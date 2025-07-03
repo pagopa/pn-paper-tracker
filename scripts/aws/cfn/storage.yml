@@ -25,10 +25,6 @@ Parameters:
     Description: 'Where to send CDC'
 
 Resources:
-    NullResource:
-        Type: AWS::CloudFormation::WaitConditionHandle
+
 
 Outputs:
-    SampleOutput:
-      Description: A Sample Output
-      Value: 'na'

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Example microservice deploy'
+Description: 'Microservice deploy for pn-paper-tracker'
 
 Parameters:
   ProjectName:
@@ -69,23 +69,14 @@ Parameters:
 
 Resources:
 
-  # PN-TemplateBeMs microservice
-  TemplateBeMsMicroservice:
+  PaperTrackerMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
-        CpuValue: 512
-        MemoryAmount: 2GB
-        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        ContainerImageURI: !Sub '${ContainerImageUri}'
-        ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        MappedPaths: '/template-ms-be/*'
-        ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
-        VpcId: !Ref VpcId
-        EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
-        LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
-        LoadbalancerRulePriority: !Ref MicroserviceNumber
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        DashboardName: !Sub "${ProjectName}-paper-tracker"
+        DynamoDBTableNames: !Join
+          - ','
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
