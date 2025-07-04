@@ -31,7 +31,7 @@ Resources:
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
     Properties:
-      TableName: !Sub '${ProjectName}-PaperTrackingsEntity'
+      TableName: !Sub '${ProjectName}-PaperTrackings'
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"

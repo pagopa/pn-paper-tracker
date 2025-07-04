@@ -69,11 +69,11 @@ Parameters:
 
   PaperTrackingsTableName:
     Type: String
-    Description: 'DynamoDB table name for PaperTrackingsEntity'
+    Description: 'DynamoDB table name for PaperTrackings'
 
   PaperTrackingsTableArn:
     Type: String
-    Description: 'DynamoDB table ARN for PaperTrackingsEntity'
+    Description: 'DynamoDB table ARN for PaperTrackings'
 
 Resources:
 
