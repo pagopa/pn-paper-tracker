@@ -67,6 +67,14 @@ Parameters:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  PaperTrackingsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackingsEntity'
+
+  PaperTrackingsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackingsEntity'
+
 Resources:
 
   PaperTrackerMicroserviceCloudWatchDashboard:
@@ -77,6 +85,22 @@ Resources:
         DashboardName: !Sub "${ProjectName}-paper-tracker"
         DynamoDBTableNames: !Join
           - ','
+          - - !Ref PaperTrackingsTableName
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
+
+  PaperTrackerMicroserviceTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "${PaperTrackingsTableArn}"
