@@ -19,4 +19,9 @@ public class PnPaperTrackerConfigs {
     public static class Dao {
 
     }
+
+    @Data
+    public static class Topics{
+        private String ocrOutputTopic;
+    }
 }
