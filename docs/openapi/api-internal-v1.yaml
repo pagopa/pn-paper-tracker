@@ -1,0 +1,38 @@
+openapi: 3.0.1
+info:
+  title: Pn-paper-tracker
+  termsOfService: https://termofservice.it
+  x-api-id: api-paper-tracker-private
+  x-summary: OpenAPI servizio Paper tracker
+  description: |-
+    ## Abstract
+      Questo servizio ha il compito di:
+        - Ricevere gli aggiornamenti di spedizione provenienti dal sistema pn-external-channels (consolidatore);
+        - Validare gli eventi ricevuti;
+        - Validare i documenti allegati tramite un servizio OCR/AI;
+        - Tracciare ogni singolo tentativo di spedizione verso un destinatario;
+        - Inoltrare gli eventi validati al workflow analogico.
+  contact:
+    email: pn@pagopa.it
+  license:
+    name: PN software license
+    url: https://www.pn.pagopa.it/LICENSE
+  version: '1.0.0'
+  servers:
+    - url: https://api.papertracker.pagopa.local
+      description: Server url
+paths:
+  /status:
+    get:
+      summary: healthCheck path
+      description: health check path per verificare lo stato del micro servizio
+      tags:
+        - HealthCheck
+      operationId: status
+      responses:
+        '200':
+          description: Ok
+        '500':
+          description: Internal Server Error
+
+              
