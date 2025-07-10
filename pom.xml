@@ -4,42 +4,32 @@
 	<parent>
 		<groupId>it.pagopa.pn</groupId>
 		<artifactId>pn-parent</artifactId>
-		<version>1.0.0</version>
+		<version>2.1.2-SPRINGBOOT3</version>
 		<relativePath />
 	</parent>
-	<artifactId>pn-template-ms-be</artifactId>
+	<artifactId>pn-paper-tracker</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>pn-template-ms-be</name>
-	<description>A template for a PN Backend Microservice</description>
+	<name>pn-paper-tracker</name>
+	<description>PN paper-tracker Microservice</description>
 	<scm>
 		<connection>${git.conn}</connection>
 		<developerConnection>${git.devConn}</developerConnection>
 		<url>${git.url}</url>
 	  <tag>HEAD</tag>
   </scm>
-	<properties>
-		<java.version>11</java.version>
-		<awspring.version>2.3.2</awspring.version>
-	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.awspring.cloud</groupId>
-				<artifactId>spring-cloud-aws-dependencies</artifactId>
-				<version>${awspring.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>1.0.0</version>
+			<version>2.12.1-SPRINGBOOT3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>it.pagopa.pn</groupId>
+			<artifactId>pn-model</artifactId>
+			<version>2.8.0</version>
 		</dependency>
 
 		<dependency>
@@ -47,7 +37,6 @@
 			<artifactId>swagger-annotations</artifactId>
 			<version>1.6.5</version>
 		</dependency>
-
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -72,6 +61,19 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>localstack</artifactId>
+			<version>1.20.6</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -93,40 +95,81 @@
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>5.4.0</version>
-				<executions>					
+				<version>7.13.0</version>
+				<executions>
 					<execution>
-						<id>generate-mandate-server</id>
+						<id>generate-timeline-service-server</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
-						<phase>process-resources</phase>
+						<phase>generate-resources</phase>
 						<configuration>
-							<inputSpec>${project.basedir}/docs/openapi/pn-template.yaml</inputSpec>
+							<inputSpec>${project.basedir}/docs/openapi/api-internal-v1.yaml</inputSpec>
 							<generatorName>spring</generatorName>
-              				<library>spring-boot</library>
+							<library>spring-boot</library>
 							<generateApiDocumentation>false</generateApiDocumentation>
 							<generateApiTests>false</generateApiTests>
 							<generateModelTests>false</generateModelTests>
 							<configOptions>
-							<dateLibrary>java11</dateLibrary>
-							<delegatePattern>true</delegatePattern>
-							<interfaceOnly>true</interfaceOnly>
-							<annotationLibrary>none</annotationLibrary>
-							<documentationProvider>source</documentationProvider>
-							<openApiNullable>false</openApiNullable>
-							<reactive>true</reactive>
-							<skipDefaultInterface>false</skipDefaultInterface>
-							<useTags>true</useTags>
-							<basePackage>${project.groupId}.template.rest.v1</basePackage>
-							<modelPackage>${project.groupId}.template.rest.v1.dto</modelPackage>
-							<apiPackage>${project.groupId}.template.rest.v1.api</apiPackage>
-							<configPackage>${project.groupId}.template.rest.v1.config</configPackage>
-							</configOptions>				
+								<generateAliasAsModel>false</generateAliasAsModel>
+								<useSpringBoot3>true</useSpringBoot3>
+								<dateLibrary>java11</dateLibrary>
+								<delegatePattern>true</delegatePattern>
+								<interfaceOnly>true</interfaceOnly>
+								<annotationLibrary>none</annotationLibrary>
+								<documentationProvider>source</documentationProvider>
+								<openApiNullable>false</openApiNullable>
+								<reactive>true</reactive>
+								<skipDefaultInterface>false</skipDefaultInterface>
+								<useTags>true</useTags>
+								<useJakartaEe>true</useJakartaEe>
+								<swaggerAnnotations>false</swaggerAnnotations>
+								<containerDefaultToNull>true</containerDefaultToNull>
+								<basePackage>${project.groupId}.papertracker.generated.openapi.server.v1</basePackage>
+								<modelPackage>${project.groupId}.papertracker.generated.openapi.server.v1.dto</modelPackage>
+								<apiPackage>${project.groupId}.papertracker.generated.openapi.server.v1.api</apiPackage>
+								<configPackage>${project.groupId}.papertracker.generated.openapi.server.v1.config</configPackage>
+							</configOptions>
+						</configuration>
+					</execution>
+					<execution>
+						<phase>generate-resources</phase>
+						<id>generate-client-pn-paper-channel</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<!-- aggiornare con il commitId di develop -->
+							<inputSpec>
+								https://raw.githubusercontent.com/pagopa/pn-paper-channel/235c565fcf0149f3e7c9b1abc0dabec8e49943ae/docs/openapi/api-internal-v1.yaml
+							</inputSpec>
+							<generatorName>java</generatorName>
+							<library>webclient</library>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateSupportingFiles>true</generateSupportingFiles>
+							<configOptions>
+								<useJakartaEe>true</useJakartaEe>
+								<openApiNullable>false</openApiNullable>
+								<additionalModelTypeAnnotations>
+									@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+								</additionalModelTypeAnnotations>
+								<additionalModelTypeAnnotations>
+									@lombok.Builder(toBuilder = true);
+									@lombok.AllArgsConstructor
+								</additionalModelTypeAnnotations>
+							</configOptions>
+							<apiPackage>
+								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.api
+							</apiPackage>
+							<modelPackage>
+								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.model
+							</modelPackage>
 						</configuration>
 					</execution>
 				</executions>
-			</plugin>			 		 
+			</plugin>
 		</plugins>
 	</build>
 </project>
