@@ -18,7 +18,13 @@ info:
     name: PN software license
     url: https://www.pn.pagopa.it/LICENSE
   version: '1.0.0'
-
+tags:
+  - name: HealthCheck
+    description: >-
+      Invocazioni per sapere lo stato del microservizio
+  - name: PaperTrackerEvent
+  - name: PaperTrackerError
+  - name: PaperTrackerOutput
 paths:
   /status:
     get:
@@ -38,7 +44,7 @@ paths:
       description: >-
         Permette l'inserimento di un evento di tracking restituendo l'entità creata
       tags:
-        - TrackingCreation
+        - PaperTrackerEvent
       operationId: trackingCreation
       requestBody:
         content:
@@ -61,6 +67,93 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker/events':
+    post:
+      summary: Recupero eventi
+      description: >-
+        Permette il recupero dell'entità di tracking di una lista di requestId
+      tags:
+        - PaperTrackerEvent
+      operationId: retrieveTrackerEvents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperTrackerRequest'
+        required: true
+      responses:
+        '200':
+          description: returns related PaperTracker entity for each requestId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTrackerResponse'
+        '404':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker/errors':
+    post:
+      summary: Recupero eventi
+      description: >-
+        Permette il recupero degli errori presenti per la lista di requestId fornita in input
+      tags:
+        - PaperTrackerError
+      operationId: retrieveTrackerErrors
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperTrackerRequest'
+        required: true
+      responses:
+        '200':
+          description: returns PaperTrackingError entity for each requestId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTrackerErrorsResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker/outputs':
+    post:
+      summary: Recupero eventi
+      description: >-
+        Permette il recupero degli errori presenti per la lista di requestId fornita in input
+      tags:
+        - PaperTrackerOutput
+      operationId: retrieveTrackerOutputs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaperTrackerRequest'
+        required: true
+      responses:
+        '200':
+          description: returns PnPaperTrackerDryRunOutputs entities for each requestId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTrackerOutputsResponse'
         '500':
           description: Internal Server Error
           content:
@@ -94,6 +187,169 @@ components:
         maxLength: 1024
 
   schemas:
+    PaperTrackerRequest:
+      type: object
+      properties:
+        requestIds:
+          type: array
+          items:
+            type: string
+      required:
+        - requestIds
+    PaperTrackerResponse:
+      type: object
+      properties:
+        paperTrackerEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaperTrackerObj'
+    PaperTrackerObj:
+      type: object
+      properties:
+        requestId:
+          type: string
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaperTrackerEvent'
+        validationFlow:
+          $ref: '#/components/schemas/PaperTrackerValidationFlow'
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        ocrRequestId:
+          type: string
+        hasNextPcretry:
+          type: boolean
+        deliveryDriverId:
+          type: string
+    PaperTrackerEvent:
+      type: object
+      properties:
+        requestTimestamp:
+          type: string
+        statusCode:
+          type: string
+        statusTimestamp:
+          type: string
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        deliveryFailureCause:
+          type: string
+        discoveredAddress:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+    ProductType:
+      type: string
+      enum:
+        - RS
+        - AR
+        - 890
+        - RIR
+        - RIS
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+        documentType:
+          type: string
+        url:
+          type: string
+        date:
+          type: string
+    PaperTrackerValidationFlow:
+      type: object
+      properties:
+        ocrEnabled:
+          type: string
+        sequencesValidationTimestamp:
+          type: string
+        ocrRequestTimestamp:
+          type: string
+        dematValidationTimestamp:
+          type: string
+        validatedAttachmentTimestamp:
+          type: string
+        validatedAttachmentUri:
+          type: string
+        validatedAttachmentType:
+          type: string
+    PaperTrackerErrorsResponse:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          requestId:
+            type: string
+          errors:
+            type: array
+            items:
+              $ref: '#/components/schemas/PaperTrackerError'
+    PaperTrackerError:
+      type: object
+      properties:
+        requestId:
+          type: string
+        created:
+          type: string
+        category:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              cause:
+                type: string
+              message:
+                type: string
+        flowThrow:
+          type: string
+          enum:
+            - SEQUENCE_VALIDATION
+            - DEMAT_VALIDATION
+            - FINAL_EVENT_BUILDING
+        eventThrow:
+          type: string
+        productType:
+          $ref: '#/components/schemas/ProductType'
+    PaperTrackerOutputsResponse:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          requestId:
+            type: string
+          outputs:
+            type: array
+            items:
+              $ref: '#/components/schemas/PaperTrackerOutput'
+    PaperTrackerOutput:
+      type: object
+      properties:
+        registeredLetterCode:
+          type: string
+        statusCode:
+          type: string
+        statusDetail:
+          type: string
+        statusDescription:
+          type: string
+        statusDateTime:
+          type: string
+        deliveryFailureCause:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        discoveredAddress:
+          type: string
+        clientRequestTimeStamp:
+          type: string
     TrackerCreationRequest:
       type: object
       properties:
@@ -113,4 +369,3 @@ components:
         - productType
         - deliveryDriverId
 
-              
