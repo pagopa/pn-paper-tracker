@@ -158,6 +158,7 @@ Resources:
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry3: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -193,4 +194,5 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:Query
             Resource:
+              - !Sub "${PaperTrackerDryRunOutputsTableArn}"
               - !Sub "${PaperTrackingsErrorsTableArn}"
