@@ -18,6 +18,6 @@ public class PnPaperTrackerConfigs {
 
     @Data
     public static class Dao {
-
+        private String paperTrackingsErrorsTable;
     }
 }
