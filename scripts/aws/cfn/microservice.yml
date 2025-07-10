@@ -127,6 +127,22 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
+  PnOcrOutputsQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where OCR outputs are sent'
+
+  PnOcrOutputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR outputs are sent'
+
+  ExternalChannelToPaperTrackerQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel messages are sent'
+
+  ExternalChannelToPaperTrackerQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel messages are sent'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -156,6 +172,7 @@ Resources:
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
+        TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
 
   PaperTrackerMicroserviceCloudWatchDashboard:
@@ -170,3 +187,21 @@ Resources:
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
+
+  PaperTrackerMicroserviceTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:GetQueueUrl
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:ReceiveMessage
+            Resource:
+              - !Ref ExternalChannelToPaperTrackerQueueARN
+              - !Ref PnOcrOutputsQueueARN
