@@ -127,13 +127,13 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
-  PaperTrackerDryRunOutputsTableName:
+  PaperTrackingsErrorsTableName:
     Type: String
-    Description: 'DynamoDB table name for PaperTrackerDryRunOutputs'
+    Description: 'DynamoDB table name for PaperTrackingsErrors'
 
-  PaperTrackerDryRunOutputsTableArn:
+  PaperTrackingsErrorsTableArn:
     Type: String
-    Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
+    Description: 'DynamoDB table ARN for PaperTrackingsErrors'
 
 
 Resources:
@@ -159,6 +159,7 @@ Resources:
         ContainerEnvEntry2: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry3: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
         ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
+        ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -194,3 +195,4 @@ Resources:
               - dynamodb:Query
             Resource:
               - !Sub "${PaperTrackerDryRunOutputsTableArn}"
+              - !Sub "${PaperTrackingsErrorsTableArn}"
