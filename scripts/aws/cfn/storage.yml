@@ -47,6 +47,46 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
+  PaperTrackingsErrorsTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperTrackingsErrors'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "created"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "created"
+          KeyType: "RANGE"
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  PaperTrackerDryRunOutputsTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-PaperTrackerDryRunOutputs'
+      AttributeDefinitions:
+        - AttributeName: "requestId"
+          AttributeType: "S"
+        - AttributeName: "created"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "requestId"
+          KeyType: "HASH"
+        - AttributeName: "created"
+          KeyType: "RANGE"
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
   PnOcrOutputsQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -74,6 +114,18 @@ Resources:
         DelaySeconds: 1
 
 Outputs:
+  PaperTrackingsErrorsTableName:
+    Description: Name of dynamodb table containing trackings errors
+    Value: !Ref PaperTrackingsErrorsTable
+  PaperTrackingsErrorsTableArn:
+    Description: ARN of dynamodb table containing trackings errors
+    Value: !Sub '${PaperTrackingsErrorsTable.Arn}'
+  PaperTrackerDryRunOutputsTableName:
+    Description: Name of dynamodb table containing trackings outputs
+    Value: !Ref PaperTrackerDryRunOutputsTable
+  PaperTrackerDryRunOutputsTableArn:
+    Description: ARN of dynamodb table containing trackings outputs
+    Value: !Sub '${PaperTrackerDryRunOutputsTable.Arn}'
   PnOcrOutputsQueueName:
     Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
   PnOcrOutputsQueueARN:

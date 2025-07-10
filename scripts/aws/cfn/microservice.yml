@@ -143,6 +143,15 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where external channel messages are sent'
 
+  PaperTrackingsErrorsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackingsErrors'
+
+  PaperTrackingsErrorsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackingsErrors'
+
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -165,6 +174,8 @@ Resources:
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
         ContainerEnvEntry3: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
+        ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -194,6 +205,13 @@ Resources:
       PolicyDocument:
         Version: 2012-10-17
         Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:Query
+            Resource:
+              - !Sub "${PaperTrackerDryRunOutputsTableArn}"
+              - !Sub "${PaperTrackingsErrorsTableArn}"
           - Effect: Allow
             Action:
               - sqs:SendMessage
