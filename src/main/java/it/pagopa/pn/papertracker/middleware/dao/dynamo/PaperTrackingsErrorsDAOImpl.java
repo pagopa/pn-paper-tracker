@@ -16,29 +16,20 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 
 @Component
 @Slf4j
-public class PaperTrackingsErrorsDAOImpl implements PaperTrackingsErrorsDAO {
-
-    private final DynamoDbAsyncTable<PaperTrackingsErrors> table;
+public class PaperTrackingsErrorsDAOImpl extends BaseDao<PaperTrackingsErrors> implements PaperTrackingsErrorsDAO {
 
     public PaperTrackingsErrorsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg) {
-        this.table = dynamoDbEnhancedClient.table(cfg.getDao().getPaperTrackingsErrorsTableName(), TableSchema.fromBean(PaperTrackingsErrors.class));
+        super(dynamoDbEnhancedClient,
+                cfg.getDao().getPaperTrackingsErrorsTable(),
+                PaperTrackingsErrors.class
+        );
     }
 
-    public Mono<PaperTrackingsErrors> insertError(PaperTrackingsErrors entity) {
-        PutItemEnhancedRequest<PaperTrackingsErrors> request = PutItemEnhancedRequest.builder(PaperTrackingsErrors.class)
-                .item(entity)
-                .build();
-
-        return Mono.fromFuture(table.putItem(request))
-                .doOnError(e -> log.error("Error putting item with requestId {}: {}", entity.getRequestId(), e.getMessage()))
-                .thenReturn(entity);
+    public Mono<PaperTrackingsErrors> insertError(PaperTrackingsErrors paperTrackingsErrors) {
+        return putItem(paperTrackingsErrors);
     }
 
     public Flux<PaperTrackingsErrors> retrieveErrors(String requestId) {
-        log.info("retrieveErrors for requestId={}", requestId);
-        return Flux.from(table.query(r -> r.queryConditional(
-                        QueryConditional.keyEqualTo(Key.builder().partitionValue(requestId).build()))))
-                .flatMap(page -> Flux.fromIterable(page.items()))
-                .doOnError(e -> log.error("Error retrieving errors for requestId {}: {}", requestId, e.getMessage()));
+        return retrieveByRequestId(requestId);
     }
 }
