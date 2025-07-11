@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.sqs.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sngular.apigenerator.asyncapi.business_model.model.event.Ocr_data_payloadDTO;
+import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import io.awspring.cloud.sqs.operations.SendResult;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class OcrProducer {
      * @param queueName Nome della coda SQS a cui inviare il messaggio.
      * @param message   Oggetto da inviare, che verrà serializzato in formato JSON.
      */
-    public void send(String queueName, Ocr_data_payloadDTO message) {
+    public void send(String queueName, OcrDataPayloadDTO message) {
         try {
             String jsonMessage = objectMapper.writeValueAsString(message);
             log.info("Invio messaggio alla coda {}: {}", queueName, jsonMessage);

@@ -39,10 +39,10 @@ components:
         Retrieve information about OCR data result
       contentType: application/json
       payload:
-        $ref: '#/components/schemas/ocr_data_result_payload'
+        $ref: '#/components/schemas/ocrDataResultPayload'
 
   schemas:
-    ocr_data_result_payload:
+    ocrDataResultPayload:
       type: object
       properties:
         version:

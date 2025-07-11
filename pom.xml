@@ -192,7 +192,7 @@
 					<execution>
 						<id>generate-timeline-service-server</id>
 						<goals>
-							<goal>asyncapi-generation</goal>
+							<goal>generate</goal>
 						</goals>
 						<phase>generate-resources</phase>
 						<configuration>
@@ -247,21 +247,9 @@
 										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.consumer</apiPackage>
 										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
 									</consumer>
-									<supplier>
-										<ids>OCR_Result</ids>
-										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
-										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
-									</supplier>
 								</specFile>
 								<specFile>
 									<filePath>docs/async/internal-datalake-v1.yaml</filePath>
-									<consumer>
-										<ids>OCR_Command</ids>
-										<classNamePostfix>CustomConsumer</classNamePostfix>
-										<modelNameSuffix>DTO</modelNameSuffix>
-										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.consumer</apiPackage>
-										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
-									</consumer>
 									<supplier>
 										<ids>OCR_Result</ids>
 										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
