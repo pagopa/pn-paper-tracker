@@ -17,11 +17,7 @@ public class PnPaperTrackerConfigs {
 
     @Data
     public static class Dao {
-
-    }
-
-    @Data
-    public static class Topics{
-        private String ocrOutputTopic;
+        private String paperTrackingsErrorsTable;
+        private String paperTrackerDryRunOutputsTable;
     }
 }
