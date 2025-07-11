@@ -135,6 +135,14 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where OCR outputs are sent'
 
+  PnOcrInputQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR request are sent'
+
+  PnOcrInputQueueUrl:
+    Type: String
+    Description: 'URL of the SQS queue where OCR request are sent'
+
   ExternalChannelToPaperTrackerQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel messages are sent'
@@ -223,3 +231,4 @@ Resources:
             Resource:
               - !Ref ExternalChannelToPaperTrackerQueueARN
               - !Ref PnOcrOutputsQueueARN
+              - !Ref PnOcrInputQueueARN
