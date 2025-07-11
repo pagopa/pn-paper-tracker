@@ -177,6 +177,7 @@ Resources:
         ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
+        ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
