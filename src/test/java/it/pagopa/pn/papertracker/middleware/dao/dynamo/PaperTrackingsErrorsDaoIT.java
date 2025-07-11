@@ -1,11 +1,12 @@
-package it.pagopa.pn.papertracker.middleware.dao;
+package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.model.ErrorCategory;
-import it.pagopa.pn.papertracker.model.ErrorDetails;
-import it.pagopa.pn.papertracker.model.FlowThrow;
-import it.pagopa.pn.papertracker.model.ProductType;
-import it.pagopa.pn.papertracker.model.PaperTrackingsErrors;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorDetails;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -20,5 +20,6 @@ public class PnPaperTrackerConfigs {
     public static class Dao {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
+        private String paperTrackingsTable;
     }
 }

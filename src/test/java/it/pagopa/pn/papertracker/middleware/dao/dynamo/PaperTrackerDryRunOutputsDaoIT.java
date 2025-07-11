@@ -1,8 +1,8 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
-import it.pagopa.pn.papertracker.model.Attachment;
-import it.pagopa.pn.papertracker.model.PaperTrackerDryRunOutputs;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
