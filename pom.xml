@@ -165,6 +165,54 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.sngular</groupId>
+				<artifactId>scs-multiapi-maven-plugin</artifactId>
+				<version>6.1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>asyncapi-generation</goal>
+						</goals>
+						<configuration>
+							<specFiles>
+								<specFile>
+									<filePath>docs/async/external-datalake-v1.yaml</filePath>
+									<consumer>
+										<ids>OCR_Command</ids>
+										<classNamePostfix>CustomConsumer</classNamePostfix>
+										<modelNameSuffix>DTO</modelNameSuffix>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.consumer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</consumer>
+									<supplier>
+										<ids>OCR_Result</ids>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</supplier>
+								</specFile>
+								<specFile>
+									<filePath>docs/async/internal-datalake-v1.yaml</filePath>
+									<consumer>
+										<ids>OCR_Command</ids>
+										<classNamePostfix>CustomConsumer</classNamePostfix>
+										<modelNameSuffix>DTO</modelNameSuffix>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.consumer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</consumer>
+									<supplier>
+										<ids>OCR_Result</ids>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</supplier>
+								</specFile>
+							</specFiles>
+							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 </project>
