@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.model;
+package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;

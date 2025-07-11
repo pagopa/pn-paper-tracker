@@ -1,6 +1,4 @@
-package it.pagopa.pn.papertracker.model;
-
-import lombok.Getter;
+package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 public enum ErrorCategory {
 

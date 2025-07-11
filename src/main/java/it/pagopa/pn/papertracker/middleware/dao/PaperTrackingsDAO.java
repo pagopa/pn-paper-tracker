@@ -1,20 +1,19 @@
 package it.pagopa.pn.papertracker.middleware.dao;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsEntity;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface PaperTrackingsDAO {
 
-    Mono<PaperTrackingsEntity> putPaperTrackings(PaperTrackingsEntity entity);
+    Mono<PaperTrackings> putIfAbsent(PaperTrackings entity);
 
-    Mono<PaperTrackingsEntity> getPaperTrackings(String requestId);
+    Mono<PaperTrackings> retrieveEntityByRequestId(String requestId);
 
-    Mono<Void> updatePaperTrackingsEvent(String requestId, Event event);
+    Mono<Void> addEvents(String requestId, Event event);
 
-    Mono<Void> updatePaperTrackingsValidationFlow(String requestId, ValidationFlow validationFlow);
+    Mono<Void> updateItem(PaperTrackings paperTrackings);
 
-    Flux<PaperTrackingsEntity> queryPaperTrackings(String ocrRequestId);
+    Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId);
 }

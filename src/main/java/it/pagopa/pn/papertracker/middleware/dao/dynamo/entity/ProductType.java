@@ -1,12 +1,15 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
+import lombok.Getter;
+
+@Getter
 public enum ProductType {
 
     RS("RS"),
 
     AR("AR"),
 
-    RACCOMANDATA_890("890"),
+    _890("890"),
 
     RIR("RIR"),
 
@@ -18,7 +21,4 @@ public enum ProductType {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
 }
