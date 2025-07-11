@@ -5,8 +5,9 @@ info:
   x-summary: 'API di pn-paper-tracker esposte ad altri microservizi'
   x-api-id: api-internal-pn-paper-tracker
   version: '1.0.0'
-  description: >- 
-    Da fare
+  description: >-
+    Questo servizio permette di iniziare il tracciamento per gli aggiornamenti di spedizione 
+    che verranno poi recapitati su delivery-push.
 
   contact:
     email: pn@pagopa.it

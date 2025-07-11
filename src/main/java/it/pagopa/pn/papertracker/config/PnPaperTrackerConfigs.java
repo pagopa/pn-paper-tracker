@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 public class PnPaperTrackerConfigs {
 
     private Dao dao;
+    private String queueOcrInput;
 
 
     @Data
@@ -20,4 +21,5 @@ public class PnPaperTrackerConfigs {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
     }
+
 }

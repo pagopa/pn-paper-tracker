@@ -105,6 +105,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>localstack</artifactId>
 			<!--Non inserendo la versione, viene utilizzata una dipendenza di Localstack che richiede l 'SDK 1 di AWS-->
