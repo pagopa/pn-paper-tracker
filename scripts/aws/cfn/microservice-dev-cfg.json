@@ -1,3 +1,9 @@
 {
-  "Parameters" : {}
+  "Parameters" : {
+    "MinTasksNumber": "1",
+    "MaxTasksNumber": "1",
+    "PnCronAnalyzer": "-",
+    "WireTapLogActivation": "false",
+    "MountEfs": "false"
+  }
 }
