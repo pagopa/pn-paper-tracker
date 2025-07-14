@@ -8,7 +8,7 @@ servers:
   pn-external_channel_outputs:
     host: 'sqs.us-east-1.amazonaws.com'
     protocol: 'sqs'
-    description: SQS queue readed by pn-delivery-push to handle events sent by pn-external-channels
+    description: SQS queue to handle send events to delivery-push
 
 channels:
   pn-external_channel_outputs:
@@ -26,23 +26,23 @@ operations:
     channel:
       $ref: '#/channels/pn-external_channel_outputs'
     summary: >-
-      Send ExternalChannelOutputs command to the queue
+      Send event to the queue
     messages:
-      - $ref: '#/channels/pn-external_channel_outputs/messages/externalChannelOutputsEvent'
+      - $ref: '#/channels/pn-external_channel_outputs/messages/external_channel_outputs_event'
 
 components:
   messages:
-    externalChannelOutputsEvent:
-      name: externalChannelOutputsEvent
-      title: pn-external_channel_outputs event
+    external_channel_outputs_event:
+      name: external_channel_outputs event
+      title: outputs event
       summary: >-
-        Send a command to the pn-external_channel_outputs service
+        Send an event to the delivery push service
       contentType: application/json
       payload:
-        $ref: '#/components/schemas/external_channel_outputs_payload'
+        $ref: '#/components/schemas/externalChannelOutputsPayload'
 
   schemas:
-    external_channel_outputs_payload:
+    externalChannelOutputsPayload:
       type: object
       properties:
         requestId:
