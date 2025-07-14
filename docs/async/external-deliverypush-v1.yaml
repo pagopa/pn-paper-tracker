@@ -1,0 +1,90 @@
+asyncapi: '3.0.0'
+info:
+  title: Delivery Push Event Schema
+  version: '1.0.0'
+  description: An event schema for sending event to delivery push
+
+servers:
+  pn-external_channel_outputs:
+    host: 'sqs.us-east-1.amazonaws.com'
+    protocol: 'sqs'
+    description: SQS queue readed by pn-delivery-push to handle events sent by pn-external-channels
+
+channels:
+  pn-external_channel_outputs:
+    address: arn:aws:sqs:us-east-1:123456789012:pn-external_channel_outputs
+    description: SQS queue
+    servers:
+      - $ref: '#/servers/pn-external_channel_outputs'
+    messages:
+      externalChannelOutputsEvent:
+        $ref: '#/components/messages/externalChannelOutputsEvent'
+
+operations:
+  ExternalChannelOutputs_Command:
+    action: send
+    channel:
+      $ref: '#/channels/pn-external_channel_outputs'
+    summary: >-
+      Send ExternalChannelOutputs command to the queue
+    messages:
+      - $ref: '#/channels/pn-external_channel_outputs/messages/externalChannelOutputsEvent'
+
+components:
+  messages:
+    externalChannelOutputsEvent:
+      name: externalChannelOutputsEvent
+      title: pn-external_channel_outputs event
+      summary: >-
+        Send a command to the pn-external_channel_outputs service
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/external_channel_outputs_payload'
+
+  schemas:
+    external_channel_outputs_payload:
+      type: object
+      properties:
+        requestId:
+          type: string
+        created:
+          type: string
+          format: date-time
+        registeredLetterCode:
+          type: string
+        statusCode:
+          type: string
+          enum:
+            - PROGRESS
+            - OK
+            - KO
+        statusDetail:
+          type: string
+        statusDescription:
+          type: string
+        statusDateTime:
+          type: string
+          format: date-time
+        deliveryFailureCause:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        discoveredAddress:
+          type: string
+        clientRequestTimeStamp:
+          type: string
+          format: date-time
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+        documentType:
+          type: string
+        url:
+          type: string
+        date:
+          type: string
