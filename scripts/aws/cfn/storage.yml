@@ -32,6 +32,9 @@ Parameters:
     Type: Number
     Default: 14
 
+  AlarmSNSTopicName:
+    Type: String
+
 Resources:
   PnPaperTrackerLogGroup:
     Type: AWS::CloudFormation::Stack
@@ -111,6 +114,32 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  PnOcrOutputsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-ocr_outputs'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 300
+        MaxReceiveCount: 10
+        DelaySeconds: 1
+
+  ExternalChannelToPaperTrackerQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-external_channel_to_paper_tracker'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 300
+        MaxReceiveCount: 10
+        DelaySeconds: 1
+
 Outputs:
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors
@@ -124,7 +153,14 @@ Outputs:
   PaperTrackerDryRunOutputsTableArn:
     Description: ARN of dynamodb table containing trackings outputs
     Value: !Sub '${PaperTrackerDryRunOutputsTable.Arn}'
-  # Dynamo tables
+  PnOcrOutputsQueueName:
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
+  PnOcrOutputsQueueARN:
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueARN
+  ExternalChannelToPaperTrackerQueueName:
+    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
+  ExternalChannelToPaperTrackerQueueARN:
+    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueARN
   PaperTrackingsTableName:
     Description: Name of dynamodb table containing trackings
     Value: !Ref PaperTrackingsTable
