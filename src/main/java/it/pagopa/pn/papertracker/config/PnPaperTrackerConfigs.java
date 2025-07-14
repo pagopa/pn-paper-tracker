@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 public class PnPaperTrackerConfigs {
 
     private Dao dao;
+    private String queueOcrInput;
     private String paperChannelBaseUrl;
 
 
