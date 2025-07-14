@@ -13,11 +13,13 @@ import org.springframework.context.annotation.Import;
 public class PnPaperTrackerConfigs {
 
     private Dao dao;
+    private String paperChannelBaseUrl;
 
 
     @Data
     public static class Dao {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
+        private String paperTrackingsTable;
     }
 }

@@ -1,8 +1,6 @@
-package it.pagopa.pn.papertracker.model;
+package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
 @DynamoDbBean
