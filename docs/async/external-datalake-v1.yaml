@@ -40,10 +40,10 @@ components:
         Send a command to the OCR service
       contentType: application/json
       payload:
-        $ref: '#/components/schemas/ocr_data_payload'
+        $ref: '#/components/schemas/ocrDataPayload'
 
   schemas:
-    ocr_data_payload:
+    ocrDataPayload:
       type: object
       properties:
         version:

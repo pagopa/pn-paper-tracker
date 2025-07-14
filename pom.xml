@@ -43,7 +43,50 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>bom</artifactId>
+			<version>2.31.77</version>
+			<type>pom</type>
+			<scope>runtime</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.awspring.cloud</groupId>
+			<artifactId>spring-cloud-aws-dependencies</artifactId>
+			<version>3.4.0</version>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
+			<groupId>io.awspring.cloud</groupId>
+			<artifactId>spring-cloud-aws-starter-sqs</artifactId>
+			<version>3.4.0</version>
+		</dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>regions</artifactId>
+            <version>2.30.26</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>kms</artifactId>
+        </dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 		<dependency>
 			<groupId>net.logstash.logback</groupId>
 			<artifactId>logstash-logback-encoder</artifactId>
@@ -62,6 +105,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>localstack</artifactId>
 			<!--Non inserendo la versione, viene utilizzata una dipendenza di Localstack che richiede l 'SDK 1 di AWS-->
@@ -75,6 +123,36 @@
 			<scope>test</scope>
 		</dependency>
 
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser-core</artifactId>
+            <version>2.1.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <version>2.2.20</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.asyncapi</groupId>
+            <artifactId>asyncapi-plugin-core</artifactId>
+            <version>1.0.0-EAP-1</version>
+        </dependency>
+
 	</dependencies>
 
 	<build>
@@ -82,6 +160,24 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.8.1</version>
+				<executions>
+					<execution>
+						<id>unpack-dependencies</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeArtifactIds>pn-commons</includeArtifactIds>
+							<outputDirectory>${project.build.directory}/dependency-resources</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -167,6 +263,42 @@
 							<modelPackage>
 								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.model
 							</modelPackage>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.sngular</groupId>
+				<artifactId>scs-multiapi-maven-plugin</artifactId>
+				<version>6.1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>asyncapi-generation</goal>
+						</goals>
+						<configuration>
+							<specFiles>
+								<specFile>
+									<filePath>docs/async/external-datalake-v1.yaml</filePath>
+									<consumer>
+										<ids>OCR_Command</ids>
+										<classNamePostfix>CustomConsumer</classNamePostfix>
+										<modelNameSuffix>DTO</modelNameSuffix>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.consumer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</consumer>
+								</specFile>
+								<specFile>
+									<filePath>docs/async/internal-datalake-v1.yaml</filePath>
+									<supplier>
+										<ids>OCR_Result</ids>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</supplier>
+								</specFile>
+							</specFiles>
+							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
 						</configuration>
 					</execution>
 				</executions>
