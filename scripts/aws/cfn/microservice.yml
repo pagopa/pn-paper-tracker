@@ -127,6 +127,30 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
+  PnOcrOutputsQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where OCR outputs are sent'
+
+  PnOcrOutputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR outputs are sent'
+
+  PnOcrInputQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR request are sent'
+
+  PnOcrInputQueueUrl:
+    Type: String
+    Description: 'URL of the SQS queue where OCR request are sent'
+
+  ExternalChannelToPaperTrackerQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel messages are sent'
+
+  ExternalChannelToPaperTrackerQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel messages are sent'
+
   PaperTrackingsErrorsTableName:
     Type: String
     Description: 'DynamoDB table name for PaperTrackingsErrors'
@@ -135,6 +159,22 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackingsErrors'
 
+
+  PaperTrackingsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackings'
+
+  PaperTrackingsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackings'
+
+  PaperTrackerDryRunOutputsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackerDryRunOutputs'
+
+  PaperTrackerDryRunOutputsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
 Resources:
 
@@ -160,6 +200,8 @@ Resources:
         ContainerEnvEntry3: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
         ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
+        ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
+        ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -179,6 +221,11 @@ Resources:
         AlarmArns: !Join
           - ','
           - - !GetAtt PaperTrackerMicroservice.Outputs.FatalLogsMetricAlarmArn
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref PaperTrackingsTableName
+          - - !Ref PaperTrackingsErrorsTableName
+          - - !Ref PaperTrackerDryRunOutputsTableName
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
@@ -193,6 +240,23 @@ Resources:
             Action:
               - dynamodb:PutItem
               - dynamodb:Query
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
             Resource:
+              - !Sub "${PaperTrackingsTableArn}"
               - !Sub "${PaperTrackerDryRunOutputsTableArn}"
               - !Sub "${PaperTrackingsErrorsTableArn}"
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:GetQueueUrl
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:ReceiveMessage
+            Resource:
+              - !Ref ExternalChannelToPaperTrackerQueueARN
+              - !Ref PnOcrOutputsQueueARN
+              - !Ref PnOcrInputQueueARN

@@ -4,6 +4,8 @@
     "MaxTasksNumber": "1",
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
-    "MountEfs": "false"
+    "MountEfs": "false",
+    "PnOcrInputQueueARN": "-",
+    "PnOcrInputQueueUrl": "-"
   }
 }

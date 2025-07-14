@@ -14,12 +14,14 @@ public class PnPaperTrackerConfigs {
 
     private Dao dao;
     private String queueOcrInput;
+    private String paperChannelBaseUrl;
 
 
     @Data
     public static class Dao {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
+        private String paperTrackingsTable;
     }
 
 }
