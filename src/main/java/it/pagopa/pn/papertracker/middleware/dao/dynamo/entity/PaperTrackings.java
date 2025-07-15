@@ -10,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,14 @@ public class PaperTrackings {
 
     public static final String COL_REQUEST_ID = "requestId";
     public static final String COL_EVENTS = "events";
+    public static final String COL_NOTIFICATION_STATE = "notificationState";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_HAS_NEXT_PC_RETRY = "hasNextPcretry";
-    public static final String COL_DELIVERY_DRIVER_ID = "deliveryDriverId";
+    public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
+    public static final String COL_CREATED_AT = "createdAt";
+    public static final String COL_UPDATED_AT = "updatedAt";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
@@ -35,6 +39,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS)}))
     private List<Event> events;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_STATE)}))
+    private NotificationState notificationState;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW)}))
     private ValidationFlow validationFlow;
@@ -48,8 +55,14 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_HAS_NEXT_PC_RETRY)}))
     private Boolean hasNextPcretry;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_DRIVER_ID)}))
-    private String deliveryDriverId;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
+    private Instant createdAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
+    private Instant updatedAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
@@ -61,9 +74,9 @@ public class PaperTrackings {
      */
     public static Map<String, AttributeValue> eventToAttributeValueMap(Event event) {
         Map<String, AttributeValue> map = new HashMap<>();
-        putIfNotEmpty(map, Event.COL_REQUEST_TIMESTAMP, event.getRequestTimestamp());
+        putIfNotNull(map, Event.COL_REQUEST_TIMESTAMP, event.getRequestTimestamp(), Object::toString);
         putIfNotEmpty(map, Event.COL_STATUS_CODE, event.getStatusCode());
-        putIfNotEmpty(map, Event.COL_STATUS_TIMESTAMP, event.getStatusTimestamp());
+        putIfNotNull(map, Event.COL_STATUS_TIMESTAMP, event.getStatusTimestamp(), Object::toString);
         putIfNotNull(map, Event.COL_PRODUCT_TYPE, event.getProductType(), ProductType::getValue);
         putIfNotEmpty(map, Event.COL_DELIVERY_FAILURE_CAUSE, event.getDeliveryFailureCause());
         putIfNotEmpty(map, Event.COL_DISCOVERED_ADDRESS, event.getDiscoveredAddress());
@@ -74,6 +87,7 @@ public class PaperTrackings {
                             .toList())
                     .build());
         }
+        putIfNotEmpty(map, Event.COL_REGISTERED_LETTER_CODE, event.getRegisteredLetterCode());
         return map;
     }
 
