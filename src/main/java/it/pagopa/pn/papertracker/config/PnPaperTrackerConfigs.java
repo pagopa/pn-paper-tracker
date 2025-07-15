@@ -25,7 +25,7 @@ public class PnPaperTrackerConfigs {
     }
 
     @Data
-    public static class Topics{
+    public static class Topics {
         private String ocrOutputTopic;
     }
 }
