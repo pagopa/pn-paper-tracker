@@ -45,7 +45,7 @@ paths:
         Permette l'inserimento di un evento di tracking restituendo l'entità creata
       tags:
         - PaperTrackerEvent
-      operationId: trackingCreation
+      operationId: initTracking
       requestBody:
         content:
           application/json:
