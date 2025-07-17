@@ -23,7 +23,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
         paperTrackings.setProductType(ProductType.AR);
-        paperTrackings.setDeliveryDriverId("POSTE");
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -33,7 +33,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved != null;
                     assert retrieved.getRequestId().equals(requestId);
                     assert retrieved.getProductType() == ProductType.AR;
-                    assert "POSTE".equalsIgnoreCase(retrieved.getDeliveryDriverId());
+                    assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
                     assert retrieved.getOcrRequestId() == null;
@@ -52,7 +52,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
         paperTrackings.setProductType(ProductType.AR);
-        paperTrackings.setDeliveryDriverId("POSTE");
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -73,7 +73,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved != null;
                     assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
-                    assert retrieved.getDeliveryDriverId().equalsIgnoreCase("POSTE");
+                    assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
                     assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -93,7 +93,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved != null;
                     assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
-                    assert retrieved.getDeliveryDriverId().equalsIgnoreCase("POSTE");
+                    assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
                     assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -109,7 +109,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
         paperTrackings.setProductType(ProductType.AR);
-        paperTrackings.setDeliveryDriverId("POSTE");
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 

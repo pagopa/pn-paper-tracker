@@ -176,6 +176,18 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
+  EnableOcrValidation:
+    Type: String
+    Description: 'Feature flag for enabling OCR validation'
+
+  QueueOcrInputUrl:
+    Type: String
+    Description: 'URL of the SQS queue where OCR request are sent'
+
+  PaperTrackerOcrInputsQueueRegion:
+    Type: String
+    Description: 'OCR AWS account region'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -202,6 +214,9 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
         ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_ENABLEOCRVALIDATION=${EnableOcrValidation}'
+        ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTURL=${QueueOcrInputUrl}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEREGIONOCRINPUTS=${PaperTrackerOcrInputsQueueRegion}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

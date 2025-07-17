@@ -26,7 +26,8 @@ public class PaperTrackings {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_HAS_NEXT_PC_RETRY = "hasNextPcretry";
-    public static final String COL_DELIVERY_DRIVER_ID = "deliveryDriverId";
+    public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
+    public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
@@ -48,8 +49,11 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_HAS_NEXT_PC_RETRY)}))
     private Boolean hasNextPcretry;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_DRIVER_ID)}))
-    private String deliveryDriverId;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
+    private String registeredLetterCode;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;

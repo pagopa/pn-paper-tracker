@@ -15,7 +15,9 @@ public class PnPaperTrackerConfigs {
     private Dao dao;
     private String queueOcrInput;
     private String paperChannelBaseUrl;
-
+    private boolean enableOcrValidation;
+    private String queueOcrInputUrl;
+    private String queueRegionOcrInputs;
 
     @Data
     public static class Dao {

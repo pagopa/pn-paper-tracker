@@ -13,7 +13,7 @@ public class ValidationFlow {
     public static final String COL_SEQUENCES_VALIDATION_TIMESTAMP = "sequencesValidationTimestamp";
     public static final String COL_OCR_REQUEST_TIMESTAMP = "ocrRequestTimestamp";
     public static final String COL_DEMAT_VALIDATION_TIMESTAMP = "dematValidationTimestamp";
-    public static final String COL_VALIDATED_ATTACHMENT_TIMESTAMP = "validatedAttachmentTimestamp";
+    public static final String COL_VALIDATED_SEQUENCE_TIMESTAMP = "validatedSequenceTimestamp";
     public static final String COL_ATTACHMENT_URI = "attachmentUri";
     public static final String COL_VALIDATED_ATTACHMENT_TYPE = "validatedAttachmentType";
 
@@ -29,8 +29,8 @@ public class ValidationFlow {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DEMAT_VALIDATION_TIMESTAMP)}))
     private String dematValidationTimestamp;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_TIMESTAMP)}))
-    private String validatedAttachmentTimestamp;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_SEQUENCE_TIMESTAMP)}))
+    private String validatedSequenceTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENT_URI)}))
     private String attachmentUri;

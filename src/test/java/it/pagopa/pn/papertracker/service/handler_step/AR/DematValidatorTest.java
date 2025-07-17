@@ -1,0 +1,87 @@
+package it.pagopa.pn.papertracker.service.handler_step.AR;
+
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
+import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
+import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.time.LocalDateTime;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class DematValidatorTest {
+
+    @Mock
+    PaperTrackingsDAO paperTrackingsDAO;
+    @Mock
+    PnPaperTrackerConfigs cfg;
+    @Mock
+    OcrMomProducer ocrMomProducer;
+
+    @InjectMocks
+    DematValidator dematValidator;
+
+    PaperTrackings paperTrackings;
+
+    @BeforeEach
+    void setUp() {
+        paperTrackings = new PaperTrackings();
+        paperTrackings.setRequestId("req-123");
+        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setRegisteredLetterCode("RL123");
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setValidatedSequenceTimestamp(LocalDateTime.now().toString());
+        paperTrackings.setValidationFlow(validationFlow);
+    }
+
+    @Test
+    void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
+        when(cfg.isEnableOcrValidation()).thenReturn(true);
+        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+                .verifyComplete();
+
+        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+    }
+
+    @Test
+    void validateDemat_OcrDisabled_UpdatesItemAndDoesNotPushEvent() {
+        when(cfg.isEnableOcrValidation()).thenReturn(false);
+        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+                .verifyComplete();
+
+        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+    }
+
+    @Test
+    void validateDemat_UpdateItemThrowsError_PropagatesError() {
+        when(cfg.isEnableOcrValidation()).thenReturn(true);
+        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.error(new RuntimeException("DB error")));
+
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+                .expectErrorMatches(e -> e instanceof RuntimeException && e.getMessage().contains("Errore durante la validazione Demat"))
+                .verify();
+
+        verify(paperTrackingsDAO, times(1)).updateItem(any());
+    }
+
+}
