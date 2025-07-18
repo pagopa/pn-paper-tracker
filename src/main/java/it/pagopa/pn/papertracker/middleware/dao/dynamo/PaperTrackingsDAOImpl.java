@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 
@@ -68,12 +69,14 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
     @Override
     public Mono<Void> addEvents(String requestId, Event event) {
-        String updateExpression = "SET #events = list_append(if_not_exists(#events, :empty_list), :new_event)";
+        String updateExpression = "SET #events = list_append(if_not_exists(#events, :empty_list), :new_event), #updatedAt = :updatedAt";
         Map<String, AttributeValue> key = Map.of(PaperTrackings.COL_REQUEST_ID, AttributeValue.builder().s(requestId).build());
-        Map<String, String> expressionAttributeNames = Map.of("#events", PaperTrackings.COL_EVENTS);
+        Map<String, String> expressionAttributeNames = Map.of("#events", PaperTrackings.COL_EVENTS,
+                "#updatedAt", PaperTrackings.COL_UPDATED_AT);
         Map<String, AttributeValue> expressionAttributeValues = Map.of(
                 ":new_event", AttributeValue.builder().l(Collections.singletonList(AttributeValue.builder().m(PaperTrackings.eventToAttributeValueMap(event)).build())).build(),
-                ":empty_list", AttributeValue.builder().l(Collections.emptyList()).build()
+                ":empty_list", AttributeValue.builder().l(Collections.emptyList()).build(),
+                ":updatedAt", AttributeValue.builder().s(Instant.now().toString()).build()
         );
 
         return update(key, updateExpression, expressionAttributeValues, expressionAttributeNames)
