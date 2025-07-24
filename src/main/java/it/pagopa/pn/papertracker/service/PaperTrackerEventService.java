@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 public interface PaperTrackerEventService {
 
     Mono<Void> insertPaperTrackings(TrackerCreationRequest trackerCreationRequest);
+
     Mono<Void> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors);
 
 }
