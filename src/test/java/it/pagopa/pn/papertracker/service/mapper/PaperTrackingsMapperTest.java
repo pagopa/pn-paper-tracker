@@ -16,26 +16,31 @@ public class PaperTrackingsMapperTest {
 
     @Test
     void toPaperTrackingsValidRequest() {
+        //ARRANGE
         TrackerCreationRequest request = new TrackerCreationRequest();
         request.setRequestId("request123");
-        request.setDeliveryDriverId("driver456");
+        request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("RS");
 
+        //ACT
         PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration);
 
+        //ASSERT
         Assertions.assertEquals("request123", paperTrackings.getRequestId());
-        Assertions.assertEquals("driver456", paperTrackings.getDeliveryDriverId());
+        Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
         Assertions.assertTrue(paperTrackings.getTtl() > 0);
     }
 
     @Test
     void toPaperTrackingsInvalidProductType() {
+        //ARRANGE
         TrackerCreationRequest request = new TrackerCreationRequest();
         request.setRequestId("request123");
-        request.setDeliveryDriverId("driver456");
+        request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("INVALID_TYPE");
 
+        //ACT & ASSERT
         assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration));
     }
 

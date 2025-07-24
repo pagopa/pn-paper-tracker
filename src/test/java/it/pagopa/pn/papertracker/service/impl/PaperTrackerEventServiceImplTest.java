@@ -38,43 +38,49 @@ class PaperTrackerEventServiceImplTest {
 
     @Test
     void insertPaperTrackingsValidRequest() {
+        //ARRANGE
         TrackerCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getRequestId().equals(request.getRequestId()) &&
-                        pt.getDeliveryDriverId().equals(request.getDeliveryDriverId()) &&
+                        pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
+        //ACT
         Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .verifyComplete();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
                 pt.getRequestId().equals(request.getRequestId()) &&
-                        pt.getDeliveryDriverId().equals(request.getDeliveryDriverId()) &&
+                        pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
     }
 
     @Test
     void insertPaperTrackingsConflictException() {
+        //ARRANGE
         TrackerCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getRequestId().equals(request.getRequestId()) &&
-                        pt.getDeliveryDriverId().equals(request.getDeliveryDriverId()) &&
+                        pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
 
+        //ACT
         Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectError(PnPaperTrackerConflictException.class)
                 .verify();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
                 pt.getRequestId().equals(request.getRequestId()) &&
-                        pt.getDeliveryDriverId().equals(request.getDeliveryDriverId()) &&
+                        pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
     }
@@ -82,7 +88,7 @@ class PaperTrackerEventServiceImplTest {
     private TrackerCreationRequest getTrackerCreationRequest() {
         TrackerCreationRequest request = new TrackerCreationRequest();
         request.setRequestId("request123");
-        request.setDeliveryDriverId("driver456");
+        request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("RS");
         return request;
     }

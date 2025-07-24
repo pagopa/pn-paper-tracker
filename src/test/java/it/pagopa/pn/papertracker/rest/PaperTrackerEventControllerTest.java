@@ -30,16 +30,19 @@ class PaperTrackerEventControllerTest {
 
     @Test
     void initTrackingReturnsOkResponse() {
+        //ARRANGE
         TrackerCreationRequest request = new TrackerCreationRequest();
         request.setRequestId("test-request-id");
-        request.setDeliveryDriverId("test-driver-id");
+        request.setUnifiedDeliveryDriver("test-driver-id");
         request.setProductType("test-product-type");
         Mono<TrackerCreationRequest> requestMono = Mono.just(request);
 
         when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.empty());
 
+        //ACT
         Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNext(ResponseEntity.status(HttpStatus.CREATED).build())
                 .verifyComplete();
@@ -48,13 +51,16 @@ class PaperTrackerEventControllerTest {
 
     @Test
     void initTrackingReturnsConflict() {
+        //ARRANGE
         TrackerCreationRequest request = new TrackerCreationRequest();
         Mono<TrackerCreationRequest> requestMono = Mono.just(request);
 
         when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.error(new PnPaperTrackerConflictException("Duplicated item", "Conflict")));
 
+        //ACT
         Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerConflictException
                         && "Conflict".equals(throwable.getMessage()))

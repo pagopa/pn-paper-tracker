@@ -16,7 +16,7 @@ public class PaperTrackingsMapper {
     public static PaperTrackings toPaperTrackings(TrackerCreationRequest trackerCreationRequest, Duration paperTrackingsTtlDuration) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(trackerCreationRequest.getRequestId());
-        paperTrackings.setDeliveryDriverId(trackerCreationRequest.getDeliveryDriverId());
+        paperTrackings.setUnifiedDeliveryDriver(trackerCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackerCreationRequest.getProductType()));
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;

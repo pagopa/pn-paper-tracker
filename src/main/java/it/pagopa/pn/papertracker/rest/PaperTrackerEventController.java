@@ -18,9 +18,18 @@ public class PaperTrackerEventController implements PaperTrackerEventApi {
 
     private final PaperTrackerEventService paperTrackerEventService;
 
+    /**
+     * Api chiamata da pn-paper-channel per inizializzare l'oggetto PaperTrackings.
+     * <p>
+     * Riceve una richiesta con i dati da salvare, la elabora tramite il servizio
+     * {@code paperTrackerEventService} e restituisce una risposta HTTP 201 (CREATED) se l'operazione ha successo.
+     *
+     * @param trackerCreationRequest richiesta con i dati da salvare
+     * @return status HTTP
+     */
     @Override
     public Mono<ResponseEntity<Void>> initTracking(Mono<TrackerCreationRequest> trackerCreationRequest, final ServerWebExchange exchange) {
-        log.debug("Received request trackingCreation - trackerCreationRequest={}", trackerCreationRequest);
+        log.debug("Received request initTracking - trackerCreationRequest={}", trackerCreationRequest);
 
         return trackerCreationRequest
                 .flatMap(paperTrackerEventService::insertPaperTrackings)
