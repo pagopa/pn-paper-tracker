@@ -15,6 +15,7 @@ public class PnPaperTrackerConfigs {
     private Dao dao;
     private String queueOcrInput;
     private String paperChannelBaseUrl;
+    private boolean sendOutputToDeliveryPush;
 
 
     @Data
