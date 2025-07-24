@@ -62,6 +62,16 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
+    /**
+     * Aggiorna un elemento PaperTrackings nel database DynamoDB, identificato dal requestId.
+     * L'aggiornamento viene eseguito solo se l'elemento esiste (condizione attribute_exists).
+     * Viene aggiornato anche il campo "updatedAt" con il timestamp corrente.
+     *
+     * @param requestId pk dell'oggetto PaperTrackings da aggiornare
+     * @param paperTrackings l'oggetto PaperTrackings con i nuovi valori da aggiornare
+     * @return un Mono contenente l'oggetto PaperTrackings aggiornato
+     * @throws PnPaperTrackerNotFoundException se l'elemento con il requestId specificato non esiste
+     */
     @Override
     public Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings) {
         log.info("Updating item with requestId: {}", requestId);
