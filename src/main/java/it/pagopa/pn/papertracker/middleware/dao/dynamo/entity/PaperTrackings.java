@@ -68,4 +68,12 @@ public class PaperTrackings {
         return schema.itemToMap(paperTrackings, true);
     }
 
+    /**
+     * Converts a Map<String, AttributeValue> to a PaperTrackings object.
+     */
+    public static PaperTrackings attributeValueMapToPaperTrackings(Map<String, AttributeValue> item) {
+        var schema = TableSchema.fromBean(PaperTrackings.class);
+        return schema.mapToItem(item);
+    }
+
 }

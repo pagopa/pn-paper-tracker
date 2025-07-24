@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,10 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
@@ -27,6 +31,7 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.ke
 public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements PaperTrackingsDAO {
 
     private final String ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM = "PN_PAPER_TRACKER_DUPLICATED_ITEM";
+    private final String ERROR_CODE_PAPER_TRACKER_NOT_FOUND = "PN_PAPER_TRACKER_NOT_FOUND";
 
     public PaperTrackingsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
@@ -58,11 +63,11 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     }
 
     @Override
-    public Mono<Void> updateItem(String requestId, Map<String, AttributeValue> attributeValueMap) {
-        log.info("attributeValueMap {}", attributeValueMap);
+    public Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings) {
+        log.info("Updating item with requestId: {}", requestId);
 
+        Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
         AtomicInteger counter = new AtomicInteger(0);
-
         Map<String, String> expressionAttributeNames = new HashMap<>();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         List<String> updateExpressions = new ArrayList<>();
@@ -82,65 +87,26 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         String updateExpr = "SET " + String.join(", ", updateExpressions);
 
+        String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_REQUEST_ID);
+
         log.info("updateExpr {}", updateExpr);
         log.info("expressionAttributeValues {}", expressionAttributeValues);
         log.info("expressionAttributeNames {}", expressionAttributeNames);
 
-        return update(
+        return updateIfExists(
                 Map.of("requestId", AttributeValue.builder().s(requestId).build()),
                 updateExpr,
                 expressionAttributeValues,
-                expressionAttributeNames
-        ).doOnError(e -> log.error("Error updating item with requestId {}: {}", requestId, e.getMessage()))
-                .then();
+                expressionAttributeNames,
+                conditionExpression
+        )
+                .map(updateItemResponse -> PaperTrackings.attributeValueMapToPaperTrackings(updateItemResponse.attributes()))
+                .doOnError(e -> log.error("Error updating item with requestId {}: {}", requestId, e.getMessage()))
+                .onErrorMap(ConditionalCheckFailedException.class, ex -> {
+                    log.error("Conditional check exception on PaperTrackingsDAOImpl updateTrackings requestId={} exmessage={}", requestId, ex.getMessage());
+                    return new PnPaperTrackerNotFoundException(ERROR_CODE_PAPER_TRACKER_NOT_FOUND, String.format("RequestId %s does not exist", requestId));
+                });
     }
 
-    /**
-     * Builds update expressions for DynamoDB based on the attribute type.
-     * <p>
-     * For list attributes, generates an expression to append to the list using {@code list_append} and {@code if_not_exists}.
-     * For map (inner object) attributes, generates expressions to update each inner key-value pair.
-     * For other attribute types, generates a simple assignment expression.
-     *
-     * @param key     The attribute key to update.
-     * @param value   The {@link AttributeValue} to set for the key.
-     * @param counter An {@link AtomicInteger} used to generate unique parameter names.
-     * @param names   A map of expression attribute names for DynamoDB.
-     * @param values  A map of expression attribute values for DynamoDB.
-     * @return A list of update expression strings for use in a DynamoDB update operation.
-     */
-    private List<String> buildUpdateExpressions(String key, AttributeValue value, AtomicInteger counter, Map<String, String> names, Map<String, AttributeValue> values) {
-        List<String> expressions = new ArrayList<>();
 
-        if (isListAttributeType(value)) {
-            int idx = counter.getAndIncrement();
-            names.put("#k" + idx, key);
-            values.put(":v" + idx, AttributeValue.builder().l(value.l()).build());
-            values.put(":empty" + idx, AttributeValue.builder().l(Collections.emptyList()).build());
-            expressions.add("#k" + idx + " = list_append(if_not_exists(" + "#k" + idx + ", " + ":empty" + idx + "), " + ":v" + idx + ")");
-
-        } else if (isInnerObjectAttributeType(value)) {
-            value.m().forEach((innerKey, innerVal) -> {
-                int idx = counter.getAndIncrement();
-                names.put("#k" + idx, key);
-                names.put("#k" + idx + "_inner", innerKey);
-                values.put(":v" + idx, innerVal);
-                expressions.add("#k" + idx + "." + "#k" + idx + "_inner" + " = " + ":v" + idx);
-            });
-        } else {
-            int idx = counter.getAndIncrement();
-            names.put("#k" + idx, key);
-            values.put(":v" + idx, value);
-            expressions.add("#k" + idx + " = " + ":v" + idx);
-        }
-        return expressions;
-    }
-
-    private static boolean isInnerObjectAttributeType(AttributeValue value) {
-        return value.m() != null && !value.m().isEmpty();
-    }
-
-    private static boolean isListAttributeType(AttributeValue value) {
-        return value.l() != null && !value.l().isEmpty();
-    }
 }
