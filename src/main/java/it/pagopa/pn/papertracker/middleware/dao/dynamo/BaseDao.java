@@ -4,7 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.*;
-import software.amazon.awssdk.enhanced.dynamodb.model.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
@@ -87,18 +90,17 @@ public class BaseDao<T> {
     }
 
     /**
-     * Builds update expressions for DynamoDB based on the attribute type.
-     * <p>
-     * For list attributes, generates an expression to append to the list using {@code list_append} and {@code if_not_exists}.
-     * For map (inner object) attributes, generates expressions to update each inner key-value pair.
-     * For other attribute types, generates a simple assignment expression.
+     * Costruisce updateExpression per DynamoDB in base al tipo di attributo fornito.
+     * Per gli attributi di tipo lista, genera un'espressione per aggiungere alla lista utilizzando {@code list_append} e {@code if_not_exists}.
+     * Per gli attributi di tipo mappa (oggetto annidato), genera espressioni per aggiornare ciascuna coppia chiave-valore interna.
+     * Per altri tipi di attributo, genera una semplice espressione di assegnazione.
      *
-     * @param key     The attribute key to update.
-     * @param value   The {@link AttributeValue} to set for the key.
-     * @param counter An {@link AtomicInteger} used to generate unique parameter names.
-     * @param names   A map of expression attribute names for DynamoDB.
-     * @param values  A map of expression attribute values for DynamoDB.
-     * @return A list of update expression strings for use in a DynamoDB update operation.
+     * @param key     La chiave dell'attributo da aggiornare
+     * @param value   Il valore dell'attributo da aggiornare
+     * @param counter Un contatore atomico utilizzato per generare indici univoci per i parametri
+     * @param names   Mappa dei nomi degli attributi per l'espressione DynamoDB
+     * @param values  Mappa dei valori degli attributi per l'espressione DynamoDB
+     * @return Una lista di espressioni di aggiornamento da utilizzare in una richiesta di update su DynamoDB
      */
     protected List<String> buildUpdateExpressions(String key, AttributeValue value, AtomicInteger counter, Map<String, String> names, Map<String, AttributeValue> values) {
         List<String> expressions = new ArrayList<>();

@@ -61,7 +61,7 @@ public class PaperTrackings {
     private Long ttl;
 
     /**
-     * Converts a PaperTrackings object to a Map<String, AttributeValue> for DynamoDB update.
+     * Converte l'entity PaperTrackings in una mappa {@code Map<String, AttributeValue>} utilizzata da DynamoDB.
      */
     public static Map<String, AttributeValue> paperTrackingsToAttributeValueMap(PaperTrackings paperTrackings) {
         var schema = TableSchema.fromBean(PaperTrackings.class);
@@ -69,7 +69,7 @@ public class PaperTrackings {
     }
 
     /**
-     * Converts a Map<String, AttributeValue> to a PaperTrackings object.
+     * Converte una mappa {@code Map<String, AttributeValue>} utilizzata da DynamoDB in una entity PaperTrackings.
      */
     public static PaperTrackings attributeValueMapToPaperTrackings(Map<String, AttributeValue> item) {
         var schema = TableSchema.fromBean(PaperTrackings.class);
