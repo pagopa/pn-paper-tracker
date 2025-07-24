@@ -42,10 +42,10 @@ paths:
     post:
       summary: Inserimento tracker
       description: >-
-        Permette l'inserimento di un evento di tracking restituendo l'entità creata
+        Permette l'inserimento di un evento di tracking
       tags:
         - PaperTrackerEvent
-      operationId: trackingCreation
+      operationId: initTracking
       requestBody:
         content:
           application/json:
@@ -361,11 +361,11 @@ components:
           type: string
           description: Tipo prodotto
           example: "AR"
-        deliveryDriverId:
+        unifiedDeliveryDriver:
           type: string
-          description: Id recapitista
+          description: unifiedDeliveryDriver pn-paper-tenders
       required:
         - requestId
         - productType
-        - deliveryDriverId
+        - unifiedDeliveryDriver
 
