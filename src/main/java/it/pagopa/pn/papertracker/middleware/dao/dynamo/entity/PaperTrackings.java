@@ -2,19 +2,13 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.util.HashMap;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
 
 @DynamoDbBean
 @Data
@@ -22,21 +16,27 @@ public class PaperTrackings {
 
     public static final String COL_REQUEST_ID = "requestId";
     public static final String COL_EVENTS = "events";
+    public static final String COL_NOTIFICATION_STATE = "notificationState";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_HAS_NEXT_PC_RETRY = "hasNextPcretry";
-    public static final String COL_DELIVERY_DRIVER_ID = "deliveryDriverId";
+    public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
+    public static final String COL_CREATED_AT = "createdAt";
+    public static final String COL_UPDATED_AT = "updatedAt";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_REQUEST_ID)}))
     private String requestId;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))
     private List<Event> events;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_STATE), @DynamoDbIgnoreNulls}))
+    private NotificationState notificationState;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
@@ -48,54 +48,24 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_HAS_NEXT_PC_RETRY)}))
     private Boolean hasNextPcretry;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_DRIVER_ID)}))
-    private String deliveryDriverId;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
+    private Instant createdAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
+    private Instant updatedAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
 
     /**
      * Converts a PaperTrackings object to a Map<String, AttributeValue> for DynamoDB update.
-     * We need to use dynamoDbAsyncClient.updateItem() to add element to the list of events.
-     * When event class is updated, this method should be updated accordingly.
      */
-    public static Map<String, AttributeValue> eventToAttributeValueMap(Event event) {
-        Map<String, AttributeValue> map = new HashMap<>();
-        putIfNotEmpty(map, Event.COL_REQUEST_TIMESTAMP, event.getRequestTimestamp());
-        putIfNotEmpty(map, Event.COL_STATUS_CODE, event.getStatusCode());
-        putIfNotEmpty(map, Event.COL_STATUS_TIMESTAMP, event.getStatusTimestamp());
-        putIfNotNull(map, Event.COL_PRODUCT_TYPE, event.getProductType(), ProductType::getValue);
-        putIfNotEmpty(map, Event.COL_DELIVERY_FAILURE_CAUSE, event.getDeliveryFailureCause());
-        putIfNotEmpty(map, Event.COL_DISCOVERED_ADDRESS, event.getDiscoveredAddress());
-        if (!CollectionUtils.isEmpty(event.getAttachments())) {
-            map.put(Event.COL_ATTACHMENTS, AttributeValue.builder().l(event.getAttachments().stream()
-                            .map(attachment -> AttributeValue.builder().m(attachmentToAttributeValueMap(attachment)).build())
-                            .filter(Objects::nonNull)
-                            .toList())
-                    .build());
-        }
-        return map;
-    }
-
-    private static Map<String, AttributeValue> attachmentToAttributeValueMap(Attachment attachment) {
-        Map<String, AttributeValue> map = new HashMap<>();
-        putIfNotEmpty(map, Attachment.COL_ID, attachment.getId());
-        putIfNotEmpty(map, Attachment.COL_DOCUMENT_TYPE, attachment.getDocumentType());
-        putIfNotEmpty(map, Attachment.COL_URL, attachment.getUrl());
-        putIfNotNull(map, Attachment.COL_DATE, attachment.getDate(), Object::toString);
-        return map;
-    }
-
-    private static void putIfNotEmpty(Map<String, AttributeValue> map, String key, String value) {
-        if (StringUtils.isNotEmpty(value)) {
-            map.put(key, AttributeValue.builder().s(value).build());
-        }
-    }
-
-    private static <T> void putIfNotNull(Map<String, AttributeValue> map, String key, T value, Function<T, String> mapper) {
-        if (Objects.nonNull(value)) {
-            map.put(key, AttributeValue.builder().s(mapper.apply(value)).build());
-        }
+    public static Map<String, AttributeValue> paperTrackingsToAttributeValueMap(PaperTrackings paperTrackings) {
+        var schema = TableSchema.fromBean(PaperTrackings.class);
+        return schema.itemToMap(paperTrackings, true);
     }
 
 }
