@@ -4,7 +4,9 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,13 +28,16 @@ class PaperTrackerEventServiceImplTest {
     private PaperTrackingsDAO paperTrackingsDAO;
 
     @Mock
+    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+
+    @Mock
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     private PaperTrackerEventServiceImpl paperTrackerEventService;
 
     @BeforeEach
     void setUp() {
-        paperTrackerEventService = new PaperTrackerEventServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs);
+        paperTrackerEventService = new PaperTrackerEventServiceImpl(paperTrackingsDAO, paperTrackingsErrorsDAO, pnPaperTrackerConfigs);
         Mockito.when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
     }
 
@@ -83,6 +88,21 @@ class PaperTrackerEventServiceImplTest {
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
+    }
+
+    @Test
+    void insertPaperTrackingsErrorsSuccessfully() {
+        //ARRANGE
+        PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
+
+        //ACT
+        Mono<Void> response = paperTrackerEventService.insertPaperTrackingsErrors(paperTrackingsErrors);
+
+        //ASSERT
+        StepVerifier.create(response)
+                .verifyComplete();
+        verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
     }
 
     private TrackerCreationRequest getTrackerCreationRequest() {
