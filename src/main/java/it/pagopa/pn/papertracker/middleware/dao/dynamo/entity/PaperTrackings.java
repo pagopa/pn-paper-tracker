@@ -24,6 +24,7 @@ public class PaperTrackings {
     public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
     public static final String COL_CREATED_AT = "createdAt";
     public static final String COL_UPDATED_AT = "updatedAt";
+    public static final String COL_STATE = "state";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
@@ -51,11 +52,14 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
     private String unifiedDeliveryDriver;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
+    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
     private Instant updatedAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
+    private PaperTrackingsState state;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
