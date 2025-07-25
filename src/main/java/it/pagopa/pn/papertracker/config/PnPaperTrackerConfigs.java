@@ -18,6 +18,7 @@ public class PnPaperTrackerConfigs {
     private String queueOcrInput;
     private String paperChannelBaseUrl;
     private Duration paperTrackingsTtlDuration;
+    private Topics topics;
 
 
     @Data
@@ -25,6 +26,11 @@ public class PnPaperTrackerConfigs {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
         private String paperTrackingsTable;
+    }
+
+    @Data
+    public static class Topics {
+        private String externalChannelToPaperTracker;
     }
 
 }
