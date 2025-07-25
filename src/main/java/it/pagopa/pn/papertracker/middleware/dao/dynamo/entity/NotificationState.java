@@ -4,8 +4,10 @@ import lombok.Data;
 import lombok.Getter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnoreNulls;
 
 import java.time.Instant;
+import java.util.List;
 
 @DynamoDbBean
 @Data
@@ -18,6 +20,7 @@ public class NotificationState {
     public static final String COL_VALIDATED_SEQUENCE_TIMESTAMP = "validatedSequenceTimestamp";
     public static final String COL_VALIDATED_ATTACHMENT_URI = "validatedAttachmentUri";
     public static final String COL_VALIDATED_ATTACHMENT_TYPE = "validatedAttachmentType";
+    public static final String COL_VALIDATED_EVENTS = "validatedEvents";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
@@ -40,4 +43,6 @@ public class NotificationState {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_TYPE)}))
     private String validatedAttachmentType;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_EVENTS), @DynamoDbIgnoreNulls}))
+    private List<Event> validatedEvents;
 }
