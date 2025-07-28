@@ -38,14 +38,14 @@ paths:
           description: Ok
         '500':
           description: Internal Server Error
-  '/paper-tracker-private/init':
+  '/paper-tracker-private/v1/init':
     post:
       summary: Inserimento tracker
       description: >-
-        Permette l'inserimento di un evento di tracking restituendo l'entità creata
+        Permette l'inserimento di un evento di tracking
       tags:
         - PaperTrackerEvent
-      operationId: trackingCreation
+      operationId: initTracking
       requestBody:
         content:
           application/json:
@@ -73,7 +73,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/events':
+  '/paper-tracker-private/v1/events':
     post:
       summary: Recupero eventi
       description: >-
@@ -106,7 +106,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/errors':
+  '/paper-tracker-private/v1/errors':
     post:
       summary: Recupero eventi
       description: >-
@@ -133,7 +133,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/outputs':
+  '/paper-tracker-private/v1/outputs':
     post:
       summary: Recupero eventi
       description: >-
@@ -361,11 +361,11 @@ components:
           type: string
           description: Tipo prodotto
           example: "AR"
-        deliveryDriverId:
+        unifiedDeliveryDriver:
           type: string
-          description: Id recapitista
+          description: unifiedDeliveryDriver pn-paper-tenders
       required:
         - requestId
         - productType
-        - deliveryDriverId
+        - unifiedDeliveryDriver
 

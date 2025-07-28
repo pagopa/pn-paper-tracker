@@ -8,6 +8,8 @@
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
     "externalChannelOutputsQueue": "-",
-    "externalChannelOutputsQueueUrl": "-"
+    "externalChannelOutputsQueueUrl": "-",
+    "queueOcrInputsUrl": "-",
+    "PaperTrackingsTtlDuration": "3650d"
   }
 }
