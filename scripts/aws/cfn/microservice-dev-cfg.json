@@ -8,6 +8,7 @@
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
     "EnableOcrValidation": "true",
-    "queueOcrInputsUrl": "-"
+    "queueOcrInputsUrl": "-",
+    "PaperTrackingsTtlDuration": "3650d"
   }
 }

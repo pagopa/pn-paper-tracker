@@ -188,6 +188,11 @@ Parameters:
     Type: String
     Description: 'OCR AWS account region'
 
+  PaperTrackingsTtlDuration:
+    Type: String
+    Default: 3650d
+    Description: 'DynamoDB PaperTrackings entity ttl duration'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -218,6 +223,7 @@ Resources:
         ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
         ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
         ContainerEnvEntry11: !Sub 'AWS_REGIONCODE=${AWS::Region}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION=${PaperTrackingsTtlDuration}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
