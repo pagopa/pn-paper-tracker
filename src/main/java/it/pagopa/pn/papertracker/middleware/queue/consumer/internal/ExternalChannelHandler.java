@@ -4,9 +4,15 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.ExternalChan
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.service.handler_step.RetrySender;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -14,6 +20,8 @@ import org.springframework.stereotype.Component;
 public class ExternalChannelHandler {
 
     private final StatusCodeConfiguration statusCodeConfiguration;
+    private final HandlersFactoryAr handlersFactoryAr;
+
 
     public void handleExternalChannelMessage(SingleStatusUpdate payload) {
         String statusCode = payload.getAnalogMail() != null ? payload.getAnalogMail().getStatusCode() : "";
@@ -25,6 +33,7 @@ public class ExternalChannelHandler {
         if (ProductType.AR.getValue().equals(productType)) {
             handleAREvent(payload, statusCode);
         }
+
     }
 
     private void handleAREvent(SingleStatusUpdate payload, String statusCode){
@@ -32,13 +41,13 @@ public class ExternalChannelHandler {
 
         if (ExternalChannelOutputsPayload.StatusCode.PROGRESS.equals(status)) {
             log.debug("Handling PROGRESS statusCode");
-            //TODO chiamare handler eventi intermedi
+            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
         } else if (ExternalChannelOutputsPayload.StatusCode.KO.equals(status)) {
             log.debug("Handling KO statusCode");
-            //TODO chiamare handler eventi retry
+            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
         } else {
             log.debug("Handling OK statusCode");
-            //TODO chiamare handler eventi finali
+            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
         }
     }
 }
