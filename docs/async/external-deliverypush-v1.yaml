@@ -28,11 +28,11 @@ operations:
     summary: >-
       Send event to the queue
     messages:
-      - $ref: '#/channels/pn-external_channel_outputs/messages/external_channel_outputs_event'
+      - $ref: '#/channels/pn-external_channel_outputs/messages/externalChannelOutputsEvent'
 
 components:
   messages:
-    external_channel_outputs_event:
+    externalChannelOutputsEvent:
       name: external_channel_outputs event
       title: outputs event
       summary: >-
