@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @ActiveProfiles("local")
@@ -23,8 +24,11 @@ public class PnPaperTrackerMiddlewareConfigs {
 
 
     @Bean
-    public OcrMomProducer ocrMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new OcrMomProducer(sqsClient, this.pnPaperChannelConfigs.getQueueOcrInput(), objMapper, OcrEvent.class);
+    public OcrMomProducer ocrMomProducer(ObjectMapper objMapper) {
+        SqsClient sqsClient = SqsClient.builder()
+                .region(Region.of(this.pnPaperChannelConfigs.getQueueOcrInputsRegion()))
+                .build();
+        return new OcrMomProducer(sqsClient, this.pnPaperChannelConfigs.getQueueOcrInput(), this.pnPaperChannelConfigs.getQueueOcrInputsUrl(), objMapper, OcrEvent.class);
     }
 }
 
