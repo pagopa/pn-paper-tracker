@@ -18,6 +18,7 @@ public class PnPaperTrackerConfigs {
     private String queueOcrInput;
     private String paperChannelBaseUrl;
     private Duration paperTrackingsTtlDuration;
+    private boolean sendOutputToDeliveryPush;
 
 
     @Data
