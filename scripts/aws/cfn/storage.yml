@@ -86,6 +86,7 @@ Resources:
       BillingMode: "PAY_PER_REQUEST"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
+
   PaperTrackingsTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -95,11 +96,15 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
+        - AttributeName: "createdAt"
+          AttributeType: "S"
         - AttributeName: "ocrRequestId"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
       GlobalSecondaryIndexes:
         - IndexName: "ocrRequestId-index"
           KeySchema:
