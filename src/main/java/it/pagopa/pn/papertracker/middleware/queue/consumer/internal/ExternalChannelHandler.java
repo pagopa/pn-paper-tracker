@@ -23,31 +23,52 @@ public class ExternalChannelHandler {
     private final HandlersFactoryAr handlersFactoryAr;
 
 
+    /**
+     * Riceve i messaggi provenienti dalla coda pn-external_channel_to_paper_tracker e gestisce, secondo il productType
+     * e statusCode, l'evento processandolo secondo l'handler adatto.
+     *
+     * @param payload il SingleStatusUpdate contenente le informazioni da processare
+     */
     public void handleExternalChannelMessage(SingleStatusUpdate payload) {
         String statusCode = payload.getAnalogMail() != null ? payload.getAnalogMail().getStatusCode() : "";
+        String productType = StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(statusCode)
+                .getProductType().getValue();
 
-        String productType = payload.getAnalogMail() != null ? payload.getAnalogMail().getProductType() : "";
         log.info("Handling external channel message with statusCode: {}, productType: {}",
-                statusCode, payload.getAnalogMail().getProductType());
+                statusCode, productType);
 
         if (ProductType.AR.getValue().equals(productType)) {
             handleAREvent(payload, statusCode);
         }
-
     }
 
+    /**
+     * Gestisce gli eventi di tipo AR (Analogue Mail) in base allo statusCode.
+     * A seconda dello statusCode, invoca l'handler appropriato per gestire l'evento.
+     *
+     * @param payload il SingleStatusUpdate contenente le informazioni da processare
+     * @param statusCode lo statusCode dell'evento
+     */
     private void handleAREvent(SingleStatusUpdate payload, String statusCode){
         ExternalChannelOutputsPayload.StatusCode status = statusCodeConfiguration.getStatusFromStatusCode(statusCode);
+        HandlerContext context = new HandlerContext();
+        context.setPaperProgressStatusEvent(payload.getAnalogMail());
 
-        if (ExternalChannelOutputsPayload.StatusCode.PROGRESS.equals(status)) {
-            log.debug("Handling PROGRESS statusCode");
-            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
-        } else if (ExternalChannelOutputsPayload.StatusCode.KO.equals(status)) {
-            log.debug("Handling KO statusCode");
-            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
-        } else {
-            log.debug("Handling OK statusCode");
-            handlersFactoryAr.buildEventsHandler(List.of(new RetrySender()), new HandlerContext());
+        switch (status) {
+            case PROGRESS:
+                log.debug("Handling PROGRESS statusCode");
+                handlersFactoryAr.buildIntermediateEventsHandler(context);
+                break;
+            case KO:
+                log.debug("Handling KO statusCode");
+                handlersFactoryAr.buildRetryEventHandler(context);
+                break;
+            case OK:
+                log.debug("Handling OK statusCode");
+                handlersFactoryAr.buildFinalEventsHandler(context);
+                break;
+            default:
+                log.error("Unhandled status code: {}", status);
         }
     }
 }

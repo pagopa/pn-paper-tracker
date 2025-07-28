@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class DeliveryPusheSender implements HandlerStep {
+public class DeliveryPushSender implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
