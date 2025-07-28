@@ -7,7 +7,6 @@
     "MountEfs": "false",
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
-    "EnableOcrValidation": "true",
     "queueOcrInputsUrl": "-",
     "PaperTrackingsTtlDuration": "3650d"
   }

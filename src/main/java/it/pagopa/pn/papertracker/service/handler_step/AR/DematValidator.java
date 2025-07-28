@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -51,7 +52,7 @@ public class DematValidator {
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking) {
         OcrEvent ocrEvent = buildOcrEvent(paperTracking);
         paperTracking.setOcrRequestId(ocrEvent.getPayload().getCommandId());
-        return paperTrackingsDAO.updateItem(paperTracking)
+        return paperTrackingsDAO.updateItem(paperTracking.getRequestId(), paperTracking)
                 .then(Mono.fromRunnable(() -> {
                     log.info("Push evento OCR su coda per requestId={}, ocrRequestId={}", paperTracking.getRequestId(), ocrEvent.getPayload().getCommandId());
                     ocrMomProducer.push(ocrEvent);
@@ -75,8 +76,8 @@ public class DematValidator {
                         .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
                         .details(
                                 DetailsDTO.builder()
-                                        .registeredLetterCode(paperTracking.getRegisteredLetterCode())
-                                        .notificationDate(LocalDateTime.parse(paperTracking.getValidationFlow().getValidatedSequenceTimestamp()))
+                                        .registeredLetterCode(paperTracking.getNotificationState().getRegisteredLetterCode())
+                                        .notificationDate(LocalDateTime.ofInstant(paperTracking.getValidationFlow().getSequencesValidationTimestamp(), ZoneId.systemDefault()))
                                         .build()
                         )
                         .build())
@@ -87,8 +88,9 @@ public class DematValidator {
 
     private Mono<Void> disableOcrAndUpdate(PaperTrackings paperTracking) {
         paperTracking.getValidationFlow().setOcrEnabled(false);
-        return paperTrackingsDAO.updateItem(paperTracking)
-                .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getRequestId()));
+        return paperTrackingsDAO.updateItem(paperTracking.getRequestId(), paperTracking)
+                .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getRequestId()))
+                .then();
     }
 
     private DataDTO.ProductType getProductType(PaperTrackings paperTracking) {
