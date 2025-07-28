@@ -26,9 +26,9 @@ public class PnPaperTrackerMiddlewareConfigs {
     @Bean
     public OcrMomProducer ocrMomProducer(ObjectMapper objMapper) {
         SqsClient sqsClient = SqsClient.builder()
-                .region(Region.of(this.pnPaperChannelConfigs.getQueueRegionOcrInputs()))
+                .region(Region.of(this.pnPaperChannelConfigs.getQueueOcrInputsRegion()))
                 .build();
-        return new OcrMomProducer(sqsClient, this.pnPaperChannelConfigs.getQueueOcrInput(), this.pnPaperChannelConfigs.getQueueOcrInputUrl(), objMapper, OcrEvent.class);
+        return new OcrMomProducer(sqsClient, this.pnPaperChannelConfigs.getQueueOcrInput(), this.pnPaperChannelConfigs.getQueueOcrInputsUrl(), objMapper, OcrEvent.class);
     }
 }
 

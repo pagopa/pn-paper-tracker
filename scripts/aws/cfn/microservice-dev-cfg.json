@@ -8,6 +8,6 @@
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
     "EnableOcrValidation": "true",
-    "queueOcrInputUrl": "-"
+    "queueOcrInputsUrl": "-"
   }
 }
