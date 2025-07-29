@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.core.io.ClassPathResource;
 import org.testcontainers.containers.BindMode;
@@ -21,6 +22,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
  * @Import(LocalStackTestConfig.class)
  */
 @TestConfiguration
+@Slf4j
 public class LocalStackTestConfig {
 
     static LocalStackContainer localStack =
@@ -32,6 +34,13 @@ public class LocalStackTestConfig {
                             "/root/.aws/credentials", BindMode.READ_ONLY)
                     .withNetworkAliases("localstack")
                     .withNetwork(Network.builder().build())
+                    // Add SSL disable environment variables
+                    .withEnv("DISABLE_SSL_CERT_VALIDATION", "1")
+                    .withEnv("SKIP_SSL_CERT_DOWNLOAD", "1")
+                    .withEnv("USE_SSL", "false")
+                    .withEnv("REQUESTS_CA_BUNDLE", "")
+                    .withEnv("CURL_CA_BUNDLE", "")
+                    .withEnv("DEBUG", "1")  // Optional: for better debugging
                     .waitingFor(Wait.forLogMessage(".*Initialization terminated.*", 1)
                             .withStartupTimeout(Duration.ofSeconds(180)));
 

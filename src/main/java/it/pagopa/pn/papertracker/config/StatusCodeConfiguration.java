@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,14 +43,14 @@ public class StatusCodeConfiguration {
 
         private final ExternalChannelCodeTypeEnum codeType;
         private final ProductType productType;
-        private final ExternalChannelOutputsPayload.StatusCode statusCode;
+        private final ExternalChannelOutputsPayload.StatusCode status;
         private final String statusCodeDescription;
 
         StatusCodeConfigurationEnum(ExternalChannelCodeTypeEnum codeType, ProductType productType,
-                                    ExternalChannelOutputsPayload.StatusCode statusCode, String statusCodeDescription) {
+                                    ExternalChannelOutputsPayload.StatusCode status, String statusCodeDescription) {
             this.codeType = codeType;
             this.productType = productType;
-            this.statusCode = statusCode;
+            this.status = status;
             this.statusCodeDescription = statusCodeDescription;
         }
 
@@ -68,5 +69,13 @@ public class StatusCodeConfiguration {
                         StatusCodeConfigurationEnum::name,
                         StatusCodeConfigurationEnum::getCodeType
                 ));
+    }
+
+    public ExternalChannelOutputsPayload.StatusCode getStatusFromStatusCode(String statusCode) {
+        return Stream.of(StatusCodeConfigurationEnum.values())
+                .filter(statusCodeEnum -> statusCodeEnum.name().equals(statusCode))
+                .findFirst()
+                .map(StatusCodeConfigurationEnum::getStatus)
+                .orElseThrow(() -> new IllegalArgumentException("No status found for status code: " + statusCode));
     }
 }

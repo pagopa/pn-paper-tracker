@@ -7,19 +7,27 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class DeliveryPushSender {
+@Component
+public class DeliveryPushSender implements HandlerStep {
 
     private final PnPaperTrackerConfigs configs;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
     private final ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
 
+    @Override
+    public Mono<Void> execute(HandlerContext context) {
+        return Mono.empty();
+    }
 
     /**
      * Invia i dati specificati al target di output configurato.
