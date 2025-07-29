@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -26,7 +27,10 @@ public class DeliveryPushSender implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.empty();
+        return Flux.fromIterable(context.getEventsToSend())
+                .zipWith(Mono.just(context.getPaperTrackings()))
+                .flatMap(tuple -> sendToOutputTarget(tuple.getT1(), tuple.getT2()))
+                .then();
     }
 
     /**
@@ -38,15 +42,21 @@ public class DeliveryPushSender implements HandlerStep {
      * @param event             evento da salvare nel target di output
      * @param paperTrackings    L'ogetto di paperTracking
      */
-    public void sendToOutputTarget(Event event, PaperTrackings paperTrackings) {
-        log.info("Sending delivery push for event: {}, paperTrackings: {}", event, paperTrackings);
-        if (configs.isSendOutputToDeliveryPush()) {
-            log.info("Sending event to pn-external_channel_outputs");
-            externalChannelOutputsMomProducer.push(ExternalChannelOutputEventMapper.buildExternalChannelOutputEvent(event, paperTrackings));
-        } else {
-            log.info("Sending event to PnPaperTrackerDryRunOutputs");
-            paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.buildDryRunOutput(event, paperTrackings));
-        }
+    public Mono<Void> sendToOutputTarget(Event event, PaperTrackings paperTrackings) {
+        return Mono.just(event)
+                .zipWith(Mono.just(paperTrackings))
+                .flatMap(tuple -> {
+                    log.info("Sending delivery push for event: {}, paperTrackings: {}", event, paperTrackings);
+                    if (configs.isSendOutputToDeliveryPush()) {
+                        log.info("Sending event to pn-external_channel_outputs");
+                        externalChannelOutputsMomProducer.push(ExternalChannelOutputEventMapper.buildExternalChannelOutputEvent(event, paperTrackings));
+                        return Mono.empty();
+                    } else {
+                        log.info("Sending event to PnPaperTrackerDryRunOutputs");
+                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.buildDryRunOutput(event, paperTrackings));
+                    }
+                })
+                .then();
     }
 
 }
