@@ -36,7 +36,7 @@ public class ExternalChannelOutputEventMapper {
                         .clientRequestTimeStamp(LocalDateTime.from(event.getRequestTimestamp().atZone(ZoneId.systemDefault())))
                         .statusCode(ExternalChannelOutputsPayload.StatusCode.valueOf(StatusCodeConfiguration
                                 .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
-                                .getStatusCode().getValue()))
+                                .getStatus().getValue()))
                         .statusDescription(StatusCodeConfiguration
                                 .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
                                 .getStatusCodeDescription())

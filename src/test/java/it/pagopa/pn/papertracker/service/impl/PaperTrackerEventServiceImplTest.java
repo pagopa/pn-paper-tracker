@@ -38,7 +38,6 @@ class PaperTrackerEventServiceImplTest {
     @BeforeEach
     void setUp() {
         paperTrackerEventService = new PaperTrackerEventServiceImpl(paperTrackingsDAO, paperTrackingsErrorsDAO, pnPaperTrackerConfigs);
-        Mockito.when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
     }
 
     @Test

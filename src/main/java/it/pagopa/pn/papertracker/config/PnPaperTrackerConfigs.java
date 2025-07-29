@@ -25,6 +25,7 @@ public class PnPaperTrackerConfigs {
     private String QueueOcrInputsRegion;
     private String externalChannelOutputsQueue;
     private String externalChannelOutputsQueueUrl;
+    private String externalChannelToPaperTrackerUrl;
 
     @Data
     public static class Dao {

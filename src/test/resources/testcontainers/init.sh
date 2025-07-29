@@ -2,7 +2,7 @@ echo " - Create pn-delayer TABLES"
 
 echo "### CREATE QUEUES ###"
 
-queues="pn-ocr_outputs dl-sqs"
+queues="pn-ocr_outputs dl-sqs pn-external_channel_to_paper_tracker"
 for qn in  $( echo $queues | tr " " "\n" ) ; do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
