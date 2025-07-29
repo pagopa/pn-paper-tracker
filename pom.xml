@@ -316,7 +316,7 @@
 						<configuration>
 							<specFiles>
 								<specFile>
-									<filePath>docs/async/external-datalake-v1.yaml</filePath>
+									<filePath>docs/asyncapi/external-datalake-v1.yaml</filePath>
 									<consumer>
 										<ids>OCR_Command</ids>
 										<classNamePostfix>CustomConsumer</classNamePostfix>
@@ -326,7 +326,7 @@
 									</consumer>
 								</specFile>
 								<specFile>
-									<filePath>docs/async/internal-datalake-v1.yaml</filePath>
+									<filePath>docs/asyncapi/internal-datalake-v1.yaml</filePath>
 									<supplier>
 										<ids>OCR_Result</ids>
 										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
@@ -334,7 +334,7 @@
 									</supplier>
 								</specFile>
 								<specFile>
-									<filePath>docs/async/external-deliverypush-v1.yaml</filePath>
+									<filePath>docs/asyncapi/external-deliverypush-v1.yaml</filePath>
 									<supplier>
 										<ids>ExternalChannelOutputs_Command</ids>
 										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>

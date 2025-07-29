@@ -19,7 +19,12 @@ public class PnPaperTrackerConfigs {
     private String paperChannelBaseUrl;
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
-
+    private boolean sendOutputToDeliveryPush;
+    private boolean enableOcrValidation;
+    private String queueOcrInputsUrl;
+    private String QueueOcrInputsRegion;
+    private String externalChannelOutputsQueue;
+    private String externalChannelOutputsQueueUrl;
 
     @Data
     public static class Dao {

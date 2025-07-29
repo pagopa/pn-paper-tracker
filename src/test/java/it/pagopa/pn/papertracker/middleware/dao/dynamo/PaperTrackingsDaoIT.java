@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,6 +25,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setRequestId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -40,6 +40,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getValidationFlow() == null;
                     assert retrieved.getOcrRequestId() == null;
                     assert retrieved.getHasNextPcretry() == null;
+                    assert retrieved.getState() == PaperTrackingsState.AWAITING_FINAL_STATUS_CODE;
                 })
                 .block();
 
@@ -60,6 +61,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         ValidationFlow validationFlow = new ValidationFlow();
         paperTrackings.setNotificationState(notificationState);
         paperTrackings.setValidationFlow(validationFlow);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -67,13 +69,24 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String ocrRequestId = "test-ocr-request-id";
         paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
         paperTrackingsToUpdate.setHasNextPcretry(true);
+        paperTrackingsToUpdate.setState(PaperTrackingsState.DONE);
         ValidationFlow validationFlow1 = new ValidationFlow();
         validationFlow1.setOcrEnabled(true);
         validationFlow1.setSequencesValidationTimestamp(Instant.now());
         paperTrackingsToUpdate.setValidationFlow(validationFlow1);
+        Attachment attachment = new Attachment();
+        attachment.setId("attachment-id-1");
+        attachment.setDocumentType("DOCUMENT_TYPE");
+        Event event = new Event();
+        event.setRequestTimestamp(Instant.now());
+        event.setStatusCode("RECRN004C");
+        event.setStatusTimestamp(Instant.now());
+        event.setProductType(ProductType.AR);
+        event.setAttachments(List.of(attachment));
         NotificationState notificationState1 = new NotificationState();
         notificationState1.setFinalStatusCode("RECRN005C");
         notificationState1.setDiscoveredAddress("address discovered");
+        notificationState1.setValidatedEvents(List.of(event));
         paperTrackingsToUpdate.setNotificationState(notificationState1);
 
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate)
@@ -83,6 +96,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert paperTrackingsUpdated.getHasNextPcretry() == Boolean.TRUE;
+                    assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
                     assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -91,6 +105,15 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getNotificationState().getFinalStatusCode().equals("RECRN005C");
                     assert paperTrackingsUpdated.getNotificationState().getDeliveryFailureCause().equals("M02");
                     assert paperTrackingsUpdated.getNotificationState().getDiscoveredAddress().equals("address discovered");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().size() == 1;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getStatusTimestamp() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().size() == 1;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
                 })
                 .block();
 
@@ -102,6 +125,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getHasNextPcretry() == Boolean.TRUE;
+                    assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
                     assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -110,6 +134,15 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getNotificationState().getFinalStatusCode().equals("RECRN005C");
                     assert retrieved.getNotificationState().getDeliveryFailureCause().equals("M02");
                     assert retrieved.getNotificationState().getDiscoveredAddress().equals("address discovered");
+                    assert retrieved.getNotificationState().getValidatedEvents() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().size() == 1;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getStatusTimestamp() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().size() == 1;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
                 })
                 .blockLast();
 
@@ -125,6 +158,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert paperTrackingsUpdated.getHasNextPcretry() == Boolean.TRUE;
+                    assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
                     assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -134,6 +168,15 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getNotificationState().getFinalStatusCode().equals("RECRN005C");
                     assert paperTrackingsUpdated.getNotificationState().getDeliveryFailureCause().equals("M02");
                     assert paperTrackingsUpdated.getNotificationState().getDiscoveredAddress().equals("address discovered");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().size() == 1;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getStatusTimestamp() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments() != null;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().size() == 1;
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
+                    assert paperTrackingsUpdated.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
                 })
                 .block();
 
@@ -144,6 +187,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getHasNextPcretry() == Boolean.TRUE;
+                    assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
                     assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
@@ -153,12 +197,21 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getNotificationState().getFinalStatusCode().equals("RECRN005C");
                     assert retrieved.getNotificationState().getDeliveryFailureCause().equals("M02");
                     assert retrieved.getNotificationState().getDiscoveredAddress().equals("address discovered");
+                    assert retrieved.getNotificationState().getValidatedEvents() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().size() == 1;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getStatusTimestamp() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments() != null;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().size() == 1;
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
+                    assert retrieved.getNotificationState().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
                 })
                 .blockLast();
     }
 
     @Test
-    void updateItemRequestIdNotExists(){
+    void updateItemRequestIdNotExists() {
         String requestId = "test-request-id";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
