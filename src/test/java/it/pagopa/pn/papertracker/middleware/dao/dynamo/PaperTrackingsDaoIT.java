@@ -21,8 +21,10 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     @Test
     void putIfAbsentAndRetrieveByRequestId() {
         String requestId = "test-request-id-1";
+        Instant createdAt = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
+        paperTrackings.setCreatedAt(createdAt);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
@@ -30,10 +32,11 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         // Then
-        paperTrackingsDAO.retrieveEntityByRequestId(requestId)
+        paperTrackingsDAO.retrieveEntityByRequestIdAndCreatedAt(requestId, createdAt)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
                     assert retrieved.getRequestId().equals(requestId);
+                    assert retrieved.getCreatedAt().equals(createdAt);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
@@ -52,8 +55,11 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     @Test
     void updateItemAndRetrieveByOcrRequestId() {
         String requestId = "test-request-id-2";
+        Instant createdAt = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
+        paperTrackings.setCreatedAt(createdAt);
+        paperTrackings.setOcrRequestId("test-ocr-request-id");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         NotificationState notificationState = new NotificationState();
@@ -89,7 +95,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         notificationState1.setValidatedEvents(List.of(event));
         paperTrackingsToUpdate.setNotificationState(notificationState1);
 
-        paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate)
+        paperTrackingsDAO.updateItem(requestId, createdAt, paperTrackingsToUpdate)
                 .doOnNext(paperTrackingsUpdated -> {
                     assert paperTrackingsUpdated != null;
                     assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
@@ -151,7 +157,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         validationFlow2.setDematValidationTimestamp(Instant.now());
         updateDematValidationTimestamp.setValidationFlow(validationFlow2);
 
-        paperTrackingsDAO.updateItem(requestId, updateDematValidationTimestamp)
+        paperTrackingsDAO.updateItem(requestId, createdAt, updateDematValidationTimestamp)
                 .doOnNext(paperTrackingsUpdated -> {
                     assert paperTrackingsUpdated != null;
                     assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
@@ -213,8 +219,10 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     @Test
     void updateItemRequestIdNotExists() {
         String requestId = "test-request-id";
+        Instant createdAt = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
+        paperTrackings.setCreatedAt(createdAt);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -222,7 +230,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String ocrRequestId = "test-ocr-request-id";
         paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
 
-        StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))
+        StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", createdAt, paperTrackingsToUpdate))
                 .expectError(PnPaperTrackerNotFoundException.class)
                 .verify();
     }
@@ -230,10 +238,12 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     @Test
     void addEvents() {
         String requestId = "test-request-id-3";
+        Instant createdAt = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setCreatedAt(createdAt);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -258,10 +268,10 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setAttachments(List.of(attachment, attachment2));
         paperTrackingsToUpdate.setEvents(List.of(event));
 
-        paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate).block();
+        paperTrackingsDAO.updateItem(requestId, createdAt, paperTrackingsToUpdate).block();
 
         // Then
-        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByRequestIdAndCreatedAt(requestId, createdAt).block();
         Assertions.assertNotNull(fisrtResponse);
         Assertions.assertNotNull(fisrtResponse.getEvents());
         Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
@@ -285,9 +295,9 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event2.setAttachments(List.of(attachment3));
         paperTrackingsToUpdate1.setEvents(List.of(event2));
 
-        paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate1).block();
+        paperTrackingsDAO.updateItem(requestId, createdAt, paperTrackingsToUpdate1).block();
 
-        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByRequestIdAndCreatedAt(requestId, createdAt).block();
         Assertions.assertNotNull(secondeResponse);
         Assertions.assertNotNull(secondeResponse.getEvents());
         Assertions.assertNotNull(secondeResponse.getUpdatedAt());
