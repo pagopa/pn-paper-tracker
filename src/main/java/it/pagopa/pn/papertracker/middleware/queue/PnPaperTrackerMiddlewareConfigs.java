@@ -2,7 +2,7 @@ package it.pagopa.pn.papertracker.middleware.queue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelOutputEvent;
+import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
@@ -35,7 +35,7 @@ public class PnPaperTrackerMiddlewareConfigs {
 
     @Bean
     public ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new ExternalChannelOutputsMomProducer(sqsClient, this.pnPaperChannelConfigs.getExternalChannelOutputsQueue(), this.pnPaperChannelConfigs.getExternalChannelOutputsQueueUrl(), objMapper, ExternalChannelOutputEvent.class);
+        return new ExternalChannelOutputsMomProducer(sqsClient, this.pnPaperChannelConfigs.getExternalChannelOutputsQueue(), this.pnPaperChannelConfigs.getExternalChannelOutputsQueueUrl(), objMapper, DeliveryPushEvent.class);
     }
 }
 
