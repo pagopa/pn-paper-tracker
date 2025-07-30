@@ -117,16 +117,27 @@ public class SequenceValidator {
 
     /**
      * Filtra la lista di eventi per ottenere solo gli ultimi eventi rilevanti.
-     * Nel caso di eventi contententi documenti, il codice prenderà gli eventi necessari per avere tutti gli eventi
-     * ancora da prendere. Ad esempio:
+     * Nel caso di eventi contententi documenti, il codice prenderà gli eventi che hanno un documento non presente nella
+     * mappa dei documenti già presi
      *<p>
-     * Per la seguente lista prenderemo i seguenti eventi
-     * RECRN002D
+     * Ad esempio per la seguente lista prenderemo i seguenti eventi
+     * -> RECRN002D
      * RECRN002E[INDAGINE]
-     * RECRN002E[PLICO]
-     * RECRN002E[INDAGINE]
+     * -> RECRN002E[PLICO]
+     * -> RECRN002E[INDAGINE]
      * RECRN002E[AR]
-     * RECRN002F
+     * -> RECRN002E[AR]
+     * -> RECRN002F
+     * <p>
+     * similmente nel caso di evento con più documenti, prende l'evento se uno tra i documenti dell'evento
+     * non è nella mappa ad esempio:
+     * -> RECRN002D
+     * RECRN002E[INDAGINE]
+     * -> RECRN002E[PLICO]
+     * RECRN002E[INDAGINE]
+     * -> RECRN002E[AR, INDAGINE]
+     * -> RECRN002E[AR]
+     * -> RECRN002F
      *
      * @param events lista di eventi da filtrare
      * @return Mono di eventi contenenti gli elementi filtrati dal metodo
