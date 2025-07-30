@@ -42,8 +42,8 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     }
 
     @Override
-    public Mono<PaperTrackings> retrieveEntityByRequestIdAndCreatedAt(String requestId, Instant createdAt) {
-        return getByKey(Key.builder().partitionValue(requestId).sortValue(createdAt.toString()).build());
+    public Mono<PaperTrackings> retrieveEntityByRequestId(String requestId) {
+        return getByKey(Key.builder().partitionValue(requestId).build());
     }
 
     @Override
@@ -68,14 +68,13 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
      * Viene aggiornato anche il campo "updatedAt" con il timestamp corrente.
      *
      * @param requestId pk dell'oggetto PaperTrackings da aggiornare
-     * @param createdAt sk dell'oggetto PaperTrackings da aggiornare
      * @param paperTrackings l'oggetto PaperTrackings con i nuovi valori da aggiornare
      * @return un Mono contenente l'oggetto PaperTrackings aggiornato
      * @throws PnPaperTrackerNotFoundException se l'elemento con il requestId specificato non esiste
      */
     @Override
-    public Mono<PaperTrackings> updateItem(String requestId, Instant createdAt, PaperTrackings paperTrackings) {
-        log.info("Updating item with requestId: {}, cretedAt: {}", requestId, createdAt);
+    public Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings) {
+        log.info("Updating item with requestId: {}", requestId);
 
         Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
         AtomicInteger counter = new AtomicInteger(0);
@@ -105,8 +104,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         log.info("expressionAttributeNames {}", expressionAttributeNames);
 
         return updateIfExists(
-                Map.of("requestId", AttributeValue.builder().s(requestId).build(),
-                        "createdAt", AttributeValue.builder().s(createdAt.toString()).build()),
+                Map.of("requestId", AttributeValue.builder().s(requestId).build()),
                 updateExpr,
                 expressionAttributeValues,
                 expressionAttributeNames,
