@@ -1,11 +1,14 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -15,10 +18,20 @@ public class MetadataUpserter implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(context.getPaperProgressStatusEvent())
+        return Mono.just(context)
+                .flatMap(this::discoveredAddressAnonimization)
                 .flatMap(PaperProgressStatusEventMapper::createPaperTrackingFromPaperProgressStatusEvent)
-                //TODO createdAt va bene che sia getStatusDateTime?
-                .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), context.getPaperProgressStatusEvent().getStatusDateTime().toInstant(), paperTrackings))
+                .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
                 .then();
+    }
+
+    private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
+        //TODO implementare l'anonimizzazione del discoveredAddress
+        if (!Objects.isNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
+            String anonimizedDiscoveredAddress = "";
+            handlerContext.setAnonimizedDiscoveredAddress(anonimizedDiscoveredAddress);
+        }
+
+        return Mono.just(handlerContext);
     }
 }

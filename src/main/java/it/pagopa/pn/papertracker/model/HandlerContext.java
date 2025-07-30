@@ -12,6 +12,7 @@ public class HandlerContext {
 
     private PaperProgressStatusEvent paperProgressStatusEvent;
     private PaperTrackings paperTrackings;
+    private String anonimizedDiscoveredAddress;
     private List<Event> eventsToSend;
 
 }
