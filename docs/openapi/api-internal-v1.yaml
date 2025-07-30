@@ -38,14 +38,14 @@ paths:
           description: Ok
         '500':
           description: Internal Server Error
-  '/paper-tracker-private/init':
+  '/paper-tracker-private/v1/init':
     post:
       summary: Inserimento tracker
       description: >-
-        Permette l'inserimento di un evento di tracking restituendo l'entità creata
+        Permette l'inserimento di un evento di tracking
       tags:
         - PaperTrackerEvent
-      operationId: trackingCreation
+      operationId: initTracking
       requestBody:
         content:
           application/json:
@@ -73,7 +73,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/events':
+  '/paper-tracker-private/v1/events':
     post:
       summary: Recupero eventi
       description: >-
@@ -106,7 +106,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/errors':
+  '/paper-tracker-private/v1/errors':
     post:
       summary: Recupero eventi
       description: >-
@@ -133,7 +133,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker/outputs':
+  '/paper-tracker-private/v1/outputs':
     post:
       summary: Recupero eventi
       description: >-
@@ -154,6 +154,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaperTrackerOutputsResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/paper-status/{prepareAnalogDomicileTimelineId}':
+    get:
+      summary: Stato eventi finali della spedizione
+      description: >-
+        Recupera lo stato degli eventi finali della spedizione. Se non specificato viene preso l'ultimo PC_RETRY.
+      tags:
+        - PaperStatus
+      operationId: paperStatus
+      parameters:
+        - in: path
+          name: prepareAnalogDomicileTimelineId
+          required: true
+          description: Timeline id dell'elemento PREPARE_ANALOG_DOMICILE
+          schema:
+            type: string
+          example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
+        - in: query
+          name: pcretry
+          required: false
+          schema:
+            type: string
+          description: Se non definito, viene recuperato di default l'ultimo PCRETRY disponibile
+          example: "PCRETRY_0"
+      responses:
+        '200':
+          description: returns PnPaperTrackerDryRunOutputs entities for each requestId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaperTrackerStatusResponse'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '404':
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '500':
           description: Internal Server Error
           content:
@@ -187,6 +235,28 @@ components:
         maxLength: 1024
 
   schemas:
+    PaperTrackerStatusResponse:
+      type: object
+      properties:
+        finalMetaStatusFound:
+          type: boolean
+        finalDemaStatusFound:
+          type: boolean
+          description: Ultimo demat ricevuto relativo alla tripletta
+        finalStatusFound:
+          type: boolean
+        finalMetaStatusCode:
+          type: string
+        finalDematStatusCode:
+          type: string
+        finalStatusCode:
+          type: string
+        finalMetaBusinessTimestamp:
+          type: string
+        finalDematBusinessTimestamp:
+          type: string
+        finalBusinessTimestamp:
+          type: string
     PaperTrackerRequest:
       type: object
       properties:
@@ -361,11 +431,11 @@ components:
           type: string
           description: Tipo prodotto
           example: "AR"
-        deliveryDriverId:
+        unifiedDeliveryDriver:
           type: string
-          description: Id recapitista
+          description: unifiedDeliveryDriver pn-paper-tenders
       required:
         - requestId
         - productType
-        - deliveryDriverId
+        - unifiedDeliveryDriver
 

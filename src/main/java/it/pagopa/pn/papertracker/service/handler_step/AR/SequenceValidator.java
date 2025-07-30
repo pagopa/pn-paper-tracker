@@ -40,9 +40,9 @@ public class SequenceValidator {
         log.info("Beginning validation for sequence for paper tracking : {}", paperTrackings);
         return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings.getRequestId(), paperTrackings.getProductType())
                 .flatMap(this::getOnlyLatestEvents)
+                .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings.getRequestId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateBusinessTimestamps(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateAttachments(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
-                .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings.getRequestId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings))
                 .flatMap(events -> paperTrackingsDAO.updateItem(buildPaperTrackings(paperTrackings)))
@@ -117,6 +117,16 @@ public class SequenceValidator {
 
     /**
      * Filtra la lista di eventi per ottenere solo gli ultimi eventi rilevanti.
+     * Nel caso di eventi contententi documenti, il codice prenderà gli eventi necessari per avere tutti gli eventi
+     * ancora da prendere. Ad esempio:
+     *<p>
+     * Per la seguente lista prenderemo i seguenti eventi
+     * RECRN002D
+     * RECRN002E[INDAGINE]
+     * RECRN002E[PLICO]
+     * RECRN002E[INDAGINE]
+     * RECRN002E[AR]
+     * RECRN002F
      *
      * @param events lista di eventi da filtrare
      * @return Mono di eventi contenenti gli elementi filtrati dal metodo

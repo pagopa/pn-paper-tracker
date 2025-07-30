@@ -81,7 +81,9 @@ class SequenceValidatorTest {
                 buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "", null),
                 buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "", "M01", List.of(DocumentTypeEnum.INDAGINE.getValue())),
                 buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(3), "", "M01", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "", null)
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "M01", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "", "M01", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
