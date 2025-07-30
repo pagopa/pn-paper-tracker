@@ -53,37 +53,37 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
-        when(paperTrackingsDAO.updateItem(any(), any(), any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(dematValidator.validateDemat(paperTrackings))
                 .verifyComplete();
 
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any(), any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
     }
 
     @Test
     void validateDemat_OcrDisabled_UpdatesItemAndDoesNotPushEvent() {
         when(cfg.isEnableOcrValidation()).thenReturn(false);
-        when(paperTrackingsDAO.updateItem(any(), any(), any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         StepVerifier.create(dematValidator.validateDemat(paperTrackings))
                 .verifyComplete();
 
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any(), any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, never()).push(any(OcrEvent.class));
     }
 
     @Test
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
-        when(paperTrackingsDAO.updateItem(any(), any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
 
         StepVerifier.create(dematValidator.validateDemat(paperTrackings))
                 .expectErrorMatches(e -> e instanceof RuntimeException && e.getMessage().contains("Errore durante la validazione Demat"))
                 .verify();
 
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any(), any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
 }
