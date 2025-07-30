@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 @Configuration
 @ConfigurationProperties(prefix = "pn.paper-tracker")
@@ -26,6 +27,9 @@ public class PnPaperTrackerConfigs {
     private String externalChannelOutputsQueue;
     private String externalChannelOutputsQueueUrl;
     private String externalChannelToPaperTrackerUrl;
+    private Duration compiutaGiacenzaArDuration;
+    private boolean enableTruncatedDateForRefinementCheck;
+    private Duration refinementDuration;
 
     @Data
     public static class Dao {
@@ -37,6 +41,14 @@ public class PnPaperTrackerConfigs {
     @Data
     public static class Topics {
         private String externalChannelToPaperTracker;
+    }
+
+    public Duration getRefinementDuration() {
+        if (this.refinementDuration == null) {
+            this.refinementDuration = Duration.of(10, ChronoUnit.DAYS);
+        }
+
+        return this.refinementDuration;
     }
 
 }

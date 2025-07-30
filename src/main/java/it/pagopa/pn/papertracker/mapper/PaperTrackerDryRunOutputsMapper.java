@@ -15,9 +15,7 @@ public class PaperTrackerDryRunOutputsMapper {
         dryRunOutput.setCreated(Instant.now());
         dryRunOutput.setRegisteredLetterCode(paperTrackings.getNotificationState().getRegisteredLetterCode());
         dryRunOutput.setStatusCode(event.getStatusCode());
-        dryRunOutput.setStatusDetail(StatusCodeConfiguration
-                .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
-                .getStatus().getValue());
+        dryRunOutput.setStatusDetail(event.getEventStatus().name());
         dryRunOutput.setStatusDescription(StatusCodeConfiguration
                 .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
                 .getStatusCodeDescription());

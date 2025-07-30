@@ -34,9 +34,7 @@ public class ExternalChannelOutputEventMapper {
                         .discoveredAddress(paperTrackings.getNotificationState().getDiscoveredAddress())
                         .statusDateTime(LocalDateTime.from(event.getStatusTimestamp().atZone(ZoneId.systemDefault())))
                         .clientRequestTimeStamp(LocalDateTime.from(event.getRequestTimestamp().atZone(ZoneId.systemDefault())))
-                        .statusCode(ExternalChannelOutputsPayload.StatusCode.valueOf(StatusCodeConfiguration
-                                .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
-                                .getStatus().getValue()))
+                        .statusCode(ExternalChannelOutputsPayload.StatusCode.valueOf(event.getEventStatus().name()))
                         .statusDescription(StatusCodeConfiguration
                                 .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
                                 .getStatusCodeDescription())

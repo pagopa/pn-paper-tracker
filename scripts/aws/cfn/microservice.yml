@@ -201,6 +201,21 @@ Parameters:
     Type: String
     Description: 'URL of the SQS queue where external channel outputs are sent'
 
+  CompiutaGiacenzaArDuration:
+    Type: String
+    Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
+
+  EnableTruncatedDateForRefinementCheck:
+    Type: String
+    Description: 'If enabled truncate datetime to local date for refinement check'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+  RefinementDuration:
+    Type: String
+    Description: 'Duration for refinement'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -234,6 +249,9 @@ Resources:
         ContainerEnvEntry12: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelOutputsQueue}'
         ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUEURL=${ExternalChannelOutputsQueueUrl}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

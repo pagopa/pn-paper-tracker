@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.NotificationState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelOutputEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.model.EventStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -50,6 +51,7 @@ class DeliveryPushSenderTest {
         event.setAttachments(Collections.singletonList(attachment));
         event.setStatusTimestamp(Instant.now());
         event.setRequestTimestamp(Instant.now());
+        event.setEventStatus(EventStatus.OK);
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId("REQUEST_ID");
@@ -76,6 +78,7 @@ class DeliveryPushSenderTest {
         event.setAttachments(Collections.singletonList(attachment));
         event.setStatusTimestamp(Instant.now());
         event.setRequestTimestamp(Instant.now());
+        event.setEventStatus(EventStatus.OK);
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId("REQUEST_ID");
@@ -103,6 +106,7 @@ class DeliveryPushSenderTest {
         event.setAttachments(Collections.singletonList(attachment));
         event.setStatusTimestamp(Instant.now());
         event.setRequestTimestamp(Instant.now());
+        event.setEventStatus(EventStatus.OK);
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId("REQUEST_ID");
