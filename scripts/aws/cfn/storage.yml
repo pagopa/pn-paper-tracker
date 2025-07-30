@@ -96,15 +96,11 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "requestId"
           AttributeType: "S"
-        - AttributeName: "createdAt"
-          AttributeType: "S"
         - AttributeName: "ocrRequestId"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "requestId"
           KeyType: "HASH"
-        - AttributeName: "createdAt"
-          KeyType: "RANGE"
       GlobalSecondaryIndexes:
         - IndexName: "ocrRequestId-index"
           KeySchema:
