@@ -1,16 +1,18 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import com.sngular.apigenerator.asyncapi.business_model.model.event.ExternalChannelOutputsPayload;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelOutputEvent;
+import it.pagopa.pn.papertracker.model.EventStatus;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public class ExternalChannelOutputEventMapper {
@@ -23,33 +25,33 @@ public class ExternalChannelOutputEventMapper {
                         .createdAt( Instant.now() )
                         .eventType("")
                         .build())
-                .payload( ExternalChannelOutputsPayload.builder()
-                        .requestId(paperTrackings.getRequestId())
-                        .attachments(event.getAttachments().stream()
-                                .map(ExternalChannelOutputEventMapper::buildAttachmentForExternalChannelOutputEvent)
-                                .toList())
-                        .created(LocalDateTime.from(Instant.now().atZone(ZoneId.systemDefault())))
-                        .registeredLetterCode(paperTrackings.getNotificationState().getRegisteredLetterCode())
-                        .deliveryFailureCause(event.getDeliveryFailureCause())
-                        .discoveredAddress(paperTrackings.getNotificationState().getDiscoveredAddress())
-                        .statusDateTime(LocalDateTime.from(event.getStatusTimestamp().atZone(ZoneId.systemDefault())))
-                        .clientRequestTimeStamp(LocalDateTime.from(event.getRequestTimestamp().atZone(ZoneId.systemDefault())))
-                        .statusCode(ExternalChannelOutputsPayload.StatusCode.valueOf(StatusCodeConfiguration
-                                .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
-                                .getStatus().getValue()))
-                        .statusDescription(StatusCodeConfiguration
-                                .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
-                                .getStatusCodeDescription())
+                .payload( SingleStatusUpdate.builder()
+                        .analogMail(
+                                //TODO aggiungere discoered
+                                PaperProgressStatusEvent.builder()
+                                    .requestId(paperTrackings.getRequestId())
+                                    .attachments(event.getAttachments().stream()
+                                            .map(ExternalChannelOutputEventMapper::buildAttachmentForExternalChannelOutputEvent)
+                                            .toList())
+                                    .registeredLetterCode(paperTrackings.getNotificationState().getRegisteredLetterCode())
+                                    .deliveryFailureCause(event.getDeliveryFailureCause())
+                                    .statusDateTime(OffsetDateTime.from(event.getStatusTimestamp()))
+                                    .clientRequestTimeStamp(OffsetDateTime.from(event.getRequestTimestamp()))
+                                    .statusCode(EventStatus.valueOf(event.getStatusCode()).name())
+                                    .statusDescription(StatusCodeConfiguration
+                                            .StatusCodeConfigurationEnum.fromKey(event.getStatusCode())
+                                            .getStatusCodeDescription())
+                                        .build())
                         .build())
                 .build();
     }
 
-    public static com.sngular.apigenerator.asyncapi.business_model.model.event.Attachment buildAttachmentForExternalChannelOutputEvent(Attachment attachment) {
-        return com.sngular.apigenerator.asyncapi.business_model.model.event.Attachment.builder()
-                .date(attachment.getDate().toString())
+    public static AttachmentDetails buildAttachmentForExternalChannelOutputEvent(Attachment attachment) {
+        return AttachmentDetails.builder()
+                .date(OffsetDateTime.from(attachment.getDate()))
                 .id(attachment.getId())
                 .documentType(attachment.getDocumentType())
-                .url(attachment.getUrl())
+                .uri(attachment.getUrl())
                 .build();
     }
 }
