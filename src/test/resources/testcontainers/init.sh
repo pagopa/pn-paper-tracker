@@ -11,6 +11,9 @@ for qn in $(echo $queues | tr " " "\n"); do
     echo "Queue $qn created successfully"
 done
 
+
+awslocal sqs list-queues
+
 echo " - Create pn-paper-tracker TABLES"
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \

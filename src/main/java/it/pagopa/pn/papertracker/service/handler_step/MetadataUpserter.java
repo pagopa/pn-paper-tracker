@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -27,7 +26,7 @@ public class MetadataUpserter implements HandlerStep {
 
     private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
         //TODO implementare l'anonimizzazione del discoveredAddress
-        if (!Objects.isNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
+        if (Objects.nonNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
             String anonimizedDiscoveredAddress = "";
             handlerContext.setAnonimizedDiscoveredAddress(anonimizedDiscoveredAddress);
         }

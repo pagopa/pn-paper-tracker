@@ -1,10 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.DeliveryPushSender;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
-import it.pagopa.pn.papertracker.service.handler_step.HandlersFactory;
-import it.pagopa.pn.papertracker.service.handler_step.MetadataUpserter;
+import it.pagopa.pn.papertracker.service.handler_step.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +16,7 @@ import java.util.List;
 public class HandlersFactoryAr implements HandlersFactory {
     private final MetadataUpserter metadataUpserter;
     private final DeliveryPushSender deliveryPushSender;
+    private final IntermediateEventsBuilder intermediateEventsBuilder;
 
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
@@ -55,7 +53,7 @@ public class HandlersFactoryAr implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
-                        //TODO aggiungere costruzione evento/i intermedi
+                        intermediateEventsBuilder,
                         deliveryPushSender
                 ), context);
     }
