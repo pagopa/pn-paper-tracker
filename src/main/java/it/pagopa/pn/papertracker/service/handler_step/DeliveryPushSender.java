@@ -1,19 +1,25 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
+import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.mapper.ExternalChannelOutputEventMapper;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -40,20 +46,31 @@ public class DeliveryPushSender implements HandlerStep {
      * Per configurare il target di output si utilizza un flag sendToDeliveryPushFlag
      *
      * @param event             evento da salvare nel target di output
-     * @param paperTrackings    L'ogetto di paperTracking
      */
     public Mono<Void> sendToOutputTarget(Event event, PaperTrackings paperTrackings) {
         return Mono.just(event)
                 .zipWith(Mono.just(paperTrackings))
                 .flatMap(tuple -> {
-                    log.info("Sending delivery push for event: {}, paperTrackings: {}", event, paperTrackings);
+                    log.info("Sending delivery push for event: {}", event);
                     if (configs.isSendOutputToDeliveryPush()) {
+                        if(StringUtils.hasText(discoveredAddress)){
+                            //todo deanonimizzare l'indirizzo e set nel SendEvent
+                        }
                         log.info("Sending event to pn-external_channel_outputs");
-                        externalChannelOutputsMomProducer.push(ExternalChannelOutputEventMapper.buildExternalChannelOutputEvent(event, paperTrackings));
-                        return Mono.empty();
+                        DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
+                                .builder()
+                                .payload(PaperChannelUpdate.builder().sendEvent(event).build())
+                                .header( GenericEventHeader.builder()
+                                        .publisher("pn-paper-tracking")
+                                        .eventId(UUID.randomUUID().toString())
+                                        .createdAt( Instant.now() )
+                                        .eventType("")
+                                        .build())
+                                .build();
+                        externalChannelOutputsMomProducer.push(deliveryPushEvent);
                     } else {
                         log.info("Sending event to PnPaperTrackerDryRunOutputs");
-                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.buildDryRunOutput(event, paperTrackings));
+                        paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(event, discoveredAddress));
                     }
                 })
                 .then();

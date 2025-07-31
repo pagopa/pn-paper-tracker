@@ -1,22 +1,17 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
-import com.sngular.apigenerator.asyncapi.business_model.model.event.ExternalChannelOutputsPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
-import it.pagopa.pn.papertracker.service.handler_step.RetrySender;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -66,7 +61,7 @@ public class ExternalChannelHandler {
      * @param statusCode lo statusCode dell'evento
      */
     private Mono<Void> handleAREvent(SingleStatusUpdate payload, String statusCode){
-        ExternalChannelOutputsPayload.StatusCode status = statusCodeConfiguration.getStatusFromStatusCode(statusCode);
+        EventStatus status = statusCodeConfiguration.getStatusFromStatusCode(statusCode);
         HandlerContext context = new HandlerContext();
         context.setPaperProgressStatusEvent(payload.getAnalogMail());
 
