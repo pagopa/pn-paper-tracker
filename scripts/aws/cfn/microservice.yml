@@ -193,13 +193,9 @@ Parameters:
     Default: 3650d
     Description: 'DynamoDB PaperTrackings entity ttl duration'
 
-  ExternalChannelOutputsQueue:
+  ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
-
-  ExternalChannelOutputsQueueUrl:
-    Type: String
-    Description: 'URL of the SQS queue where external channel outputs are sent'
 
 Resources:
 
@@ -232,8 +228,7 @@ Resources:
         ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
         ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
         ContainerEnvEntry12: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelOutputsQueue}'
-        ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUEURL=${ExternalChannelOutputsQueueUrl}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

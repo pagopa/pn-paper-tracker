@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.model;
 
-public enum ExternalChannelCodeTypeEnum {
+public enum EventStatusCodeTypeEnum {
     INTERMEDIATE_STATUS,
     FINAL_STATUS
 }

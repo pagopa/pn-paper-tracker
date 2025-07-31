@@ -35,7 +35,7 @@ public class PnPaperTrackerMiddlewareConfigs {
 
     @Bean
     public ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new ExternalChannelOutputsMomProducer(sqsClient, this.pnPaperChannelConfigs.getExternalChannelOutputsQueue(), this.pnPaperChannelConfigs.getExternalChannelOutputsQueueUrl(), objMapper, DeliveryPushEvent.class);
+        return new ExternalChannelOutputsMomProducer(sqsClient, this.pnPaperChannelConfigs.getExternalChannelOutputsQueue(), objMapper, DeliveryPushEvent.class);
     }
 }
 
