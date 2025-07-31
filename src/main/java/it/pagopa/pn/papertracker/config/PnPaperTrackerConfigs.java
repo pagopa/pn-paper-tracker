@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import java.time.Duration;
+
 @Configuration
 @ConfigurationProperties(prefix = "pn.paper-tracker")
 @Data
@@ -15,13 +17,25 @@ public class PnPaperTrackerConfigs {
     private Dao dao;
     private String queueOcrInput;
     private String paperChannelBaseUrl;
-
+    private Duration paperTrackingsTtlDuration;
+    private Topics topics;
+    private boolean sendOutputToDeliveryPush;
+    private boolean enableOcrValidation;
+    private String queueOcrInputsUrl;
+    private String QueueOcrInputsRegion;
+    private String externalChannelOutputsQueue;
+    private String externalChannelToPaperTrackerUrl;
 
     @Data
     public static class Dao {
         private String paperTrackingsErrorsTable;
         private String paperTrackerDryRunOutputsTable;
         private String paperTrackingsTable;
+    }
+
+    @Data
+    public static class Topics {
+        private String externalChannelToPaperTracker;
     }
 
 }

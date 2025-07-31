@@ -1,0 +1,16 @@
+package it.pagopa.pn.papertracker.service.handler_step;
+
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+
+public interface HandlersFactory {
+
+    Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context);
+    Mono<Void> buildFinalEventsHandler(HandlerContext context);
+    Mono<Void> buildIntermediateEventsHandler(HandlerContext context);
+    Mono<Void> buildRetryEventHandler(HandlerContext context);
+    Mono<Void> buildOcrResponseHandler(HandlerContext context);
+
+}

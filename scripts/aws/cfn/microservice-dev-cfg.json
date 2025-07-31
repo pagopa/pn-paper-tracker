@@ -6,6 +6,8 @@
     "WireTapLogActivation": "false",
     "MountEfs": "false",
     "PnOcrInputQueueARN": "-",
-    "PnOcrInputQueueUrl": "-"
+    "PnOcrInputQueueUrl": "-",
+    "queueOcrInputsUrl": "-",
+    "PaperTrackingsTtlDuration": "3650d"
   }
 }

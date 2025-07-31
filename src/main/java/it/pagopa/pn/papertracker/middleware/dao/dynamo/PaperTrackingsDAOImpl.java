@@ -2,8 +2,8 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,8 +16,11 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
@@ -28,6 +31,7 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.ke
 public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements PaperTrackingsDAO {
 
     private final String ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM = "PN_PAPER_TRACKER_DUPLICATED_ITEM";
+    private final String ERROR_CODE_PAPER_TRACKER_NOT_FOUND = "PN_PAPER_TRACKER_NOT_FOUND";
 
     public PaperTrackingsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
@@ -58,30 +62,60 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
-
+    /**
+     * Aggiorna un elemento PaperTrackings nel database DynamoDB, identificato dal requestId.
+     * L'aggiornamento viene eseguito solo se l'elemento esiste (condizione attribute_exists).
+     * Viene aggiornato anche il campo "updatedAt" con il timestamp corrente.
+     *
+     * @param requestId pk dell'oggetto PaperTrackings da aggiornare
+     * @param paperTrackings l'oggetto PaperTrackings con i nuovi valori da aggiornare
+     * @return un Mono contenente l'oggetto PaperTrackings aggiornato
+     * @throws PnPaperTrackerNotFoundException se l'elemento con il requestId specificato non esiste
+     */
     @Override
-    public Mono<Void> updateItem(PaperTrackings paperTrackings) {
-        return updateEntity(paperTrackings)
-                .doOnSuccess(r -> log.info("Validation flow updated successfully for requestId={}", paperTrackings.getRequestId()))
-                .doOnError(e -> log.error("Error updating validation flow for requestId {}: {}", paperTrackings.getRequestId(), e.getMessage()))
-                .then();
-    }
+    public Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings) {
+        log.info("Updating item with requestId: {}", requestId);
 
-    @Override
-    public Mono<Void> addEvents(String requestId, Event event) {
-        String updateExpression = "SET #events = list_append(if_not_exists(#events, :empty_list), :new_event), #updatedAt = :updatedAt";
-        Map<String, AttributeValue> key = Map.of(PaperTrackings.COL_REQUEST_ID, AttributeValue.builder().s(requestId).build());
-        Map<String, String> expressionAttributeNames = Map.of("#events", PaperTrackings.COL_EVENTS,
-                "#updatedAt", PaperTrackings.COL_UPDATED_AT);
-        Map<String, AttributeValue> expressionAttributeValues = Map.of(
-                ":new_event", AttributeValue.builder().l(Collections.singletonList(AttributeValue.builder().m(PaperTrackings.eventToAttributeValueMap(event)).build())).build(),
-                ":empty_list", AttributeValue.builder().l(Collections.emptyList()).build(),
-                ":updatedAt", AttributeValue.builder().s(Instant.now().toString()).build()
-        );
+        Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
+        AtomicInteger counter = new AtomicInteger(0);
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        List<String> updateExpressions = new ArrayList<>();
 
-        return update(key, updateExpression, expressionAttributeValues, expressionAttributeNames)
+        expressionAttributeNames.put("#updatedAt", PaperTrackings.COL_UPDATED_AT);
+        expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(Instant.now().toString()).build());
+        updateExpressions.add("#updatedAt = :updatedAt");
+
+        attributeValueMap.forEach((key, value) -> {
+            List<String> expressions = buildUpdateExpressions(
+                    key, value, counter, expressionAttributeNames, expressionAttributeValues
+            );
+            updateExpressions.addAll(expressions);
+        });
+
+        if (updateExpressions.isEmpty()) return Mono.empty();
+
+        String updateExpr = "SET " + String.join(", ", updateExpressions);
+
+        String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_REQUEST_ID);
+
+        log.info("updateExpr {}", updateExpr);
+        log.info("expressionAttributeValues {}", expressionAttributeValues);
+        log.info("expressionAttributeNames {}", expressionAttributeNames);
+
+        return updateIfExists(
+                Map.of("requestId", AttributeValue.builder().s(requestId).build()),
+                updateExpr,
+                expressionAttributeValues,
+                expressionAttributeNames,
+                conditionExpression
+        )
+                .map(updateItemResponse -> PaperTrackings.attributeValueMapToPaperTrackings(updateItemResponse.attributes()))
                 .doOnError(e -> log.error("Error updating item with requestId {}: {}", requestId, e.getMessage()))
-                .then();
+                .onErrorMap(ConditionalCheckFailedException.class, ex -> {
+                    log.error("Conditional check exception on PaperTrackingsDAOImpl updateTrackings requestId={} exmessage={}", requestId, ex.getMessage());
+                    return new PnPaperTrackerNotFoundException(ERROR_CODE_PAPER_TRACKER_NOT_FOUND, String.format("RequestId %s does not exist", requestId));
+                });
     }
 
 
