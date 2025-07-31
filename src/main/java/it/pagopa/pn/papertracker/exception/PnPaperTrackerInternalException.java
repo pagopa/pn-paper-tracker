@@ -1,10 +1,13 @@
 package it.pagopa.pn.papertracker.exception;
 
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+
+import java.time.Instant;
+import java.util.List;
 
 public class PnPaperTrackerInternalException extends RuntimeException {
 
-    public PnPaperTrackerInternalException(String message, PaperTrackingsErrors error) {
+    public PnPaperTrackerInternalException(String message, List<Event> events, String requestId, ProductType productType) {
         super(message);
         PaperTrackingsErrors error = buildPaperTrackingsError(events, requestId, productType);
     }

@@ -58,14 +58,14 @@ class SequenceValidatorTest {
                 buildEvent("RECRN003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "", "", null)
         ));
 
-        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
@@ -86,14 +86,14 @@ class SequenceValidatorTest {
                 buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "", "", null)
         ));
 
-        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
@@ -110,14 +110,14 @@ class SequenceValidatorTest {
                 buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
-        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
@@ -133,14 +133,14 @@ class SequenceValidatorTest {
                 buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M01", List.of(DocumentTypeEnum.AR.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
                 buildEvent("RECRN002F", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
-        when(paperTrackingsDAO.updateItem(any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(1)).updateItem(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test

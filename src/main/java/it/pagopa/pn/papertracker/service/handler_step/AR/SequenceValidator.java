@@ -45,7 +45,7 @@ public class SequenceValidator {
                 .flatMap(events -> validateAttachments(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings))
-                .flatMap(events -> paperTrackingsDAO.updateItem(buildPaperTrackings(paperTrackings)))
+                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getRequestId(), buildPaperTrackings(paperTrackings)))
                 .then();
     }
 
