@@ -16,6 +16,17 @@ awslocal sqs list-queues
 
 echo " - Create pn-paper-tracker TABLES"
 
+echo "### CREATE QUEUES ###"
+
+queues="pn-ocr_outputs dl-sqs"
+for qn in  $( echo $queues | tr " " "\n" ) ; do
+    echo creating queue $qn ...
+    aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+        sqs create-queue \
+        --attributes '{"DelaySeconds":"2"}' \
+        --queue-name $qn
+done
+
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
     --table-name pn-PaperTrackerDryRunOutputs  \

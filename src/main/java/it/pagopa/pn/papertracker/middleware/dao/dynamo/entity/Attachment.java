@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
@@ -9,6 +10,7 @@ import java.time.Instant;
 
 @DynamoDbBean
 @Data
+@NoArgsConstructor
 public class Attachment {
 
     public static final String COL_ID = "id";
