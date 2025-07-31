@@ -176,6 +176,23 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
+  EnableOcrValidation:
+    Type: String
+    Description: 'Feature flag for enabling OCR validation'
+
+  QueueOcrInputsUrl:
+    Type: String
+    Description: 'URL of the SQS queue where OCR request are sent'
+
+  QueueOcrInputsRegion:
+    Type: String
+    Description: 'OCR AWS account region'
+
+  PaperTrackingsTtlDuration:
+    Type: String
+    Default: 3650d
+    Description: 'DynamoDB PaperTrackings entity ttl duration'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
@@ -206,7 +223,12 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
         ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION=${PaperTrackingsTtlDuration}'
+        ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER=${ExternalChannelToPaperTrackerQueueName}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
+        ContainerEnvEntry12: !Sub 'AWS_REGIONCODE=${AWS::Region}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

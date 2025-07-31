@@ -86,6 +86,7 @@ Resources:
       BillingMode: "PAY_PER_REQUEST"
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
+
   PaperTrackingsTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
