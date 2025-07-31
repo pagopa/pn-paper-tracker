@@ -3,10 +3,9 @@ package it.pagopa.pn.papertracker.service.handler_step;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -34,8 +33,8 @@ public class DeliveryPushSender implements HandlerStep {
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
-                .zipWith(Mono.just(context.getPaperTrackings()))
-                .flatMap(tuple -> sendToOutputTarget(tuple.getT1(), tuple.getT2()))
+                .zipWith(Mono.just(context))
+                .flatMap(tuple -> sendToOutputTarget(tuple.getT1(), tuple.getT2().getAnonimizedDiscoveredAddress()))
                 .then();
     }
 
@@ -47,9 +46,8 @@ public class DeliveryPushSender implements HandlerStep {
      *
      * @param event             evento da salvare nel target di output
      */
-    public Mono<Void> sendToOutputTarget(Event event, PaperTrackings paperTrackings) {
+    public Mono<Void> sendToOutputTarget(SendEvent event, String discoveredAddress) {
         return Mono.just(event)
-                .zipWith(Mono.just(paperTrackings))
                 .flatMap(tuple -> {
                     log.info("Sending delivery push for event: {}", event);
                     if (configs.isSendOutputToDeliveryPush()) {
@@ -68,9 +66,10 @@ public class DeliveryPushSender implements HandlerStep {
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
+                        return Mono.empty();
                     } else {
                         log.info("Sending event to PnPaperTrackerDryRunOutputs");
-                        paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(event, discoveredAddress));
+                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(event, discoveredAddress));
                     }
                 })
                 .then();
