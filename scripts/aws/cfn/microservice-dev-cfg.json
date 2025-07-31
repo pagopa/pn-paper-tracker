@@ -6,7 +6,6 @@
     "WireTapLogActivation": "false",
     "MountEfs": "false",
     "PnOcrInputQueueARN": "-",
-    "PnOcrInputQueueUrl": "-",
-    "externalChannelOutputsQueue": "-"
+    "PnOcrInputQueueUrl": "-"
   }
 }

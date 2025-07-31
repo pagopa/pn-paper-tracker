@@ -176,7 +176,7 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
-  ExternalChannelOutputsQueue:
+  ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
 
@@ -206,7 +206,7 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
         ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelOutputsQueue}'
+        ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
