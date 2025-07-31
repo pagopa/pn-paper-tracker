@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
-import it.pagopa.pn.papertracker.model.EventStatus;
 import lombok.Data;
 import lombok.Getter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -46,7 +45,5 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
-
-    private EventStatus eventStatus;
 
 }

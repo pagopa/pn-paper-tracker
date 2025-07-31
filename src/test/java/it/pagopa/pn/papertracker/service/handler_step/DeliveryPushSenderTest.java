@@ -1,14 +1,12 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.NotificationState;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelOutputEvent;
+import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
-import it.pagopa.pn.papertracker.model.EventStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -16,7 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,83 +42,61 @@ class DeliveryPushSenderTest {
     @Test
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
-        Event event = new Event();
-        event.setStatusCode("RECRN002A");
-        Attachment attachment = new Attachment();
-        attachment.setDate(Instant.now());
-        event.setAttachments(Collections.singletonList(attachment));
-        event.setStatusTimestamp(Instant.now());
-        event.setRequestTimestamp(Instant.now());
-        event.setEventStatus(EventStatus.OK);
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId("REQUEST_ID");
-        paperTrackings.setNotificationState(new NotificationState());
-        paperTrackings.getNotificationState().setRegisteredLetterCode("LETTER_CODE");
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, paperTrackings);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(1)).push(any(ExternalChannelOutputEvent.class));
+        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
     }
 
     @Test
     void testSendToOutputTarget_SendToDryRunOutputs() {
         // Arrange
-        Event event = new Event();
-        event.setStatusCode("RECRN002A");
-        Attachment attachment = new Attachment();
-        attachment.setDate(Instant.now());
-        event.setAttachments(Collections.singletonList(attachment));
-        event.setStatusTimestamp(Instant.now());
-        event.setRequestTimestamp(Instant.now());
-        event.setEventStatus(EventStatus.OK);
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId("REQUEST_ID");
-        paperTrackings.setNotificationState(new NotificationState());
-        paperTrackings.getNotificationState().setRegisteredLetterCode("LETTER_CODE");
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(false);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, paperTrackings);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
-        verify(externalChannelOutputsMomProducer, never()).push(any(ExternalChannelOutputEvent.class));
+        verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
     }
 
     @Test
-    void testBuildExternalChannelOutputEvent() {
+    void testBuildDeliveryPushEvent() {
         // Arrange
-        Event event = new Event();
-        event.setStatusCode("RECRN002A");
-
-        Attachment attachment = new Attachment();
-        attachment.setDate(Instant.now());
-        event.setAttachments(Collections.singletonList(attachment));
-        event.setStatusTimestamp(Instant.now());
-        event.setRequestTimestamp(Instant.now());
-        event.setEventStatus(EventStatus.OK);
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId("REQUEST_ID");
-        paperTrackings.setNotificationState(new NotificationState());
-        paperTrackings.getNotificationState().setRegisteredLetterCode("LETTER_CODE");
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, paperTrackings);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
 
         // Assert
-        ArgumentCaptor<ExternalChannelOutputEvent> captor = ArgumentCaptor.forClass(ExternalChannelOutputEvent.class);
+        ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
         verify(externalChannelOutputsMomProducer).push(captor.capture());
-        assertEquals("REQUEST_ID", ((ExternalChannelOutputEvent) captor.getValue()).getPayload().getRequestId());
+        assertEquals(event, ((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent());
     }
+
+    private SendEvent getSendEvent() {
+        SendEvent event = new SendEvent();
+        event.setStatusCode(StatusCodeEnum.PROGRESS);
+        AttachmentDetails attachment = new AttachmentDetails();
+        attachment.setDate(OffsetDateTime.now());
+        event.setAttachments(Collections.singletonList(attachment));
+        event.setStatusDateTime(OffsetDateTime.now());
+        event.setClientRequestTimeStamp(OffsetDateTime.now());
+        return event;
+    }
+
 }

@@ -1,9 +1,11 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import reactor.test.StepVerifier;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +37,13 @@ class FinalEventBuilderTest {
 
     PaperTrackings paperTrackings;
 
+    StatusCodeConfiguration statusCodeConfiguration;
+
     @BeforeEach
     void setUp() {
         handlerContext = new HandlerContext();
-        finalEventBuilder = new FinalEventBuilder(cfg, handlerContext);
+        statusCodeConfiguration = new StatusCodeConfiguration();
+        finalEventBuilder = new FinalEventBuilder(cfg, handlerContext, statusCodeConfiguration);
         paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -53,7 +59,7 @@ class FinalEventBuilderTest {
     void buildFinalEvent_stockStatus_differenceGreater_RECRN005C() {
         // Arrange
         setValidatedEvents(RECRN005A.name(), Instant.now().minus(40, ChronoUnit.DAYS));
-        Event finalEvent = getFinalEvent(RECRN005C.name());
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN005C.name());
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
 
         // Act
@@ -61,17 +67,16 @@ class FinalEventBuilderTest {
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals(paperTrackings, handlerContext.getPaperTrackingsToSend());
         Assertions.assertEquals(2, handlerContext.getEventsToSend().size());
-        Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusCode());
-        Assertions.assertEquals(EventStatus.PROGRESS, handlerContext.getEventsToSend().getLast().getEventStatus());
+        Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, handlerContext.getEventsToSend().getLast().getStatusCode());
     }
 
     @Test
     void buildFinalEvent_stockStatus_differenceMinor_RECRN005C() {
         // Arrange
         setValidatedEvents(RECRN005A.name(), Instant.now().minus(25, ChronoUnit.DAYS));
-        Event finalEvent = getFinalEvent(RECRN005C.name());
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN005C.name());
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
 
         // Act
@@ -82,13 +87,12 @@ class FinalEventBuilderTest {
                     Assertions.assertNotNull(ex.getError());
                     Assertions.assertEquals(paperTrackings.getRequestId(), ex.getError().getRequestId());
                     Assertions.assertEquals(finalEvent.getStatusCode(), ex.getError().getEventThrow());
-                    Assertions.assertEquals(finalEvent.getProductType(), ex.getError().getProductType());
+                    Assertions.assertEquals(ProductType.valueOf(finalEvent.getProductType()), ex.getError().getProductType());
                     Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, ex.getError().getDetails().getCause());
                 })
                 .verify();
 
         // Assert
-        Assertions.assertNull(handlerContext.getPaperTrackingsToSend());
         Assertions.assertNull(handlerContext.getEventsToSend());
     }
 
@@ -96,7 +100,7 @@ class FinalEventBuilderTest {
     void buildFinalEvent_stockStatus_differenceMinor_RECRN003C() {
         // Arrange
         setValidatedEvents(RECRN003A.name(), Instant.now().minus(5, ChronoUnit.DAYS));
-        Event finalEvent = getFinalEvent(RECRN003C.name());
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN003C.name());
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
 
         // Act
@@ -104,9 +108,9 @@ class FinalEventBuilderTest {
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals(paperTrackings, handlerContext.getPaperTrackingsToSend());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
-        Assertions.assertEquals(RECRN003C.name(), handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals(RECRN003C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertEquals(StatusCodeEnum.valueOf(RECRN003C.getStatus().name()), handlerContext.getEventsToSend().getFirst().getStatusCode());
     }
 
     @Test
@@ -114,7 +118,7 @@ class FinalEventBuilderTest {
         // Arrange
         Instant statusTimestamp = Instant.now().minus(13, ChronoUnit.DAYS);
         setValidatedEvents(RECRN004A.name(), statusTimestamp);
-        Event finalEvent = getFinalEvent(RECRN004C.name());
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN004C.name());
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
         when(cfg.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
 
@@ -123,26 +127,24 @@ class FinalEventBuilderTest {
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals(paperTrackings, handlerContext.getPaperTrackingsToSend());
         Assertions.assertEquals(2, handlerContext.getEventsToSend().size());
-        Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusCode());
-        Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getStatusTimestamp());
-        Assertions.assertEquals(EventStatus.PROGRESS, handlerContext.getEventsToSend().getLast().getEventStatus());
+        Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getStatusDateTime());
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, handlerContext.getEventsToSend().getLast().getStatusCode());
     }
 
     @Test
     void buildFinalEvent_stockStatusFalse() {
         // Arrange
-        Event finalEvent = getFinalEvent(RECRN002F.name());
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
 
         // Act
         StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals(paperTrackings, handlerContext.getPaperTrackingsToSend());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
-        Assertions.assertEquals(RECRN002F.name(), handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals(RECRN002F.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
     }
 
     private void setValidatedEvents(String statusCode, Instant statusTimestamp) {
@@ -165,13 +167,16 @@ class FinalEventBuilderTest {
         paperTrackings.getNotificationState().setValidatedEvents(validatedEvents);
     }
 
-    private Event getFinalEvent(String statusCode) {
-        Event finalEvent = new Event();
+    private PaperProgressStatusEvent getFinalEvent(String statusCode) {
+        PaperProgressStatusEvent finalEvent = new PaperProgressStatusEvent();
         finalEvent.setStatusCode(statusCode);
-        finalEvent.setProductType(ProductType.AR);
-        finalEvent.setStatusTimestamp(Instant.now());
+        finalEvent.setRequestId("req-123");
+        finalEvent.setClientRequestTimeStamp(OffsetDateTime.now());
+        finalEvent.setRegisteredLetterCode("RL123");
         finalEvent.setDeliveryFailureCause("M02");
         finalEvent.setAttachments(new ArrayList<>());
+        finalEvent.setStatusDateTime(OffsetDateTime.now());
+        finalEvent.setProductType("AR");
         return finalEvent;
     }
 }

@@ -3,18 +3,18 @@ package it.pagopa.pn.papertracker.service.handler_step.AR;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.mapper.SendEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -27,8 +27,10 @@ public class FinalEventBuilder {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final HandlerContext handlerContext;
+    private final StatusCodeConfiguration statusCodeConfiguration;
 
-    public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, Event finalEvent) {
+
+    public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent) {
         String statusCode = finalEvent.getStatusCode();
         log.info("Building final event for statusCode: {}", statusCode);
 
@@ -41,20 +43,23 @@ public class FinalEventBuilder {
             return Mono.just(isDifferenceGreater(statusCode, eventRECRN010, eventRECRN00XA))
                     .flatMap(isDifferenceGreater -> {
                         if (isDifferenceGreater) {
-                            return prepareFinalEventAndPNRN012toSend(paperTrackings, finalEvent, eventRECRN010);
+                            return prepareFinalEventAndPNRN012toSend(finalEvent, eventRECRN010);
                         }
                         if (RECRN005C.name().equals(statusCode)) {
                             log.error("The difference between RECRN005A and RECRN010 is greater than the configured duration, throwing PnPaperTrackerValidationException");
-                            return Mono.error(new PnPaperTrackerValidationException(
-                                    "The difference between RECRN005A and RECRN010 is greater than the configured duration", getPaperTrackingsErrors(paperTrackings, finalEvent, eventRECRN00XA, eventRECRN010)
+                            return Mono.error(new PnPaperTrackerValidationException("The difference between RECRN005A and RECRN010 is greater than the configured duration",
+                                    getPaperTrackingsErrors(paperTrackings, finalEvent, eventRECRN00XA, eventRECRN010)
                             ));
                         } else {
-                            return prepareToSend(paperTrackings, List.of(finalEvent));
+                            handlerContext.setEventsToSend(List.of(SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.valueOf(getStatusCode(finalEvent)), finalEvent.getStatusCode(), finalEvent.getStatusDateTime())));
                         }
+                        return Mono.empty();
                     });
         } else {
-            return prepareToSend(paperTrackings, List.of(finalEvent));
+            handlerContext.setEventsToSend(List.of(SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.valueOf(getStatusCode(finalEvent)), finalEvent.getStatusCode(), finalEvent.getStatusDateTime())));
         }
+
+        return Mono.empty();
     }
 
     private boolean isDifferenceGreater(String statusCode, Event eventRECRN010, Event eventRECRN00XA) {
@@ -63,15 +68,8 @@ public class FinalEventBuilder {
                 : isDifferenceGreaterRefinementDuration(eventRECRN010.getStatusTimestamp(), eventRECRN00XA.getStatusTimestamp());
     }
 
-    private Mono<Void> prepareToSend(PaperTrackings paperTrackings, List<Event> eventsToSend) {
-        handlerContext.setPaperTrackingsToSend(paperTrackings);
-        handlerContext.setEventsToSend(eventsToSend);
-        return Mono.empty();
-    }
-
     private StatusCodeConfiguration.StatusCodeConfigurationEnum getRECRN00XA(String statusCode) {
-        final String status = statusCode.substring(0, statusCode.length() - 1)
-                .concat("A");
+        final String status = statusCode.substring(0, statusCode.length() - 1).concat("A");
         return StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(status);
     }
 
@@ -81,24 +79,19 @@ public class FinalEventBuilder {
                 RECRN005C.name().equals(status);
     }
 
-    private Mono<Void> prepareFinalEventAndPNRN012toSend(PaperTrackings paperTrackings, Event finalEvent, Event eventRECRN010) {
-        Event eventPNRN012 = getEventPNRN012(finalEvent, eventRECRN010);
-        finalEvent.setEventStatus(EventStatus.PROGRESS);
-        return prepareToSend(paperTrackings, List.of(eventPNRN012, finalEvent));
+    private Mono<Void> prepareFinalEventAndPNRN012toSend(PaperProgressStatusEvent finalEvent, Event eventRECRN010) {
+        OffsetDateTime statusDateTime = OffsetDateTime.ofInstant(addDurationToInstant(eventRECRN010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()), ZoneOffset.UTC);
+        SendEvent eventPNRN012 = SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.OK, PNRN012.name(), statusDateTime);
+        SendEvent finalEventToSend = SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusDateTime());
+        handlerContext.setEventsToSend(List.of(eventPNRN012, finalEventToSend));
+        return Mono.empty();
     }
 
-    private Event getEventPNRN012(Event finalEvent, Event eventRECRN010) {
-        Event eventPNRN012 = new Event();
-        eventPNRN012.setStatusCode(PNRN012.name());
-        eventPNRN012.setRequestTimestamp(Instant.now());
-        eventPNRN012.setStatusTimestamp(addDurationToInstant(eventRECRN010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()));
-        eventPNRN012.setProductType(finalEvent.getProductType());
-        eventPNRN012.setAttachments(finalEvent.getAttachments());
-        eventPNRN012.setDeliveryFailureCause(finalEvent.getDeliveryFailureCause());
-        return eventPNRN012;
+    private String getStatusCode(PaperProgressStatusEvent finalEvent) {
+        return statusCodeConfiguration.getStatusFromStatusCode(finalEvent.getStatusCode()).name();
     }
 
-    private PaperTrackingsErrors getPaperTrackingsErrors(PaperTrackings paperTrackings, Event finalEvent,
+    private PaperTrackingsErrors getPaperTrackingsErrors(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent,
                                                          Event RECRN00XA, Event RECRN010) {
         PaperTrackingsErrors errors = new PaperTrackingsErrors();
         errors.setRequestId(paperTrackings.getRequestId());
@@ -110,32 +103,25 @@ public class FinalEventBuilder {
         errors.setDetails(errorDetails);
         errors.setFlowThrow(FlowThrow.FINAL_EVENT_BUILDING);
         errors.setEventThrow(finalEvent.getStatusCode());
-        errors.setProductType(finalEvent.getProductType());
+        errors.setProductType(ProductType.valueOf(finalEvent.getProductType()));
         errors.setType(ErrorType.ERROR);
         return errors;
     }
 
     private Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
         return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(
-                Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+                ? Duration.ofDays(Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
                 : Duration.between(instant1, instant2);
     }
 
-    private boolean isDifferenceGreaterRefinementDuration(
-            Instant recrn010Timestamp,
-            Instant recrn00xATimestamp) {
-        log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}",
-                recrn010Timestamp, recrn00xATimestamp, pnPaperTrackerConfigs.getRefinementDuration());
+    private boolean isDifferenceGreaterRefinementDuration(Instant recrn010Timestamp, Instant recrn00xATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}", recrn010Timestamp, recrn00xATimestamp, pnPaperTrackerConfigs.getRefinementDuration());
         return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
                 .compareTo(pnPaperTrackerConfigs.getRefinementDuration()) > 0;
     }
 
-    private boolean isDifferenceGreaterOrEqualToStockDuration(
-            Instant recrn010Timestamp,
-            Instant recrn005ATimestamp) {
-        log.debug("recrn010Timestamp={}, recrn005ATimestamp={}, refinementDuration={}",
-                recrn010Timestamp, recrn005ATimestamp, pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration());
+    private boolean isDifferenceGreaterOrEqualToStockDuration(Instant recrn010Timestamp, Instant recrn005ATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn005ATimestamp={}, refinementDuration={}", recrn010Timestamp, recrn005ATimestamp, pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration());
         return getDurationBetweenDates(recrn010Timestamp, recrn005ATimestamp)
                 .compareTo(pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration()) >= 0;
     }
