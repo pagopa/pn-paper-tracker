@@ -24,7 +24,6 @@ public class PnPaperTrackerConfigs {
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;
     private String externalChannelOutputsQueue;
-    private String externalChannelOutputsQueueUrl;
     private String externalChannelToPaperTrackerUrl;
 
     @Data

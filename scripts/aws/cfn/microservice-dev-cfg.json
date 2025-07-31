@@ -7,8 +7,6 @@
     "MountEfs": "false",
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
-    "externalChannelOutputsQueue": "-",
-    "externalChannelOutputsQueueUrl": "-",
     "queueOcrInputsUrl": "-",
     "PaperTrackingsTtlDuration": "3650d"
   }
