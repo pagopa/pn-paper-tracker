@@ -297,14 +297,6 @@
 										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
 									</supplier>
 								</specFile>
-								<specFile>
-									<filePath>docs/async/external-deliverypush-v1.yaml</filePath>
-									<supplier>
-										<ids>ExternalChannelOutputs_Command</ids>
-										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
-										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
-									</supplier>
-								</specFile>
 							</specFiles>
 							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
 						</configuration>
