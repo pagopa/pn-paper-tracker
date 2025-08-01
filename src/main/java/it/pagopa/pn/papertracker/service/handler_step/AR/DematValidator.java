@@ -46,9 +46,12 @@ public class DematValidator implements HandlerStep {
         log.info("Inizio validazione Demat per requestId={}, request : {}", paperTrackings.getRequestId(), paperTrackings);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
+                    //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
+                    paperTracking.setUpdatedAt(null);
+                    paperTracking.setRequestId(null);
                     if (cfg.isEnableOcrValidation()) {
                         log.debug("OCR validation abilitata");
-                        return sendMessageToOcr(paperTracking);
+                        return sendMessageToOcr(paperTracking, requestId);
                     } else {
                         log.debug("OCR validation disabilitata");
                         return disableOcrAndUpdate(paperTracking, requestId);
@@ -57,12 +60,13 @@ public class DematValidator implements HandlerStep {
                 .onErrorResume(e -> Mono.error(new RuntimeException("Errore durante la validazione Demat", e)));
     }
 
-    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking) {
+    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, String requestId) {
         OcrEvent ocrEvent = buildOcrEvent(paperTracking);
         paperTracking.setOcrRequestId(ocrEvent.getPayload().getCommandId());
-        return paperTrackingsDAO.updateItem(paperTracking.getRequestId(), paperTracking)
+        paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
+        return paperTrackingsDAO.updateItem(requestId, paperTracking)
                 .then(Mono.fromRunnable(() -> {
-                    log.info("Push evento OCR su coda per requestId={}, ocrRequestId={}", paperTracking.getRequestId(), ocrEvent.getPayload().getCommandId());
+                    log.info("Push evento OCR su coda per requestId={}, ocrRequestId={}", requestId, ocrEvent.getPayload().getCommandId());
                     ocrMomProducer.push(ocrEvent);
                 }));
     }
@@ -95,9 +99,8 @@ public class DematValidator implements HandlerStep {
     }
 
     private Mono<Void> disableOcrAndUpdate(PaperTrackings paperTracking, String requestId) {
-        paperTracking.setUpdatedAt(null);
-        paperTracking.setRequestId(null);
         paperTracking.getValidationFlow().setOcrEnabled(false);
+        paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
         return paperTrackingsDAO.updateItem(requestId, paperTracking)
                 .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getRequestId()))
                 .then();

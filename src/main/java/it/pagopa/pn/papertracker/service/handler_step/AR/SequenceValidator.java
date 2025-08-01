@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -355,7 +356,7 @@ public class SequenceValidator implements HandlerStep {
     }
 
     private PaperTrackings buildPaperTrackings(PaperTrackings paperTrackings) {
-        paperTrackings.getValidationFlow().setDematValidationTimestamp(paperTrackings.getEvents().getFirst().getStatusTimestamp());
+        paperTrackings.getValidationFlow().setSequencesValidationTimestamp(Instant.now());
         //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
         paperTrackings.setUpdatedAt(null);
         paperTrackings.setRequestId(null);

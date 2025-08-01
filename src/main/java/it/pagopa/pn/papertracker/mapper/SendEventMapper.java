@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -21,35 +20,16 @@ public class SendEventMapper {
      */
     public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(HandlerContext handlerContext) {
         return Mono.just(handlerContext.getPaperProgressStatusEvent())
-                .flatMapMany(progressEvent -> {
-                    if (!CollectionUtils.isEmpty(progressEvent.getAttachments()) && progressEvent.getAttachments().size() > 1) {
-                        return Flux.fromIterable(progressEvent.getAttachments().stream()
-                                .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
-                                .collect(Collectors.toList()));
-                    } else {
-                        return Flux.fromIterable(List.of(buildSendEvent(progressEvent)));
-                    }
-                });
+                .flatMapMany(progressEvent ->
+                     Flux.fromIterable(progressEvent.getAttachments().stream()
+                            .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
+                            .collect(Collectors.toList()))
+                );
     }
 
     private static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, AttachmentDetails attachmentDetails) {
         return SendEvent.builder()
                 .attachments(List.of(attachmentDetails))
-                .requestId(progressEvent.getRequestId())
-                .statusCode(StatusCodeEnum.valueOf(StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
-                .statusDetail(progressEvent.getStatusCode())
-                .deliveryFailureCause(progressEvent.getDeliveryFailureCause())
-                .registeredLetterCode(progressEvent.getRegisteredLetterCode())
-                .discoveredAddress(buildAnalogAddressFromDiscoveredAddress(progressEvent.getDiscoveredAddress()))
-                .statusDateTime(progressEvent.getStatusDateTime())
-                .clientRequestTimeStamp(progressEvent.getClientRequestTimeStamp())
-                .build();
-
-    }
-
-    private static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent) {
-        return SendEvent.builder()
-                .attachments(progressEvent.getAttachments())
                 .requestId(progressEvent.getRequestId())
                 .statusCode(StatusCodeEnum.valueOf(StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
                 .statusDetail(progressEvent.getStatusCode())
