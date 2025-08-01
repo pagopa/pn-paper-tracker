@@ -2,17 +2,13 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SendEventMapper {
@@ -67,7 +63,7 @@ public class SendEventMapper {
     }
 
     private static AnalogAddress buildAnalogAddressFromDiscoveredAddress(DiscoveredAddress discoveredAddress) {
-        return AnalogAddress.builder()
+        return Objects.nonNull(discoveredAddress) ? AnalogAddress.builder()
                 .address(discoveredAddress.getAddress())
                 .addressRow2(discoveredAddress.getAddressRow2())
                 .pr(discoveredAddress.getPr())
@@ -77,6 +73,6 @@ public class SendEventMapper {
                 .country(discoveredAddress.getCountry())
                 .fullname(discoveredAddress.getName())
                 .nameRow2(discoveredAddress.getNameRow2())
-                .build();
+                .build() : null;
     }
 }

@@ -33,8 +33,7 @@ public class DeliveryPushSender implements HandlerStep {
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
-                .zipWith(Mono.just(context))
-                .flatMap(tuple -> sendToOutputTarget(tuple.getT1(), tuple.getT2().getAnonimizedDiscoveredAddress()))
+                .flatMap(event -> sendToOutputTarget(event, context.getAnonimizedDiscoveredAddress()))
                 .then();
     }
 
@@ -62,7 +61,7 @@ public class DeliveryPushSender implements HandlerStep {
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
-                                        .eventType("")
+                                        .eventType("SEND_EVENT_RESPONSE")
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
