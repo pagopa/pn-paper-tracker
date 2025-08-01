@@ -50,9 +50,6 @@ public class DeliveryPushSender implements HandlerStep {
                 .flatMap(tuple -> {
                     log.info("Sending delivery push for event: {}", event);
                     if (configs.isSendOutputToDeliveryPush()) {
-                        if(StringUtils.hasText(discoveredAddress)){
-                            //todo deanonimizzare l'indirizzo e set nel SendEvent
-                        }
                         log.info("Sending event to pn-external_channel_outputs");
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()

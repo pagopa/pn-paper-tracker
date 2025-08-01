@@ -21,6 +21,7 @@ public class MetadataUpserter implements HandlerStep {
                 .flatMap(this::discoveredAddressAnonimization)
                 .flatMap(PaperProgressStatusEventMapper::createPaperTrackingFromPaperProgressStatusEvent)
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
+                .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
