@@ -55,7 +55,7 @@ class DematValidatorTest {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest"))
                 .verifyComplete();
 
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
@@ -67,7 +67,7 @@ class DematValidatorTest {
         when(cfg.isEnableOcrValidation()).thenReturn(false);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest"))
                 .verifyComplete();
 
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
@@ -79,7 +79,7 @@ class DematValidatorTest {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings))
+        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest"))
                 .expectErrorMatches(e -> e instanceof RuntimeException && e.getMessage().contains("Errore durante la validazione Demat"))
                 .verify();
 

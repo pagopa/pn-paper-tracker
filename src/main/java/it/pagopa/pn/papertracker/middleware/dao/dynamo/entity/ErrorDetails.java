@@ -14,6 +14,6 @@ public class ErrorDetails {
     public static final String COL_CAUSE = "cause";
     public static final String COL_MESSAGE = "message";
 
-    private String cause;
+    private ErrorCause cause;
     private String message;
 }

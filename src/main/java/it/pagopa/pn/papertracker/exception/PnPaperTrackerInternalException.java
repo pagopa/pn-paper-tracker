@@ -7,18 +7,18 @@ import java.util.List;
 
 public class PnPaperTrackerInternalException extends RuntimeException {
 
-    public PnPaperTrackerInternalException(String message, List<Event> events, String requestId, ProductType productType) {
+    public PnPaperTrackerInternalException(String message, List<Event> events, String requestId, ProductType productType, ErrorCategory errorCategory) {
         super(message);
-        PaperTrackingsErrors error = buildPaperTrackingsError(events, requestId, productType);
+        PaperTrackingsErrors error = buildPaperTrackingsError(events, requestId, productType, errorCategory);
     }
 
-    private PaperTrackingsErrors buildPaperTrackingsError(List<Event> events, String requestId, ProductType productType) {
+    private PaperTrackingsErrors buildPaperTrackingsError(List<Event> events, String requestId, ProductType productType, ErrorCategory errorCategory) {
         return PaperTrackingsErrors.builder()
                 .requestId(requestId)
                 .created(Instant.now())
-                .errorCategory(ErrorCategory.DATE_ERROR)
+                .errorCategory(errorCategory)
                 .details(ErrorDetails.builder()
-                        .cause(ErrorCategory.DATE_ERROR.name())
+                        .cause(ErrorCause.valueOf(errorCategory.name()))
                         .message("Invalid sequence or timestamps")
                         .build())
                 .flowThrow(FlowThrow.SEQUENCE_VALIDATION)

@@ -5,12 +5,11 @@ import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerInternalException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.SequenceElement;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -19,16 +18,25 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SequenceValidator {
+public class SequenceValidator implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final SequenceConfiguration sequenceConfiguration;
+
+    @Override
+    public Mono<Void> execute(HandlerContext context) {
+        return Mono.just(context.getPaperTrackings())
+                .flatMap(this::validateSequence)
+                .flatMap(updatedPaperTracking -> {
+                    context.setPaperTrackings(updatedPaperTracking);
+                    return Mono.empty();
+                });
+    }
 
     /**
      * Valida la sequenza degli eventi di una raccomandata, applicando una serie di controlli di business.
@@ -36,8 +44,14 @@ public class SequenceValidator {
      * @param paperTrackings oggetto contenente gli eventi da validare
      * @return Mono<Void> che completa se la validazione ha successo, altrimenti emette un Mono.error
      */
-    public Mono<Void> validateSequence(PaperTrackings paperTrackings) {
+    public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings) {
         log.info("Beginning validation for sequence for paper tracking : {}", paperTrackings);
+        if (Objects.isNull(paperTrackings.getNotificationState())) {
+            paperTrackings.setNotificationState(new NotificationState());
+        }
+        if (Objects.isNull(paperTrackings.getValidationFlow())) {
+            paperTrackings.setValidationFlow(new ValidationFlow());
+        }
         return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings.getRequestId(), paperTrackings.getProductType())
                 .flatMap(this::getOnlyLatestEvents)
                 .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings.getRequestId(), paperTrackings.getProductType()))
@@ -45,8 +59,7 @@ public class SequenceValidator {
                 .flatMap(events -> validateAttachments(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings))
-                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getRequestId(), buildPaperTrackings(paperTrackings)))
-                .then();
+                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getRequestId(), buildPaperTrackings(paperTrackings)));
     }
 
     /**
@@ -82,14 +95,17 @@ public class SequenceValidator {
         //Per ogni elemento della sequenze di configurazione verifica la presenza dei documenti richiesti
         return Flux.fromIterable(listOfDocumentsForSequenceElement.entrySet())
                 .flatMap(entrySet -> {
-                    boolean allDocsMatch = entrySet.getKey().getDocumentTypes()
-                            .stream()
-                            .allMatch(docType -> entrySet.getValue().contains(docType.getValue()));
-                    if (!allDocsMatch) {
-                        return generateCustomError("Attachments are not valid for the sequence: " + sequenceElements,
-                                events, requestId, productType
-                        );
+                    if (Objects.nonNull(entrySet.getKey().getDocumentTypes())) {
+                        boolean allDocsMatch = entrySet.getKey().getDocumentTypes()
+                                .stream()
+                                .allMatch(docType -> entrySet.getValue().contains(docType.getValue()));
+                        if (!allDocsMatch) {
+                            return generateCustomError("Attachments are not valid for the sequence: " + sequenceElements,
+                                    events, requestId, productType, ErrorCategory.ATTACHMENTS_ERROR
+                            );
+                        }
                     }
+
                     return Mono.empty();
                 })
                 .then(Mono.just(events));
@@ -199,7 +215,7 @@ public class SequenceValidator {
                 if (StringUtil.isNullOrEmpty(deliveryFailureCause)) {
                     return generateCustomError(
                             "deliveryFailureCause non valorizzato per statusCode=" + statusCode,
-                            events, paperTrackings.getRequestId(), paperTrackings.getProductType()
+                            events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
                     );
                 }
                 if ((StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002B.name().equals(statusCode)
@@ -208,7 +224,7 @@ public class SequenceValidator {
                                 && !DeliveryFailureCauseEnum.containsCauseForE(deliveryFailureCause))) {
                     return generateCustomError(
                             "deliveryFailureCause non valido: " + deliveryFailureCause,
-                            events, paperTrackings.getRequestId(), paperTrackings.getProductType()
+                            events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
                     );
                 }
 
@@ -234,7 +250,7 @@ public class SequenceValidator {
         if (!allRegisteredLetterCodeMatch) {
             return generateCustomError(
                     "Registered letter codes do not match in sequence: " + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    events, paperTrackings.getRequestId(), paperTrackings.getProductType()
+                    events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.REGISTERED_LETTER_CODE_ERROR
             );
         }
         paperTrackings.getNotificationState().setRegisteredLetterCode(firstRegisteredLetterCode);
@@ -256,7 +272,7 @@ public class SequenceValidator {
         if (sequenceElements == null) {
             return generateCustomError(
                     "Invalid lastEvent for sequence validation",
-                    events, requestId, productType
+                    events, requestId, productType, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR
             );
         }
         return Mono.just(
@@ -286,7 +302,7 @@ public class SequenceValidator {
                 .flatMap(seqElem -> Mono.just(seqElem.getCode()))
                 .flatMap(statusCode -> {
                     if (!eventsStatusCodes.contains(statusCode)) {
-                        return generateCustomError("Necessary status code not found in events", events, requestId, productType);
+                        return generateCustomError("Necessary status code not found in events", events, requestId, productType, ErrorCategory.STATUS_CODE_ERROR);
                     }
                     return Mono.just(statusCode);
                 })
@@ -328,19 +344,21 @@ public class SequenceValidator {
                     boolean allStatusTimestampInGroupAreEquals = groupEvents.stream()
                             .allMatch(groupEvent -> groupEvent.getStatusTimestamp().equals(groupEvents.getFirst().getStatusTimestamp()));
                     if(!allStatusTimestampInGroupAreEquals) {
-                        return generateCustomError("Invalid business timestamps", events, requestId, productType);
+                        return generateCustomError("Invalid business timestamps", events, requestId, productType, ErrorCategory.DATE_ERROR);
                     }
                     return Mono.just(groupEvents);
                 }).then(Mono.just(events));
     }
 
-    private @NotNull Mono<List<Event>> generateCustomError(String message, List<Event> events, String requestId, ProductType productType) {
-        return Mono.error(new PnPaperTrackerInternalException(message, events, requestId, productType));
+    private @NotNull Mono<List<Event>> generateCustomError(String message, List<Event> events, String requestId, ProductType productType, ErrorCategory errorCategory) {
+        return Mono.error(new PnPaperTrackerInternalException(message, events, requestId, productType, errorCategory));
     }
 
     private PaperTrackings buildPaperTrackings(PaperTrackings paperTrackings) {
         paperTrackings.getValidationFlow().setDematValidationTimestamp(paperTrackings.getEvents().getFirst().getStatusTimestamp());
-        paperTrackings.setUpdatedAt(Instant.now());
+        //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
+        paperTrackings.setUpdatedAt(null);
+        paperTrackings.setRequestId(null);
         return paperTrackings;
     }
     
