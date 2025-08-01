@@ -38,11 +38,11 @@ public class DematValidator implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return validateDemat(context.getPaperTrackings(), context.getPaperTrackings().getRequestId())
+        return validateDemat(context.getPaperTrackings(), context.getPaperTrackings().getRequestId(), context)
                 .then();
     }
 
-    public Mono<Void> validateDemat(PaperTrackings paperTrackings, String requestId) {
+    public Mono<Void> validateDemat(PaperTrackings paperTrackings, String requestId, HandlerContext context){
         log.info("Inizio validazione Demat per requestId={}, request : {}", paperTrackings.getRequestId(), paperTrackings);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
@@ -54,6 +54,8 @@ public class DematValidator implements HandlerStep {
                         return sendMessageToOcr(paperTracking, requestId);
                     } else {
                         log.debug("OCR validation disabilitata");
+                        // Imposta un flag nel context per indicare di fermare l'esecuzione
+                        context.setStopExecution(true);
                         return disableOcrAndUpdate(paperTracking, requestId);
                     }
                 })

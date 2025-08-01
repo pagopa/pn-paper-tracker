@@ -16,6 +16,7 @@ import java.util.List;
 public class HandlersFactoryAr implements HandlersFactory {
     private final MetadataUpserter metadataUpserter;
     private final DeliveryPushSender deliveryPushSender;
+    private final FinalEventBuilder finalEventBuilder;
     private final IntermediateEventsBuilder intermediateEventsBuilder;
     private final DematValidator dematValidator;
     private final SequenceValidator sequenceValidator;
@@ -30,7 +31,13 @@ public class HandlersFactoryAr implements HandlersFactory {
     @Override
     public Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context) {
         return Flux.fromIterable(steps)
-                .concatMap(step -> step.execute(context))
+                .concatMap(step -> {
+                    if (context.isStopExecution()) {
+                        log.debug("Interruzione esecuzione richiesta - saltando step: {}", step.getClass().getSimpleName());
+                        return Mono.empty();
+                    }
+                    return step.execute(context);
+                })
                 .then();
 
     };
@@ -53,7 +60,9 @@ public class HandlersFactoryAr implements HandlersFactory {
                 List.of(
                         metadataUpserter,
                         sequenceValidator,
-                        dematValidator
+                        dematValidator,
+                        finalEventBuilder,
+                        deliveryPushSender
                 ), context);
     }
 
