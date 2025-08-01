@@ -13,6 +13,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -31,7 +32,7 @@ public class ExternalChannelHandler {
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
     public void handleExternalChannelMessage(SingleStatusUpdate payload) {
-        if (payload == null || payload.getAnalogMail() == null) {
+        if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
         }
