@@ -13,6 +13,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -31,6 +32,10 @@ public class ExternalChannelHandler {
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
     public void handleExternalChannelMessage(SingleStatusUpdate payload) {
+        if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
+            log.error("Received null payload or analogMail in ExternalChannelHandler");
+            throw new IllegalArgumentException("Payload or analogMail cannot be null");
+        }
 
         String processName = "processExternalChannelMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
@@ -40,7 +45,7 @@ public class ExternalChannelHandler {
                         .flatMap(singleStatusUpdate -> {
                             HandlerContext context = new HandlerContext();
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
-                            String statusCode = payload.getAnalogMail() != null ? payload.getAnalogMail().getStatusCode() : "";
+                            String statusCode = payload.getAnalogMail().getStatusCode();
                             String productType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
                                     .map(e -> e.getProductType().getValue())
                                     .orElse("UNKNOWN");

@@ -21,12 +21,13 @@ public class MetadataUpserter implements HandlerStep {
                 .flatMap(this::discoveredAddressAnonimization)
                 .flatMap(PaperProgressStatusEventMapper::createPaperTrackingFromPaperProgressStatusEvent)
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
+                .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
     private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
         //TODO implementare l'anonimizzazione del discoveredAddress
-        if (!Objects.isNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
+        if (Objects.nonNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
             String anonimizedDiscoveredAddress = "";
             handlerContext.setAnonimizedDiscoveredAddress(anonimizedDiscoveredAddress);
         }

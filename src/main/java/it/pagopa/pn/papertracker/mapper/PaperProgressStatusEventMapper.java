@@ -31,6 +31,7 @@ public class PaperProgressStatusEventMapper {
                     .toList());
         }
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
+        event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
         event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());

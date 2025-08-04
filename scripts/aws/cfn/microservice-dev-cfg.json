@@ -8,6 +8,9 @@
     "PnOcrInputQueueARN": "-",
     "PnOcrInputQueueUrl": "-",
     "queueOcrInputsUrl": "-",
-    "PaperTrackingsTtlDuration": "3650d"
+    "PaperTrackingsTtlDuration": "3650d",
+    "CompiutaGiacenzaArDuration": "80s",
+    "EnableTruncatedDateForRefinementCheck": "false",
+    "RefinementDuration": "1m"
   }
 }

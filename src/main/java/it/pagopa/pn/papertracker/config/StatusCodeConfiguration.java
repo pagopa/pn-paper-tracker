@@ -38,7 +38,8 @@ public class StatusCodeConfiguration {
         RECRN003B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Consegnato presso Punti di Giacenza - In Dematerializzazione"),
         RECRN004B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Mancata consegna presso Punti di Giacenza - In Dematerializzazione"),
         RECRN005B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Compiuta giacenza - In Dematerializzazione"),
-        RECRN010(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Inesito");
+        RECRN010(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Inesito"),
+        PNRN012(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.AR, EventStatus.OK, "Perfezionamento per decorrenza termini");
 
         private final EventStatusCodeTypeEnum codeType;
         private final ProductType productType;
@@ -57,7 +58,7 @@ public class StatusCodeConfiguration {
             return Stream.of(values())
                     .filter(definition -> definition.name().equals(key))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("No sequence found for key: " + key));
+                    .orElse(null);
         }
     }
 
