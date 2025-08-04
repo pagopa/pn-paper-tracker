@@ -11,7 +11,21 @@ for qn in $(echo $queues | tr " " "\n"); do
     echo "Queue $qn created successfully"
 done
 
+
+awslocal sqs list-queues
+
 echo " - Create pn-paper-tracker TABLES"
+
+echo "### CREATE QUEUES ###"
+
+queues="pn-ocr_outputs dl-sqs"
+for qn in  $( echo $queues | tr " " "\n" ) ; do
+    echo creating queue $qn ...
+    aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+        sqs create-queue \
+        --attributes '{"DelaySeconds":"2"}' \
+        --queue-name $qn
+done
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
@@ -42,11 +56,9 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --table-name pn-PaperTrackings  \
     --attribute-definitions \
         AttributeName=requestId,AttributeType=S \
-        AttributeName=createdAt,AttributeType=S \
         AttributeName=ocrRequestId,AttributeType=S \
     --key-schema \
         AttributeName=requestId,KeyType=HASH \
-        AttributeName=createdAt,KeyType=RANGE \
     --provisioned-throughput \
         ReadCapacityUnits=10,WriteCapacityUnits=5 \
      --global-secondary-indexes \

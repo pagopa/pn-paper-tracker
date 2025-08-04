@@ -349,15 +349,13 @@ components:
           type: string
     PaperTrackerErrorsResponse:
       type: object
-      additionalProperties:
-        type: object
-        properties:
-          requestId:
-            type: string
-          errors:
-            type: array
-            items:
-              $ref: '#/components/schemas/PaperTrackerError'
+      properties:
+        requestId:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaperTrackerError'
     PaperTrackerError:
       type: object
       properties:
@@ -369,13 +367,11 @@ components:
           type: string
         details:
           type: object
-          additionalProperties:
-            type: object
-            properties:
-              cause:
-                type: string
-              message:
-                type: string
+          properties:
+            cause:
+              type: string
+            message:
+              type: string
         flowThrow:
           type: string
           enum:
@@ -388,15 +384,13 @@ components:
           $ref: '#/components/schemas/ProductType'
     PaperTrackerOutputsResponse:
       type: object
-      additionalProperties:
-        type: object
-        properties:
-          requestId:
-            type: string
-          outputs:
-            type: array
-            items:
-              $ref: '#/components/schemas/PaperTrackerOutput'
+      properties:
+        requestId:
+          type: string
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaperTrackerOutput'
     PaperTrackerOutput:
       type: object
       properties:

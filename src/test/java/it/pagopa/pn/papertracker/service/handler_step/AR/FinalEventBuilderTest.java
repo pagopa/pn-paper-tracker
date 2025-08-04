@@ -43,7 +43,7 @@ class FinalEventBuilderTest {
     void setUp() {
         handlerContext = new HandlerContext();
         statusCodeConfiguration = new StatusCodeConfiguration();
-        finalEventBuilder = new FinalEventBuilder(cfg, handlerContext, statusCodeConfiguration);
+        finalEventBuilder = new FinalEventBuilder(cfg, statusCodeConfiguration);
         paperTrackings = new PaperTrackings();
         paperTrackings.setRequestId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -63,7 +63,7 @@ class FinalEventBuilderTest {
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
 
         // Act
-        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
+        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent, handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -80,7 +80,7 @@ class FinalEventBuilderTest {
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
 
         // Act
-        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
+        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent, handlerContext))
                 .expectErrorSatisfies(throwable -> {
                     Assertions.assertInstanceOf(PnPaperTrackerValidationException.class, throwable);
                     PnPaperTrackerValidationException ex = (PnPaperTrackerValidationException) throwable;
@@ -104,7 +104,7 @@ class FinalEventBuilderTest {
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
 
         // Act
-        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
+        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent, handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -123,7 +123,7 @@ class FinalEventBuilderTest {
         when(cfg.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
 
         // Act
-        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
+        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent, handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -139,7 +139,7 @@ class FinalEventBuilderTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
 
         // Act
-        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent))
+        StepVerifier.create(finalEventBuilder.buildFinalEvent(paperTrackings, finalEvent, handlerContext))
                 .verifyComplete();
 
         // Assert

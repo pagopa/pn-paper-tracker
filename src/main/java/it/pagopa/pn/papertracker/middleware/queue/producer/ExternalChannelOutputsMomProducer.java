@@ -7,10 +7,10 @@ import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Slf4j
-public class ExternalChannelOutputsMomProducer extends AbstractSqsMomProducer<DeliveryPushEvent> {
+public class ExternalChannelOutputsMomProducer extends AbstractSqsMomProducer<DeliveryPushEvent>  {
 
-    public ExternalChannelOutputsMomProducer(SqsClient sqsClient, String topic, String url, ObjectMapper objectMapper, Class<DeliveryPushEvent> msgClass) {
-        super(sqsClient, topic, url, objectMapper, msgClass);
+    public ExternalChannelOutputsMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<DeliveryPushEvent> msgClass) {
+        super(sqsClient, topic, objectMapper, msgClass);
     }
 
 }

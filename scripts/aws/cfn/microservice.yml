@@ -193,7 +193,7 @@ Parameters:
     Default: 3650d
     Description: 'DynamoDB PaperTrackings entity ttl duration'
 
-  ExternalChannelOutputsQueue:
+  ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
 
@@ -247,11 +247,10 @@ Resources:
         ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
         ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
         ContainerEnvEntry12: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelOutputsQueue}'
-        ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUEURL=${ExternalChannelOutputsQueueUrl}'
-        ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
-        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
-        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

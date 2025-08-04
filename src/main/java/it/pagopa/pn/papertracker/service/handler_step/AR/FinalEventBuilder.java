@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.mapper.SendEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,18 +24,24 @@ import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCod
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class FinalEventBuilder {
+public class FinalEventBuilder implements HandlerStep {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
-    private final HandlerContext handlerContext;
     private final StatusCodeConfiguration statusCodeConfiguration;
 
-    public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent) {
+    @Override
+    public Mono<Void> execute(HandlerContext context) {
+        return buildFinalEvent(context.getPaperTrackings(), context.getPaperProgressStatusEvent(), context)
+                .then();
+    }
+
+
+    public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent, HandlerContext handlerContext) {
         String statusCode = finalEvent.getStatusCode();
         log.info("Building final event for statusCode: {}", statusCode);
 
         if (!isStockStatus(statusCode)) {
-            setSingleEventToSend(finalEvent);
+            setSingleEventToSend(finalEvent, handlerContext);
             return Mono.empty();
         }
 
@@ -57,12 +64,12 @@ public class FinalEventBuilder {
                         ));
                     }
 
-                    setSingleEventToSend(finalEvent);
+                    setSingleEventToSend(finalEvent, handlerContext);
                     return Mono.empty();
                 });
     }
 
-    private void setSingleEventToSend(PaperProgressStatusEvent finalEvent) {
+    private void setSingleEventToSend(PaperProgressStatusEvent finalEvent, HandlerContext handlerContext) {
         handlerContext.setEventsToSend(List.of(
                 SendEventMapper.toSendEvent(
                         finalEvent,
@@ -90,7 +97,7 @@ public class FinalEventBuilder {
                 RECRN005C.name().equals(status);
     }
 
-    private Mono<Void> prepareFinalEventAndPNRN012toSend(PaperProgressStatusEvent finalEvent, Event eventRECRN010) {
+    private Mono<Void> prepareFinalEventAndPNRN012toSend(PaperProgressStatusEvent finalEvent, Event eventRECRN010, HandlerContext handlerContext){
         OffsetDateTime statusDateTime = OffsetDateTime.ofInstant(addDurationToInstant(eventRECRN010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()), ZoneOffset.UTC);
         SendEvent eventPNRN012 = SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.OK, PNRN012.name(), statusDateTime);
         SendEvent finalEventToSend = SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusDateTime());

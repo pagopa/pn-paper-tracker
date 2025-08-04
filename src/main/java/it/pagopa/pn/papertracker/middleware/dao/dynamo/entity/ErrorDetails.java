@@ -1,10 +1,14 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
-import lombok.Data;
+import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
+@Setter
+@Getter
 @DynamoDbBean
-@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ErrorDetails {
 
     public static final String COL_CAUSE = "cause";

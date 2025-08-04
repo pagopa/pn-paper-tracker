@@ -7,17 +7,18 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 class DeliveryPushSenderTest {
@@ -62,6 +63,7 @@ class DeliveryPushSenderTest {
         String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(false);
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
@@ -85,7 +87,7 @@ class DeliveryPushSenderTest {
         // Assert
         ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
         verify(externalChannelOutputsMomProducer).push(captor.capture());
-        assertEquals(event, ((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent());
+        Assertions.assertEquals(event, ((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent());
     }
 
     private SendEvent getSendEvent() {

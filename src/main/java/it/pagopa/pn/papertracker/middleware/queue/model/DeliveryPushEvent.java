@@ -5,21 +5,16 @@ import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Getter
+@Builder(toBuilder = true)
 public class DeliveryPushEvent implements GenericEvent<GenericEventHeader, PaperChannelUpdate> {
 
     private GenericEventHeader header;
     private PaperChannelUpdate payload;
 
-    @Override
-    public GenericEventHeader getHeader() {
-        return header;
-    }
-
-    @Override
-    public PaperChannelUpdate getPayload() {
-        return payload;
-    }
 }
