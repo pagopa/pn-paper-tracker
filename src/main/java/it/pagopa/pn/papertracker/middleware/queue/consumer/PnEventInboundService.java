@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer;
 
 import io.awspring.cloud.sqs.annotation.SqsListener;
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import lombok.RequiredArgsConstructor;

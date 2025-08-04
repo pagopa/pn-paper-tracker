@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -57,7 +58,7 @@ class DeliveryPushSenderTest {
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
@@ -79,9 +80,10 @@ class DeliveryPushSenderTest {
         String anonimizedDiscoveredAddress = "test-discovered-address";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(false);
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
@@ -105,7 +107,7 @@ class DeliveryPushSenderTest {
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
 
         // Assert
         ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
