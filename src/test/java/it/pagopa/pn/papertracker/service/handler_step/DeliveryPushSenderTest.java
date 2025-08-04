@@ -18,7 +18,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
-import java.util.Objects;
 
 import static org.mockito.Mockito.*;
 
@@ -44,21 +43,13 @@ class DeliveryPushSenderTest {
     @Test
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
-        SendEvent event = new SendEvent();
-        event.setStatusCode(StatusCodeEnum.PROGRESS);
-        event.setStatusDetail("RECRN002A");
-        AttachmentDetails attachment = new AttachmentDetails();
-        attachment.setDate(OffsetDateTime.now());
-        event.setAttachments(Collections.singletonList(attachment));
-        event.setStatusDateTime(OffsetDateTime.now());
-        event.setClientRequestTimeStamp(OffsetDateTime.now());
-
-        String anonimizedDiscoveredAddress = "test-discovered-address";
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
@@ -68,22 +59,14 @@ class DeliveryPushSenderTest {
     @Test
     void testSendToOutputTarget_SendToDryRunOutputs() {
         // Arrange
-        SendEvent event = new SendEvent();
-        event.setStatusCode(StatusCodeEnum.PROGRESS);
-        event.setStatusDetail("RECRN002A");
-        AttachmentDetails attachment = new AttachmentDetails();
-        attachment.setDate(OffsetDateTime.now());
-        event.setAttachments(Collections.singletonList(attachment));
-        event.setStatusDateTime(OffsetDateTime.now());
-        event.setClientRequestTimeStamp(OffsetDateTime.now());
-
-        String anonimizedDiscoveredAddress = "test-discovered-address";
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
 
         when(config.isSendOutputToDeliveryPush()).thenReturn(false);
         when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
@@ -91,27 +74,31 @@ class DeliveryPushSenderTest {
     }
 
     @Test
-    void testBuildExternalChannelOutputEvent() {
+    void testBuildDeliveryPushEvent() {
         // Arrange
+        SendEvent event = getSendEvent();
+        String discoveredAddress = "123 Main St";
+
+        when(config.isSendOutputToDeliveryPush()).thenReturn(true);
+
+        // Act
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
+
+        // Assert
+        ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
+        verify(externalChannelOutputsMomProducer).push(captor.capture());
+        Assertions.assertEquals(event, ((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent());
+    }
+
+    private SendEvent getSendEvent() {
         SendEvent event = new SendEvent();
         event.setStatusCode(StatusCodeEnum.PROGRESS);
-        event.setStatusDetail("RECRN002A");
         AttachmentDetails attachment = new AttachmentDetails();
         attachment.setDate(OffsetDateTime.now());
         event.setAttachments(Collections.singletonList(attachment));
         event.setStatusDateTime(OffsetDateTime.now());
         event.setClientRequestTimeStamp(OffsetDateTime.now());
-
-        String anonimizedDiscoveredAddress = "test-discovered-address";
-
-        when(config.isSendOutputToDeliveryPush()).thenReturn(true);
-
-        // Act
-        deliveryPushSender.sendToOutputTarget(event, anonimizedDiscoveredAddress).block();
-
-        // Assert
-        ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
-        verify(externalChannelOutputsMomProducer).push(captor.capture());
-        Assertions.assertEquals("RECRN002A", Objects.requireNonNull(((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent()).getStatusDetail());
+        return event;
     }
+
 }

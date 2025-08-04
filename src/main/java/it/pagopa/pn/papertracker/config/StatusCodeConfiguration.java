@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.config;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeTypeEnum;
-import it.pagopa.pn.papertracker.model.ExternalChannelCodeTypeEnum;
 import lombok.Getter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

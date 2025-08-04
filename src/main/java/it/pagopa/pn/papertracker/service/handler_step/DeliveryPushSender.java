@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,7 +42,7 @@ public class DeliveryPushSender implements HandlerStep {
      * I target possono essere o la coda pn-external_channel_outputs o la tabella PnPaperTrackerDryRunOutputs
      * Per configurare il target di output si utilizza un flag sendToDeliveryPushFlag
      *
-     * @param event             evento da salvare nel target di output
+     * @param event evento da salvare nel target di output
      */
     public Mono<Void> sendToOutputTarget(SendEvent event, String discoveredAddress) {
         return Mono.just(event)

@@ -35,37 +35,48 @@ public class FinalEventBuilder implements HandlerStep {
                 .then();
     }
 
-
     public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent, HandlerContext handlerContext) {
         String statusCode = finalEvent.getStatusCode();
         log.info("Building final event for statusCode: {}", statusCode);
 
-        if (isStockStatus(statusCode)) {
-            List<Event> validatedEvents = paperTrackings.getNotificationState().getValidatedEvents();
-            StatusCodeConfiguration.StatusCodeConfigurationEnum RECRN00XA = getRECRN00XA(statusCode);
-            Event eventRECRN00XA = getEvent(validatedEvents, RECRN00XA);
-            Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
-
-            return Mono.just(isDifferenceGreater(statusCode, eventRECRN010, eventRECRN00XA))
-                    .flatMap(isDifferenceGreater -> {
-                        if (isDifferenceGreater) {
-                            return prepareFinalEventAndPNRN012toSend(finalEvent, eventRECRN010, handlerContext);
-                        }
-                        if (RECRN005C.name().equals(statusCode)) {
-                            log.error("The difference between RECRN005A and RECRN010 is greater than the configured duration, throwing PnPaperTrackerValidationException");
-                            return Mono.error(new PnPaperTrackerValidationException("The difference between RECRN005A and RECRN010 is greater than the configured duration",
-                                    getPaperTrackingsErrors(paperTrackings, finalEvent, eventRECRN00XA, eventRECRN010)
-                            ));
-                        } else {
-                            handlerContext.setEventsToSend(List.of(SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.valueOf(getStatusCode(finalEvent)), finalEvent.getStatusCode(), finalEvent.getStatusDateTime())));
-                        }
-                        return Mono.empty();
-                    });
-        } else {
-            handlerContext.setEventsToSend(List.of(SendEventMapper.toSendEvent(finalEvent, StatusCodeEnum.valueOf(getStatusCode(finalEvent)), finalEvent.getStatusCode(), finalEvent.getStatusDateTime())));
+        if (!isStockStatus(statusCode)) {
+            setSingleEventToSend(finalEvent, handlerContext);
+            return Mono.empty();
         }
 
-        return Mono.empty();
+        List<Event> validatedEvents = paperTrackings.getNotificationState().getValidatedEvents();
+        StatusCodeConfiguration.StatusCodeConfigurationEnum configEnum = getRECRN00XA(statusCode);
+        Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
+        Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
+
+        return Mono.just(isDifferenceGreater(statusCode, eventRECRN010, eventRECRN00XA))
+                .flatMap(isGreater -> {
+                    if (isGreater) {
+                        return prepareFinalEventAndPNRN012toSend(finalEvent, eventRECRN010, handlerContext);
+                    }
+
+                    if (RECRN005C.name().equals(statusCode)) {
+                        log.error("The difference between RECRN005A and RECRN010 is greater than the configured duration, throwing exception");
+                        return Mono.error(new PnPaperTrackerValidationException(
+                                "The difference between RECRN005A and RECRN010 is greater than the configured duration",
+                                getPaperTrackingsErrors(paperTrackings, finalEvent, eventRECRN00XA, eventRECRN010)
+                        ));
+                    }
+
+                    setSingleEventToSend(finalEvent, handlerContext);
+                    return Mono.empty();
+                });
+    }
+
+    private void setSingleEventToSend(PaperProgressStatusEvent finalEvent, HandlerContext handlerContext) {
+        handlerContext.setEventsToSend(List.of(
+                SendEventMapper.toSendEvent(
+                        finalEvent,
+                        StatusCodeEnum.valueOf(getStatusCode(finalEvent)),
+                        finalEvent.getStatusCode(),
+                        finalEvent.getStatusDateTime()
+                )
+        ));
     }
 
     private boolean isDifferenceGreater(String statusCode, Event eventRECRN010, Event eventRECRN00XA) {
