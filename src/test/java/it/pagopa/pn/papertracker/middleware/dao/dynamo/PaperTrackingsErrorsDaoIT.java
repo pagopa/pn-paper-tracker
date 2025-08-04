@@ -28,7 +28,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
             error.setProductType(ProductType.AR);
             error.setType(ErrorType.WARNING);
             ErrorDetails errorDetails = new ErrorDetails();
-            errorDetails.setCause("ERROR");
+            errorDetails.setCause(ErrorCause.UNKNOWN);
             errorDetails.setMessage("error");
             error.setDetails(errorDetails);
             error.setEventThrow("RECRN001C");
@@ -44,7 +44,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         error.setProductType(ProductType.AR);
         error.setType(ErrorType.ERROR);
         ErrorDetails errorDetails = new ErrorDetails();
-        errorDetails.setCause("ERROR");
+        errorDetails.setCause(ErrorCause.UNKNOWN);
         errorDetails.setMessage("error");
         error.setDetails(errorDetails);
         error.setEventThrow("RECRN001C");
@@ -59,7 +59,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getErrorCategory() == ErrorCategory.UNKNOWN));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getFlowThrow() == FlowThrow.DEMAT_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getProductType() == ProductType.AR));
-        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause().equals("ERROR")));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause().equals(ErrorCause.UNKNOWN)));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getMessage().equals("error")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getEventThrow().equals("RECRN001C")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getType() == ErrorType.WARNING));
@@ -71,7 +71,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertSame(ErrorCategory.UNKNOWN, errors2.getFirst().getErrorCategory());
         Assertions.assertSame(FlowThrow.DEMAT_VALIDATION, errors2.getFirst().getFlowThrow());
         Assertions.assertSame(ProductType.AR, errors2.getFirst().getProductType());
-        Assertions.assertEquals("ERROR", errors2.getFirst().getDetails().getCause());
+        Assertions.assertEquals(ErrorCause.UNKNOWN, errors2.getFirst().getDetails().getCause());
         Assertions.assertEquals("error", errors2.getFirst().getDetails().getMessage());
         Assertions.assertEquals("RECRN001C", errors2.getFirst().getEventThrow());
         Assertions.assertSame(ErrorType.ERROR, errors2.getFirst().getType());

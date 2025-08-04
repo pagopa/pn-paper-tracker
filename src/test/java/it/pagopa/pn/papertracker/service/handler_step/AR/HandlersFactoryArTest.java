@@ -22,6 +22,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+
+//TODO implementare junits per gestione evento finale
 @ExtendWith(MockitoExtension.class)
 class HandlersFactoryArTest {
 

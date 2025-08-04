@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.config;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeTypeEnum;
+import it.pagopa.pn.papertracker.model.ExternalChannelCodeTypeEnum;
 import lombok.Getter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +39,8 @@ public class StatusCodeConfiguration {
         RECRN003B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Consegnato presso Punti di Giacenza - In Dematerializzazione"),
         RECRN004B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Mancata consegna presso Punti di Giacenza - In Dematerializzazione"),
         RECRN005B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Compiuta giacenza - In Dematerializzazione"),
-        RECRN010(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Inesito");
+        RECRN010(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Inesito"),
+        PNRN012(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.AR, EventStatus.OK, "Perfezionamento per decorrenza termini");
 
         private final EventStatusCodeTypeEnum codeType;
         private final ProductType productType;

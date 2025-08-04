@@ -16,15 +16,8 @@ public class IntermediateEventsBuilder implements HandlerStep {
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return SendEventMapper.createSendEventsFromPaperProgressStatusEvent(context)
-                .concatMap(sendEvent -> {
-                    if(CollectionUtils.isEmpty(context.getEventsToSend())) {
-                        context.setEventsToSend(new ArrayList<>());
-                        context.getEventsToSend().add(sendEvent);
-                    } else {
-                        context.getEventsToSend().add(sendEvent);
-                    }
-                    return Mono.empty();
-                }).then();
+                .doOnNext(sendEvent -> context.getEventsToSend().add(sendEvent))
+                .then();
     }
 
 }

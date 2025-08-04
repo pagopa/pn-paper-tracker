@@ -2,17 +2,12 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SendEventMapper {
@@ -25,15 +20,11 @@ public class SendEventMapper {
      */
     public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(HandlerContext handlerContext) {
         return Mono.just(handlerContext.getPaperProgressStatusEvent())
-                .flatMapMany(progressEvent -> {
-                    if (!CollectionUtils.isEmpty(progressEvent.getAttachments()) && progressEvent.getAttachments().size() > 1) {
-                        return Flux.fromIterable(progressEvent.getAttachments().stream()
-                                .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
-                                .collect(Collectors.toList()));
-                    } else {
-                        return Flux.fromIterable(List.of(buildSendEvent(progressEvent)));
-                    }
-                });
+                .flatMapMany(progressEvent ->
+                     Flux.fromIterable(progressEvent.getAttachments().stream()
+                            .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
+                            .collect(Collectors.toList()))
+                );
     }
 
     private static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, AttachmentDetails attachmentDetails) {
@@ -51,23 +42,8 @@ public class SendEventMapper {
 
     }
 
-    private static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent) {
-        return SendEvent.builder()
-                .attachments(progressEvent.getAttachments())
-                .requestId(progressEvent.getRequestId())
-                .statusCode(StatusCodeEnum.valueOf(StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
-                .statusDetail(progressEvent.getStatusCode())
-                .deliveryFailureCause(progressEvent.getDeliveryFailureCause())
-                .registeredLetterCode(progressEvent.getRegisteredLetterCode())
-                .discoveredAddress(buildAnalogAddressFromDiscoveredAddress(progressEvent.getDiscoveredAddress()))
-                .statusDateTime(progressEvent.getStatusDateTime())
-                .clientRequestTimeStamp(progressEvent.getClientRequestTimeStamp())
-                .build();
-
-    }
-
     private static AnalogAddress buildAnalogAddressFromDiscoveredAddress(DiscoveredAddress discoveredAddress) {
-        return AnalogAddress.builder()
+        return Objects.nonNull(discoveredAddress) ? AnalogAddress.builder()
                 .address(discoveredAddress.getAddress())
                 .addressRow2(discoveredAddress.getAddressRow2())
                 .pr(discoveredAddress.getPr())
@@ -77,6 +53,6 @@ public class SendEventMapper {
                 .country(discoveredAddress.getCountry())
                 .fullname(discoveredAddress.getName())
                 .nameRow2(discoveredAddress.getNameRow2())
-                .build();
+                .build() : null;
     }
 }
