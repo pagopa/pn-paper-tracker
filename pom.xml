@@ -238,7 +238,7 @@
 						<configuration>
 							<!-- aggiornare con il commitId di develop -->
 							<inputSpec>
-								https://raw.githubusercontent.com/pagopa/pn-paper-channel/235c565fcf0149f3e7c9b1abc0dabec8e49943ae/docs/openapi/api-internal-v1.yaml
+								https://raw.githubusercontent.com/pagopa/pn-paper-channel/b8533c9330718146dfe16dd158173698eb0916c1/docs/openapi/api-internal-v1.yaml
 							</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>

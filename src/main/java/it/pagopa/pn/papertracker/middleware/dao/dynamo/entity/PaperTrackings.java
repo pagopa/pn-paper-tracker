@@ -20,7 +20,7 @@ public class PaperTrackings {
     public static final String COL_VALIDATION_FLOW = "validationFlow";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
-    public static final String COL_HAS_NEXT_PC_RETRY = "hasNextPcretry";
+    public static final String COL_NEXT_REQUEST_ID_PC_RETRY = "nextRequestIdPcretry";
     public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
     public static final String COL_CREATED_AT = "createdAt";
     public static final String COL_UPDATED_AT = "updatedAt";
@@ -46,8 +46,8 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = OCR_REQUEST_ID_INDEX), @DynamoDbAttribute(COL_OCR_REQUEST_ID)}))
     private String ocrRequestId;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_HAS_NEXT_PC_RETRY)}))
-    private Boolean hasNextPcretry;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NEXT_REQUEST_ID_PC_RETRY)}))
+    private String nextRequestIdPcretry;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
     private String unifiedDeliveryDriver;

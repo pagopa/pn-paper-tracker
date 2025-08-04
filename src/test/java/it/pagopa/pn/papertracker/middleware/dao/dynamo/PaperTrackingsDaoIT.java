@@ -39,7 +39,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
                     assert retrieved.getOcrRequestId() == null;
-                    assert retrieved.getHasNextPcretry() == null;
+                    assert retrieved.getNextRequestIdPcretry() == null;
                     assert retrieved.getState() == PaperTrackingsState.AWAITING_FINAL_STATUS_CODE;
                 })
                 .block();
@@ -68,7 +68,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         String ocrRequestId = "test-ocr-request-id";
         paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
-        paperTrackingsToUpdate.setHasNextPcretry(true);
+        paperTrackingsToUpdate.setNextRequestIdPcretry("next-request-id-pcretry");
         paperTrackingsToUpdate.setState(PaperTrackingsState.DONE);
         ValidationFlow validationFlow1 = new ValidationFlow();
         validationFlow1.setOcrEnabled(true);
@@ -95,7 +95,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert paperTrackingsUpdated.getHasNextPcretry() == Boolean.TRUE;
+                    assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
@@ -124,7 +124,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert retrieved.getHasNextPcretry() == Boolean.TRUE;
+                    assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
@@ -157,7 +157,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert paperTrackingsUpdated.getHasNextPcretry() == Boolean.TRUE;
+                    assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
@@ -186,7 +186,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert retrieved.getHasNextPcretry() == Boolean.TRUE;
+                    assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
