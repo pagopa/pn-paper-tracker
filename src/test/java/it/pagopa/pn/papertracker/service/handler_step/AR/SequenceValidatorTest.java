@@ -121,6 +121,30 @@ class SequenceValidatorTest {
     }
 
     @Test
+    void validateSequenceValidFlowABCAllWithDocuments() {
+        //Arrange
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setEvents(List.of(
+                buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", List.of(DocumentTypeEnum.AR.getValue()))
+        ));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
     void validateSequenceValidFlowDEF() {
         // Arrange
         Instant timestamp = Instant.now();

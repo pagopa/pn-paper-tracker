@@ -16,7 +16,10 @@ import java.util.List;
 public class HandlersFactoryAr implements HandlersFactory {
     private final MetadataUpserter metadataUpserter;
     private final DeliveryPushSender deliveryPushSender;
+    private final FinalEventBuilder finalEventBuilder;
     private final IntermediateEventsBuilder intermediateEventsBuilder;
+    private final DematValidator dematValidator;
+    private final SequenceValidator sequenceValidator;
 
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
@@ -28,14 +31,38 @@ public class HandlersFactoryAr implements HandlersFactory {
     @Override
     public Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context) {
         return Flux.fromIterable(steps)
-                .concatMap(step -> step.execute(context))
+                .concatMap(step -> {
+                    if (context.isStopExecution()) {
+                        log.debug("Interruzione esecuzione richiesta - saltando step: {}", step.getClass().getSimpleName());
+                        return Mono.empty();
+                    }
+                    return step.execute(context);
+                })
                 .then();
-
     };
 
+    /**
+     * Metodo che prende in carico gli eventi finali per poi inviare la risposta a delivery-push.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati e demat
+     *  - Validazione triplette
+     *  - Validazione demat tramite invio di un messaggio all'OCR
+     *  - Costruzione evento finale
+     *  - Invio evento finale a delivery-push
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
     @Override
     public Mono<Void> buildFinalEventsHandler(HandlerContext context) {
-        return Mono.empty();
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter,
+                        sequenceValidator,
+                        dematValidator,
+                        finalEventBuilder,
+                        deliveryPushSender
+                ), context);
     }
 
     /**

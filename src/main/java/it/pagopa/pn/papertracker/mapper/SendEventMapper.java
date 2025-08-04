@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
