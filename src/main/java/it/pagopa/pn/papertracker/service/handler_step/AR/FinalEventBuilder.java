@@ -35,7 +35,6 @@ public class FinalEventBuilder implements HandlerStep {
                 .then();
     }
 
-
     public Mono<Void> buildFinalEvent(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent, HandlerContext handlerContext) {
         String statusCode = finalEvent.getStatusCode();
         log.info("Building final event for statusCode: {}", statusCode);
@@ -53,7 +52,7 @@ public class FinalEventBuilder implements HandlerStep {
         return Mono.just(isDifferenceGreater(statusCode, eventRECRN010, eventRECRN00XA))
                 .flatMap(isGreater -> {
                     if (isGreater) {
-                        return prepareFinalEventAndPNRN012toSend(finalEvent, eventRECRN010);
+                        return prepareFinalEventAndPNRN012toSend(finalEvent, eventRECRN010, handlerContext);
                     }
 
                     if (RECRN005C.name().equals(statusCode)) {
