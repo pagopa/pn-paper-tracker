@@ -94,4 +94,12 @@ public class HandlersFactoryAr implements HandlersFactory {
     public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
         return Mono.empty();
     }
+
+    @Override
+    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter
+                ), context);
+    }
 }

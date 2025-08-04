@@ -59,7 +59,7 @@ public class StatusCodeConfiguration {
             return Stream.of(values())
                     .filter(definition -> definition.name().equals(key))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("No sequence found for key: " + key));
+                    .orElse(null);
         }
     }
 

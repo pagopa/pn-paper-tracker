@@ -182,4 +182,18 @@ class HandlersFactoryArTest {
         verify(mockHandlerStep1).execute(handlerContext);
         verify(mockHandlerStep2).execute(handlerContext);
     }
+
+    @Test
+    void buildUnrecognizedEventsHandler_ExecutesMetadataUpserter() {
+        // Arrange
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(handlersFactoryAr.buildUnrecognizedEventsHandler(handlerContext))
+                .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(metadataUpserter);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+    }
 }

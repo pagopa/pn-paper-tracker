@@ -13,6 +13,9 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 @CustomLog
@@ -29,6 +32,10 @@ public class ExternalChannelHandler {
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
     public void handleExternalChannelMessage(SingleStatusUpdate payload) {
+        if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
+            log.error("Received null payload or analogMail in ExternalChannelHandler");
+            throw new IllegalArgumentException("Payload or analogMail cannot be null");
+        }
 
         String processName = "processExternalChannelMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
@@ -36,16 +43,19 @@ public class ExternalChannelHandler {
 
         MDCUtils.addMDCToContextAndExecute(Mono.just(payload)
                         .flatMap(singleStatusUpdate -> {
-                            String statusCode = payload.getAnalogMail() != null ? payload.getAnalogMail().getStatusCode() : "";
-                            String productType = StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(statusCode)
-                                    .getProductType().getValue();
+                            HandlerContext context = new HandlerContext();
+                            context.setPaperProgressStatusEvent(payload.getAnalogMail());
+                            String statusCode = payload.getAnalogMail().getStatusCode();
+                            String productType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
+                                    .map(e -> e.getProductType().getValue())
+                                    .orElse("UNKNOWN");
                             log.info("Handling external channel message with statusCode: {}, productType: {}",
                                     statusCode, productType);
 
                             if (ProductType.AR.getValue().equals(productType)) {
-                                return handleAREvent(payload, statusCode);
+                                return handleAREvent(statusCode, context);
                             } else {
-                                return Mono.empty();
+                                return handlersFactoryAr.buildUnrecognizedEventsHandler(context);
                             }
                         })
                         .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
@@ -57,13 +67,10 @@ public class ExternalChannelHandler {
      * Gestisce gli eventi di tipo AR (Analogue Mail) in base allo statusCode.
      * A seconda dello statusCode, invoca l'handler appropriato per gestire l'evento.
      *
-     * @param payload il SingleStatusUpdate contenente le informazioni da processare
      * @param statusCode lo statusCode dell'evento
      */
-    private Mono<Void> handleAREvent(SingleStatusUpdate payload, String statusCode){
+    private Mono<Void> handleAREvent(String statusCode, HandlerContext context) {
         EventStatus status = statusCodeConfiguration.getStatusFromStatusCode(statusCode);
-        HandlerContext context = new HandlerContext();
-        context.setPaperProgressStatusEvent(payload.getAnalogMail());
 
         return switch (status) {
             case PROGRESS -> {
@@ -77,10 +84,6 @@ public class ExternalChannelHandler {
             case OK -> {
                 log.info("Handling OK statusCode");
                 yield handlersFactoryAr.buildFinalEventsHandler(context);
-            }
-            default -> {
-                log.error("Unhandled status code: {}", status);
-                yield Mono.empty();
             }
         };
     }
