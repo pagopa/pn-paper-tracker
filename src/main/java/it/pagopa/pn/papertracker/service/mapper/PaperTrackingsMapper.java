@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.mapper;
 
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
@@ -18,6 +19,15 @@ public class PaperTrackingsMapper {
         paperTrackings.setRequestId(trackerCreationRequest.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(trackerCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackerCreationRequest.getProductType()));
+        paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        return paperTrackings;
+    }
+
+    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType){
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setRequestId(pcRetryResponse.getRequestId());
+        paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
+        paperTrackings.setProductType(productType);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }

@@ -20,6 +20,7 @@ public class HandlersFactoryAr implements HandlersFactory {
     private final IntermediateEventsBuilder intermediateEventsBuilder;
     private final DematValidator dematValidator;
     private final SequenceValidator sequenceValidator;
+    private final RetrySender retrySender;
 
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
