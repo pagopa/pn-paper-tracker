@@ -50,11 +50,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TrackerCreationRequest'
+              $ref: '#/components/schemas/TrackingCreationRequest'
         required: true
       responses:
         '201':
-          description: Created - Tracker created
+          description: Created - Tracking created
         '400':
           description: Bad request
           content:
@@ -73,14 +73,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/v1/events':
+  '/paper-tracker-private/v1/trackings':
     post:
       summary: Recupero eventi
       description: >-
         Permette il recupero dell'entità di tracking di una lista di requestId
       tags:
         - PaperTrackerEvent
-      operationId: retrieveTrackerEvents
+      operationId: retrieveTrackings
       requestBody:
         content:
           application/json:
@@ -160,6 +160,23 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/attempts/{attemptId}':
+    get:
+      summary: Oggetto tracking dato l'attemptId
+      description: >-
+        Recupera il tracking della spedizione dato l'attemptId.
+      tags:
+        - Attempts
+      operationId: getByAttemptId
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          description: Timeline id dell'elemento PREPARE_ANALOG_DOMICILE
+          schema:
+            type: string
+          example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
+
   '/paper-tracker-private/paper-status/{prepareAnalogDomicileTimelineId}':
     get:
       summary: Stato eventi finali della spedizione
@@ -266,14 +283,14 @@ components:
             type: string
       required:
         - requestIds
-    PaperTrackerResponse:
+    PaperTrackingsResponse:
       type: object
       properties:
         paperTrackerEntities:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerObj'
-    PaperTrackerObj:
+            $ref: '#/components/schemas/PaperTrackingsObj'
+    PaperTrackingsObj:
       type: object
       properties:
         requestId:
@@ -281,7 +298,7 @@ components:
         events:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerEvent'
+            $ref: '#/components/schemas/PaperTracking'
         validationFlow:
           $ref: '#/components/schemas/PaperTrackerValidationFlow'
         productType:
@@ -292,7 +309,7 @@ components:
           type: boolean
         deliveryDriverId:
           type: string
-    PaperTrackerEvent:
+    PaperTracking:
       type: object
       properties:
         requestTimestamp:
@@ -330,7 +347,7 @@ components:
           type: string
         date:
           type: string
-    PaperTrackerValidationFlow:
+    PaperTrackingValidationFlow:
       type: object
       properties:
         ocrEnabled:
