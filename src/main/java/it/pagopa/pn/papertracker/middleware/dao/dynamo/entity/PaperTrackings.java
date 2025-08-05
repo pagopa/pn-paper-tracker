@@ -29,7 +29,7 @@ public class PaperTrackings {
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_REQUEST_ID)}))
-    private String requestId;
+    private String trackingId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))
     private List<Event> events;

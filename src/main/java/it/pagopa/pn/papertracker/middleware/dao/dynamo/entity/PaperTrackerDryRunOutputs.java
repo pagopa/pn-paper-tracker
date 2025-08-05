@@ -53,7 +53,7 @@ public class PaperTrackerDryRunOutputs {
     private List<Attachment> attachments;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    private String anonymizedDiscoveredAddressId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CLIENT_REQUEST_TIMESTAMP)}))
     private String clientRequestTimestamp;

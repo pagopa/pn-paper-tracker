@@ -53,14 +53,14 @@ public class SequenceValidator implements HandlerStep {
         if (Objects.isNull(paperTrackings.getValidationFlow())) {
             paperTrackings.setValidationFlow(new ValidationFlow());
         }
-        return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings.getRequestId(), paperTrackings.getProductType())
+        return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings.getTrackingId(), paperTrackings.getProductType())
                 .flatMap(this::getOnlyLatestEvents)
-                .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings.getRequestId(), paperTrackings.getProductType()))
-                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
-                .flatMap(events -> validateAttachments(events, paperTrackings.getRequestId(), paperTrackings.getProductType()))
+                .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings.getTrackingId(), paperTrackings.getProductType()))
+                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings.getTrackingId(), paperTrackings.getProductType()))
+                .flatMap(events -> validateAttachments(events, paperTrackings.getTrackingId(), paperTrackings.getProductType()))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings))
-                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getRequestId(), buildPaperTrackings(paperTrackings)));
+                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), buildPaperTrackings(paperTrackings)));
     }
 
     /**
@@ -216,7 +216,7 @@ public class SequenceValidator implements HandlerStep {
                 if (StringUtil.isNullOrEmpty(deliveryFailureCause)) {
                     return generateCustomError(
                             "deliveryFailureCause non valorizzato per statusCode=" + statusCode,
-                            events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
+                            events, paperTrackings.getTrackingId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
                     );
                 }
                 if ((StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002B.name().equals(statusCode)
@@ -225,7 +225,7 @@ public class SequenceValidator implements HandlerStep {
                                 && !DeliveryFailureCauseEnum.containsCauseForE(deliveryFailureCause))) {
                     return generateCustomError(
                             "deliveryFailureCause non valido: " + deliveryFailureCause,
-                            events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
+                            events, paperTrackings.getTrackingId(), paperTrackings.getProductType(), ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
                     );
                 }
 
@@ -251,7 +251,7 @@ public class SequenceValidator implements HandlerStep {
         if (!allRegisteredLetterCodeMatch) {
             return generateCustomError(
                     "Registered letter codes do not match in sequence: " + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    events, paperTrackings.getRequestId(), paperTrackings.getProductType(), ErrorCategory.REGISTERED_LETTER_CODE_ERROR
+                    events, paperTrackings.getTrackingId(), paperTrackings.getProductType(), ErrorCategory.REGISTERED_LETTER_CODE_ERROR
             );
         }
         paperTrackings.getNotificationState().setRegisteredLetterCode(firstRegisteredLetterCode);
@@ -359,7 +359,7 @@ public class SequenceValidator implements HandlerStep {
         paperTrackings.getValidationFlow().setSequencesValidationTimestamp(Instant.now());
         //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
         paperTrackings.setUpdatedAt(null);
-        paperTrackings.setRequestId(null);
+        paperTrackings.setTrackingId(null);
         return paperTrackings;
     }
     

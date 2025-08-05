@@ -1,10 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.DeliveryPushSender;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
-import it.pagopa.pn.papertracker.service.handler_step.IntermediateEventsBuilder;
-import it.pagopa.pn.papertracker.service.handler_step.MetadataUpserter;
+import it.pagopa.pn.papertracker.service.handler_step.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,14 +18,26 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 
-//TODO implementare junits per gestione evento finale
 @ExtendWith(MockitoExtension.class)
 class HandlersFactoryArTest {
 
     @Mock
     private MetadataUpserter metadataUpserter;
+
+    @Mock
+    private SequenceValidator sequenceValidator;
+
+    @Mock
+    private DematValidator dematValidator;
+
+    @Mock
+    private FinalEventBuilder finalEventBuilder;
+
+    @Mock
+    private RetrySender retrySender;
 
     @Mock
     private DeliveryPushSender deliveryPushSender;
@@ -105,13 +114,25 @@ class HandlersFactoryArTest {
     }
 
     @Test
-    void buildFinalEventsHandler_ReturnsEmptyMono() {
-        // Act & Assert
+    void buildFinalEventsHandler_ExecutesSuccessfully() {
+        // Arrange
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(sequenceValidator.execute(handlerContext)).thenReturn(Mono.empty());
+        when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
+        when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+
+        // Act
         StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext))
                 .verifyComplete();
 
-        // Verify no interactions with dependencies
-        verifyNoInteractions(metadataUpserter, deliveryPushSender);
+        // Assert
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidator, dematValidator, finalEventBuilder, deliveryPushSender);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(sequenceValidator).execute(handlerContext);
+        inOrder.verify(dematValidator).execute(handlerContext);
+        inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(deliveryPushSender).execute(handlerContext);
     }
 
     @Test
@@ -133,13 +154,19 @@ class HandlersFactoryArTest {
     }
 
     @Test
-    void buildRetryEventHandler_ReturnsEmptyMono() {
-        // Act & Assert
+    void buildRetryEventHandler_ExecutesSuccessfully() {
+        // Arrange
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
+
+        // Act
         StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))
                 .verifyComplete();
 
-        // Verify no interactions with dependencies
-        verifyNoInteractions(metadataUpserter, deliveryPushSender);
+        // Assert
+        InOrder inOrder = inOrder(metadataUpserter, retrySender);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(retrySender).execute(handlerContext);
     }
 
     @Test

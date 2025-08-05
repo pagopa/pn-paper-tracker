@@ -32,7 +32,7 @@ public class DeliveryPushSender implements HandlerStep {
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
-                .flatMap(event -> sendToOutputTarget(event, context.getAnonimizedDiscoveredAddress()))
+                .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
                 .then();
     }
 
@@ -44,15 +44,15 @@ public class DeliveryPushSender implements HandlerStep {
      *
      * @param event evento da salvare nel target di output
      */
-    public Mono<Void> sendToOutputTarget(SendEvent event, String discoveredAddress) {
+    public Mono<Void> sendToOutputTarget(SendEvent event, String anonymizedDiscoveredAddressId) {
         return Mono.just(event)
-                .flatMap(tuple -> {
-                    log.info("Sending delivery push for event: {}", event);
+                .flatMap(sendEvent -> {
+                    log.info("Sending delivery push for event: {}", sendEvent);
                     if (configs.isSendOutputToDeliveryPush()) {
                         log.info("Sending event to pn-external_channel_outputs");
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
-                                .payload(PaperChannelUpdate.builder().sendEvent(event).build())
+                                .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
                                 .header( GenericEventHeader.builder()
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
@@ -64,7 +64,7 @@ public class DeliveryPushSender implements HandlerStep {
                         return Mono.empty();
                     } else {
                         log.info("Sending event to PnPaperTrackerDryRunOutputs");
-                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(event, discoveredAddress));
+                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, anonymizedDiscoveredAddressId));
                     }
                 })
                 .then();

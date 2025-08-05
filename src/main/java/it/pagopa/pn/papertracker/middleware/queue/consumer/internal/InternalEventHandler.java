@@ -32,7 +32,7 @@ public class InternalEventHandler {
         paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
                 .map(paperTrackings -> {
                     if (OCR_OK.equals(ocrResultMessage.getData().getValidationStatus().getValue())) {
-                        return paperTrackingsDAO.updateItem(buildPaperTrackings(paperTrackings));
+                        return paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), buildPaperTrackings(paperTrackings));
                         //TODO richiamare metodo di costruzione evento finale
                     } else if (OCR_KO.equals(ocrResultMessage.getData().getValidationStatus().getValue())) {
                         throw new PaperTrackerOcrKoException("Ocr KO!", BuilderUtils.buildErrorTrackerDTO(ocrResultMessage, requestId, productType, tripletta));
@@ -44,7 +44,7 @@ public class InternalEventHandler {
     }
 
     private PaperTrackings buildPaperTrackings(PaperTrackings paperTrackings) {
-        paperTrackings.getValidationFlow().setDematValidationTimestamp(Instant.now().toString());
+        paperTrackings.getValidationFlow().setDematValidationTimestamp(Instant.now());
         return paperTrackings;
     }
 }

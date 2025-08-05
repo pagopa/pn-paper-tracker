@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.rest;
 
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.api.PaperTrackerEventApi;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.api.PaperTrackerTrackingApi;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.service.PaperTrackerEventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-public class PaperTrackerEventController implements PaperTrackerEventApi {
+public class PaperTrackerEventController implements PaperTrackerTrackingApi {
 
     private final PaperTrackerEventService paperTrackerEventService;
 
@@ -24,14 +24,14 @@ public class PaperTrackerEventController implements PaperTrackerEventApi {
      * Riceve una richiesta con i dati da salvare, la elabora tramite il servizio
      * {@code paperTrackerEventService} e restituisce una risposta HTTP 201 (CREATED) se l'operazione ha successo.
      *
-     * @param trackerCreationRequest richiesta con i dati da salvare
+     * @param trackingCreationRequest richiesta con i dati da salvare
      * @return status HTTP
      */
     @Override
-    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackerCreationRequest> trackerCreationRequest, final ServerWebExchange exchange) {
-        log.debug("Received request initTracking - trackerCreationRequest={}", trackerCreationRequest);
+    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, final ServerWebExchange exchange) {
+        log.debug("Received request initTracking - trackingCreationRequest={}", trackingCreationRequest);
 
-        return trackerCreationRequest
+        return trackingCreationRequest
                 .flatMap(paperTrackerEventService::insertPaperTrackings)
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
     }

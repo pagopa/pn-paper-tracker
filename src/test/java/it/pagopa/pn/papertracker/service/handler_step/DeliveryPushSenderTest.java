@@ -8,12 +8,12 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
@@ -21,6 +21,7 @@ import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class DeliveryPushSenderTest {
 
     @Mock
@@ -35,11 +36,6 @@ class DeliveryPushSenderTest {
     @InjectMocks
     private DeliveryPushSender deliveryPushSender;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
@@ -49,7 +45,7 @@ class DeliveryPushSenderTest {
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
@@ -66,7 +62,7 @@ class DeliveryPushSenderTest {
         when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
@@ -82,12 +78,12 @@ class DeliveryPushSenderTest {
         when(config.isSendOutputToDeliveryPush()).thenReturn(true);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress);
+        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
 
         // Assert
         ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
         verify(externalChannelOutputsMomProducer).push(captor.capture());
-        Assertions.assertEquals(event, ((DeliveryPushEvent) captor.getValue()).getPayload().getSendEvent());
+        Assertions.assertEquals(event, captor.getValue().getPayload().getSendEvent());
     }
 
     private SendEvent getSendEvent() {

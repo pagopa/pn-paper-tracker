@@ -2,8 +2,10 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnoreNulls;
 
 import java.time.Instant;
@@ -19,8 +21,13 @@ public class Event {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_DELIVERY_FAILURE_CAUSE = "deliveryFailureCause";
     public static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
+    public static final String COL_ANONYMIZED_DISCOVERED_ADDRESS_ID = "anonymizedDiscoveredAddressId";
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
+
+    @Getter(onMethod = @__({@DynamoDbIgnore}))
+    @Setter(onMethod = @__({@DynamoDbIgnore}))
+    private String discoveredAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_TIMESTAMP)}))
     private Instant requestTimestamp;
@@ -37,8 +44,8 @@ public class Event {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ANONYMIZED_DISCOVERED_ADDRESS_ID)}))
+    private String anonymizedDiscoveredAddressId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ATTACHMENTS), @DynamoDbIgnoreNulls}))
     private List<Attachment> attachments;

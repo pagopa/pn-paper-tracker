@@ -38,17 +38,17 @@ public class DematValidator implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return validateDemat(context.getPaperTrackings(), context.getPaperTrackings().getRequestId(), context)
+        return validateDemat(context.getPaperTrackings(), context.getPaperTrackings().getTrackingId(), context)
                 .then();
     }
 
     public Mono<Void> validateDemat(PaperTrackings paperTrackings, String requestId, HandlerContext context){
-        log.info("Inizio validazione Demat per requestId={}, request : {}", paperTrackings.getRequestId(), paperTrackings);
+        log.info("Inizio validazione Demat per requestId={}, request : {}", paperTrackings.getTrackingId(), paperTrackings);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
                     //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
                     paperTracking.setUpdatedAt(null);
-                    paperTracking.setRequestId(null);
+                    paperTracking.setTrackingId(null);
                     if (cfg.isEnableOcrValidation()) {
                         log.debug("OCR validation abilitata");
                         return sendMessageToOcr(paperTracking, requestId);
@@ -104,7 +104,7 @@ public class DematValidator implements HandlerStep {
         paperTracking.getValidationFlow().setOcrEnabled(false);
         paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
         return paperTrackingsDAO.updateItem(requestId, paperTracking)
-                .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getRequestId()))
+                .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
@@ -112,7 +112,7 @@ public class DematValidator implements HandlerStep {
         return Arrays.stream(DataDTO.ProductType.values()).filter(ocrProductType -> ocrProductType.getValue().equals(paperTracking.getProductType().getValue()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("ProductType non valido per requestId={}: {}", paperTracking.getRequestId(), paperTracking.getProductType());
+                    log.error("ProductType non valido per requestId={}: {}", paperTracking.getTrackingId(), paperTracking.getProductType());
                     return new IllegalArgumentException("Invalid product type: " + paperTracking.getProductType());
                 });
     }

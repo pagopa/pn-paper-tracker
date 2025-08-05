@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class PaperTrackerDryRunOutputsMapper {
 
-    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String discoveredAddress) {
+    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String anonymizedDiscoveredAddressId) {
         PaperTrackerDryRunOutputs dryRunOutput = new PaperTrackerDryRunOutputs();
         dryRunOutput.setRequestId(event.getRequestId());
         dryRunOutput.setCreated(Instant.now());
@@ -18,7 +18,7 @@ public class PaperTrackerDryRunOutputsMapper {
         dryRunOutput.setStatusDetail(event.getStatusDetail());
         dryRunOutput.setStatusDescription(event.getStatusDescription());
         dryRunOutput.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        dryRunOutput.setDiscoveredAddress(discoveredAddress);
+        dryRunOutput.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
 
         if(Objects.nonNull(event.getStatusCode())) {
             dryRunOutput.setStatusCode(event.getStatusCode().name());

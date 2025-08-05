@@ -88,7 +88,11 @@ public class HandlersFactoryAr implements HandlersFactory {
 
     @Override
     public Mono<Void> buildRetryEventHandler(HandlerContext context) {
-        return Mono.empty();
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter,
+                        retrySender
+                ), context);
     }
 
     @Override

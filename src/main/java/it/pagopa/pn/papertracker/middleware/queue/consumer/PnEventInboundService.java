@@ -35,7 +35,7 @@ public class PnEventInboundService {
         }
     }
 
-    @SqsListener(queueNames = "${cfg.topics.ocrOutputTopic}")
+    @SqsListener(value = "${pn.paper-tracker.topics.ocr-output-topic}")
     public void ocrOutputsConsumer(Message<OcrDataResultPayload> message) {
         try {
             log.debug("Handle message from pn-ocr_outputs with content {}", message);

@@ -2,7 +2,7 @@ package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
@@ -12,12 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import java.time.Duration;
 
 import static org.mockito.Mockito.*;
 
@@ -43,10 +40,10 @@ class PaperTrackerEventServiceImplTest {
     @Test
     void insertPaperTrackingsValidRequest() {
         //ARRANGE
-        TrackerCreationRequest request = getTrackerCreationRequest();
+        TrackingCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
-                pt.getRequestId().equals(request.getRequestId()) &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.just(new PaperTrackings()));
@@ -58,7 +55,7 @@ class PaperTrackerEventServiceImplTest {
         StepVerifier.create(response)
                 .verifyComplete();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
-                pt.getRequestId().equals(request.getRequestId()) &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
@@ -67,10 +64,10 @@ class PaperTrackerEventServiceImplTest {
     @Test
     void insertPaperTrackingsConflictException() {
         //ARRANGE
-        TrackerCreationRequest request = getTrackerCreationRequest();
+        TrackingCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
-                pt.getRequestId().equals(request.getRequestId()) &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
@@ -83,7 +80,7 @@ class PaperTrackerEventServiceImplTest {
                 .expectError(PnPaperTrackerConflictException.class)
                 .verify();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
-                pt.getRequestId().equals(request.getRequestId()) &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
@@ -104,9 +101,9 @@ class PaperTrackerEventServiceImplTest {
         verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
     }
 
-    private TrackerCreationRequest getTrackerCreationRequest() {
-        TrackerCreationRequest request = new TrackerCreationRequest();
-        request.setRequestId("request123");
+    private TrackingCreationRequest getTrackerCreationRequest() {
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setTrackingId("request123");
         request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("RS");
         return request;

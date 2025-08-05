@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.mapper;
 
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import org.junit.jupiter.api.Assertions;
@@ -17,8 +17,8 @@ public class PaperTrackingsMapperTest {
     @Test
     void toPaperTrackingsValidRequest() {
         //ARRANGE
-        TrackerCreationRequest request = new TrackerCreationRequest();
-        request.setRequestId("request123");
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setTrackingId("request123");
         request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("RS");
 
@@ -26,7 +26,7 @@ public class PaperTrackingsMapperTest {
         PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration);
 
         //ASSERT
-        Assertions.assertEquals("request123", paperTrackings.getRequestId());
+        Assertions.assertEquals("request123", paperTrackings.getTrackingId());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
         Assertions.assertTrue(paperTrackings.getTtl() > 0);
@@ -35,8 +35,8 @@ public class PaperTrackingsMapperTest {
     @Test
     void toPaperTrackingsInvalidProductType() {
         //ARRANGE
-        TrackerCreationRequest request = new TrackerCreationRequest();
-        request.setRequestId("request123");
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setTrackingId("request123");
         request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("INVALID_TYPE");
 

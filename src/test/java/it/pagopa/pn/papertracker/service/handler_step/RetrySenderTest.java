@@ -46,7 +46,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(true);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getRequestId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
         when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
 
         //ACT
@@ -54,10 +54,10 @@ public class RetrySenderTest {
                 .verifyComplete();
 
         //ASSERT
-        verify(paperTrackingsDAO).updateItem(eq(context.getPaperTrackings().getRequestId()), argThat(paperTrackings ->
+        verify(paperTrackingsDAO).updateItem(eq(context.getPaperTrackings().getTrackingId()), argThat(paperTrackings ->
                 paperTrackings.getNextRequestIdPcretry().equals(response.getRequestId())));
         verify(paperTrackingsDAO).putIfAbsent(
-                argThat(paperTrackings -> paperTrackings.getRequestId().equals(response.getRequestId()) &&
+                argThat(paperTrackings -> paperTrackings.getTrackingId().equals(response.getRequestId()) &&
                         paperTrackings.getUnifiedDeliveryDriver().equals(response.getDeliveryDriverId()) &&
                         paperTrackings.getProductType() == context.getPaperTrackings().getProductType()));
         verify(paperTrackingsErrorsDAO, never()).insertError(any());
@@ -69,7 +69,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(false);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getRequestId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -91,7 +91,7 @@ public class RetrySenderTest {
         //ARRANGE
         HandlerContext context = getHandlerContext();
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getRequestId())).thenReturn(Mono.error(new RuntimeException()));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(new RuntimeException()));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -106,7 +106,7 @@ public class RetrySenderTest {
     private HandlerContext getHandlerContext() {
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(new PaperTrackings());
-        context.getPaperTrackings().setRequestId("requestId");
+        context.getPaperTrackings().setTrackingId("requestId");
         context.getPaperTrackings().setProductType(ProductType.AR);
         context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
         context.getPaperProgressStatusEvent().setRequestId("requestId");

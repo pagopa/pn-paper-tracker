@@ -45,7 +45,7 @@ class FinalEventBuilderTest {
         statusCodeConfiguration = new StatusCodeConfiguration();
         finalEventBuilder = new FinalEventBuilder(cfg, statusCodeConfiguration);
         paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId("req-123");
+        paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setNotificationState(new NotificationState());
@@ -85,7 +85,7 @@ class FinalEventBuilderTest {
                     Assertions.assertInstanceOf(PnPaperTrackerValidationException.class, throwable);
                     PnPaperTrackerValidationException ex = (PnPaperTrackerValidationException) throwable;
                     Assertions.assertNotNull(ex.getError());
-                    Assertions.assertEquals(paperTrackings.getRequestId(), ex.getError().getRequestId());
+                    Assertions.assertEquals(paperTrackings.getTrackingId(), ex.getError().getRequestId());
                     Assertions.assertEquals(finalEvent.getStatusCode(), ex.getError().getEventThrow());
                     Assertions.assertEquals(ProductType.valueOf(finalEvent.getProductType()), ex.getError().getProductType());
                     Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, ex.getError().getDetails().getCause());
@@ -93,7 +93,7 @@ class FinalEventBuilderTest {
                 .verify();
 
         // Assert
-        Assertions.assertNull(handlerContext.getEventsToSend());
+        Assertions.assertTrue(handlerContext.getEventsToSend().isEmpty());
     }
 
     @Test

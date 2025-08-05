@@ -22,7 +22,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     void putIfAbsentAndRetrieveByRequestId() {
         String requestId = "test-request-id-1";
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId(requestId);
+        paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
@@ -33,7 +33,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.retrieveEntityByRequestId(requestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
-                    assert retrieved.getRequestId().equals(requestId);
+                    assert retrieved.getTrackingId().equals(requestId);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
@@ -53,7 +53,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     void updateItemAndRetrieveByOcrRequestId() {
         String requestId = "test-request-id-2";
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId(requestId);
+        paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         NotificationState notificationState = new NotificationState();
@@ -214,7 +214,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     void updateItemRequestIdNotExists() {
         String requestId = "test-request-id";
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId(requestId);
+        paperTrackings.setTrackingId(requestId);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -231,7 +231,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     void addEvents() {
         String requestId = "test-request-id-3";
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId(requestId);
+        paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
 

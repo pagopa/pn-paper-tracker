@@ -13,7 +13,7 @@ public class HandlerContext {
 
     private PaperProgressStatusEvent paperProgressStatusEvent;
     private PaperTrackings paperTrackings;
-    private String anonimizedDiscoveredAddress;
+    private String anonymizedDiscoveredAddressId;
     private List<SendEvent> eventsToSend = new ArrayList<>();
     private boolean stopExecution = false;
 

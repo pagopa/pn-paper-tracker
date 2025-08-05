@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
@@ -25,9 +25,9 @@ public class PaperTrackerEventServiceImpl implements PaperTrackerEventService {
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Override
-    public Mono<Void> insertPaperTrackings(TrackerCreationRequest trackerCreationRequest) {
+    public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
         Duration paperTrackingsTtlDuration = pnPaperTrackerConfigs.getPaperTrackingsTtlDuration();
-        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackerCreationRequest, paperTrackingsTtlDuration)).then();
+        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, paperTrackingsTtlDuration)).then();
     }
 
     @Override

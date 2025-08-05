@@ -26,14 +26,14 @@ public class RetrySender implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return pcRetryApi.getPcRetry(context.getPaperTrackings().getRequestId())
+        return pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())
                 .onErrorMap(
                         ex -> ex instanceof RuntimeException,
                         ex -> new PnPaperTrackerNotFoundException("RequestId not found", ex.getMessage())
                 )
                 .flatMap(pcRetryResponse -> {
                     if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-                        paperTrackingsDAO.updateItem(context.getPaperTrackings().getRequestId(), getPaperTrackingsPcretry(pcRetryResponse));
+                        paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsPcretry(pcRetryResponse));
                         paperTrackingsDAO.putIfAbsent(
                                 PaperTrackingsMapper.toPaperTrackings(
                                         pcRetryResponse,

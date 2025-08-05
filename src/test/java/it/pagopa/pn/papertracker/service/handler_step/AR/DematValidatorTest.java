@@ -44,7 +44,7 @@ class DematValidatorTest {
     void setUp() {
         context = new HandlerContext();
         paperTrackings = new PaperTrackings();
-        paperTrackings.setRequestId("req-123");
+        paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setNotificationState(new NotificationState());

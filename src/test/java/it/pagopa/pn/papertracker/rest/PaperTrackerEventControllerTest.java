@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.rest;
 
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackerCreationRequest;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.service.PaperTrackerEventService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,11 +31,11 @@ class PaperTrackerEventControllerTest {
     @Test
     void initTrackingReturnsOkResponse() {
         //ARRANGE
-        TrackerCreationRequest request = new TrackerCreationRequest();
-        request.setRequestId("test-request-id");
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setTrackingId("test-request-id");
         request.setUnifiedDeliveryDriver("test-driver-id");
         request.setProductType("test-product-type");
-        Mono<TrackerCreationRequest> requestMono = Mono.just(request);
+        Mono<TrackingCreationRequest> requestMono = Mono.just(request);
 
         when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.empty());
 
@@ -52,8 +52,8 @@ class PaperTrackerEventControllerTest {
     @Test
     void initTrackingReturnsConflict() {
         //ARRANGE
-        TrackerCreationRequest request = new TrackerCreationRequest();
-        Mono<TrackerCreationRequest> requestMono = Mono.just(request);
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        Mono<TrackingCreationRequest> requestMono = Mono.just(request);
 
         when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.error(new PnPaperTrackerConflictException("Duplicated item", "Conflict")));
 

@@ -1,0 +1,40 @@
+package it.pagopa.pn.papertracker.middleware.msclient.impl;
+
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.api.PaperAddressesApi;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
+import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Component
+@RequiredArgsConstructor
+public class DataVaultClientImpl implements DataVaultClient {
+
+    private final PaperAddressesApi paperAddressesApi;
+    private final String PREFIX_ANONYMIZED_ADDRESS_ID = "anonymized_addr_";
+
+    @Override
+    public Mono<String> anonymizeDiscoveredAddress(String trackingId, DiscoveredAddress discoveredAddress) {
+        String uuid = UUID.randomUUID().toString();
+        String anonymizedDiscoveredAddressId = PREFIX_ANONYMIZED_ADDRESS_ID + uuid;
+        return paperAddressesApi.updatePaperAddress(trackingId, anonymizedDiscoveredAddressId, toPaperAddress(discoveredAddress))
+                .thenReturn(anonymizedDiscoveredAddressId);
+    }
+
+    private PaperAddress toPaperAddress(DiscoveredAddress discoveredAddress) {
+        return new PaperAddress()
+                .name(discoveredAddress.getName())
+                .nameRow2(discoveredAddress.getNameRow2())
+                .address(discoveredAddress.getAddress())
+                .addressRow2(discoveredAddress.getAddressRow2())
+                .cap(discoveredAddress.getCap())
+                .city(discoveredAddress.getCity())
+                .city2(discoveredAddress.getCity2())
+                .pr(discoveredAddress.getPr())
+                .country(discoveredAddress.getCountry());
+    }
+}

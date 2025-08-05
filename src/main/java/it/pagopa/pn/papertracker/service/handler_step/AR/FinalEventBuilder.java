@@ -111,7 +111,7 @@ public class FinalEventBuilder implements HandlerStep {
     private PaperTrackingsErrors getPaperTrackingsErrors(PaperTrackings paperTrackings, PaperProgressStatusEvent finalEvent,
                                                          Event RECRN00XA, Event RECRN010) {
         PaperTrackingsErrors errors = new PaperTrackingsErrors();
-        errors.setRequestId(paperTrackings.getRequestId());
+        errors.setRequestId(paperTrackings.getTrackingId());
         errors.setCreated(Instant.now());
         errors.setErrorCategory(ErrorCategory.RENDICONTAZIONE_SCARTATA);
         ErrorDetails errorDetails = new ErrorDetails();
@@ -127,7 +127,7 @@ public class FinalEventBuilder implements HandlerStep {
 
     private Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
         return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+                ? Duration.ofDays(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2)))
                 : Duration.between(instant1, instant2);
     }
 

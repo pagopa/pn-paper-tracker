@@ -16,13 +16,13 @@ import java.util.List;
 public class PaperProgressStatusEventMapper {
 
     /**
-     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro PaperTrackins in modo da fare l'upsert
+     * Rimappa l'oggetto PaperProgressStatusEvent nell'entity PaperTrackings in modo da effettuare l'upsert
      *
-     * @param handlerContext
+     * @param paperProgressStatusEvent evento da rimappare
+     * @param anonymizedDiscoveredAddressId l'id dell'indirizzo anonimizzato
      * @return PaperTrackings contenente il nuovo evento
      */
-    public static Mono<PaperTrackings> createPaperTrackingFromPaperProgressStatusEvent(HandlerContext handlerContext) {
-        PaperProgressStatusEvent paperProgressStatusEvent = handlerContext.getPaperProgressStatusEvent();
+    public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent, String anonymizedDiscoveredAddressId) {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         if (!CollectionUtils.isEmpty(paperProgressStatusEvent.getAttachments())) {
@@ -36,9 +36,8 @@ public class PaperProgressStatusEventMapper {
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
         event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
-        if (!StringUtils.isEmpty(handlerContext.getAnonimizedDiscoveredAddress())) {
-            event.setDiscoveredAddress(handlerContext.getAnonimizedDiscoveredAddress());
-        }
+        event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
+        event.setDiscoveredAddress(null);//TODO?
 
         paperTrackings.setEvents(List.of(event));
         return Mono.just(paperTrackings);

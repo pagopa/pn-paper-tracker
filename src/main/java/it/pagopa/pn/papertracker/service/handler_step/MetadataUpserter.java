@@ -1,7 +1,9 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,24 +16,29 @@ import java.util.Objects;
 public class MetadataUpserter implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
+    private final DataVaultClient dataVaultClient;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(PaperProgressStatusEventMapper::createPaperTrackingFromPaperProgressStatusEvent)
+                .flatMap(anonymizedDiscoveredAddressId -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), anonymizedDiscoveredAddressId))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
-    private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
-        //TODO implementare l'anonimizzazione del discoveredAddress
-        if (Objects.nonNull(handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress())) {
-            String anonimizedDiscoveredAddress = "";
-            handlerContext.setAnonimizedDiscoveredAddress(anonimizedDiscoveredAddress);
+    private Mono<String> discoveredAddressAnonimization(HandlerContext handlerContext) {
+        DiscoveredAddress discoveredAddress = handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress();
+        if (Objects.nonNull(discoveredAddress)) {
+            return dataVaultClient.anonymizeDiscoveredAddress(
+                    handlerContext.getPaperProgressStatusEvent().getRequestId(),
+                    discoveredAddress
+            ).map(anonymizedDiscoveredAddressId -> {
+                handlerContext.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
+                return anonymizedDiscoveredAddressId;
+            });
         }
-
-        return Mono.just(handlerContext);
+        return Mono.just("");
     }
 }

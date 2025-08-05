@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
+import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
@@ -12,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class PaperTrackerDryRunOutputsDaoIT extends it.pagopa.pn.papertracker.BaseTest.WithLocalStack {
+public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
 
     @Autowired
     PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
@@ -26,7 +27,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends it.pagopa.pn.papertracker.Ba
             output.setClientRequestTimestamp(Instant.now().toString());
             output.setRegisteredLetterCode("registeredLetterCode");
             output.setDeliveryFailureCause("deliveryFailureCause");
-            output.setDiscoveredAddress("discoveredAddress");
+            output.setAnonymizedDiscoveredAddressId("discoveredAddress");
             output.setStatusCode("RECRN001C");
             output.setStatusDetail("statusDetail");
             output.setStatusDescription("statusDescription");
@@ -47,7 +48,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends it.pagopa.pn.papertracker.Ba
         output.setClientRequestTimestamp(Instant.now().toString());
         output.setRegisteredLetterCode("registeredLetterCode");
         output.setDeliveryFailureCause("deliveryFailureCause");
-        output.setDiscoveredAddress("discoveredAddress");
+        output.setAnonymizedDiscoveredAddressId("discoveredAddress");
         output.setStatusCode("RECRN001C");
         output.setStatusDetail("statusDetail");
         output.setStatusDescription("statusDescription");
@@ -70,7 +71,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends it.pagopa.pn.papertracker.Ba
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getStatusDetail().equals("statusDetail")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getStatusDescription().equals("statusDescription")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getDeliveryFailureCause().equals("deliveryFailureCause")));
-        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getDiscoveredAddress().equals("discoveredAddress")));
+        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAnonymizedDiscoveredAddressId().equals("discoveredAddress")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getRegisteredLetterCode().equals("registeredLetterCode")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getCreated() != null));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getClientRequestTimestamp() != null));
@@ -89,7 +90,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends it.pagopa.pn.papertracker.Ba
         Assertions.assertNotNull(outputs2.getFirst().getClientRequestTimestamp());
         Assertions.assertEquals("registeredLetterCode", outputs2.getFirst().getRegisteredLetterCode());
         Assertions.assertEquals("deliveryFailureCause", outputs2.getFirst().getDeliveryFailureCause());
-        Assertions.assertEquals("discoveredAddress", outputs2.getFirst().getDiscoveredAddress());
+        Assertions.assertEquals("discoveredAddress", outputs2.getFirst().getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals("RECRN001C", outputs2.getFirst().getStatusCode());
         Assertions.assertEquals("statusDetail", outputs2.getFirst().getStatusDetail());
         Assertions.assertEquals("statusDescription", outputs2.getFirst().getStatusDescription());

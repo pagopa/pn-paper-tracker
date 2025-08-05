@@ -17,6 +17,7 @@ public class PnPaperTrackerConfigs {
     private Dao dao;
     private String queueOcrInput;
     private String paperChannelBaseUrl;
+    private String dataVaultBaseUrl;
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private boolean sendOutputToDeliveryPush;
