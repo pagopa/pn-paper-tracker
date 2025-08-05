@@ -9,8 +9,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 @Slf4j
 public class OcrMomProducer extends AbstractSqsMomProducer<OcrEvent>  {
 
-    public OcrMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<OcrEvent> msgClass) {
-        super(sqsClient, topic, objectMapper, msgClass);
+    public OcrMomProducer(SqsClient sqsClient, String topic, String url, ObjectMapper objectMapper, Class<OcrEvent> msgClass) {
+        super(sqsClient, topic, url, objectMapper, msgClass);
     }
 
 }

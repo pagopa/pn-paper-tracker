@@ -2,11 +2,7 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorDetails;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +26,9 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
             error.setErrorCategory(ErrorCategory.UNKNOWN);
             error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
             error.setProductType(ProductType.AR);
+            error.setType(ErrorType.WARNING);
             ErrorDetails errorDetails = new ErrorDetails();
-            errorDetails.setCause("ERROR");
+            errorDetails.setCause(ErrorCause.GIACENZA_DATE_ERROR);
             errorDetails.setMessage("error");
             error.setDetails(errorDetails);
             error.setEventThrow("RECRN001C");
@@ -45,8 +42,9 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         error.setErrorCategory(ErrorCategory.UNKNOWN);
         error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
         error.setProductType(ProductType.AR);
+        error.setType(ErrorType.ERROR);
         ErrorDetails errorDetails = new ErrorDetails();
-        errorDetails.setCause("ERROR");
+        errorDetails.setCause(ErrorCause.GIACENZA_DATE_ERROR);
         errorDetails.setMessage("error");
         error.setDetails(errorDetails);
         error.setEventThrow("RECRN001C");
@@ -61,9 +59,10 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getErrorCategory() == ErrorCategory.UNKNOWN));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getFlowThrow() == FlowThrow.DEMAT_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getProductType() == ProductType.AR));
-        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause().equals("ERROR")));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause() == ErrorCause.GIACENZA_DATE_ERROR));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getMessage().equals("error")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getEventThrow().equals("RECRN001C")));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getType() == ErrorType.WARNING));
 
         List<PaperTrackingsErrors> errors2 = paperTrackingsErrorsDAO.retrieveErrors("requestId2").collectList().block();
         Assertions.assertNotNull(errors2);
@@ -71,11 +70,11 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals("requestId2", errors2.getFirst().getRequestId());
         Assertions.assertSame(ErrorCategory.UNKNOWN, errors2.getFirst().getErrorCategory());
         Assertions.assertSame(FlowThrow.DEMAT_VALIDATION, errors2.getFirst().getFlowThrow());
-        Assertions.assertSame(errors2.getFirst().getProductType(), ProductType.AR);
-        Assertions.assertEquals("ERROR", errors2.getFirst().getDetails().getCause());
+        Assertions.assertSame(ProductType.AR, errors2.getFirst().getProductType());
+        Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, errors2.getFirst().getDetails().getCause());
         Assertions.assertEquals("error", errors2.getFirst().getDetails().getMessage());
         Assertions.assertEquals("RECRN001C", errors2.getFirst().getEventThrow());
-
+        Assertions.assertSame(ErrorType.ERROR, errors2.getFirst().getType());
 
     }
 }

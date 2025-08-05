@@ -1,4 +1,31 @@
-echo " - Create pn-delayer TABLES"
+echo "### CREATE QUEUES ###"
+
+queues="pn-ocr_outputs dl-sqs pn-external_channel_to_paper_tracker pn-external_channel_outputs"
+for qn in $(echo $queues | tr " " "\n"); do
+    echo creating queue $qn ...
+    aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+        sqs create-queue \
+        --attributes '{"DelaySeconds":"2"}' \
+        --queue-name $qn
+
+    echo "Queue $qn created successfully"
+done
+
+
+awslocal sqs list-queues
+
+echo " - Create pn-paper-tracker TABLES"
+
+echo "### CREATE QUEUES ###"
+
+queues="pn-ocr_outputs dl-sqs"
+for qn in  $( echo $queues | tr " " "\n" ) ; do
+    echo creating queue $qn ...
+    aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \
+        sqs create-queue \
+        --attributes '{"DelaySeconds":"2"}' \
+        --queue-name $qn
+done
 
 aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     dynamodb create-table \
