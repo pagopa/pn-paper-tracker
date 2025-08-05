@@ -22,7 +22,8 @@ tags:
   - name: HealthCheck
     description: >-
       Invocazioni per sapere lo stato del microservizio
-  - name: PaperTrackerEvent
+  - name: PaperTrackerTracking
+  - name: PaperTrackerAttempt
   - name: PaperTrackerError
   - name: PaperTrackerOutput
 paths:
@@ -42,19 +43,19 @@ paths:
     post:
       summary: Inserimento tracker
       description: >-
-        Permette l'inserimento di un evento di tracking
+        Permette l'inizializzazione di un'entità di tracking.
       tags:
-        - PaperTrackerEvent
+        - PaperTrackerTracking
       operationId: initTracking
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TrackerCreationRequest'
+              $ref: '#/components/schemas/TrackingCreationRequest'
         required: true
       responses:
         '201':
-          description: Created - Tracker created
+          description: Created - Tracking created
         '400':
           description: Bad request
           content:
@@ -73,27 +74,27 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/v1/events':
+  '/paper-tracker-private/v1/trackings':
     post:
       summary: Recupero eventi
       description: >-
-        Permette il recupero dell'entità di tracking di una lista di requestId
+        Permette il recupero delle entità di tracking da una lista di trackingId.
       tags:
-        - PaperTrackerEvent
-      operationId: retrieveTrackerEvents
+        - PaperTrackerTracking
+      operationId: retrieveTrackings
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaperTrackerRequest'
+              $ref: '#/components/schemas/TrackingsRequest'
         required: true
       responses:
         '200':
-          description: returns related PaperTracker entity for each requestId
+          description: returns related Tracking entity for each trackingId
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaperTrackerResponse'
+                $ref: '#/components/schemas/TrackingsResponse'
         '404':
           description: Bad request
           content:
@@ -108,25 +109,25 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
   '/paper-tracker-private/v1/errors':
     post:
-      summary: Recupero eventi
+      summary: Recupero errori
       description: >-
-        Permette il recupero degli errori presenti per la lista di requestId fornita in input
+        Permette il recupero degli errori presenti nella tabella PnPaperTrackingsErrors.
       tags:
         - PaperTrackerError
-      operationId: retrieveTrackerErrors
+      operationId: retrieveTrackingErrors
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaperTrackerRequest'
+              $ref: '#/components/schemas/TrackingsRequest'
         required: true
       responses:
         '200':
-          description: returns PaperTrackingError entity for each requestId
+          description: returns TrackingErrorsResponse entity for each trackingId
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaperTrackerErrorsResponse'
+                $ref: '#/components/schemas/TrackingErrorsResponse'
         '500':
           description: Internal Server Error
           content:
@@ -135,21 +136,21 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
   '/paper-tracker-private/v1/outputs':
     post:
-      summary: Recupero eventi
+      summary: Recupero output prodotto
       description: >-
-        Permette il recupero degli errori presenti per la lista di requestId fornita in input
+        Permette il recupero degli oggetti in output nella tabella PnPaperTrackerDryRunOutputs.
       tags:
         - PaperTrackerOutput
-      operationId: retrieveTrackerOutputs
+      operationId: retrieveTrackingOutputs
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaperTrackerRequest'
+              $ref: '#/components/schemas/TrackingsRequest'
         required: true
       responses:
         '200':
-          description: returns PnPaperTrackerDryRunOutputs entities for each requestId
+          description: returns PnPaperTrackerDryRunOutputs entities for each trackingId
           content:
             application/json:
               schema:
@@ -160,61 +161,35 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/paper-status/{prepareAnalogDomicileTimelineId}':
+  '/paper-tracker-private/v1/attempts/{attemptId}':
     get:
-      summary: Stato eventi finali della spedizione
+      summary: Oggetto tracking dato l'attemptId
       description: >-
-        Recupera lo stato degli eventi finali della spedizione. Se non specificato viene preso l'ultimo PC_RETRY.
+        Recupera il tracking della spedizione dato l'attemptId.
       tags:
-        - PaperStatus
-      operationId: paperStatus
+        - PaperTrackerAttempt
+      operationId: retrieveTrackingsByAttemptId
       parameters:
-        - in: path
-          name: prepareAnalogDomicileTimelineId
-          required: true
-          description: Timeline id dell'elemento PREPARE_ANALOG_DOMICILE
-          schema:
-            type: string
-          example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
-        - in: query
-          name: pcretry
-          required: false
-          schema:
-            type: string
-          description: Se non definito, viene recuperato di default l'ultimo PCRETRY disponibile
-          example: "PCRETRY_0"
+        - $ref: '#/components/parameters/attemptId'
       responses:
         '200':
-          description: returns PnPaperTrackerDryRunOutputs entities for each requestId
+          description: returns Tracking entities using the attemptId
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaperTrackerStatusResponse'
-        '400':
-          description: Bad request
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
-        '404':
-          description: Not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+                $ref: '#/components/schemas/TrackingsResponse'
         '500':
           description: Internal Server Error
           content:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-
 components:
   parameters:
-    requestId:
+    attemptId:
       description: >-
-        Request id
-      name: requestId
+        Timeline id dell'elemento PREPARE_ANALOG_DOMICILE
+      name: attemptId
       in: path
       required: true
       schema:
@@ -222,85 +197,75 @@ components:
         # ASCII printable characters
         pattern: ^[ -~]*$
         maxLength: 1024
-    deliveryDriverId:
-      description: >-
-        Id del recapitista
-      name: deliveryDriverId
-      in: query
-      required: true
-      schema:
-        type: string
-        # ASCII printable characters
-        pattern: ^[ -~]*$
-        maxLength: 1024
+      example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
 
   schemas:
-    PaperTrackerStatusResponse:
+    TrackingsRequest:
       type: object
       properties:
-        finalMetaStatusFound:
-          type: boolean
-        finalDemaStatusFound:
-          type: boolean
-          description: Ultimo demat ricevuto relativo alla tripletta
-        finalStatusFound:
-          type: boolean
-        finalMetaStatusCode:
-          type: string
-        finalDematStatusCode:
-          type: string
-        finalStatusCode:
-          type: string
-        finalMetaBusinessTimestamp:
-          type: string
-        finalDematBusinessTimestamp:
-          type: string
-        finalBusinessTimestamp:
-          type: string
-    PaperTrackerRequest:
-      type: object
-      properties:
-        requestIds:
+        trackingIds:
           type: array
           items:
             type: string
       required:
-        - requestIds
-    PaperTrackerResponse:
+        - trackingIds
+    TrackingsResponse:
       type: object
+      required:
+        - trackings
       properties:
-        paperTrackerEntities:
+        trackings:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerObj'
-    PaperTrackerObj:
+            $ref: '#/components/schemas/Tracking'
+    Tracking:
       type: object
+      required:
+        - trackingId
+        - events
+        - productType
+        - unifiedDeliveryDriverId
+        - state
       properties:
-        requestId:
+        trackingId:
+          type: string
+        attemptId:
+          type: string
+        pcRetry:
           type: string
         events:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerEvent'
+            $ref: '#/components/schemas/PaperEvent'
         validationFlow:
-          $ref: '#/components/schemas/PaperTrackerValidationFlow'
+          $ref: '#/components/schemas/ValidationFlow'
         productType:
           $ref: '#/components/schemas/ProductType'
+        paperStatus:
+          $ref: '#/components/schemas/PaperStatus'
         ocrRequestId:
           type: string
-        hasNextPcretry:
-          type: boolean
-        deliveryDriverId:
+        nextRequestIdPcretry:
           type: string
-    PaperTrackerEvent:
+        unifiedDeliveryDriverId:
+          type: string
+        state:
+          type: string
+          enum:
+            - AWAITING_FINAL_STATUS_CODE
+            - AWAITING_OCR
+            - DONE
+    PaperEvent:
       type: object
       properties:
         requestTimestamp:
           type: string
+          format: date-time
         statusCode:
           type: string
         statusTimestamp:
           type: string
+          format: date-time
         productType:
           $ref: '#/components/schemas/ProductType'
         deliveryFailureCause:
@@ -311,6 +276,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Attachment'
+        registeredLetterCode:
+          type: string
     ProductType:
       type: string
       enum:
@@ -330,36 +297,80 @@ components:
           type: string
         date:
           type: string
-    PaperTrackerValidationFlow:
+    ValidationFlow:
       type: object
       properties:
         ocrEnabled:
           type: string
         sequencesValidationTimestamp:
           type: string
+          format: date-time
         ocrRequestTimestamp:
           type: string
+          format: date-time
         dematValidationTimestamp:
           type: string
+          format: date-time
         validatedAttachmentTimestamp:
           type: string
+          format: date-time
         validatedAttachmentUri:
           type: string
         validatedAttachmentType:
           type: string
-    PaperTrackerErrorsResponse:
+    PaperStatus:
       type: object
       properties:
-        requestId:
+        registeredLetterCode:
           type: string
-        errors:
+          description: Codice spedizione cartacea
+        deliveryFailureCause:
+          type: string
+          description: Causa del fallimento della consegna
+        discoveredAddress:
+          type: string
+          description: Indirizzo scoperto durante la spedizione
+        finalStatusCode:
+          type: string
+          description: Codice di stato finale della spedizione
+          example: "RECRN005C"
+        validatedSequenceTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp validato delle triplette (data di rendicontazione documento)
+        validatedAttachmentUri:
+          type: string
+          description: URI del documento su safestorage
+          example: "safestorage://PN_EXTERNAL_LEGAL_FACTS-xxx.pdf"
+        validatedAttachmentType:
+          type: string
+          description: Tipo di documento validato
+        validatedEvents:
+          type: array
+          description: Lista di eventi validati
+          items:
+            $ref: '#/components/schemas/PaperEvent'
+    TrackingErrorsResponse:
+      type: object
+      properties:
+        results:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerError'
-    PaperTrackerError:
+            type: object
+            required:
+              - trackingId
+              - errors
+            properties:
+              trackingId:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackingError'
+    TrackingError:
       type: object
       properties:
-        requestId:
+        trackingId:
           type: string
         created:
           type: string
@@ -385,12 +396,17 @@ components:
     PaperTrackerOutputsResponse:
       type: object
       properties:
-        requestId:
-          type: string
-        outputs:
+        result:
           type: array
           items:
-            $ref: '#/components/schemas/PaperTrackerOutput'
+            type: object
+            properties:
+              trackingId:
+                type: string
+              outputs:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaperTrackerOutput'
     PaperTrackerOutput:
       type: object
       properties:
@@ -414,10 +430,10 @@ components:
           type: string
         clientRequestTimeStamp:
           type: string
-    TrackerCreationRequest:
+    TrackingCreationRequest:
       type: object
       properties:
-        requestId:
+        trackingId:
           type: string
           description: Identificativo singola richiesta per spedizione analogica
           example: "PREPARE_ANALOG_DOMICILE.IUN_LKHJ-HKGV-HQUP-202402-Q-1.RECINDEX_0.ATTEMPT_0.PCRETRY_0"
@@ -429,7 +445,7 @@ components:
           type: string
           description: unifiedDeliveryDriver pn-paper-tenders
       required:
-        - requestId
+        - trackingId
         - productType
         - unifiedDeliveryDriver
 
