@@ -211,6 +211,8 @@ components:
         - trackingIds
     TrackingsResponse:
       type: object
+      required:
+        - trackings
       properties:
         trackings:
           type: array
@@ -218,8 +220,18 @@ components:
             $ref: '#/components/schemas/Tracking'
     Tracking:
       type: object
+      required:
+        - trackingId
+        - events
+        - productType
+        - unifiedDeliveryDriverId
+        - state
       properties:
         trackingId:
+          type: string
+        attemptId:
+          type: string
+        pcRetry:
           type: string
         events:
           type: array
@@ -237,6 +249,12 @@ components:
           type: string
         unifiedDeliveryDriverId:
           type: string
+        state:
+          type: string
+          enum:
+            - AWAITING_FINAL_STATUS_CODE
+            - AWAITING_OCR
+            - DONE
     PaperEvent:
       type: object
       properties:
@@ -335,15 +353,20 @@ components:
     TrackingErrorsResponse:
       type: object
       properties:
-        result:
-          type: object
-          properties:
-            trackingId:
-              type: string
-            errors:
-              type: array
-              items:
-                $ref: '#/components/schemas/TrackingError'
+        results:
+          type: array
+          items:
+            type: object
+            required:
+              - trackingId
+              - errors
+            properties:
+              trackingId:
+                type: string
+              errors:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrackingError'
     TrackingError:
       type: object
       properties:
@@ -374,14 +397,16 @@ components:
       type: object
       properties:
         result:
-          type: object
-          properties:
-            trackingId:
-              type: string
-            outputs:
-              type: array
-              items:
-                $ref: '#/components/schemas/PaperTrackerOutput'
+          type: array
+          items:
+            type: object
+            properties:
+              trackingId:
+                type: string
+              outputs:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaperTrackerOutput'
     PaperTrackerOutput:
       type: object
       properties:
