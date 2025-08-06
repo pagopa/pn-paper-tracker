@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.NotificationState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
@@ -52,14 +53,15 @@ class DematValidatorTest {
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
+        context.setPaperTrackings(paperTrackings);
     }
 
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest", context))
+        StepVerifier.create(dematValidator.validateDemat(context))
                 .verifyComplete();
 
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
@@ -71,7 +73,7 @@ class DematValidatorTest {
         when(cfg.isEnableOcrValidation()).thenReturn(false);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest", context))
+        StepVerifier.create(dematValidator.validateDemat(context))
                 .verifyComplete();
 
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
@@ -83,8 +85,8 @@ class DematValidatorTest {
         when(cfg.isEnableOcrValidation()).thenReturn(true);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
 
-        StepVerifier.create(dematValidator.validateDemat(paperTrackings, "requestIdTest", context))
-                .expectErrorMatches(e -> e instanceof RuntimeException && e.getMessage().contains("Errore durante la validazione Demat"))
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .expectErrorMatches(e -> e instanceof PaperTrackerException && e.getMessage().contains("Error during Demat Validation"))
                 .verify();
 
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());

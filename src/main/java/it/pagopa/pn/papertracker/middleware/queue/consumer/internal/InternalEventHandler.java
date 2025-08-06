@@ -1,50 +1,84 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
-import io.netty.util.internal.StringUtil;
-import it.pagopa.pn.papertracker.exception.PaperTrackerOcrKoException;
+import it.pagopa.pn.commons.utils.MDCUtils;
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.utils.BuilderUtils;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
+import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
+@CustomLog
 public class InternalEventHandler {
 
-    private static final String OCR_OK = "OK";
-    private static final String OCR_KO = "KO";
-
     private final PaperTrackingsDAO paperTrackingsDAO;
+    private final HandlersFactoryAr handlersFactoryAr;
 
     public void handleOcrMessage(OcrDataResultPayload ocrResultMessage) {
+        if (Objects.isNull(ocrResultMessage) || Objects.isNull(ocrResultMessage.getCommandId())) {
+            log.error("Received null payload or commandId in OcrResponse handler");
+            throw new IllegalArgumentException("Payload or commandId cannot be null");
+        }
 
-        String tripletta = StringUtil.EMPTY_STRING;
-        String productType = StringUtil.EMPTY_STRING;
-        String requestId = StringUtil.EMPTY_STRING;
-        log.debug("Handle message from pn-ocr_outputs with content {}", ocrResultMessage);
-        paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
-                .map(paperTrackings -> {
-                    if (OCR_OK.equals(ocrResultMessage.getData().getValidationStatus().getValue())) {
-                        return paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), buildPaperTrackings(paperTrackings));
-                        //TODO richiamare metodo di costruzione evento finale
-                    } else if (OCR_KO.equals(ocrResultMessage.getData().getValidationStatus().getValue())) {
-                        throw new PaperTrackerOcrKoException("Ocr KO!", BuilderUtils.buildErrorTrackerDTO(ocrResultMessage, requestId, productType, tripletta));
-                    } else {
-                        log.warn("Received OCR result with unknown type: {}", ocrResultMessage.getCommandType());
-                        return Mono.empty();
-                    }
-                });
+        String processName = "processOcrResponseMessage";
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, ocrResultMessage.getCommandId());
+        log.logStartingProcess(processName);
+
+        MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
+                        .flatMap(paperTrackings -> {
+                            Event event = extractFinalEventFromOcr(paperTrackings);
+                            String statusCode = event.getStatusCode();
+                            Data.ValidationStatus validationStatus = ocrResultMessage.getData().getValidationStatus();
+                            return switch (validationStatus) {
+                                case KO -> Mono.error(new PnPaperTrackerValidationException(("Error in OCR validation for requestId: " + ocrResultMessage.getCommandId()),
+                                                PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
+                                                        List.of(statusCode),
+                                                        ErrorCategory.OCR_VALIDATION,
+                                                        ErrorCause.OCR_KO,
+                                                        ocrResultMessage.getData().getDescription(),
+                                                        FlowThrow.DEMAT_VALIDATION,
+                                                        ErrorType.ERROR
+                                                        )));
+                                case OK -> handlersFactoryAr.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, event.getId())).then();
+                                case PENDING -> {
+                                    log.info("Ocr validation is still pending for requestId: {}", ocrResultMessage.getCommandId());
+                                    yield Mono.empty();
+                                }
+                            };
+                        })
+                        .then())
+                .block();
+
     }
 
-    private PaperTrackings buildPaperTrackings(PaperTrackings paperTrackings) {
+    private Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {
+        String eventId = paperTrackings.getOcrRequestId().split("#")[1];
+        return paperTrackings.getEvents().stream()
+                .filter(event -> eventId.equalsIgnoreCase(event.getId()))
+                .findFirst()
+                .orElseThrow(() -> new PaperTrackerException("Invalid ocr requestId: " + paperTrackings.getOcrRequestId() +
+                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
+    }
+
+    private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, String eventId) {
         paperTrackings.getValidationFlow().setDematValidationTimestamp(Instant.now());
-        return paperTrackings;
+        HandlerContext handlerContext = new HandlerContext();
+        handlerContext.setPaperTrackings(paperTrackings);
+        handlerContext.setEventId(eventId);
+        return handlerContext;
     }
 }

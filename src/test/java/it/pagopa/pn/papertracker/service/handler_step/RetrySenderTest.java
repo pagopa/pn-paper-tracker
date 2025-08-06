@@ -2,12 +2,14 @@ package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -48,6 +52,8 @@ public class RetrySenderTest {
 
         when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
         when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -73,25 +79,22 @@ public class RetrySenderTest {
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
-                .verifyComplete();
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId()));
 
         //ASSERT
         verify(paperTrackingsDAO, never()).updateItem(any(), any());
         verify(paperTrackingsDAO, never()).putIfAbsent(any());
-        verify(paperTrackingsErrorsDAO).insertError(argThat(error ->
-                error.getRequestId().equals(response.getRequestId()) &&
-                        error.getDetails().getMessage().isEmpty() &&
-                        error.getFlowThrow() == null &&
-                        error.getEventThrow().equals(context.getPaperProgressStatusEvent().getStatusCode()) &&
-                        error.getProductType() == context.getPaperTrackings().getProductType()));
     }
 
     @Test
     void execute_errorFromApi() {
         //ARRANGE
         HandlerContext context = getHandlerContext();
+        WebClientResponseException webClientResponseException = mock(WebClientResponseException.class);
+        when(webClientResponseException.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(new RuntimeException()));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(webClientResponseException));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))

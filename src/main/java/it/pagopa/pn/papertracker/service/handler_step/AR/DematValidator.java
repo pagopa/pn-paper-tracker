@@ -5,6 +5,7 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
@@ -38,42 +39,42 @@ public class DematValidator implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return validateDemat(context.getPaperTrackings(), context.getPaperTrackings().getTrackingId(), context)
+        return validateDemat(context)
                 .then();
     }
 
-    public Mono<Void> validateDemat(PaperTrackings paperTrackings, String requestId, HandlerContext context){
-        log.info("Inizio validazione Demat per requestId={}, request : {}", paperTrackings.getTrackingId(), paperTrackings);
+    public Mono<Void> validateDemat(HandlerContext context){
+        PaperTrackings paperTrackings = context.getPaperTrackings();
+        String trackingId = paperTrackings.getTrackingId();
+        log.info("Start demait validation for trackingId={}", trackingId);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
-                    //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
-                    paperTracking.setUpdatedAt(null);
-                    paperTracking.setTrackingId(null);
                     if (cfg.isEnableOcrValidation()) {
-                        log.debug("OCR validation abilitata");
-                        return sendMessageToOcr(paperTracking, requestId);
-                    } else {
-                        log.debug("OCR validation disabilitata");
-                        // Imposta un flag nel context per indicare di fermare l'esecuzione
+                        log.debug("OCR validation enabled");
                         context.setStopExecution(true);
-                        return disableOcrAndUpdate(paperTracking, requestId);
+                        return sendMessageToOcr(paperTracking, context.getEventId());
+                    } else {
+                        log.debug("OCR validation disabled");
+                        return updatePaperTrackingsOcrFlag(paperTracking, trackingId);
                     }
                 })
-                .onErrorResume(e -> Mono.error(new RuntimeException("Errore durante la validazione Demat", e)));
+                .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)));
     }
 
-    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, String requestId) {
-        OcrEvent ocrEvent = buildOcrEvent(paperTracking);
+    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, String eventId) {
+        String ocrRequestId = String.join("#", paperTracking.getTrackingId(), eventId);
+        OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId);
         paperTracking.setOcrRequestId(ocrEvent.getPayload().getCommandId());
         paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
-        return paperTrackingsDAO.updateItem(requestId, paperTracking)
-                .then(Mono.fromRunnable(() -> {
-                    log.info("Push evento OCR su coda per requestId={}, ocrRequestId={}", requestId, ocrEvent.getPayload().getCommandId());
+        return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTracking)
+                .doOnNext(paperTrackings -> {
+                    log.info("Send message to OCR queue for trackingId={}, with commandId={}", paperTrackings.getTrackingId(), ocrEvent.getPayload().getCommandId());
                     ocrMomProducer.push(ocrEvent);
-                }));
+                })
+                .then();
     }
 
-    private OcrEvent buildOcrEvent(PaperTrackings paperTracking) {
+    private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId) {
         GenericEventHeader ocrHeader = GenericEventHeader.builder()
                 .publisher(PUBLISHER)
                 .eventId(UUID.randomUUID().toString())
@@ -84,7 +85,7 @@ public class DematValidator implements HandlerStep {
         OcrDataPayloadDTO ocrDataPayload = OcrDataPayloadDTO.builder()
                 .version("v1")
                 .commandType(OcrDataPayloadDTO.CommandType.POSTAL)
-                .commandId(UUID.randomUUID().toString())
+                .commandId(ocrRequestId)
                 .data(DataDTO.builder()
                         .productType(getProductType(paperTracking))
                         .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
@@ -100,11 +101,11 @@ public class DematValidator implements HandlerStep {
         return new OcrEvent(ocrHeader, ocrDataPayload);
     }
 
-    private Mono<Void> disableOcrAndUpdate(PaperTrackings paperTracking, String requestId) {
+    private Mono<Void> updatePaperTrackingsOcrFlag(PaperTrackings paperTracking, String requestId) {
         paperTracking.getValidationFlow().setOcrEnabled(false);
         paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
         return paperTrackingsDAO.updateItem(requestId, paperTracking)
-                .doOnSuccess(v -> log.debug("Aggiornato PaperTrackings con OCR disabilitato per requestId={}", paperTracking.getTrackingId()))
+                .doOnNext(v -> log.debug("Updated PaperTrackings entity with OCR flag disabled for trackingId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
@@ -112,7 +113,7 @@ public class DematValidator implements HandlerStep {
         return Arrays.stream(DataDTO.ProductType.values()).filter(ocrProductType -> ocrProductType.getValue().equals(paperTracking.getProductType().getValue()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("ProductType non valido per requestId={}: {}", paperTracking.getTrackingId(), paperTracking.getProductType());
+                    log.error("invalid ProductType for trackingId={}: {}", paperTracking.getTrackingId(), paperTracking.getProductType());
                     return new IllegalArgumentException("Invalid product type: " + paperTracking.getProductType());
                 });
     }

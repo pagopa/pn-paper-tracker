@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.DYNAMODB;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
 
 /**
  * Classe che permette di creare un container Docker di LocalStack.
@@ -24,8 +25,8 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 public class LocalStackTestConfig {
 
     static LocalStackContainer localStack =
-            new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4").asCompatibleSubstituteFor("localstack/localstack"))
-                    .withServices(DYNAMODB)
+            new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4"))
+                    .withServices(DYNAMODB, SQS) // ← AGGIUNTO SQS!
                     .withClasspathResourceMapping("testcontainers/init.sh",
                             "/docker-entrypoint-initaws.d/make-storages.sh", BindMode.READ_ONLY)
                     .withClasspathResourceMapping("testcontainers/credentials",
@@ -38,12 +39,17 @@ public class LocalStackTestConfig {
     static {
         localStack.start();
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
+
+        System.setProperty("spring.cloud.aws.sqs.endpoint", localStack.getEndpointOverride(SQS).toString());
+        System.setProperty("spring.cloud.aws.region.static", localStack.getRegion());
+        System.setProperty("spring.cloud.aws.credentials.access-key", localStack.getAccessKey());
+        System.setProperty("spring.cloud.aws.credentials.secret-key", localStack.getSecretKey());
+
         try {
             System.setProperty("aws.sharedCredentialsFile", new ClassPathResource("testcontainers/credentials").getFile().getAbsolutePath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
 

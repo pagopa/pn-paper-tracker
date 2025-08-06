@@ -170,13 +170,13 @@ class HandlersFactoryArTest {
     }
 
     @Test
-    void buildOcrResponseHandler_ReturnsEmptyMono() {
+    void buildOcrResponseHandler() {
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
         StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext))
                 .verifyComplete();
-
-        // Verify no interactions with dependencies
-        verifyNoInteractions(metadataUpserter, deliveryPushSender);
     }
 
     @Test

@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -45,12 +46,12 @@ public class ExternalChannelHandler {
                         .flatMap(singleStatusUpdate -> {
                             HandlerContext context = new HandlerContext();
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
+                            context.setEventId(UUID.randomUUID().toString());
                             String statusCode = payload.getAnalogMail().getStatusCode();
                             String productType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
                                     .map(e -> e.getProductType().getValue())
                                     .orElse("UNKNOWN");
-                            log.info("Handling external channel message with statusCode: {}, productType: {}",
-                                    statusCode, productType);
+                            log.info("Handling external channel message with statusCode: {}, productType: {}", statusCode, productType);
 
                             if (ProductType.AR.getValue().equals(productType)) {
                                 return handleAREvent(statusCode, context);

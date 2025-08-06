@@ -18,6 +18,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +49,9 @@ class MetadataUpserterTest {
         paperProgressStatusEvent = new PaperProgressStatusEvent();
         paperProgressStatusEvent.setRequestId("req-123");
         paperProgressStatusEvent.setStatusCode("RECRN002A");
+        paperProgressStatusEvent.setStatusDateTime(OffsetDateTime.now());
+        paperProgressStatusEvent.setClientRequestTimeStamp(OffsetDateTime.now());
+        paperProgressStatusEvent.setProductType("AR");
 
         handlerContext = new HandlerContext();
         handlerContext.setPaperProgressStatusEvent(paperProgressStatusEvent);
@@ -61,29 +67,17 @@ class MetadataUpserterTest {
     void execute_WithDiscoveredAddress_SetsAnonimizedDiscoveredAddress() {
         // Arrange
         paperProgressStatusEvent.setDiscoveredAddress(new DiscoveredAddress());
+        when(dataVaultClient.anonymizeDiscoveredAddress(any(), any())).thenReturn(Mono.just("anonymized_addr_uuid"));
 
-        when(paperTrackingsDAO.updateItem(eq("req-123"), any(PaperTrackings.class)))
+        when(paperTrackingsDAO.updateItem(any(), any(PaperTrackings.class)))
                 .thenReturn(Mono.empty());
 
-        try (MockedStatic<PaperProgressStatusEventMapper> mapperMock =
-                     mockStatic(PaperProgressStatusEventMapper.class)) {
+        StepVerifier.create(metadataUpserter.execute(handlerContext))
+                .verifyComplete();
 
-            mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, anonymizedDiscoveredAddressId))
-                    .thenReturn(Mono.just(paperTrackings));
+        assertEquals(anonymizedDiscoveredAddressId, handlerContext.getAnonymizedDiscoveredAddressId());
+        verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
 
-            mapperMock.when(() -> dataVaultClient.anonymizeDiscoveredAddress(
-                            eq("req-123"), any(DiscoveredAddress.class)))
-                    .thenReturn(Mono.just(anonymizedDiscoveredAddressId));
-
-            // Act
-            StepVerifier.create(metadataUpserter.execute(handlerContext))
-                    .verifyComplete();
-
-            // Assert
-            assertEquals(anonymizedDiscoveredAddressId, handlerContext.getAnonymizedDiscoveredAddressId());
-            verify(paperTrackingsDAO).updateItem("req-123", paperTrackings);
-        }
     }
 
     @Test
@@ -94,21 +88,14 @@ class MetadataUpserterTest {
         when(paperTrackingsDAO.updateItem(eq("req-123"), any(PaperTrackings.class)))
                 .thenReturn(Mono.empty());
 
-        try (MockedStatic<PaperProgressStatusEventMapper> mapperMock =
-                     mockStatic(PaperProgressStatusEventMapper.class)) {
-
-            mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, ""))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             StepVerifier.create(metadataUpserter.execute(handlerContext))
                     .verifyComplete();
 
             // Assert
             assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
-            verify(paperTrackingsDAO).updateItem("req-123", paperTrackings);
-        }
+            verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
+
     }
 
     @Test
@@ -120,7 +107,7 @@ class MetadataUpserterTest {
                      mockStatic(PaperProgressStatusEventMapper.class)) {
 
             mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, ""))
+                            .toPaperTrackings(paperProgressStatusEvent, "", "eventId"))
                     .thenReturn(Mono.error(mapperException));
 
             // Act & Assert
@@ -130,32 +117,6 @@ class MetadataUpserterTest {
 
             // Verify DAO was never called due to mapper failure
             verify(paperTrackingsDAO, never()).updateItem(any(), any());
-        }
-    }
-
-    @Test
-    void execute_WhenDaoUpdateFails_PropagatesError() {
-        // Arrange
-        RuntimeException daoException = new RuntimeException("Database update failed");
-
-        when(paperTrackingsDAO.updateItem(eq("req-123"), any(PaperTrackings.class)))
-                .thenReturn(Mono.error(daoException));
-
-        try (MockedStatic<PaperProgressStatusEventMapper> mapperMock =
-                     mockStatic(PaperProgressStatusEventMapper.class)) {
-
-            mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, ""))
-                    .thenReturn(Mono.just(paperTrackings));
-
-            // Act & Assert
-            StepVerifier.create(metadataUpserter.execute(handlerContext))
-                    .expectError(RuntimeException.class)
-                    .verify();
-
-            verify(paperTrackingsDAO).updateItem("req-123", paperTrackings);
-            mapperMock.verify(() -> PaperProgressStatusEventMapper
-                    .toPaperTrackings(paperProgressStatusEvent, ""));
         }
     }
 

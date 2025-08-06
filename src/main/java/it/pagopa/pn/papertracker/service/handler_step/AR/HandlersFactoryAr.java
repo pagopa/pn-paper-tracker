@@ -34,7 +34,7 @@ public class HandlersFactoryAr implements HandlersFactory {
         return Flux.fromIterable(steps)
                 .concatMap(step -> {
                     if (context.isStopExecution()) {
-                        log.debug("Interruzione esecuzione richiesta - saltando step: {}", step.getClass().getSimpleName());
+                        log.debug("Requested stop execution for trackingId: {} on step: {}", context.getTrackingId(), step.getClass().getSimpleName());
                         return Mono.empty();
                     }
                     return step.execute(context);
@@ -86,6 +86,15 @@ public class HandlersFactoryAr implements HandlersFactory {
                 ), context);
     }
 
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento di retry.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati e demat (se presenti)
+     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
     @Override
     public Mono<Void> buildRetryEventHandler(HandlerContext context) {
         return buildEventsHandler(
@@ -95,9 +104,24 @@ public class HandlersFactoryAr implements HandlersFactory {
                 ), context);
     }
 
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento di risposta della validazione ocr.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati e demat (se presenti)
+     *  - Costruzione evento finale
+     *  - Invio a pn-delivery-push
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
     @Override
     public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
-        return Mono.empty();
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter,
+                        finalEventBuilder,
+                        deliveryPushSender
+                ), context);
     }
 
     @Override

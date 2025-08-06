@@ -22,9 +22,10 @@ public class PaperProgressStatusEventMapper {
      * @param anonymizedDiscoveredAddressId l'id dell'indirizzo anonimizzato
      * @return PaperTrackings contenente il nuovo evento
      */
-    public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent, String anonymizedDiscoveredAddressId) {
+    public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent, String anonymizedDiscoveredAddressId, String eventId) {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
+        event.setId(eventId);
         if (!CollectionUtils.isEmpty(paperProgressStatusEvent.getAttachments())) {
             event.setAttachments(paperProgressStatusEvent.getAttachments().stream()
                     .map(PaperProgressStatusEventMapper::buildAttachmentFromAttachmentDetail)
@@ -37,7 +38,6 @@ public class PaperProgressStatusEventMapper {
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
         event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
-        event.setDiscoveredAddress(null);//TODO?
 
         paperTrackings.setEvents(List.of(event));
         return Mono.just(paperTrackings);
