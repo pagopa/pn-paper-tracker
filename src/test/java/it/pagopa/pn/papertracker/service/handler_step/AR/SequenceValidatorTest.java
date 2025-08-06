@@ -390,7 +390,7 @@ class SequenceValidatorTest {
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("deliveryFailureCause non valorizzato per statusCode"))
+                        throwable.getMessage().contains("deliveryFailureCause is null for statusCode=RECRN002B"))
                 .verify();
     }
 
@@ -414,7 +414,7 @@ class SequenceValidatorTest {
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("deliveryFailureCause non valido"))
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: TESTERR"))
                 .verify();
     }
     
