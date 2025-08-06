@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.exception;
 
-import it.pagopa.pn.papertracker.service.PaperTrackerEventService;
+import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PaperTrackerExceptionHandler {
 
-    private final PaperTrackerEventService paperTrackerEventService;
+    private final PaperTrackerTrackingService paperTrackerEventService;
 
     /**
      * Intercetta le eccezioni di tipo {@link PnPaperTrackerValidationException}.

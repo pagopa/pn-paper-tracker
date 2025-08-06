@@ -44,7 +44,7 @@ public class FinalEventBuilder implements HandlerStep {
             return Mono.empty();
         }
 
-        List<Event> validatedEvents = paperTrackings.getNotificationState().getValidatedEvents();
+        List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
         StatusCodeConfiguration.StatusCodeConfigurationEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);

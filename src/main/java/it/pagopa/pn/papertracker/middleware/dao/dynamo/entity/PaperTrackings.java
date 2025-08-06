@@ -35,7 +35,7 @@ public class PaperTrackings {
     private List<Event> events;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_STATE), @DynamoDbIgnoreNulls}))
-    private NotificationState notificationState;
+    private PaperStatus paperStatus;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;

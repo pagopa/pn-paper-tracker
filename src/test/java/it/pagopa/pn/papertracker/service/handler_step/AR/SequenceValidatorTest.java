@@ -42,7 +42,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN0010", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
@@ -75,7 +75,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "", null),
@@ -102,7 +102,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
@@ -126,7 +126,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
@@ -150,7 +150,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN002D", timestamp, businessTimestamp, "REG123", "", null),
@@ -175,7 +175,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
@@ -199,7 +199,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
@@ -220,7 +220,7 @@ class SequenceValidatorTest {
         // Arrange
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", Instant.now(), Instant.now(), "REG123", "", null)
@@ -241,7 +241,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
@@ -264,7 +264,7 @@ class SequenceValidatorTest {
         Instant timestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, Instant.now(), "REG123", "", null),
@@ -287,7 +287,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
@@ -310,7 +310,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
@@ -332,7 +332,7 @@ class SequenceValidatorTest {
         Instant businessTimestamp = Instant.now();
 
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", Instant.now(), businessTimestamp, "REG123", "", null),
@@ -355,7 +355,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
@@ -378,7 +378,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
@@ -402,7 +402,7 @@ class SequenceValidatorTest {
 
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setNotificationState(new NotificationState());
+        paperTrackings.setPaperStatus(new PaperStatus());
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(

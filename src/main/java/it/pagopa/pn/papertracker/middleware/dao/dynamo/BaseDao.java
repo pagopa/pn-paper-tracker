@@ -4,10 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.*;
-import software.amazon.awssdk.enhanced.dynamodb.model.Page;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
@@ -24,6 +21,7 @@ public class BaseDao<T> {
     private final DynamoDbAsyncTable<T> tableAsync;
     private final Class<T> tClass;
     private final DynamoDbAsyncClient dynamoDbAsyncClient;
+    private final DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient;
 
     protected BaseDao(
             DynamoDbEnhancedAsyncClient dynamoDbEnhancedAsyncClient,
@@ -34,6 +32,7 @@ public class BaseDao<T> {
         this.tableAsync = dynamoDbEnhancedAsyncClient.table(tableName, TableSchema.fromBean(tClass));
         this.tClass = tClass;
         this.dynamoDbAsyncClient = dynamoDbAsyncClient;
+        this.dynamoDbEnhancedAsyncClient = dynamoDbEnhancedAsyncClient;
     }
 
     protected Mono<T> putItem(T entity) {
@@ -87,6 +86,23 @@ public class BaseDao<T> {
                 .build();
 
         return Mono.fromFuture(dynamoDbAsyncClient.updateItem(updateItemRequest));
+    }
+
+    protected Flux<T> findAllByKeys(List<String> partitionKeys) {
+        ReadBatch.Builder<T> builder = ReadBatch.builder(tClass)
+                .mappedTableResource(this.tableAsync);
+
+        partitionKeys.forEach(partitionKey ->
+                builder.addGetItem(Key.builder().partitionValue(partitionKey).build())
+        );
+
+        BatchGetItemEnhancedRequest request = BatchGetItemEnhancedRequest.builder()
+                .readBatches(builder.build())
+                .build();
+
+        return Flux.from(dynamoDbEnhancedAsyncClient.batchGetItem(request)
+                        .map(result -> result.resultsForTable(tableAsync)))
+                .flatMap(Flux::fromIterable);
     }
 
     /**

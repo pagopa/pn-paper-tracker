@@ -48,8 +48,8 @@ class FinalEventBuilderTest {
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setNotificationState(new NotificationState());
-        paperTrackings.getNotificationState().setRegisteredLetterCode("RL123");
+        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
@@ -164,7 +164,7 @@ class FinalEventBuilderTest {
         event2.setStatusCode(RECRN010.name());
         event2.setStatusTimestamp(statusTimestamp);
         List<Event> validatedEvents = List.of(event, event2);
-        paperTrackings.getNotificationState().setValidatedEvents(validatedEvents);
+        paperTrackings.getPaperStatus().setValidatedEvents(validatedEvents);
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {

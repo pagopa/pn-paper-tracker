@@ -11,7 +11,7 @@ import java.util.List;
 
 @DynamoDbBean
 @Data
-public class NotificationState {
+public class PaperStatus {
 
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_DELIVERY_FAILURE_CAUSE = "deliveryFailureCause";
