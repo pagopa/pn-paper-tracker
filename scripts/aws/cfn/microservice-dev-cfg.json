@@ -11,6 +11,7 @@
     "PaperTrackingsTtlDuration": "3650d",
     "CompiutaGiacenzaArDuration": "80s",
     "EnableTruncatedDateForRefinementCheck": "false",
-    "RefinementDuration": "1m"
+    "RefinementDuration": "1m",
+    "SafeStorageCxId": "pn-cons-000"
   }
 }

@@ -247,13 +247,13 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
         attachment.setDocumentType("DOCUMENT_TYPE");
-        attachment.setUrl("http://example.com/document.pdf");
+        attachment.setUri("http://example.com/document.pdf");
         attachment.setDate(Instant.now());
 
         Attachment attachment2 = new Attachment();
         attachment2.setId("attachment-id-1");
         attachment2.setDocumentType("DOCUMENT_TYPE");
-        attachment2.setUrl("http://example.com/document.pdf");
+        attachment2.setUri("http://example.com/document.pdf");
 
         event.setAttachments(List.of(attachment, attachment2));
         paperTrackingsToUpdate.setEvents(List.of(event));
@@ -279,7 +279,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Attachment attachment3 = new Attachment();
         attachment.setId("attachment-id-1");
         attachment.setDocumentType("DOCUMENT_TYPE");
-        attachment.setUrl("http://example.com/document.pdf");
+        attachment.setUri("http://example.com/document.pdf");
         attachment.setDate(Instant.now());
 
         event2.setAttachments(List.of(attachment3));

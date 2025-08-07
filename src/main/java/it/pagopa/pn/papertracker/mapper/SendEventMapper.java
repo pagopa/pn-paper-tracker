@@ -128,7 +128,7 @@ public class SendEventMapper {
                 .documentType(attachment.getDocumentType())
                 .date(attachment.getDate().atOffset(ZoneOffset.UTC))
                 .id(attachment.getId())
-                .uri(attachment.getUrl())
+                .uri(attachment.getUri())
                 .build()).toList();
     }
 

@@ -36,7 +36,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
             attachment.setId("id");
             attachment.setDocumentType("DOC");
             attachment.setDate(Instant.now());
-            attachment.setUrl("attachmentUrl");
+            attachment.setUri("attachmentUrl");
             output.setAttachments(List.of(attachment));
 
             paperTrackerDryRunOutputsDAO.insertOutputEvent(output).block();
@@ -57,7 +57,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
         attachment.setId("id");
         attachment.setDocumentType("DOC");
         attachment.setDate(Instant.now());
-        attachment.setUrl("attachmentUrl");
+        attachment.setUri("attachmentUrl");
         output.setAttachments(List.of(attachment));
 
         paperTrackerDryRunOutputsDAO.insertOutputEvent(output).block();
@@ -79,7 +79,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments() != null && !e.getAttachments().isEmpty()));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments().getFirst().getId().equals("id")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments().getFirst().getDocumentType().equals("DOC")));
-        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments().getFirst().getUrl().equals("attachmentUrl")));
+        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments().getFirst().getUri().equals("attachmentUrl")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getAttachments().getFirst().getDate() != null));
 
         List<PaperTrackerDryRunOutputs> outputs2 = paperTrackerDryRunOutputsDAO.retrieveOutputEvents("requestId2").collectList().block();
@@ -99,7 +99,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals(1, outputs2.getFirst().getAttachments().size());
         Assertions.assertEquals("id", outputs2.getFirst().getAttachments().getFirst().getId());
         Assertions.assertEquals("DOC", outputs2.getFirst().getAttachments().getFirst().getDocumentType());
-        Assertions.assertEquals("attachmentUrl", outputs2.getFirst().getAttachments().getFirst().getUrl());
+        Assertions.assertEquals("attachmentUrl", outputs2.getFirst().getAttachments().getFirst().getUri());
         Assertions.assertNotNull(outputs2.getFirst().getAttachments().getFirst().getDate());
 
 

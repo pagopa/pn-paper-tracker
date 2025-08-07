@@ -3,14 +3,13 @@ package it.pagopa.pn.papertracker.service.handler_step;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +38,7 @@ public class RetrySenderTest {
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Mock
-    private PcRetryApi pcRetryApi;
+    private PaperChannelClient pcRetryApi;
 
     @InjectMocks
     private RetrySender retrySender;
@@ -91,8 +90,7 @@ public class RetrySenderTest {
     void execute_errorFromApi() {
         //ARRANGE
         HandlerContext context = getHandlerContext();
-        WebClientResponseException webClientResponseException = mock(WebClientResponseException.class);
-        when(webClientResponseException.getStatusCode()).thenReturn(HttpStatus.NOT_FOUND);
+        PnPaperTrackerNotFoundException webClientResponseException = mock(PnPaperTrackerNotFoundException.class);
 
         when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(webClientResponseException));
 

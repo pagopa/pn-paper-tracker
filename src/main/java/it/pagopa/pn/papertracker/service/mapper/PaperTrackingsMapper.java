@@ -8,7 +8,6 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
-import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -42,7 +41,7 @@ public class PaperTrackingsMapper {
     public static Tracking toTracking(PaperTrackings paperTrackings) {
         Tracking tracking = new Tracking();
         tracking.setTrackingId(paperTrackings.getTrackingId());
-        tracking.setUnifiedDeliveryDriverId(paperTrackings.getUnifiedDeliveryDriver());
+        tracking.setUnifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver());
         tracking.setProductType(
                 paperTrackings.getProductType() != null ?
                         it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().name()) :
@@ -105,7 +104,7 @@ public class PaperTrackingsMapper {
                 new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment();
         dto.setId(entityAttachment.getId());
         dto.setDocumentType(entityAttachment.getDocumentType());
-        dto.setUrl(entityAttachment.getUrl());
+        dto.setUrl(entityAttachment.getUri());
         dto.setDate(entityAttachment.getDate() != null ? entityAttachment.getDate().toString() : null);
         return dto;
     }

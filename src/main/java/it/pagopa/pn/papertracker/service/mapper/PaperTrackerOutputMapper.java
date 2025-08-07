@@ -45,7 +45,7 @@ public class PaperTrackerOutputMapper {
                     new Attachment();
             attDto.setId(att.getId());
             attDto.setDocumentType(att.getDocumentType());
-            attDto.setUrl(att.getUrl());
+            attDto.setUrl(att.getUri());
             attDto.setDate(att.getDate() != null ? att.getDate().toString() : null);
             attachmentsDto.add(attDto);
         }

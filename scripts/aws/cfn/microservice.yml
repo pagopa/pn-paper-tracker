@@ -216,6 +216,14 @@ Parameters:
     Type: String
     Description: 'Duration for refinement'
 
+  SandboxSafeStorageBaseUrl:
+    Type: String
+    Description: 'Url to the SafeStorage microservice'
+
+  SafeStorageCxId:
+    Type: String
+    Description: 'CxId for the SafeStorage microservice'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -251,6 +259,8 @@ Resources:
         ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
+        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds

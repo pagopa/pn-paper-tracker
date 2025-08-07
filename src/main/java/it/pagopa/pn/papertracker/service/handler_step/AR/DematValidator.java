@@ -5,24 +5,30 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrDocumentTypeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +42,7 @@ public class DematValidator implements HandlerStep {
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final PnPaperTrackerConfigs cfg;
     private final OcrMomProducer ocrMomProducer;
+    private final SafeStorageClient safeStorageClient;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
@@ -43,7 +50,7 @@ public class DematValidator implements HandlerStep {
                 .then();
     }
 
-    public Mono<Void> validateDemat(HandlerContext context){
+    public Mono<Void> validateDemat(HandlerContext context) {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String trackingId = paperTrackings.getTrackingId();
         log.info("Start demait validation for trackingId={}", trackingId);
@@ -52,7 +59,7 @@ public class DematValidator implements HandlerStep {
                     if (cfg.isEnableOcrValidation()) {
                         log.debug("OCR validation enabled");
                         context.setStopExecution(true);
-                        return sendMessageToOcr(paperTracking, context.getEventId());
+                        return sendMessageToOcr(paperTracking, context);
                     } else {
                         log.debug("OCR validation disabled");
                         return updatePaperTrackingsOcrFlag(paperTracking, trackingId);
@@ -61,20 +68,25 @@ public class DematValidator implements HandlerStep {
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)));
     }
 
-    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, String eventId) {
-        String ocrRequestId = String.join("#", paperTracking.getTrackingId(), eventId);
-        OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId);
-        paperTracking.setOcrRequestId(ocrEvent.getPayload().getCommandId());
-        paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
-        return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTracking)
-                .doOnNext(paperTrackings -> {
-                    log.info("Send message to OCR queue for trackingId={}, with commandId={}", paperTrackings.getTrackingId(), ocrEvent.getPayload().getCommandId());
+    private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
+        String ocrRequestId = String.join("#", paperTracking.getTrackingId(), context.getEventId());
+        Attachment attachment = retrieveFinalDemat(paperTracking.getTrackingId(), paperTracking.getPaperStatus().getValidatedEvents());
+        return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
+                .doOnNext(presignedUrl -> {
+                    OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(attachment.getDocumentType()));
                     ocrMomProducer.push(ocrEvent);
                 })
+                .doOnNext(ocrEvent -> {
+                    paperTracking.setOcrRequestId(ocrRequestId);
+                    paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
+                })
+                .flatMap(o -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTracking))
+                .doOnNext(v -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
-    private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId) {
+    private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId, String presignedUrl, DocumentTypeEnum documentType) {
+
         GenericEventHeader ocrHeader = GenericEventHeader.builder()
                 .publisher(PUBLISHER)
                 .eventId(UUID.randomUUID().toString())
@@ -87,10 +99,12 @@ public class DematValidator implements HandlerStep {
                 .commandType(OcrDataPayloadDTO.CommandType.POSTAL)
                 .commandId(ocrRequestId)
                 .data(DataDTO.builder()
+                        .documentType(DataDTO.DocumentType.valueOf(documentType.name()))
                         .productType(getProductType(paperTracking))
                         .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
                         .details(
                                 DetailsDTO.builder()
+                                        .attachment(presignedUrl)
                                         .registeredLetterCode(paperTracking.getPaperStatus().getRegisteredLetterCode())
                                         .notificationDate(LocalDateTime.ofInstant(paperTracking.getValidationFlow().getSequencesValidationTimestamp(), ZoneId.systemDefault()))
                                         .build()
@@ -99,6 +113,32 @@ public class DematValidator implements HandlerStep {
                 .build();
 
         return new OcrEvent(ocrHeader, ocrDataPayload);
+    }
+
+    private Attachment retrieveFinalDemat(String trackingId, List<Event> validatedEvents) {
+        Map<String, Attachment> attachments = new HashMap<>();
+
+        List<Event> finalDematList = validatedEvents.reversed().stream()
+                .filter(event -> StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(event.getStatusCode()).isFinalDemat())
+                .toList();
+
+        if (CollectionUtils.isEmpty(finalDematList)) {
+            log.error("Demat events not found for trackingId={}", trackingId);
+            throw new PaperTrackerException("Demat events not found");
+        }
+
+        for (Event event : finalDematList) {
+            event.getAttachments().stream()
+                    .filter(att -> OcrDocumentTypeEnum.valueOf(event.getProductType().name()).getDocumentTypes().contains(DocumentTypeEnum.fromValue(att.getDocumentType())))
+                    .forEach(attachment -> attachments.putIfAbsent(attachment.getDocumentType(), attachment));
+        }
+
+        if (CollectionUtils.isEmpty(attachments) || attachments.size() > 1) {
+            log.error("Invalid number of attachments for demat event found for trackingId={}", trackingId);
+            throw new PaperTrackerException("Invalid number of attachments for demat event");
+        }
+
+        return attachments.values().stream().toList().getFirst();
     }
 
     private Mono<Void> updatePaperTrackingsOcrFlag(PaperTrackings paperTracking, String requestId) {

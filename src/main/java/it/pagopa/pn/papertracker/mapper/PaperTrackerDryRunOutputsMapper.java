@@ -46,7 +46,7 @@ public class PaperTrackerDryRunOutputsMapper {
         attachmentEntity.setId(attachment.getId());
         attachmentEntity.setDate(attachment.getDate().toInstant());
         attachmentEntity.setDocumentType(attachment.getDocumentType());
-        attachmentEntity.setUrl(attachment.getUri());
+        attachmentEntity.setUri(attachment.getUri());
         return attachmentEntity;
     }
 }

@@ -18,6 +18,8 @@ public class PnPaperTrackerConfigs {
     private String queueOcrInput;
     private String paperChannelBaseUrl;
     private String dataVaultBaseUrl;
+    private String safeStorageBaseUrl;
+    public String safeStorageCxId;
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private boolean sendOutputToDeliveryPush;

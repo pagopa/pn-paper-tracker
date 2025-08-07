@@ -1,9 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -11,33 +9,29 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RetrySender implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
-    private final PcRetryApi pcRetryApi;
+    private final PaperChannelClient paperChannelClient;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())
-                .onErrorResume(throwable -> {
-                    if (throwable instanceof WebClientResponseException webEx && webEx.getStatusCode() == HttpStatus.NOT_FOUND) {
-                        return Mono.error(new PnPaperTrackerNotFoundException("RequestId not found", webEx.getMessage()));
-                    }
-                    return Mono.error(throwable);
-                })
+        return paperChannelClient.getPcRetry(context.getPaperTrackings().getTrackingId())
+                .doOnError(throwable -> log.error("Error retrieving retry for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> {
                     if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
                         return paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsPcretry(pcRetryResponse))

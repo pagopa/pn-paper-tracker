@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -220,7 +219,7 @@ class FinalEventBuilderTest {
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
         attachment.setDocumentType("DOCUMENT_TYPE");
-        attachment.setUrl("http://example.com/document.pdf");
+        attachment.setUri("http://example.com/document.pdf");
         attachment.setDate(Instant.now());
         event.setAttachments(List.of(attachment));
         Event event2 = new Event();

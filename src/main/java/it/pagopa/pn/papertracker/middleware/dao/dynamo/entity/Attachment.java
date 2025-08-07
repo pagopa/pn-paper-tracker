@@ -13,7 +13,7 @@ public class Attachment {
 
     public static final String COL_ID = "id";
     public static final String COL_DOCUMENT_TYPE = "documentType";
-    public static final String COL_URL = "url";
+    public static final String COL_URI = "uri";
     public static final String COL_DATE = "date";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
@@ -22,8 +22,8 @@ public class Attachment {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_TYPE)}))
     private String documentType;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_URL)}))
-    private String url;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_URI)}))
+    private String uri;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
     private Instant date;

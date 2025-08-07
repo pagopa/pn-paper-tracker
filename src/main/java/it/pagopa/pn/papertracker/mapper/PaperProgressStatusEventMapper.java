@@ -6,8 +6,6 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
@@ -48,7 +46,7 @@ public class PaperProgressStatusEventMapper {
         attachment.setDate(attachmentDetails.getDate().toInstant());
         attachment.setId(attachmentDetails.getId());
         attachment.setDocumentType(attachmentDetails.getDocumentType());
-        attachment.setUrl(attachmentDetails.getUri());
+        attachment.setUri(attachmentDetails.getUri());
         return attachment;
     }
 }

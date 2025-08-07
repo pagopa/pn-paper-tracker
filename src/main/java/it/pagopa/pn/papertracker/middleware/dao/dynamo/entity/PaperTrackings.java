@@ -52,7 +52,7 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
     private String unifiedDeliveryDriver;
 
-    @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CREATED_AT)}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
