@@ -90,7 +90,7 @@ public class DematValidator implements HandlerStep {
                         .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
                         .details(
                                 DetailsDTO.builder()
-                                        .registeredLetterCode(paperTracking.getNotificationState().getRegisteredLetterCode())
+                                        .registeredLetterCode(paperTracking.getPaperStatus().getRegisteredLetterCode())
                                         .notificationDate(LocalDateTime.ofInstant(paperTracking.getValidationFlow().getSequencesValidationTimestamp(), ZoneId.systemDefault()))
                                         .build()
                         )

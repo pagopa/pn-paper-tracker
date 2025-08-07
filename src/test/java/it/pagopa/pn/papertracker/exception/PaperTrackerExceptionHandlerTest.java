@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.exception;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
-import it.pagopa.pn.papertracker.service.PaperTrackerEventService;
+import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class PaperTrackerExceptionHandlerTest {
 
     @Mock
-    private PaperTrackerEventService paperTrackerEventService;
+    private PaperTrackerTrackingService paperTrackerEventService;
 
     private PaperTrackerExceptionHandler exceptionHandler;
 

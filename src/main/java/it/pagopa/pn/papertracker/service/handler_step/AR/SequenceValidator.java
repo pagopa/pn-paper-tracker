@@ -47,8 +47,8 @@ public class SequenceValidator implements HandlerStep {
      */
     public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings) {
         log.info("Beginning validation for sequence for paper tracking : {}", paperTrackings);
-        if (Objects.isNull(paperTrackings.getNotificationState())) {
-            paperTrackings.setNotificationState(new NotificationState());
+        if (Objects.isNull(paperTrackings.getPaperStatus())) {
+            paperTrackings.setPaperStatus(new PaperStatus());
         }
         if (Objects.isNull(paperTrackings.getValidationFlow())) {
             paperTrackings.setValidationFlow(new ValidationFlow());
@@ -229,7 +229,7 @@ public class SequenceValidator implements HandlerStep {
                     );
                 }
 
-                paperTrackings.getNotificationState().setDeliveryFailureCause(event.getDeliveryFailureCause());
+                paperTrackings.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
             }
         }
         return Mono.just(events);
@@ -254,7 +254,7 @@ public class SequenceValidator implements HandlerStep {
                     events, paperTrackings.getTrackingId(), paperTrackings.getProductType(), ErrorCategory.REGISTERED_LETTER_CODE_ERROR
             );
         }
-        paperTrackings.getNotificationState().setRegisteredLetterCode(firstRegisteredLetterCode);
+        paperTrackings.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
         return Mono.just(events);
     }
 

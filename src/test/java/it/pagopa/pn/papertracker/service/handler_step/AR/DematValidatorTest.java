@@ -2,7 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.NotificationState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
@@ -47,8 +47,8 @@ class DematValidatorTest {
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setNotificationState(new NotificationState());
-        paperTrackings.getNotificationState().setRegisteredLetterCode("RL123");
+        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);

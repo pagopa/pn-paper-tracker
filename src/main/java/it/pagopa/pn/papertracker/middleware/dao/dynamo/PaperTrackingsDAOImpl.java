@@ -118,5 +118,9 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
+    @Override
+    public Flux<PaperTrackings> retrieveAllByTrackingIds(List<String> trackingIds) {
+        return findAllByKeys(trackingIds);
+    }
 
 }
