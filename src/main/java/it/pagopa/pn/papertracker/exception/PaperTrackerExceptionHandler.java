@@ -20,7 +20,7 @@ public class PaperTrackerExceptionHandler {
     /**
      * Intercetta le eccezioni di tipo {@link PnPaperTrackerValidationException}.
      * <p>
-     * Per ogni eccezione intercettata, effettua una putItem sulla tabella PaperTrackingsErrors e logga eventuali errori durante l'inserimento.
+     * Per ogni eccezione intercettata, effettua una putItem sulla tabella PaperTrackingsError
      */
     @ExceptionHandler(PnPaperTrackerValidationException.class)
     public Mono<Void> handleInternalException(final PnPaperTrackerValidationException ex) {

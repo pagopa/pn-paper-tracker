@@ -30,66 +30,39 @@ public class ExternalChannelHandlerTest {
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_PROGRESS() {
-        //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002A.name());
-        HandlerContext context = new HandlerContext();
-        context.setPaperProgressStatusEvent(payload.getAnalogMail());
-
-        when(handlersFactoryAr.buildIntermediateEventsHandler(context)).thenReturn(Mono.empty());
-
-        //Act
+        when(handlersFactoryAr.buildIntermediateEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
         externalChannelHandler.handleExternalChannelMessage(payload);
-
-        //Assert
-        verify(handlersFactoryAr).buildIntermediateEventsHandler(context);
+        verify(handlersFactoryAr).buildIntermediateEventsHandler(any(HandlerContext.class));
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002F.name());
-        HandlerContext context = new HandlerContext();
-        context.setPaperProgressStatusEvent(payload.getAnalogMail());
 
-        when(handlersFactoryAr.buildRetryEventHandler(context)).thenReturn(Mono.empty());
+        when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
-        //Act
         externalChannelHandler.handleExternalChannelMessage(payload);
 
-        //Assert
-        verify(handlersFactoryAr).buildRetryEventHandler(context);
+        verify(handlersFactoryAr, times(1)).buildRetryEventHandler(any(HandlerContext.class));
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_OK() {
-        //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN004C.name());
-        HandlerContext context = new HandlerContext();
-        context.setPaperProgressStatusEvent(payload.getAnalogMail());
-
-        when(handlersFactoryAr.buildFinalEventsHandler(context)).thenReturn(Mono.empty());
-
-        //Act
+        when(handlersFactoryAr.buildFinalEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
         externalChannelHandler.handleExternalChannelMessage(payload);
-
-        //Assert
-        verify(handlersFactoryAr).buildFinalEventsHandler(context);
+        verify(handlersFactoryAr).buildFinalEventsHandler(any(HandlerContext.class));
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_UNRECOGNIZED() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate("UNRECOGNIZED_STATUS");
-        HandlerContext context = new HandlerContext();
-        context.setPaperProgressStatusEvent(payload.getAnalogMail());
-
-        when(handlersFactoryAr.buildUnrecognizedEventsHandler(context)).thenReturn(Mono.empty());
-
-        //Act
+        when(handlersFactoryAr.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
         externalChannelHandler.handleExternalChannelMessage(payload);
-
-        //Assert
-        verify(handlersFactoryAr).buildUnrecognizedEventsHandler(context);
+        verify(handlersFactoryAr).buildUnrecognizedEventsHandler(any(HandlerContext.class));
     }
 
     private SingleStatusUpdate getSingleStatusUpdate(String statusCode) {

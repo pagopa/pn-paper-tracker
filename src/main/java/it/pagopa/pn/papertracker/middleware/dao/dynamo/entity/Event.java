@@ -17,6 +17,7 @@ public class Event {
 
     public static final String COL_REQUEST_TIMESTAMP = "requestTimestamp";
     public static final String COL_STATUS_CODE = "statusCode";
+    public static final String COL_STATUS_DESCRIPTION = "statusDescription";
     public static final String COL_STATUS_TIMESTAMP = "statusTimestamp";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_DELIVERY_FAILURE_CAUSE = "deliveryFailureCause";
@@ -24,16 +25,20 @@ public class Event {
     public static final String COL_ANONYMIZED_DISCOVERED_ADDRESS_ID = "anonymizedDiscoveredAddressId";
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
+    public static final String COL_ID = "id";
 
-    @Getter(onMethod = @__({@DynamoDbIgnore}))
-    @Setter(onMethod = @__({@DynamoDbIgnore}))
-    private String discoveredAddress;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
+    private String id;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_TIMESTAMP)}))
     private Instant requestTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_CODE)}))
     private String statusCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_DESCRIPTION)}))
+    private String statusDescription;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATUS_TIMESTAMP)}))
     private Instant statusTimestamp;

@@ -15,14 +15,20 @@ import java.util.UUID;
 public class DataVaultClientImpl implements DataVaultClient {
 
     private final PaperAddressesApi paperAddressesApi;
-    private final String PREFIX_ANONYMIZED_ADDRESS_ID = "anonymized_addr_";
 
     @Override
     public Mono<String> anonymizeDiscoveredAddress(String trackingId, DiscoveredAddress discoveredAddress) {
         String uuid = UUID.randomUUID().toString();
+        String PREFIX_ANONYMIZED_ADDRESS_ID = "anonymized_addr_";
         String anonymizedDiscoveredAddressId = PREFIX_ANONYMIZED_ADDRESS_ID + uuid;
         return paperAddressesApi.updatePaperAddress(trackingId, anonymizedDiscoveredAddressId, toPaperAddress(discoveredAddress))
                 .thenReturn(anonymizedDiscoveredAddressId);
+    }
+
+    @Override
+    public Mono<PaperAddress> deAnonymizeDiscoveredAddress(String trackingId, String anonymizeDiscoveredAddress) {
+        return paperAddressesApi.getPaperAddressByIds(trackingId, anonymizeDiscoveredAddress)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("No address found for the given anonymized ID: " + anonymizeDiscoveredAddress)));
     }
 
     private PaperAddress toPaperAddress(DiscoveredAddress discoveredAddress) {

@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerInternalException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
@@ -186,7 +186,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Attachments are not valid for the sequence"))
                 .verify();
     }
@@ -210,7 +210,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Attachments are not valid for the sequence"))
                 .verify();
     }
@@ -228,7 +228,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid lastEvent for sequence validation"))
                 .verify();
     }
@@ -253,7 +253,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid business timestamps"))
                 .verify();
     }
@@ -274,7 +274,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
     }
@@ -297,7 +297,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
     }
@@ -320,7 +320,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
     }
@@ -342,7 +342,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid business timestamps"))
                 .verify();
     }
@@ -365,7 +365,7 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
                 .verify();
     }
@@ -389,8 +389,8 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
-                        throwable.getMessage().contains("deliveryFailureCause non valorizzato per statusCode"))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("deliveryFailureCause is null for statusCode=RECRN002B"))
                 .verify();
     }
 
@@ -413,8 +413,8 @@ class SequenceValidatorTest {
 
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerInternalException &&
-                        throwable.getMessage().contains("deliveryFailureCause non valido"))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: TESTERR"))
                 .verify();
     }
     

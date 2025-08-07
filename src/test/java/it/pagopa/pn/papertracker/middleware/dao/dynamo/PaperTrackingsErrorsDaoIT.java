@@ -23,12 +23,12 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
             PaperTrackingsErrors error = new PaperTrackingsErrors();
             error.setRequestId("requestId1");
             error.setCreated(Instant.now().minus(i, ChronoUnit.MINUTES));
-            error.setErrorCategory(ErrorCategory.UNKNOWN);
+            error.setErrorCategory(ErrorCategory.OCR_VALIDATION);
             error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
             error.setProductType(ProductType.AR);
             error.setType(ErrorType.WARNING);
             ErrorDetails errorDetails = new ErrorDetails();
-            errorDetails.setCause(ErrorCause.GIACENZA_DATE_ERROR);
+            errorDetails.setCause(ErrorCause.OCR_KO);
             errorDetails.setMessage("error");
             error.setDetails(errorDetails);
             error.setEventThrow("RECRN001C");
@@ -39,7 +39,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         PaperTrackingsErrors error = new PaperTrackingsErrors();
         error.setRequestId("requestId2");
         error.setCreated(Instant.now());
-        error.setErrorCategory(ErrorCategory.UNKNOWN);
+        error.setErrorCategory(ErrorCategory.OCR_VALIDATION);
         error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
         error.setProductType(ProductType.AR);
         error.setType(ErrorType.ERROR);
@@ -56,10 +56,10 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertNotNull(errors);
         Assertions.assertEquals(3, errors.size());
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getRequestId().equals("requestId1")));
-        Assertions.assertTrue(errors.stream().allMatch(e -> e.getErrorCategory() == ErrorCategory.UNKNOWN));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getErrorCategory() == ErrorCategory.OCR_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getFlowThrow() == FlowThrow.DEMAT_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getProductType() == ProductType.AR));
-        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause() == ErrorCause.GIACENZA_DATE_ERROR));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getCause() == ErrorCause.OCR_KO));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getDetails().getMessage().equals("error")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getEventThrow().equals("RECRN001C")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getType() == ErrorType.WARNING));
@@ -68,7 +68,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertNotNull(errors2);
         Assertions.assertEquals(1, errors2.size());
         Assertions.assertEquals("requestId2", errors2.getFirst().getRequestId());
-        Assertions.assertSame(ErrorCategory.UNKNOWN, errors2.getFirst().getErrorCategory());
+        Assertions.assertSame(ErrorCategory.OCR_VALIDATION, errors2.getFirst().getErrorCategory());
         Assertions.assertSame(FlowThrow.DEMAT_VALIDATION, errors2.getFirst().getFlowThrow());
         Assertions.assertSame(ProductType.AR, errors2.getFirst().getProductType());
         Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, errors2.getFirst().getDetails().getCause());

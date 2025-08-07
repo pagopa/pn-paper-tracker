@@ -22,23 +22,19 @@ public class MetadataUpserter implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(anonymizedDiscoveredAddressId -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), anonymizedDiscoveredAddressId))
+                .flatMap(anonymizedDiscoveredAddressId -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), context.getAnonymizedDiscoveredAddressId(), context.getEventId()))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
-    private Mono<String> discoveredAddressAnonimization(HandlerContext handlerContext) {
+    private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
         DiscoveredAddress discoveredAddress = handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress();
         if (Objects.nonNull(discoveredAddress)) {
-            return dataVaultClient.anonymizeDiscoveredAddress(
-                    handlerContext.getPaperProgressStatusEvent().getRequestId(),
-                    discoveredAddress
-            ).map(anonymizedDiscoveredAddressId -> {
-                handlerContext.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
-                return anonymizedDiscoveredAddressId;
-            });
+            return dataVaultClient.anonymizeDiscoveredAddress(handlerContext.getPaperProgressStatusEvent().getRequestId(), discoveredAddress)
+                    .doOnNext(handlerContext::setAnonymizedDiscoveredAddressId)
+                    .thenReturn(handlerContext);
         }
-        return Mono.just("");
+        return Mono.just(handlerContext);
     }
 }

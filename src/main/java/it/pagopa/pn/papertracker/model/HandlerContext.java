@@ -12,9 +12,11 @@ import java.util.List;
 public class HandlerContext {
 
     private PaperProgressStatusEvent paperProgressStatusEvent;
+    private String trackingId;
     private PaperTrackings paperTrackings;
     private String anonymizedDiscoveredAddressId;
     private List<SendEvent> eventsToSend = new ArrayList<>();
     private boolean stopExecution = false;
+    private String eventId;
 
 }
