@@ -4,8 +4,7 @@ Description: 'Microservice deploy for pn-paper-tracker'
 Parameters:
   ProjectName:
     Type: String
-    Description: 'Usually pn can be pnXYZ where XYZ are the feature number, useful to create
-      experimental environments without crash official development environment'
+    Description: 'Usually pn can be pnXYZ where XYZ are the feature number, useful to create experimental environments without crash official development environment'
 
   AlarmSNSTopicArn:
     Type: String
@@ -49,7 +48,7 @@ Parameters:
 
   ApplicationLoadBalancerListenerArn:
     Type: String
-    Description: 'Load balancer listener where HTTP endpoints is going to be registered'
+    Description: 'Load balancer listener where HTTP endpoints are going to be registered'
 
   ApplicationLoadBalancerDomain:
     Type: String
@@ -61,15 +60,15 @@ Parameters:
   
   LogsKinesisSourceStreamArn:
     Type: String
-    Description: 'Kinesis stream that receive logs'
-  
+    Description: 'Kinesis stream that receives logs'
+
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
 
   EcsLogGroup:
     Type: String
-    Description: 'Ecs log group name'
+    Description: 'ECS log group name'
 
   WireTapLogActivation:
     Type: String
@@ -135,14 +134,6 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where OCR outputs are sent'
 
-  PnOcrInputQueueARN:
-    Type: String
-    Description: 'ARN of the SQS queue where OCR request are sent'
-
-  PnOcrInputQueueUrl:
-    Type: String
-    Description: 'URL of the SQS queue where OCR request are sent'
-
   ExternalChannelToPaperTrackerQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel messages are sent'
@@ -158,7 +149,6 @@ Parameters:
   PaperTrackingsErrorsTableArn:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackingsErrors'
-
 
   PaperTrackingsTableName:
     Type: String
@@ -178,11 +168,15 @@ Parameters:
 
   EnableOcrValidation:
     Type: String
+    Default: false
     Description: 'Feature flag for enabling OCR validation'
+    AllowedValues:
+      - 'true'
+      - 'false'
 
   QueueOcrInputsUrl:
     Type: String
-    Description: 'URL of the SQS queue where OCR request are sent'
+    Description: 'URL of the SQS queue where OCR requests are sent'
 
   QueueOcrInputsRegion:
     Type: String
@@ -191,7 +185,7 @@ Parameters:
   PaperTrackingsTtlDuration:
     Type: String
     Default: 3650d
-    Description: 'DynamoDB PaperTrackings entity ttl duration'
+    Description: 'DynamoDB PaperTrackings entity TTL duration'
 
   ExternalChannelsOutputsQueueName:
     Type: String
@@ -207,6 +201,7 @@ Parameters:
 
   EnableTruncatedDateForRefinementCheck:
     Type: String
+    Default: 'false'
     Description: 'If enabled truncate datetime to local date for refinement check'
     AllowedValues:
       - 'true'
@@ -218,7 +213,7 @@ Parameters:
 
   SandboxSafeStorageBaseUrl:
     Type: String
-    Description: 'Url to the SafeStorage microservice'
+    Description: 'URL to the SafeStorage microservice'
 
   SafeStorageCxId:
     Type: String
@@ -254,13 +249,12 @@ Resources:
         ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER=${ExternalChannelToPaperTrackerQueueName}'
         ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
         ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
-        ContainerEnvEntry12: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
-        ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
-        ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
-        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
-        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
-        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
+        ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
+        ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
+        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref SubnetsIds
@@ -283,8 +277,8 @@ Resources:
         DynamoDBTableNames: !Join
           - ','
           - - !Ref PaperTrackingsTableName
-          - - !Ref PaperTrackingsErrorsTableName
-          - - !Ref PaperTrackerDryRunOutputsTableName
+            - !Ref PaperTrackingsErrorsTableName
+            - !Ref PaperTrackerDryRunOutputsTableName
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
@@ -297,16 +291,17 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - dynamodb:PutItem
-              - dynamodb:Query
               - dynamodb:GetItem
               - dynamodb:PutItem
-              - dynamodb:Query
               - dynamodb:UpdateItem
+              - dynamodb:Query
             Resource:
               - !Sub "${PaperTrackingsTableArn}"
               - !Sub "${PaperTrackerDryRunOutputsTableArn}"
               - !Sub "${PaperTrackingsErrorsTableArn}"
+              - !Sub "${PaperTrackingsTableArn}/*"
+              - !Sub "${PaperTrackerDryRunOutputsTableArn}/*"
+              - !Sub "${PaperTrackingsErrorsTableArn}/*"
           - Effect: Allow
             Action:
               - sqs:SendMessage
@@ -318,4 +313,3 @@ Resources:
             Resource:
               - !Ref ExternalChannelToPaperTrackerQueueARN
               - !Ref PnOcrOutputsQueueARN
-              - !Ref PnOcrInputQueueARN

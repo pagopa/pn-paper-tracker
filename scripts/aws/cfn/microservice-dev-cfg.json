@@ -12,6 +12,9 @@
     "CompiutaGiacenzaArDuration": "80s",
     "EnableTruncatedDateForRefinementCheck": "false",
     "RefinementDuration": "1m",
-    "SafeStorageCxId": "pn-cons-000"
+    "SafeStorageCxId": "pn-cons-000",
+    "EnableOcrValidation": "false",
+    "QueueOcrInputsUrl": "",
+    "QueueOcrInputsRegion": ""
   }
 }
