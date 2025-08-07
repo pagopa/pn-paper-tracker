@@ -21,7 +21,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
     void insertAndRetrieveError() {
         IntStream.range(0, 3).forEach(i -> {
             PaperTrackingsErrors error = new PaperTrackingsErrors();
-            error.setRequestId("requestId1");
+            error.setTrackingId("requestId1");
             error.setCreated(Instant.now().minus(i, ChronoUnit.MINUTES));
             error.setErrorCategory(ErrorCategory.OCR_VALIDATION);
             error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
@@ -37,7 +37,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         });
 
         PaperTrackingsErrors error = new PaperTrackingsErrors();
-        error.setRequestId("requestId2");
+        error.setTrackingId("requestId2");
         error.setCreated(Instant.now());
         error.setErrorCategory(ErrorCategory.OCR_VALIDATION);
         error.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
@@ -55,7 +55,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
 
         Assertions.assertNotNull(errors);
         Assertions.assertEquals(3, errors.size());
-        Assertions.assertTrue(errors.stream().allMatch(e -> e.getRequestId().equals("requestId1")));
+        Assertions.assertTrue(errors.stream().allMatch(e -> e.getTrackingId().equals("requestId1")));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getErrorCategory() == ErrorCategory.OCR_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getFlowThrow() == FlowThrow.DEMAT_VALIDATION));
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getProductType() == ProductType.AR));
@@ -67,7 +67,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
         List<PaperTrackingsErrors> errors2 = paperTrackingsErrorsDAO.retrieveErrors("requestId2").collectList().block();
         Assertions.assertNotNull(errors2);
         Assertions.assertEquals(1, errors2.size());
-        Assertions.assertEquals("requestId2", errors2.getFirst().getRequestId());
+        Assertions.assertEquals("requestId2", errors2.getFirst().getTrackingId());
         Assertions.assertSame(ErrorCategory.OCR_VALIDATION, errors2.getFirst().getErrorCategory());
         Assertions.assertSame(FlowThrow.DEMAT_VALIDATION, errors2.getFirst().getFlowThrow());
         Assertions.assertSame(ProductType.AR, errors2.getFirst().getProductType());

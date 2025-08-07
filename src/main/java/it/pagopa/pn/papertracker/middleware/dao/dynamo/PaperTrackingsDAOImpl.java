@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.COL_TRACKING_ID;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
 import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo;
 
@@ -53,7 +54,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
     @Override
     public Mono<PaperTrackings> putIfAbsent(PaperTrackings entity) {
-        String expression = String.format("%s(%s)", ATTRIBUTE_NOT_EXISTS, PaperTrackings.COL_REQUEST_ID);
+        String expression = String.format("%s(%s)", ATTRIBUTE_NOT_EXISTS, PaperTrackings.COL_TRACKING_ID);
 
         return putIfAbsent(expression, entity)
                 .onErrorMap(ConditionalCheckFailedException.class, ex -> {
@@ -97,14 +98,14 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         String updateExpr = "SET " + String.join(", ", updateExpressions);
 
-        String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_REQUEST_ID);
+        String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_TRACKING_ID);
 
         log.info("updateExpr {}", updateExpr);
         log.info("expressionAttributeValues {}", expressionAttributeValues);
         log.info("expressionAttributeNames {}", expressionAttributeNames);
 
         return updateIfExists(
-                Map.of("requestId", AttributeValue.builder().s(requestId).build()),
+                Map.of(PaperTrackings.COL_TRACKING_ID, AttributeValue.builder().s(requestId).build()),
                 updateExpr,
                 expressionAttributeValues,
                 expressionAttributeNames,

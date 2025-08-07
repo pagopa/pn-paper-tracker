@@ -34,12 +34,6 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
     }
 
     @Override
-    public Mono<Void> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors) {
-        log.info("Inserting paper trackings error: {}", paperTrackingsErrors.toString());
-        return paperTrackingsErrorsDAO.insertError(paperTrackingsErrors).then();
-    }
-
-    @Override
     public Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest) {
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
                 .collectList()

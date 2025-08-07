@@ -15,7 +15,7 @@ public class PaperTrackingsErrorsMapper {
                                                                 FlowThrow flowThrow,
                                                                 ErrorType errorType) {
         return PaperTrackingsErrors.builder()
-                .requestId(paperTrackings.getTrackingId())
+                .trackingId(paperTrackings.getTrackingId())
                 .created(Instant.now())
                 .errorCategory(errorCategory)
                 .details(ErrorDetails.builder()

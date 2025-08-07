@@ -14,7 +14,7 @@ import java.util.Map;
 @Data
 public class PaperTrackings {
 
-    public static final String COL_REQUEST_ID = "requestId";
+    public static final String COL_TRACKING_ID = "trackingId";
     public static final String COL_EVENTS = "events";
     public static final String COL_NOTIFICATION_STATE = "notificationState";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
@@ -28,7 +28,7 @@ public class PaperTrackings {
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_REQUEST_ID)}))
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))

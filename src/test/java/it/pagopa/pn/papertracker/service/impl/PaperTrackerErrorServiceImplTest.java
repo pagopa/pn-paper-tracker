@@ -36,9 +36,9 @@ class PaperTrackerErrorServiceImplTest {
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1", "tracking2"));
         PaperTrackingsErrors paperTrackingsErrors1 = new PaperTrackingsErrors();
-        paperTrackingsErrors1.setRequestId("tracking1");
+        paperTrackingsErrors1.setTrackingId("tracking1");
         PaperTrackingsErrors paperTrackingsErrors2 = new PaperTrackingsErrors();
-        paperTrackingsErrors2.setRequestId("tracking2");
+        paperTrackingsErrors2.setTrackingId("tracking2");
 
         when(paperTrackingsErrorsDAO.retrieveErrors("tracking1"))
                 .thenReturn(Flux.just(paperTrackingsErrors1));
@@ -83,5 +83,20 @@ class PaperTrackerErrorServiceImplTest {
                         && "DAO error".equals(throwable.getMessage()))
                 .verify();
         verify(paperTrackingsErrorsDAO, times(1)).retrieveErrors("tracking1");
+    }
+
+    @Test
+    void insertPaperTrackingsErrorsSuccessfully() {
+        //ARRANGE
+        PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
+
+        //ACT
+        Mono<Void> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
+
+        //ASSERT
+        StepVerifier.create(response)
+                .verifyComplete();
+        verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
     }
 }

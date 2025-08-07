@@ -12,7 +12,7 @@ public class PaperTrackerDryRunOutputsMapper {
 
     public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String anonymizedDiscoveredAddressId) {
         PaperTrackerDryRunOutputs dryRunOutput = new PaperTrackerDryRunOutputs();
-        dryRunOutput.setRequestId(event.getRequestId());
+        dryRunOutput.setTrackingId(event.getRequestId());
         dryRunOutput.setCreated(Instant.now());
         dryRunOutput.setRegisteredLetterCode(event.getRegisteredLetterCode());
         dryRunOutput.setStatusDetail(event.getStatusDetail());

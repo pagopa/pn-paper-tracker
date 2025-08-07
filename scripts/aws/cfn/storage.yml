@@ -54,12 +54,12 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperTrackingsErrors'
       AttributeDefinitions:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           AttributeType: "S"
         - AttributeName: "created"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           KeyType: "HASH"
         - AttributeName: "created"
           KeyType: "RANGE"
@@ -74,12 +74,12 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperTrackerDryRunOutputs'
       AttributeDefinitions:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           AttributeType: "S"
         - AttributeName: "created"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           KeyType: "HASH"
         - AttributeName: "created"
           KeyType: "RANGE"
@@ -94,12 +94,12 @@ Resources:
     Properties:
       TableName: !Sub '${ProjectName}-PaperTrackings'
       AttributeDefinitions:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           AttributeType: "S"
         - AttributeName: "ocrRequestId"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "requestId"
+        - AttributeName: "trackingId"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
         - IndexName: "ocrRequestId-index"

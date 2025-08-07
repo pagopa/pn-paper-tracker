@@ -94,21 +94,6 @@ class PaperTrackerTrackingServiceImplTest {
     }
 
     @Test
-    void insertPaperTrackingsErrorsSuccessfully() {
-        //ARRANGE
-        PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
-        when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
-
-        //ACT
-        Mono<Void> response = paperTrackerEventService.insertPaperTrackingsErrors(paperTrackingsErrors);
-
-        //ASSERT
-        StepVerifier.create(response)
-                .verifyComplete();
-        verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
-    }
-
-    @Test
     void retrieveTrackingsReturnsResponseWithTrackings() {
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1", "tracking2"));

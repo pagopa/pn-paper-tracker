@@ -28,7 +28,7 @@ public class PaperTrackingsErrorsMapper {
         }
 
         return new TrackingError()
-                .trackingId(paperTrackingsErrors.getRequestId())
+                .trackingId(paperTrackingsErrors.getTrackingId())
                 .created(paperTrackingsErrors.getCreated() != null ? paperTrackingsErrors.getCreated().toString() : null)
                 .category(paperTrackingsErrors.getErrorCategory() != null ? paperTrackingsErrors.getErrorCategory().name() : null)
                 .details(details)

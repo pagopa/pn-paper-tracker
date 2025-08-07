@@ -10,8 +10,6 @@ public interface PaperTrackerTrackingService {
 
     Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest);
 
-    Mono<Void> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors);
-
     Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest);
 
 }

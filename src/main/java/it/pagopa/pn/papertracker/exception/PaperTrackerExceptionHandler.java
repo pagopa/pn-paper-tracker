@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.exception;
 
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PaperTrackerExceptionHandler {
 
-    private final PaperTrackerTrackingService paperTrackerEventService;
+    private final PaperTrackerErrorService paperTrackerErrorService;
 
     /**
      * Intercetta le eccezioni di tipo {@link PnPaperTrackerValidationException}.
@@ -25,7 +26,7 @@ public class PaperTrackerExceptionHandler {
     @ExceptionHandler(PnPaperTrackerValidationException.class)
     public Mono<Void> handleInternalException(final PnPaperTrackerValidationException ex) {
 
-        return paperTrackerEventService.insertPaperTrackingsErrors(ex.getError())
+        return paperTrackerErrorService.insertPaperTrackingsErrors(ex.getError())
                 .doOnError(throwable -> log.error("Error inserting entity into PaperTrackingsErrors: {}", throwable.getMessage(), throwable));
     }
 

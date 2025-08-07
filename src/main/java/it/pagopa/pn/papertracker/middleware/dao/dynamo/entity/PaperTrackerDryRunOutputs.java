@@ -13,7 +13,7 @@ import java.util.List;
 @DynamoDbBean
 @Data
 public class PaperTrackerDryRunOutputs {
-    public static final String COL_REQUEST_ID = "requestId";
+    public static final String COL_TRACKING_ID = "trackingId";
     public static final String COL_CREATED = "created";
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_STATUS_CODE = "statusCode";
@@ -25,8 +25,8 @@ public class PaperTrackerDryRunOutputs {
     public static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
     public static final String COL_CLIENT_REQUEST_TIMESTAMP = "clientRequestTimestamp";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_REQUEST_ID)}))
-    private String requestId;
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
+    private String trackingId;
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CREATED)}))
     private Instant created;

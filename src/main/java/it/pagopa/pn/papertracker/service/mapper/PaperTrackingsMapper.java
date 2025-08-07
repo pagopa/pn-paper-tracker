@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -84,7 +85,6 @@ public class PaperTrackingsMapper {
                         null
         );
         paperEvent.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        paperEvent.setDiscoveredAddress(event.getDiscoveredAddress());
         paperEvent.setRegisteredLetterCode(event.getRegisteredLetterCode());
         paperEvent.setAttachments(
                 event.getAttachments() != null ?

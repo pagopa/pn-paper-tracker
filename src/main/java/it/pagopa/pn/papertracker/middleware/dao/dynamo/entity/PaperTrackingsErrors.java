@@ -18,7 +18,7 @@ import java.time.Instant;
 @Builder
 public class PaperTrackingsErrors {
 
-    public static final String COL_REQUEST_ID = "requestId";
+    public static final String COL_TRACKING_ID = "trackingId";
     public static final String COL_CREATED = "created";
     public static final String COL_CATEGORY = "category";
     public static final String COL_DETAILS = "details";
@@ -27,8 +27,8 @@ public class PaperTrackingsErrors {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_TYPE = "type";
 
-    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_REQUEST_ID)}))
-    private String requestId;
+    @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
+    private String trackingId;
 
     @Getter(onMethod = @__({@DynamoDbSortKey, @DynamoDbAttribute(COL_CREATED)}))
     private Instant created;

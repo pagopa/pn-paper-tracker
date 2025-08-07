@@ -22,7 +22,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
     void insertAndRetrieveError() {
         IntStream.range(0, 3).forEach(i -> {
             PaperTrackerDryRunOutputs output = new PaperTrackerDryRunOutputs();
-            output.setRequestId("requestId1");
+            output.setTrackingId("requestId1");
             output.setCreated(Instant.now().minus(i, ChronoUnit.MINUTES));
             output.setClientRequestTimestamp(Instant.now().toString());
             output.setRegisteredLetterCode("registeredLetterCode");
@@ -43,7 +43,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
         });
 
         PaperTrackerDryRunOutputs output = new PaperTrackerDryRunOutputs();
-        output.setRequestId("requestId2");
+        output.setTrackingId("requestId2");
         output.setCreated(Instant.now());
         output.setClientRequestTimestamp(Instant.now().toString());
         output.setRegisteredLetterCode("registeredLetterCode");
@@ -66,7 +66,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
 
         Assertions.assertNotNull(outputs);
         Assertions.assertEquals(3, outputs.size());
-        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getRequestId().equals("requestId1")));
+        Assertions.assertTrue(outputs.stream().allMatch(e -> e.getTrackingId().equals("requestId1")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getStatusCode().equals("RECRN001C")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getStatusDetail().equals("statusDetail")));
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getStatusDescription().equals("statusDescription")));
@@ -85,7 +85,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
         List<PaperTrackerDryRunOutputs> outputs2 = paperTrackerDryRunOutputsDAO.retrieveOutputEvents("requestId2").collectList().block();
         Assertions.assertNotNull(outputs2);
         Assertions.assertEquals(1, outputs2.size());
-        Assertions.assertEquals("requestId2", outputs2.getFirst().getRequestId());
+        Assertions.assertEquals("requestId2", outputs2.getFirst().getTrackingId());
         Assertions.assertNotNull(outputs2.getFirst().getCreated());
         Assertions.assertNotNull(outputs2.getFirst().getClientRequestTimestamp());
         Assertions.assertEquals("registeredLetterCode", outputs2.getFirst().getRegisteredLetterCode());

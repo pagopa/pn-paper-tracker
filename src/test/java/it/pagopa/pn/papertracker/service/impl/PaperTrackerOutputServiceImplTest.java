@@ -36,9 +36,9 @@ class PaperTrackerOutputServiceImplTest {
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1", "tracking2"));
         PaperTrackerDryRunOutputs paperTrackerDryRunOutputs1 = new PaperTrackerDryRunOutputs();
-        paperTrackerDryRunOutputs1.setRequestId("tracking1");
+        paperTrackerDryRunOutputs1.setTrackingId("tracking1");
         PaperTrackerDryRunOutputs paperTrackerDryRunOutputs2 = new PaperTrackerDryRunOutputs();
-        paperTrackerDryRunOutputs2.setRequestId("tracking2");
+        paperTrackerDryRunOutputs2.setTrackingId("tracking2");
 
         when(paperTrackerDryRunOutputsDAO.retrieveOutputEvents("tracking1"))
                 .thenReturn(Flux.just(paperTrackerDryRunOutputs1));

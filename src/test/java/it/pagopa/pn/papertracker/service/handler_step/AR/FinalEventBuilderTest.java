@@ -145,7 +145,7 @@ class FinalEventBuilderTest {
                     Assertions.assertInstanceOf(PnPaperTrackerValidationException.class, throwable);
                     PnPaperTrackerValidationException ex = (PnPaperTrackerValidationException) throwable;
                     Assertions.assertNotNull(ex.getError());
-                    Assertions.assertEquals(paperTrackings.getTrackingId(), ex.getError().getRequestId());
+                    Assertions.assertEquals(paperTrackings.getTrackingId(), ex.getError().getTrackingId());
                     Assertions.assertEquals(finalEvent.getStatusCode(), ex.getError().getEventThrow());
                     Assertions.assertEquals(ProductType.valueOf(finalEvent.getProductType()), ex.getError().getProductType());
                     Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, ex.getError().getDetails().getCause());

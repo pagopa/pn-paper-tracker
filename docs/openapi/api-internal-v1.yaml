@@ -224,7 +224,7 @@ components:
         - trackingId
         - events
         - productType
-        - unifiedDeliveryDriverId
+        - unifiedDeliveryDriver
         - state
       properties:
         trackingId:
@@ -247,7 +247,7 @@ components:
           type: string
         nextRequestIdPcretry:
           type: string
-        unifiedDeliveryDriverId:
+        unifiedDeliveryDriver:
           type: string
         state:
           type: string

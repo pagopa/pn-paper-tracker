@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsR
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponseResultsInner;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsErrorsMapper;
 import lombok.RequiredArgsConstructor;
@@ -42,5 +43,11 @@ public class PaperTrackerErrorServiceImpl implements PaperTrackerErrorService {
                     trackingErrorsResponse.setResults(trackingErrorsResponseResultsInnerList);
                     return trackingErrorsResponse;
                 });
+    }
+
+    @Override
+    public Mono<Void> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors) {
+        log.info("Inserting paper trackings error: {}", paperTrackingsErrors.toString());
+        return paperTrackingsErrorsDAO.insertError(paperTrackingsErrors).then();
     }
 }
