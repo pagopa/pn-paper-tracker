@@ -37,6 +37,12 @@ class HandlersFactoryArTest {
     private FinalEventBuilder finalEventBuilder;
 
     @Mock
+    private StateUpdater stateUpdater;
+
+    @Mock
+    private DuplicatedEventFiltering duplicatedEventFiltering;
+
+    @Mock
     private RetrySender retrySender;
 
     @Mock
@@ -121,6 +127,8 @@ class HandlersFactoryArTest {
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext))
@@ -141,6 +149,7 @@ class HandlersFactoryArTest {
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
         StepVerifier.create(handlersFactoryAr.buildIntermediateEventsHandler(handlerContext))
@@ -158,6 +167,8 @@ class HandlersFactoryArTest {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))
@@ -174,6 +185,7 @@ class HandlersFactoryArTest {
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
         StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext))
                 .verifyComplete();

@@ -5,10 +5,7 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper;
@@ -34,8 +31,11 @@ public class RetrySender implements HandlerStep {
                 .doOnError(throwable -> log.error("Error retrieving retry for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> {
                     if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-                        return paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsPcretry(pcRetryResponse))
-                                .flatMap(paperTrackings -> paperTrackingsDAO.putIfAbsent(PaperTrackingsMapper.toPaperTrackings(pcRetryResponse, pnPaperTrackerConfigs.getPaperTrackingsTtlDuration(), context.getPaperTrackings().getProductType())));
+                        return paperTrackingsDAO.putIfAbsent(PaperTrackingsMapper.toPaperTrackings(pcRetryResponse, pnPaperTrackerConfigs.getPaperTrackingsTtlDuration(), context.getPaperTrackings().getProductType()))
+                                .doOnNext(paperTrackings -> {
+                                    PaperTrackings paperTrackingsToUpdate = getPaperTrackingsPcretry(pcRetryResponse);
+                                    context.setPaperTrackings(paperTrackingsToUpdate);
+                                });
                     } else {
                         throw new PnPaperTrackerValidationException(String.format("Retry not found for trackingId: %s ", context.getPaperTrackings().getTrackingId()),
                                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
@@ -52,6 +52,7 @@ public class RetrySender implements HandlerStep {
 
     private PaperTrackings getPaperTrackingsPcretry(PcRetryResponse pcRetryResponse) {
         PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.DONE);
         paperTrackings.setNextRequestIdPcretry(pcRetryResponse.getRequestId());
         return paperTrackings;
     }

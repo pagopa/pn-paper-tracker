@@ -8,9 +8,7 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
@@ -76,13 +74,20 @@ public class DematValidator implements HandlerStep {
                     OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(attachment.getDocumentType()));
                     ocrMomProducer.push(ocrEvent);
                 })
-                .doOnNext(ocrEvent -> {
-                    paperTracking.setOcrRequestId(ocrRequestId);
-                    paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
-                })
-                .flatMap(o -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTracking))
-                .doOnNext(v -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
+                .map(ocrEvent -> getPaperTrackingsToUpdate(ocrRequestId))
+                .flatMap(paperTrackingsToUpdate -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTrackingsToUpdate))
+                .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .then();
+    }
+
+    private PaperTrackings getPaperTrackingsToUpdate( String ocrRequestId) {
+        PaperTrackings paperTracking = new PaperTrackings();
+        paperTracking.setOcrRequestId(ocrRequestId);
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setOcrRequestTimestamp(Instant.now());
+        paperTracking.setValidationFlow(validationFlow);
+        paperTracking.setState(PaperTrackingsState.AWAITING_OCR);
+        return paperTracking;
     }
 
     private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId, String presignedUrl, DocumentTypeEnum documentType) {

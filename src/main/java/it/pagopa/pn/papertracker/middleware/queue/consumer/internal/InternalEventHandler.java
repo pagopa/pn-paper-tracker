@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,6 +41,17 @@ public class InternalEventHandler {
 
         MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
                         .flatMap(paperTrackings -> {
+                            if(paperTrackings.getState().equals(PaperTrackingsState.DONE) || paperTrackings.getState().equals(PaperTrackingsState.KO)){
+                                Mono.error(new PnPaperTrackerValidationException(("Error in OCR validation for requestId: " + ocrResultMessage.getCommandId()),
+                                        PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
+                                                Collections.emptyList(),
+                                                ErrorCategory.OCR_VALIDATION,
+                                                ErrorCause.OCR_DUPLICATED_EVENT,
+                                                ErrorCause.OCR_DUPLICATED_EVENT.getDescription(),
+                                                FlowThrow.DEMAT_VALIDATION,
+                                                ErrorType.WARNING
+                                        )));
+                            }
                             Event event = extractFinalEventFromOcr(paperTrackings);
                             String statusCode = event.getStatusCode();
                             Data.ValidationStatus validationStatus = ocrResultMessage.getData().getValidationStatus();
@@ -75,9 +87,13 @@ public class InternalEventHandler {
     }
 
     private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, String eventId) {
-        paperTrackings.getValidationFlow().setDematValidationTimestamp(Instant.now());
+        PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
+        paperTrackings.setTrackingId(paperTrackings.getTrackingId());
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setDematValidationTimestamp(Instant.now());
+        paperTrackings.setValidationFlow(validationFlow);
         HandlerContext handlerContext = new HandlerContext();
-        handlerContext.setPaperTrackings(paperTrackings);
+        handlerContext.setPaperTrackings(paperTrackingsToUpdate);
         handlerContext.setEventId(eventId);
         return handlerContext;
     }

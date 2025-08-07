@@ -34,9 +34,9 @@ Parameters:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
-  SubnetsIds:
+  VpcEgressSubnetsIds:
     Type: String
-    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+    Description: 'Egress subnets'
 
   VpcId:
     Type: String
@@ -219,6 +219,31 @@ Parameters:
     Type: String
     Description: 'CxId for the SafeStorage microservice'
 
+  PnOcrInputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR inputs are sent'
+
+  PnOcrInputsQueueURL:
+    Type: String
+    Description: 'URL of the SQS queue where OCR inputs are sent'
+
+  PnOcrInputsQueueRegion:
+    Type: String
+    Description: 'Region of the SQS queue where OCR inputs are sent'
+
+  PnOcrOutputsQueueURL:
+    Type: String
+    Description: 'URL of the SQS queue where OCR outputs are sent'
+
+  OcrAwsRoleARN:
+    Type: String
+    Description: 'ARN of the IAM role in the OCR AWS account that can send messages to the PnOcrOutputsQueue'
+
+  OcrAwsAccountId:
+    Type: String
+    Description: 'AWS account ID of the OCR service'
+
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -247,23 +272,43 @@ Resources:
         ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
         ContainerEnvEntry8: !Sub 'PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION=${PaperTrackingsTtlDuration}'
         ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER=${ExternalChannelToPaperTrackerQueueName}'
-        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${QueueOcrInputsUrl}'
-        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${QueueOcrInputsRegion}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${PnOcrInputsQueueURL}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${PnOcrInputsQueueRegion}'
         ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry13: !Sub 'PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION=${CompiutaGiacenzaArDuration}'
         ContainerEnvEntry14: !Sub 'PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK=${EnableTruncatedDateForRefinementCheck}'
         ContainerEnvEntry15: !Sub 'PN_PAPERTRACKER_REFINEMENTDURATION=${RefinementDuration}'
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS=${PnOcrOutputsQueueName}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
+
+  PnOcrOutputsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PnOcrOutputsQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCrossAccountSend
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Ref PnOcrOutputsQueueURL
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref OcrAwsRoleARN
 
   PaperTrackerMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
@@ -313,3 +358,9 @@ Resources:
             Resource:
               - !Ref ExternalChannelToPaperTrackerQueueARN
               - !Ref PnOcrOutputsQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref PnOcrInputsQueueARN

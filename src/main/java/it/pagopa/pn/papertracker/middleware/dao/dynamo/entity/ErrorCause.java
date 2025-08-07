@@ -8,6 +8,7 @@ import lombok.Getter;
 public enum ErrorCause {
 
     GIACENZA_DATE_ERROR("Date di inizio e fine giacenza non coerenti"),
+    OCR_DUPLICATED_EVENT("Evento di risposta duplicato"),
     OCR_KO( "Errore nella validazione dell'OCR");
 
     private final String description;

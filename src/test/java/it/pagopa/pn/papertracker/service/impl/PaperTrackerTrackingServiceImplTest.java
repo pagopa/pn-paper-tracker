@@ -41,7 +41,7 @@ class PaperTrackerTrackingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, paperTrackingsErrorsDAO, pnPaperTrackerConfigs);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs);
     }
 
     @Test

@@ -17,20 +17,23 @@ import static org.mockito.Mockito.*;
 class PaperTrackerExceptionHandlerTest {
 
     @Mock
-    private PaperTrackerErrorService paperTrackerEventService;
+    private PaperTrackerErrorService paperTrackerErrorService;
+
+    @Mock
+    private PaperTrackerTrackingService paperTrackerEventService;
 
     private PaperTrackerExceptionHandler exceptionHandler;
 
     @BeforeEach
     void setUp() {
-        exceptionHandler = new PaperTrackerExceptionHandler(paperTrackerEventService);
+        exceptionHandler = new PaperTrackerExceptionHandler(paperTrackerErrorService, paperTrackerEventService);
     }
 
     @Test
     void handleInternalExceptionSuccessfully() {
         // ARRANGE
         PnPaperTrackerValidationException exception = new PnPaperTrackerValidationException("Validation error", new PaperTrackingsErrors());
-        when(paperTrackerEventService.insertPaperTrackingsErrors(exception.getError())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsErrors(exception.getError())).thenReturn(Mono.empty());
 
         // ACT
         Mono<Void> response = exceptionHandler.handleInternalException(exception);
@@ -38,7 +41,7 @@ class PaperTrackerExceptionHandlerTest {
         // ASSERT
         StepVerifier.create(response)
                 .verifyComplete();
-        verify(paperTrackerEventService, times(1)).insertPaperTrackingsErrors(exception.getError());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(exception.getError());
     }
 
 }

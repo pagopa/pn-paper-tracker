@@ -148,23 +148,30 @@ Outputs:
   PaperTrackingsErrorsTableArn:
     Description: ARN of dynamodb table containing trackings errors
     Value: !Sub '${PaperTrackingsErrorsTable.Arn}'
+
   PaperTrackerDryRunOutputsTableName:
     Description: Name of dynamodb table containing trackings outputs
     Value: !Ref PaperTrackerDryRunOutputsTable
   PaperTrackerDryRunOutputsTableArn:
     Description: ARN of dynamodb table containing trackings outputs
     Value: !Sub '${PaperTrackerDryRunOutputsTable.Arn}'
-  PnOcrOutputsQueueName:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
-  PnOcrOutputsQueueARN:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueARN
-  ExternalChannelToPaperTrackerQueueName:
-    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
-  ExternalChannelToPaperTrackerQueueARN:
-    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueARN
+
   PaperTrackingsTableName:
     Description: Name of dynamodb table containing trackings
     Value: !Ref PaperTrackingsTable
   PaperTrackingsTableArn:
     Description: ARN of dynamodb table containing trackings
     Value: !Sub '${PaperTrackingsTable.Arn}'
+
+  PnOcrOutputsQueueName:
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
+  PnOcrOutputsQueueARN:
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueARN
+  PnOcrOutputsQueueURL:
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueUrl
+
+  ExternalChannelToPaperTrackerQueueName:
+    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
+  ExternalChannelToPaperTrackerQueueARN:
+    Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueARN
+

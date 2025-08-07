@@ -92,10 +92,11 @@ class PaperTrackerErrorServiceImplTest {
         when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
 
         //ACT
-        Mono<Void> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
+        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
 
         //ASSERT
         StepVerifier.create(response)
+                .expectNext(paperTrackingsErrors)
                 .verifyComplete();
         verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
     }

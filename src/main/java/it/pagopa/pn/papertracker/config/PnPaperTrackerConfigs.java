@@ -15,7 +15,6 @@ import java.time.Duration;
 public class PnPaperTrackerConfigs {
 
     private Dao dao;
-    private String queueOcrInput;
     private String paperChannelBaseUrl;
     private String dataVaultBaseUrl;
     private String safeStorageBaseUrl;
@@ -24,6 +23,7 @@ public class PnPaperTrackerConfigs {
     private Topics topics;
     private boolean sendOutputToDeliveryPush;
     private boolean enableOcrValidation;
+    private String queueOcrInputName;
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;
     private String externalChannelOutputsQueue;

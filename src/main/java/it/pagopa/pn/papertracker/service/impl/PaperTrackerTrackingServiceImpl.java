@@ -5,8 +5,8 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreatio
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,6 @@ import static it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper.toPa
 public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingService {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Override
@@ -46,6 +45,12 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
                     );
                     return response;
                 });
+    }
+
+    @Override
+    public Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings) {
+        return paperTrackingsDAO.updateItem(trackingId, paperTrackings)
+                .then();
     }
 
 }

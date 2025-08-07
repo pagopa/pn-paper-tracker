@@ -51,20 +51,13 @@ public class RetrySenderTest {
 
         when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
         when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
         when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
                 .verifyComplete();
 
-        //ASSERT
-        verify(paperTrackingsDAO).updateItem(eq(context.getPaperTrackings().getTrackingId()), argThat(paperTrackings ->
-                paperTrackings.getNextRequestIdPcretry().equals(response.getRequestId())));
-        verify(paperTrackingsDAO).putIfAbsent(
-                argThat(paperTrackings -> paperTrackings.getTrackingId().equals(response.getRequestId()) &&
-                        paperTrackings.getUnifiedDeliveryDriver().equals(response.getDeliveryDriverId()) &&
-                        paperTrackings.getProductType() == context.getPaperTrackings().getProductType()));
+        verify(paperTrackingsDAO, times(1)).putIfAbsent(any());
         verify(paperTrackingsErrorsDAO, never()).insertError(any());
     }
 

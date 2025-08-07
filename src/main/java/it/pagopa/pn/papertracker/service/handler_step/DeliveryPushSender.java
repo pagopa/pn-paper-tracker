@@ -6,6 +6,8 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -33,6 +35,10 @@ public class DeliveryPushSender implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
                 .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
+                .doOnNext(unused -> {
+                    PaperTrackings paperTrackingsToUpdate = getPaperTrackingsDone();
+                    context.setPaperTrackings(paperTrackingsToUpdate);
+                })
                 .then();
     }
 
@@ -68,6 +74,13 @@ public class DeliveryPushSender implements HandlerStep {
                     }
                 })
                 .then();
+    }
+
+
+    private PaperTrackings getPaperTrackingsDone() {
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.DONE);
+        return paperTrackings;
     }
 
 }

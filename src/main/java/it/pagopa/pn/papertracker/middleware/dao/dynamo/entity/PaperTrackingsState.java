@@ -4,5 +4,6 @@ public enum PaperTrackingsState {
 
     AWAITING_FINAL_STATUS_CODE,
     AWAITING_OCR,
-    DONE
+    DONE,
+    KO
 }

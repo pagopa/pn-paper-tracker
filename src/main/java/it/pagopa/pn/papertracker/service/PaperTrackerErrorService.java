@@ -9,6 +9,6 @@ public interface PaperTrackerErrorService {
 
     Mono<TrackingErrorsResponse> retrieveTrackingErrors(TrackingsRequest trackingsRequest);
 
-    Mono<Void> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors);
+    Mono<PaperTrackingsErrors> insertPaperTrackingsErrors(PaperTrackingsErrors paperTrackingsErrors);
 
 }

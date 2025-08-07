@@ -13,7 +13,8 @@ public enum ErrorCategory {
     DELIVERY_FAILURE_CAUSE_ERROR("Errore nella validazione del delivery Failure Cause"),
     ATTACHMENTS_ERROR("Errore nella validazione degli allegati della sequenza"),
     MAX_RETRY_REACHED_ERROR("Numero massimo di retry raggiunto"),
-    OCR_VALIDATION("Errore nella validazione OCR");
+    OCR_VALIDATION("Errore nella validazione OCR"),
+    DUPLICATED_EVENT("Errore nella validazione della presenza di eventi duplicati");
 
     private final String value;
 

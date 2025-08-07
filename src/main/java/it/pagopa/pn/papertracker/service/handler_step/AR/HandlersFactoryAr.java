@@ -21,6 +21,8 @@ public class HandlersFactoryAr implements HandlersFactory {
     private final DematValidator dematValidator;
     private final SequenceValidator sequenceValidator;
     private final RetrySender retrySender;
+    private final DuplicatedEventFiltering duplicatedEventFiltering;
+    private final StateUpdater stateUpdater;
 
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
@@ -59,10 +61,12 @@ public class HandlersFactoryAr implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
+                        duplicatedEventFiltering,
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender
+                        deliveryPushSender,
+                        stateUpdater
                 ), context);
     }
 
@@ -81,6 +85,7 @@ public class HandlersFactoryAr implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
+                        duplicatedEventFiltering,
                         intermediateEventsBuilder,
                         deliveryPushSender
                 ), context);
@@ -100,7 +105,9 @@ public class HandlersFactoryAr implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
-                        retrySender
+                        duplicatedEventFiltering,
+                        retrySender,
+                        stateUpdater
                 ), context);
     }
 
@@ -120,7 +127,8 @@ public class HandlersFactoryAr implements HandlersFactory {
                 List.of(
                         metadataUpserter,
                         finalEventBuilder,
-                        deliveryPushSender
+                        deliveryPushSender,
+                        stateUpdater
                 ), context);
     }
 

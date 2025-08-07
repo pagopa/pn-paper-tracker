@@ -11,11 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
-@ActiveProfiles("local")
 @Configuration
 @Slf4j
 public class PnPaperTrackerMiddlewareConfigs {
@@ -30,7 +28,7 @@ public class PnPaperTrackerMiddlewareConfigs {
         SqsClient sqsClient = SqsClient.builder()
                 .region(Region.of(this.pnPaperChannelConfigs.getQueueOcrInputsRegion()))
                 .build();
-        return new OcrMomProducer(sqsClient, this.pnPaperChannelConfigs.getQueueOcrInput(), this.pnPaperChannelConfigs.getQueueOcrInputsUrl(), objMapper, OcrEvent.class);
+        return new OcrMomProducer(sqsClient, null, this.pnPaperChannelConfigs.getQueueOcrInputsUrl(), objMapper, OcrEvent.class);
     }
 
     @Bean
