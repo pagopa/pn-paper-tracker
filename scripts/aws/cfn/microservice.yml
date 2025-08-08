@@ -183,6 +183,10 @@ Parameters:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
 
+  ExternalChannelsOutputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel outputs are sent'
+
   CompiutaGiacenzaArDuration:
     Type: String
     Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
@@ -337,18 +341,18 @@ Resources:
               - !Sub "${PaperTrackingsErrorsTableArn}/*"
           - Effect: Allow
             Action:
-              - sqs:SendMessage
-              - sqs:GetQueueUrl
               - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
               - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
               - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
               - sqs:ReceiveMessage
-            Resource:
-              - !Ref ExternalChannelToPaperTrackerQueueARN
-              - !Ref PnOcrOutputsQueueARN
-          - Effect: Allow
-            Action:
               - sqs:SendMessage
               - sqs:SendMessageBatch
             Resource:
+              - !Ref ExternalChannelToPaperTrackerQueueARN
+              - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
+              - !Ref ExternalChannelsOutputsQueueARN
+
