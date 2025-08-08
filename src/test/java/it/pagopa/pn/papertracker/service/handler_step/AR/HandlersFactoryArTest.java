@@ -34,7 +34,7 @@ class HandlersFactoryArTest {
     private DematValidator dematValidator;
 
     @Mock
-    private FinalEventBuilder finalEventBuilder;
+    private FinalEventBuilderAr finalEventBuilder;
 
     @Mock
     private StateUpdater stateUpdater;
