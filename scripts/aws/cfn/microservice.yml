@@ -332,6 +332,7 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
               - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
               - !Sub "${PaperTrackingsTableArn}"
               - !Sub "${PaperTrackerDryRunOutputsTableArn}"
