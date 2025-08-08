@@ -166,13 +166,10 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
-  EnableOcrValidation:
+  EnableOcrValidationFor:
     Type: String
-    Default: false
+    Default: 'AR,RIR'
     Description: 'Feature flag for enabling OCR validation'
-    AllowedValues:
-      - 'true'
-      - 'false'
 
   PaperTrackingsTtlDuration:
     Type: String
