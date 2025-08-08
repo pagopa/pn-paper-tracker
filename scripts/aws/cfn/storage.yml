@@ -168,7 +168,7 @@ Outputs:
   PnOcrOutputsQueueARN:
     Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueARN
   PnOcrOutputsQueueURL:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueUrl
+    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueURL
 
   ExternalChannelToPaperTrackerQueueName:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
