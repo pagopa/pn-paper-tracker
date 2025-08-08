@@ -142,6 +142,9 @@ Resources:
         DelaySeconds: 1
 
 Outputs:
+  EcsLogGroup:
+    Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
+
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors
     Value: !Ref PaperTrackingsErrorsTable

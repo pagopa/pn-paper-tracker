@@ -174,14 +174,6 @@ Parameters:
       - 'true'
       - 'false'
 
-  QueueOcrInputsUrl:
-    Type: String
-    Description: 'URL of the SQS queue where OCR requests are sent'
-
-  QueueOcrInputsRegion:
-    Type: String
-    Description: 'OCR AWS account region'
-
   PaperTrackingsTtlDuration:
     Type: String
     Default: 3650d
@@ -190,10 +182,6 @@ Parameters:
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
-
-  ExternalChannelOutputsQueueUrl:
-    Type: String
-    Description: 'URL of the SQS queue where external channel outputs are sent'
 
   CompiutaGiacenzaArDuration:
     Type: String
