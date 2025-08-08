@@ -444,8 +444,17 @@ components:
         unifiedDeliveryDriver:
           type: string
           description: unifiedDeliveryDriver pn-paper-tenders
+        attemptId:
+          type: string
+          description: Identificativo tentativo di spedizione
+          example: "PREPARE_ANALOG_DOMICILE.IUN_LKHJ-HKGV-HQUP-202402-Q-1.RECINDEX_0.ATTEMPT_0"
+        pcRetry:
+          type: string
+          description: Identificativo retry di spedizione
+          example: "PCRETRY_1"
       required:
         - trackingId
         - productType
         - unifiedDeliveryDriver
-
+        - attemptId
+        - pcRetry

@@ -24,6 +24,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
+        paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
@@ -34,6 +36,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
         paperTrackings.setProductType(productType);
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setAttemptId(pcRetryResponse.getParentRequestId());
+        paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
