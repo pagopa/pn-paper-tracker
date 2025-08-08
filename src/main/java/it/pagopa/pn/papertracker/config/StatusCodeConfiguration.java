@@ -16,6 +16,7 @@ public class StatusCodeConfiguration {
 
     @Getter
     public enum StatusCodeConfigurationEnum {
+        // AR
         RECRN006(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.AR, EventStatus.PROGRESS, "Furto/Smarrimento/deterioramento", false),
         RECRN013(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Non Rendicontabile ", false),
         RECRN015(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Causa Forza Maggiore", false),
@@ -39,7 +40,18 @@ public class StatusCodeConfiguration {
         RECRN004B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Mancata consegna presso Punti di Giacenza - In Dematerializzazione", true),
         RECRN005B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Compiuta giacenza - In Dematerializzazione", true),
         RECRN010(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.AR, EventStatus.PROGRESS, "Inesito", false),
-        PNRN012(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.AR, EventStatus.OK, "Perfezionamento per decorrenza termini", false);
+        PNRN012(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.AR, EventStatus.OK, "Perfezionamento per decorrenza termini", false),
+
+        // RIR
+        RECRI001(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Avviato all’estero", false),
+        RECRI002(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Ingresso nel paese estero", false),
+        RECRI005(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Furto, smarrimento o deterioramento", false),
+        RECRI003A(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Consegnato - pre-esito", false),
+        RECRI004A(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Mancata consegna - pre-esito", false),
+        RECRI003B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Consegnato - In Dematerializzazione", true),
+        RECRI004B(EventStatusCodeTypeEnum.INTERMEDIATE_STATUS, ProductType.RIR, EventStatus.PROGRESS, "Mancata consegna - In Dematerializzazione", true),
+        RECRI003C(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.RIR, EventStatus.OK, "Consegnato - Fascicolo Chiuso", false),
+        RECRI004C(EventStatusCodeTypeEnum.FINAL_STATUS, ProductType.RIR, EventStatus.KO, "Mancata consegna - Fascicolo Chiuso", false);
 
         private final EventStatusCodeTypeEnum codeType;
         private final ProductType productType;
