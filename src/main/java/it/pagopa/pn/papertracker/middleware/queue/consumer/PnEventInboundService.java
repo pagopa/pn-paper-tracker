@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Headers;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -25,7 +24,7 @@ public class PnEventInboundService {
     private final InternalEventHandler internalEventHandler;
 
     @SqsListener(value = "${pn.paper-tracker.topics.external-channel-to-paper-tracker}")
-    public void externalChannelConsumer(@Payload Message<SingleStatusUpdate> message, @Headers Map<String, Object> headers) {
+    public void externalChannelConsumer(Message<SingleStatusUpdate> message, @Headers Map<String, Object> headers) {
         try {
             log.debug("Handle message from pn-external_channel_to_paper_tracker with message {}", message);
             externalChannelHandler.handleExternalChannelMessage(message.getPayload());
