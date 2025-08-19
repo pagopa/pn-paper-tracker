@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
-import java.util.Set;
+import java.util.List;
 
 @Configuration
 @ConfigurationProperties(prefix = "pn.paper-tracker")
@@ -23,7 +23,7 @@ public class PnPaperTrackerConfigs {
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private boolean sendOutputToDeliveryPush;
-    private Set<String> enableOcrValidationFor;
+    private List<String> enableOcrValidationFor;
     private String queueOcrInputName;
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;

@@ -83,7 +83,7 @@ class DematValidatorTest {
         paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
-        when(cfg.getEnableOcrValidationFor()).thenReturn(Set.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -101,7 +101,7 @@ class DematValidatorTest {
         paperStatus.setValidatedEvents(List.of(getEvent("RECRN002F", null), getEvent("RECRN002D", null), getEvent("RECRN002E", "AR")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
-        when(cfg.getEnableOcrValidationFor()).thenReturn(Set.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -115,7 +115,7 @@ class DematValidatorTest {
 
     @Test
     void validateDemat_OcrDisabled_UpdatesItemAndDoesNotPushEvent() {
-        when(cfg.getEnableOcrValidationFor()).thenReturn(Set.of(ProductType.RIR.name()));
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.RIR.name()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
@@ -131,7 +131,7 @@ class DematValidatorTest {
 
     @Test
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
-        when(cfg.getEnableOcrValidationFor()).thenReturn(Set.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
