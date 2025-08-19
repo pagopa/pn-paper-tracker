@@ -42,8 +42,6 @@ class FinalEventBuilderArTest {
 
     PaperTrackings paperTrackings;
 
-    StatusCodeConfiguration statusCodeConfiguration;
-
     private static final String EVENT_ID = UUID.randomUUID().toString();
 
     @BeforeEach
@@ -51,8 +49,7 @@ class FinalEventBuilderArTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        statusCodeConfiguration = new StatusCodeConfiguration();
-        finalEventBuilder = new FinalEventBuilderAr(cfg, statusCodeConfiguration, dataVaultClient);
+        finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);

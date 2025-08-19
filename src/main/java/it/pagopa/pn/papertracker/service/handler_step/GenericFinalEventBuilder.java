@@ -25,13 +25,12 @@ import static it.pagopa.pn.papertracker.mapper.SendEventMapper.toAnalogAddress;
 @RequiredArgsConstructor
 public class GenericFinalEventBuilder implements HandlerStep {
 
-    private final StatusCodeConfiguration statusCodeConfiguration;
     private final DataVaultClient dataVaultClient;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
         Event finalEvent = extractFinalEvent(context);
-        return addEventToSend(context, finalEvent, getSendEventStatusCode(finalEvent.getStatusCode()));
+        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(finalEvent.getStatusCode()).getStatus().name());
     }
 
     protected Mono<Void> addEventToSend(HandlerContext ctx, Event finalEvent, String status) {
@@ -56,12 +55,8 @@ public class GenericFinalEventBuilder implements HandlerStep {
                 .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
     }
 
-    protected String getSendEventStatusCode(String statusCode) {
-        return statusCodeConfiguration.getStatusFromStatusCode(statusCode).name();
-    }
-
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, Event source, SendEvent sendEvent) {
-        if (!StringUtils.hasText(source.getAnonymizedDiscoveredAddressId())) {
+        if (!StringUtils.hasText(context.getPaperTrackings().getPaperStatus().getDiscoveredAddress())) {
             return Mono.just(sendEvent);
         }
 
@@ -71,9 +66,10 @@ public class GenericFinalEventBuilder implements HandlerStep {
             return Mono.just(sendEvent);
         }
 
-        return dataVaultClient.deAnonymizeDiscoveredAddress(context.getPaperTrackings().getTrackingId(), source.getAnonymizedDiscoveredAddressId())
+        return dataVaultClient.deAnonymizeDiscoveredAddress(context.getPaperTrackings().getTrackingId(), context.getPaperTrackings().getPaperStatus().getDiscoveredAddress())
                 .map(SendEventMapper::toAnalogAddress)
                 .doOnNext(sendEvent::setDiscoveredAddress)
+                .doOnNext(analogAddress -> context.setAnonymizedDiscoveredAddressId(context.getPaperTrackings().getPaperStatus().getDiscoveredAddress()))
                 .thenReturn(sendEvent);
     }
 

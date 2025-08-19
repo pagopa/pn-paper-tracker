@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.service.handler_step;
 
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DataDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
@@ -15,7 +15,6 @@ import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrDocumentTypeEnum;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,9 @@ public class DematValidator implements HandlerStep {
                         return sendMessageToOcr(paperTracking, context);
                     } else {
                         log.debug("OCR validation disabled");
-                        return updatePaperTrackingsOcrFlag(paperTracking, trackingId);
+                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate(false, null, null))
+                                .doOnNext(v -> log.debug("Updated PaperTrackings entity with OCR flag disabled for trackingId={}", paperTracking.getTrackingId()))
+                                .then();
                     }
                 })
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)));
@@ -74,19 +75,25 @@ public class DematValidator implements HandlerStep {
                     OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(attachment.getDocumentType()));
                     ocrMomProducer.push(ocrEvent);
                 })
-                .map(ocrEvent -> getPaperTrackingsToUpdate(ocrRequestId))
+                .map(ocrEvent -> getPaperTrackingsToUpdate(true, ocrRequestId, PaperTrackingsState.AWAITING_OCR))
                 .flatMap(paperTrackingsToUpdate -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTrackingsToUpdate))
                 .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate( String ocrRequestId) {
+    private PaperTrackings getPaperTrackingsToUpdate(boolean ocrEnabled, String ocrRequestId, PaperTrackingsState state){
         PaperTrackings paperTracking = new PaperTrackings();
-        paperTracking.setOcrRequestId(ocrRequestId);
         ValidationFlow validationFlow = new ValidationFlow();
-        validationFlow.setOcrRequestTimestamp(Instant.now());
+        if(ocrEnabled){
+            validationFlow.setOcrEnabled(true);
+            validationFlow.setOcrRequestTimestamp(Instant.now());
+            paperTracking.setOcrRequestId(ocrRequestId);
+            paperTracking.setState(state);
+        }else{
+            validationFlow.setOcrEnabled(false);
+            validationFlow.setDematValidationTimestamp(Instant.now());
+        }
         paperTracking.setValidationFlow(validationFlow);
-        paperTracking.setState(PaperTrackingsState.AWAITING_OCR);
         return paperTracking;
     }
 
@@ -144,14 +151,6 @@ public class DematValidator implements HandlerStep {
         }
 
         return attachments.values().stream().toList().getFirst();
-    }
-
-    private Mono<Void> updatePaperTrackingsOcrFlag(PaperTrackings paperTracking, String requestId) {
-        paperTracking.getValidationFlow().setOcrEnabled(false);
-        paperTracking.getValidationFlow().setDematValidationTimestamp(Instant.now());
-        return paperTrackingsDAO.updateItem(requestId, paperTracking)
-                .doOnNext(v -> log.debug("Updated PaperTrackings entity with OCR flag disabled for trackingId={}", paperTracking.getTrackingId()))
-                .then();
     }
 
     private DataDTO.ProductType getProductType(PaperTrackings paperTracking) {

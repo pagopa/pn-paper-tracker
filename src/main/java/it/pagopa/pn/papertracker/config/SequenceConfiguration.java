@@ -18,24 +18,24 @@ public class SequenceConfiguration {
     public enum SequenceDefinition {
 
         RECRN005C("RECRN005C", Set.of(
-                new SequenceElement("RECRN0010", null, false, null),
-                new SequenceElement("RECRN0011", null, false, null),
+                new SequenceElement("RECRN010", null, false, null),
+                new SequenceElement("RECRN011", null, false, null),
                 new SequenceElement("RECRN005A", null, false, "1"),
                 new SequenceElement("RECRN005B", Set.of(DocumentTypeEnum.PLICO), false, "1"),
                 new SequenceElement("RECRN005C", null, false, "1")
         )),
 
         RECRN004C("RECRN004C", Set.of(
-                new SequenceElement("RECRN0010", null, false, null),
-                new SequenceElement("RECRN0011", null, false, null),
+                new SequenceElement("RECRN010", null, false, null),
+                new SequenceElement("RECRN011", null, false, null),
                 new SequenceElement("RECRN004A", null, false, "1"),
                 new SequenceElement("RECRN004B", Set.of(DocumentTypeEnum.PLICO), false, "1"),
                 new SequenceElement("RECRN004C", null, false, "1")
         )),
 
         RECRN003C("RECRN003C", Set.of(
-                new SequenceElement("RECRN0010", null, false, null),
-                new SequenceElement("RECRN0011", null, false, null),
+                new SequenceElement("RECRN010", null, false, null),
+                new SequenceElement("RECRN011", null, false, null),
                 new SequenceElement("RECRN003A", null, false, "1"),
                 new SequenceElement("RECRN003B", Set.of(DocumentTypeEnum.AR), false, "1"),
                 new SequenceElement("RECRN003C", null, false, "1")
@@ -60,10 +60,32 @@ public class SequenceConfiguration {
         )),
 
         RECRN006("RECRN006", Set.of(
-                new SequenceElement("RECRN0010", null, true, "1"),
-                new SequenceElement("RECRN0011", null, true, "1"),
+                new SequenceElement("RECRN010", null, true, "1"),
+                new SequenceElement("RECRN011", null, true, "1"),
                 new SequenceElement("RECRN006", null, false, "1")
-        ));
+        )),
+
+        RECRI005("RECRI005", Set.of(
+                new SequenceElement("RECRI001", null, true, null),
+                new SequenceElement("RECRI005", null,  false, null)
+        )),
+
+        RECRI003C("RECRI003C", Set.of(
+                new SequenceElement("RECRI001", null, false, null),
+                new SequenceElement("RECRI002", null, false, null),
+                new SequenceElement("RECRI003A", null, false, "1"),
+                new SequenceElement("RECRI003B", Set.of(DocumentTypeEnum.AR), false, "1"),
+                new SequenceElement("RECRI003C", null ,false, "1")
+                )),
+
+        RECRI004C("RECRI004C", Set.of(
+                new SequenceElement("RECRI001", null,false, null),
+                new SequenceElement("RECRI002", null,false, null),
+                new SequenceElement("RECRI004A", null,false, "1"),
+                new SequenceElement("RECRI004B",  Set.of(DocumentTypeEnum.PLICO),false, "1"),
+                new SequenceElement("RECRI004C", null,false, "1")
+                ));
+
 
         private final String key;
         private final Set<SequenceElement> sequence;

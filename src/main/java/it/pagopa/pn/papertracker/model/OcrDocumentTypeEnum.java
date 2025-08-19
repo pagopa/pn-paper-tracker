@@ -7,7 +7,8 @@ import java.util.Set;
 @Getter
 public enum OcrDocumentTypeEnum {
 
-    AR(Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.PLICO));
+    AR(Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.PLICO)),
+    RIR(Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.PLICO));
 
     private final Set<DocumentTypeEnum> documentTypes;
 
