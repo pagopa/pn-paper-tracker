@@ -16,7 +16,7 @@ import java.util.List;
 public class HandlersFactoryAr implements HandlersFactory {
     private final MetadataUpserter metadataUpserter;
     private final DeliveryPushSender deliveryPushSender;
-    private final FinalEventBuilder finalEventBuilder;
+    private final FinalEventBuilderAr finalEventBuilder;
     private final IntermediateEventsBuilder intermediateEventsBuilder;
     private final DematValidator dematValidator;
     private final SequenceValidator sequenceValidator;
