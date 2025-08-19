@@ -2,14 +2,12 @@ package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.StringUtil;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +20,7 @@ import reactor.test.StepVerifier;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -65,7 +64,7 @@ class DematValidatorTest {
         Event event = new Event();
         event.setStatusCode(statusCode);
         event.setProductType(ProductType.AR);
-        if(StringUtils.hasText(documentType)) {
+        if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();
             attachment.setUri("uri");
             attachment.setDocumentType("Indagine");
@@ -81,10 +80,10 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null),getEvent("RECRN005A", null),getEvent("RECRN005B", "Plico")));
+        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
-        when(cfg.isEnableOcrValidation()).thenReturn(true);
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -99,10 +98,10 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent2() {
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN002F", null),getEvent("RECRN002D", null),getEvent("RECRN002E", "AR")));
+        paperStatus.setValidatedEvents(List.of(getEvent("RECRN002F", null), getEvent("RECRN002D", null), getEvent("RECRN002E", "AR")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
-        when(cfg.isEnableOcrValidation()).thenReturn(true);
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -116,10 +115,10 @@ class DematValidatorTest {
 
     @Test
     void validateDemat_OcrDisabled_UpdatesItemAndDoesNotPushEvent() {
-        when(cfg.isEnableOcrValidation()).thenReturn(false);
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.RIR.name()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null),getEvent("RECRN005A", null),getEvent("RECRN005B", "Plico")));
+        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
         StepVerifier.create(dematValidator.validateDemat(context))
@@ -132,10 +131,10 @@ class DematValidatorTest {
 
     @Test
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
-        when(cfg.isEnableOcrValidation()).thenReturn(true);
+        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null),getEvent("RECRN005A", null),getEvent("RECRN005B", "Plico")));
+        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));

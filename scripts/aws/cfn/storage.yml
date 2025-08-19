@@ -98,6 +98,10 @@ Resources:
           AttributeType: "S"
         - AttributeName: "ocrRequestId"
           AttributeType: "S"
+        - AttributeName: "attemptId"
+          AttributeType: "S"
+        - AttributeName: "pcRetry"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "trackingId"
           KeyType: "HASH"
@@ -106,6 +110,14 @@ Resources:
           KeySchema:
             - AttributeName: "ocrRequestId"
               KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "attemptId-index"
+          KeySchema:
+            - AttributeName: "attemptId"
+              KeyType: "HASH"
+            - AttributeName: "pcRetry"
+              KeyType: "RANGE"
           Projection:
             ProjectionType: "ALL"
       TimeToLiveSpecification:
