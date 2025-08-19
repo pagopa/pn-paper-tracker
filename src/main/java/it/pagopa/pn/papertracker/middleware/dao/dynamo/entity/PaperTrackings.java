@@ -40,6 +40,12 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = ATTEMPT_ID_INDEX), @DynamoDbAttribute(COL_PC_RETRY)}))
     private String pcRetry;
 
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
+    private ProductType productType;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
+
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))
     private List<Event> events;
 
@@ -49,26 +55,20 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
-
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = OCR_REQUEST_ID_INDEX), @DynamoDbAttribute(COL_OCR_REQUEST_ID)}))
     private String ocrRequestId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NEXT_REQUEST_ID_PC_RETRY)}))
     private String nextRequestIdPcretry;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
-    private String unifiedDeliveryDriver;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
+    private PaperTrackingsState state;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
     private Instant updatedAt;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
-    private PaperTrackingsState state;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
