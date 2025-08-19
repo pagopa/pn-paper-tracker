@@ -274,8 +274,6 @@ Resources:
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS=${PnOcrOutputsQueueName}'
-        ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_SENDOUTPUTTODELIVERYPUSH=${SendOutputToDeliveryPush}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_ENABLEOCRVALIDATION=${EnableOcrValidation}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
