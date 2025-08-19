@@ -232,6 +232,14 @@ Parameters:
     Type: String
     Description: 'AWS account ID of the OCR service'
 
+  SendOutputToDeliveryPush:
+    Type: String
+    Default: 'false'
+    Description: 'If true, the microservice will send output to the delivery push service'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
 
 Resources:
 
@@ -325,6 +333,7 @@ Resources:
               - dynamodb:PutItem
               - dynamodb:UpdateItem
               - dynamodb:Query
+              - dynamodb:BatchGetItem
             Resource:
               - !Sub "${PaperTrackingsTableArn}"
               - !Sub "${PaperTrackerDryRunOutputsTableArn}"

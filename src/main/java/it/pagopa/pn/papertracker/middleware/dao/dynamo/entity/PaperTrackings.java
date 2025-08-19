@@ -15,6 +15,8 @@ import java.util.Map;
 public class PaperTrackings {
 
     public static final String COL_TRACKING_ID = "trackingId";
+    public static final String COL_ATTEMPT_ID = "attemptId";
+    public static final String COL_PC_RETRY = "pcRetry";
     public static final String COL_EVENTS = "events";
     public static final String COL_NOTIFICATION_STATE = "notificationState";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
@@ -27,9 +29,22 @@ public class PaperTrackings {
     public static final String COL_STATE = "state";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
+    public static final String ATTEMPT_ID_INDEX = "attemptId-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
+
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = ATTEMPT_ID_INDEX), @DynamoDbAttribute(COL_ATTEMPT_ID)}))
+    private String attemptId;
+
+    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = ATTEMPT_ID_INDEX), @DynamoDbAttribute(COL_PC_RETRY)}))
+    private String pcRetry;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
+    private ProductType productType;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))
     private List<Event> events;
@@ -40,26 +55,20 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
-
     @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = OCR_REQUEST_ID_INDEX), @DynamoDbAttribute(COL_OCR_REQUEST_ID)}))
     private String ocrRequestId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NEXT_REQUEST_ID_PC_RETRY)}))
     private String nextRequestIdPcretry;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
-    private String unifiedDeliveryDriver;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
+    private PaperTrackingsState state;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UPDATED_AT)}))
     private Instant updatedAt;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
-    private PaperTrackingsState state;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
