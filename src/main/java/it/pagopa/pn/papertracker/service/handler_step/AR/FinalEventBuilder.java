@@ -47,7 +47,7 @@ public class FinalEventBuilder implements HandlerStep {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            return addEventToSend(context, finalEvent, getSendEventStatusCode(finalEvent.getStatusCode()));
+            return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
         }
 
         List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
@@ -90,7 +90,7 @@ public class FinalEventBuilder implements HandlerStep {
                     String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
                     FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR)));
         }
-        return addEventToSend(context, finalEvent, getSendEventStatusCode(statusCode));
+        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
     }
 
     private Event extractFinalEvent(HandlerContext context) {
@@ -142,10 +142,6 @@ public class FinalEventBuilder implements HandlerStep {
                 .flatMap(se -> buildSendEvent(context, finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusTimestamp().atOffset(ZoneOffset.UTC)))
                 .doOnNext(context.getEventsToSend()::add)
                 .then();
-    }
-
-    private String getSendEventStatusCode(String statusCode) {
-        return statusCodeConfiguration.getStatusFromStatusCode(statusCode).name();
     }
 
     private Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
