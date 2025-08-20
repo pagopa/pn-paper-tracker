@@ -20,7 +20,7 @@ public class PaperTrackingsMapper {
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(trackingCreationRequest.getTrackingId());
+        paperTrackings.setTrackingId(trackingCreationRequest.getTrackingId() + ".PCRETRY_0");
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
