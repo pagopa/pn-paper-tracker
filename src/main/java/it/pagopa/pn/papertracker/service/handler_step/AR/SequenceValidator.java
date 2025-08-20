@@ -120,10 +120,14 @@ public class SequenceValidator implements HandlerStep {
                                     //uguale a quello dell'elemento di sequence
                                     .filter(event -> event.getStatusCode().equals(seqElem.getCode()))
                                     //Prendo la lista dei documenti presenti per tutti gli eventi
-                                    .flatMap(event ->
-                                            event.getAttachments()
-                                            .stream()
-                                            .map(Attachment::getDocumentType)).toList();
+                                    .flatMap(event -> {
+                                        if (!CollectionUtils.isEmpty(event.getAttachments())) {
+                                            return event.getAttachments()
+                                                    .stream()
+                                                    .map(Attachment::getDocumentType);
+                                        } else {
+                                            return null;
+                                        }}).toList();
                     //Se la lista di documenti presenti non è vuota allora la inserisco nella mappa per la validazione
                     if (!CollectionUtils.isEmpty(documentsInEvents)) {
                         listOfDocumentsForSequenceElement.put(seqElem, documentsInEvents);
