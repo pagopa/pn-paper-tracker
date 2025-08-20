@@ -366,6 +366,9 @@ public class SequenceValidator implements HandlerStep {
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(PaperTrackings paperTrackings) {
         paperTrackings.getValidationFlow().setSequencesValidationTimestamp(Instant.now());
+        //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
+        paperTrackings.setUpdatedAt(null);
+        paperTrackings.setTrackingId(null);
         return paperTrackings;
     }
     
