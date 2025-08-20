@@ -180,14 +180,16 @@ public class SequenceValidator implements HandlerStep {
                         if (documents == null) {
                             uniqueCodes.put(event.getStatusCode(), new HashSet<>());
                         }
-                        List<Attachment> documentsToAdd = event.getAttachments().stream()
-                                .filter(document -> !uniqueCodes.get(event.getStatusCode())
-                                        .contains(document.getDocumentType()))
-                                .toList();
-                        if (!CollectionUtils.isEmpty(documentsToAdd)) {
-                            Set<String> eventDocuments = uniqueCodes.get(event.getStatusCode());
-                            eventDocuments.addAll(documentsToAdd.stream().map(Attachment::getDocumentType).toList());
-                            uniqueCodes.put(event.getStatusCode(), eventDocuments);
+                        if (!CollectionUtils.isEmpty(event.getAttachments())) {
+                            List<Attachment> documentsToAdd = event.getAttachments().stream()
+                                    .filter(document -> !uniqueCodes.get(event.getStatusCode())
+                                            .contains(document.getDocumentType()))
+                                    .toList();
+                            if (!CollectionUtils.isEmpty(documentsToAdd)) {
+                                Set<String> eventDocuments = uniqueCodes.get(event.getStatusCode());
+                                eventDocuments.addAll(documentsToAdd.stream().map(Attachment::getDocumentType).toList());
+                                uniqueCodes.put(event.getStatusCode(), eventDocuments);
+                            }
                         }
 
                         return true; // Evento unico, è l'ultimo
