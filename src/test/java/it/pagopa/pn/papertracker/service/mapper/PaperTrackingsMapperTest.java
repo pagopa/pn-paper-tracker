@@ -26,7 +26,7 @@ public class PaperTrackingsMapperTest {
         PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration);
 
         //ASSERT
-        Assertions.assertEquals("request123", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
         Assertions.assertTrue(paperTrackings.getTtl() > 0);
