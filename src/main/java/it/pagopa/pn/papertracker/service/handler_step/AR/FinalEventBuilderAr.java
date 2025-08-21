@@ -26,8 +26,8 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
-    public FinalEventBuilderAr(PnPaperTrackerConfigs pnPaperTrackerConfigs, StatusCodeConfiguration statusCodeConfiguration, DataVaultClient dataVaultClient) {
-        super(statusCodeConfiguration, dataVaultClient);
+    public FinalEventBuilderAr(PnPaperTrackerConfigs pnPaperTrackerConfigs, DataVaultClient dataVaultClient) {
+        super(dataVaultClient);
         this.pnPaperTrackerConfigs = pnPaperTrackerConfigs;
     }
 
@@ -42,7 +42,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            return addEventToSend(context, finalEvent, getSendEventStatusCode(finalEvent.getStatusCode()));
+            return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
         }
 
         List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
@@ -70,7 +70,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                             String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
                             FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR)));
         }
-        return addEventToSend(context, finalEvent, getSendEventStatusCode(statusCode));
+        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
     }
 
     private boolean isStockStatus(String status) {
