@@ -4,7 +4,6 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreatio
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import reactor.core.publisher.Mono;
 
 public interface PaperTrackerTrackingService {
@@ -14,4 +13,7 @@ public interface PaperTrackerTrackingService {
     Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest);
 
     Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings);
+
+    Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry);
+
 }
