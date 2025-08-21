@@ -18,7 +18,8 @@ public class PaperTrackingsMapperTest {
     void toPaperTrackingsValidRequest() {
         //ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
-        request.setTrackingId("request123");
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
         request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("RS");
 
@@ -26,7 +27,9 @@ public class PaperTrackingsMapperTest {
         PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration);
 
         //ASSERT
-        Assertions.assertEquals("request123", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
         Assertions.assertTrue(paperTrackings.getTtl() > 0);
@@ -36,7 +39,8 @@ public class PaperTrackingsMapperTest {
     void toPaperTrackingsInvalidProductType() {
         //ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
-        request.setTrackingId("request123");
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
         request.setUnifiedDeliveryDriver("driver456");
         request.setProductType("INVALID_TYPE");
 

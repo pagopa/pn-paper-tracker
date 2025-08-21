@@ -15,6 +15,7 @@ public class ValidationFlow {
     public static final String COL_SEQUENCES_VALIDATION_TIMESTAMP = "sequencesValidationTimestamp";
     public static final String COL_OCR_REQUEST_TIMESTAMP = "ocrRequestTimestamp";
     public static final String COL_DEMAT_VALIDATION_TIMESTAMP = "dematValidationTimestamp";
+    public static final String COL_FINAL_EVENT_BUILDER_TIMESTAMP = "finalEventBuilderTimestamp";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_OCR_ENABLED)}))
     private Boolean ocrEnabled;
@@ -27,5 +28,8 @@ public class ValidationFlow {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DEMAT_VALIDATION_TIMESTAMP)}))
     private Instant dematValidationTimestamp;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_EVENT_BUILDER_TIMESTAMP)}))
+    private Instant finalEventBuilderTimestamp;
 
 }

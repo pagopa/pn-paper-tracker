@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingError;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponseResultsInner;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
@@ -14,8 +13,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -25,24 +22,21 @@ public class PaperTrackerErrorServiceImpl implements PaperTrackerErrorService {
 
     @Override
     public Mono<TrackingErrorsResponse> retrieveTrackingErrors(TrackingsRequest trackingsRequest) {
+        TrackingErrorsResponse trackingErrorsResponse = new TrackingErrorsResponse();
         return Flux.fromIterable(trackingsRequest.getTrackingIds())
                 .flatMap(trackingId -> paperTrackingsErrorsDAO.retrieveErrors(trackingId)
+                        .map(PaperTrackingsErrorsMapper::toTrackingError)
                         .collectList()
-                        .map(paperTrackingsErrors -> {
-                            List<TrackingError> trackingErrorList = paperTrackingsErrors.stream()
-                                    .map(PaperTrackingsErrorsMapper::toTrackingError)
-                                    .toList();
-                            TrackingErrorsResponseResultsInner trackingErrorsResponseResultsInner = new TrackingErrorsResponseResultsInner();
-                            trackingErrorsResponseResultsInner.setTrackingId(trackingId);
-                            trackingErrorsResponseResultsInner.setErrors(trackingErrorList);
-                            return trackingErrorsResponseResultsInner;
-                        }))
+                        .map(trackingErrors -> {
+                                    TrackingErrorsResponseResultsInner trackingErrorsResponseResultsInner = new TrackingErrorsResponseResultsInner();
+                                    trackingErrorsResponseResultsInner.setTrackingId(trackingId);
+                                    trackingErrorsResponseResultsInner.setErrors(trackingErrors);
+                                    return trackingErrorsResponseResultsInner;
+                                }
+                        ))
                 .collectList()
-                .map(trackingErrorsResponseResultsInnerList -> {
-                    TrackingErrorsResponse trackingErrorsResponse = new TrackingErrorsResponse();
-                    trackingErrorsResponse.setResults(trackingErrorsResponseResultsInnerList);
-                    return trackingErrorsResponse;
-                });
+                .doOnNext(trackingErrorsResponse::setResults)
+                .map(trackingErrorsResponseResultsInners -> trackingErrorsResponse);
     }
 
     @Override
