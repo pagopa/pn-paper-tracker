@@ -13,12 +13,23 @@ public enum ProductType {
 
     RIR("RIR"),
 
-    RIS("RIS");
+    RIS("RIS"),
+
+    UNKNOWN("UNKNOWN");
 
     private final String value;
 
     ProductType(String value) {
         this.value = value;
+    }
+
+    public static ProductType fromValue(String value) {
+        for (ProductType type : ProductType.values()) {
+            if (type.getValue().equals(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ProductType: " + value);
     }
 
 }

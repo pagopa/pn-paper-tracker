@@ -1,10 +1,10 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
+import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +21,14 @@ public class ExternalChannelHandlerTest {
     @Mock
     private HandlersFactoryAr handlersFactoryAr;
 
+    @Mock
+    private HandlersFactoryRir handlersFactoryRir;
+
     private ExternalChannelHandler externalChannelHandler;
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(new StatusCodeConfiguration(), handlersFactoryAr);
+        externalChannelHandler = new ExternalChannelHandler(handlersFactoryAr, handlersFactoryRir);
     }
 
     @Test
@@ -39,7 +42,7 @@ public class ExternalChannelHandlerTest {
     @Test
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002F.name());
+        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
 
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 

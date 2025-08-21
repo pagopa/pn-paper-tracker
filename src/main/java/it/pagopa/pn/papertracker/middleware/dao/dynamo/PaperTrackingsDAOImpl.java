@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
@@ -23,8 +24,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.COL_TRACKING_ID;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.*;
 import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo;
 
 @Component
@@ -43,8 +43,19 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     }
 
     @Override
-    public Mono<PaperTrackings> retrieveEntityByRequestId(String requestId) {
-        return getByKey(Key.builder().partitionValue(requestId).build());
+    public Mono<PaperTrackings> retrieveEntityByTrackingId(String trackingId) {
+        return getByKey(Key.builder().partitionValue(trackingId).build());
+    }
+
+    @Override
+    public Flux<PaperTrackings> retrieveEntityByAttemptId(String attemptId, String pcRetry) {
+        Key.Builder key = Key.builder().partitionValue(attemptId);
+
+        if(StringUtils.hasText(pcRetry)){
+            key.sortValue(pcRetry);
+        }
+
+        return queryByIndex(key.build(), ATTEMPT_ID_PCRETRY_INDEX);
     }
 
     @Override

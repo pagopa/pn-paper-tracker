@@ -28,7 +28,7 @@ import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCod
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FinalEventBuilderTest {
+class FinalEventBuilderArTest {
 
     @Mock
     PnPaperTrackerConfigs cfg;
@@ -36,13 +36,11 @@ class FinalEventBuilderTest {
     @Mock
     DataVaultClient dataVaultClient;
 
-    FinalEventBuilder finalEventBuilder;
+    FinalEventBuilderAr finalEventBuilder;
 
     HandlerContext handlerContext;
 
     PaperTrackings paperTrackings;
-
-    StatusCodeConfiguration statusCodeConfiguration;
 
     private static final String EVENT_ID = UUID.randomUUID().toString();
 
@@ -51,8 +49,7 @@ class FinalEventBuilderTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        statusCodeConfiguration = new StatusCodeConfiguration();
-        finalEventBuilder = new FinalEventBuilder(cfg, statusCodeConfiguration, dataVaultClient);
+        finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);

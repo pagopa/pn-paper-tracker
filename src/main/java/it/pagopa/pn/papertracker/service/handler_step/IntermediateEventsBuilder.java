@@ -1,8 +1,7 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

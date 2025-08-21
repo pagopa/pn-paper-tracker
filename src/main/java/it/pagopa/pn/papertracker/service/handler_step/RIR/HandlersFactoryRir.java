@@ -1,6 +1,7 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.handler_step.DematValidator;
 import it.pagopa.pn.papertracker.service.handler_step.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,13 +13,13 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class HandlersFactoryAr extends AbstractHandlersFactory implements HandlersFactory {
+public class HandlersFactoryRir extends AbstractHandlersFactory implements HandlersFactory {
     private final MetadataUpserter metadataUpserter;
     private final DeliveryPushSender deliveryPushSender;
-    private final FinalEventBuilderAr finalEventBuilder;
+    private final FinalEventBuilderRir finalEventBuilder;
     private final IntermediateEventsBuilder intermediateEventsBuilder;
     private final DematValidator dematValidator;
-    private final SequenceValidatorAr sequenceValidatorAr;
+    private final SequenceValidatorRir sequenceValidatorRir;
     private final RetrySender retrySender;
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final StateUpdater stateUpdater;
@@ -41,7 +42,7 @@ public class HandlersFactoryAr extends AbstractHandlersFactory implements Handle
                 List.of(
                         metadataUpserter,
                         duplicatedEventFiltering,
-                        sequenceValidatorAr,
+                        sequenceValidatorRir,
                         dematValidator,
                         finalEventBuilder,
                         deliveryPushSender,
@@ -90,6 +91,14 @@ public class HandlersFactoryAr extends AbstractHandlersFactory implements Handle
                 ), context);
     }
 
+    @Override
+    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter
+                ), context);
+    }
+
     /**
      * Metodo che costruisce la lista di steps necessari al processamento di un evento di risposta della validazione ocr.
      * I step da compiere sono i seguenti:
@@ -108,14 +117,6 @@ public class HandlersFactoryAr extends AbstractHandlersFactory implements Handle
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater
-                ), context);
-    }
-
-    @Override
-    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter
                 ), context);
     }
 }
