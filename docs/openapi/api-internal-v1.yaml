@@ -171,6 +171,13 @@ paths:
       operationId: retrieveTrackingsByAttemptId
       parameters:
         - $ref: '#/components/parameters/attemptId'
+        - name: pcRetry
+          in: query
+          required: false
+          description: Identificativo della richiesta
+          schema:
+            type: string
+            maxLength: 102
       responses:
         '200':
           description: returns Tracking entities using the attemptId
