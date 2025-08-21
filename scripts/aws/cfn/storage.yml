@@ -112,7 +112,7 @@ Resources:
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"
-        - IndexName: "attemptId-index"
+        - IndexName: "attemptId-pcRetry-index"
           KeySchema:
             - AttributeName: "attemptId"
               KeyType: "HASH"

@@ -10,7 +10,9 @@ public interface PaperTrackingsDAO {
 
     Mono<PaperTrackings> putIfAbsent(PaperTrackings entity);
 
-    Mono<PaperTrackings> retrieveEntityByRequestId(String requestId);
+    Mono<PaperTrackings> retrieveEntityByTrackingId(String trackingId);
+
+    Flux<PaperTrackings> retrieveEntityByAttemptId(String attemptId, String pcRetry);
 
     Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings);
 
