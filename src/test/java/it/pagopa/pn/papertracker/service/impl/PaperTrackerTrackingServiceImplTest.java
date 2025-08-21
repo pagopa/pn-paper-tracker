@@ -50,7 +50,7 @@ class PaperTrackerTrackingServiceImplTest {
         TrackingCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
-                pt.getTrackingId().equals(request.getTrackingId()+".PCRETRY_0") &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.just(new PaperTrackings()));
@@ -62,7 +62,7 @@ class PaperTrackerTrackingServiceImplTest {
         StepVerifier.create(response)
                 .verifyComplete();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
-                pt.getTrackingId().equals(request.getTrackingId()+".PCRETRY_0") &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));
@@ -74,7 +74,7 @@ class PaperTrackerTrackingServiceImplTest {
         TrackingCreationRequest request = getTrackerCreationRequest();
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
-                pt.getTrackingId().equals(request.getTrackingId()+".PCRETRY_0") &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
@@ -87,7 +87,7 @@ class PaperTrackerTrackingServiceImplTest {
                 .expectError(PnPaperTrackerConflictException.class)
                 .verify();
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
-                pt.getTrackingId().equals(request.getTrackingId()+".PCRETRY_0") &&
+                pt.getTrackingId().equals(request.getTrackingId()) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS
         ));

@@ -46,21 +46,17 @@ public class SequenceValidator implements HandlerStep {
      * @return Mono<Void> che completa se la validazione ha successo, altrimenti emette un Mono.error
      */
     public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings) {
+        PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
+        paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
         log.info("Beginning validation for sequence for paper tracking : {}", paperTrackings);
-        if (Objects.isNull(paperTrackings.getPaperStatus())) {
-            paperTrackings.setPaperStatus(new PaperStatus());
-        }
-        if (Objects.isNull(paperTrackings.getValidationFlow())) {
-            paperTrackings.setValidationFlow(new ValidationFlow());
-        }
         return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings)
                 .flatMap(this::getOnlyLatestEvents)
                 .flatMap(events -> validatePresenceOfStatusCodes(events ,paperTrackings))
                 .flatMap(events -> validateBusinessTimestamps(events, paperTrackings))
                 .flatMap(events -> validateAttachments(events, paperTrackings))
-                .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings))
-                .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings))
-                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(paperTrackings)));
+                .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate))
+                .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, paperTrackingsToUpdate))
+                .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(events, paperTrackingsToUpdate)));
     }
 
     /**
@@ -116,19 +112,11 @@ public class SequenceValidator implements HandlerStep {
         sequenceElements
                 .forEach(seqElem -> {
                     List<String> documentsInEvents = events.stream()
-                                    //Filtro la lista di eventi prendendo solamente quelli che hanno lo status code
-                                    //uguale a quello dell'elemento di sequence
-                                    .filter(event -> event.getStatusCode().equals(seqElem.getCode()))
-                                    //Prendo la lista dei documenti presenti per tutti gli eventi
-                                    .flatMap(event -> {
-                                        if (!CollectionUtils.isEmpty(event.getAttachments())) {
-                                            return event.getAttachments()
-                                                    .stream()
-                                                    .map(Attachment::getDocumentType);
-                                        } else {
-                                            return null;
-                                        }}).toList();
-                    //Se la lista di documenti presenti non è vuota allora la inserisco nella mappa per la validazione
+                            .filter(event -> event.getStatusCode().equals(seqElem.getCode()))
+                            .flatMap(event ->
+                                    Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
+                                            .stream()
+                                            .map(Attachment::getDocumentType)).toList();
                     if (!CollectionUtils.isEmpty(documentsInEvents)) {
                         listOfDocumentsForSequenceElement.put(seqElem, documentsInEvents);
                     }
@@ -167,7 +155,7 @@ public class SequenceValidator implements HandlerStep {
         HashMap<String, Set<String>> uniqueCodes = new HashMap<>();
         List<Event> mutableEvents = new ArrayList<>(events);
 
-        //Ordino la lista in base al timestamp e poi la inverto per avere al primo posto l'evento con requestTimestamp più alto
+        //Ordino la lista in base al timestamp e poi la inverto per avere al primo posto l'evento con requestTimestamp più recente
         mutableEvents.sort(Comparator.comparing(Event::getRequestTimestamp).reversed());
 
         return Mono.just(mutableEvents.stream().filter(
@@ -175,7 +163,7 @@ public class SequenceValidator implements HandlerStep {
                     Set<String> documents = uniqueCodes.get(event.getStatusCode());
                     boolean allDocumentsInEventAreAlreadyPresentInMap =
                             documents != null &&
-                                    event.getAttachments()
+                                    Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
                                         .stream()
                                         .allMatch(document -> documents.contains(document.getDocumentType()));
                     if (allDocumentsInEventAreAlreadyPresentInMap) {
@@ -195,8 +183,7 @@ public class SequenceValidator implements HandlerStep {
                                 uniqueCodes.put(event.getStatusCode(), eventDocuments);
                             }
                         }
-
-                        return true; // Evento unico, è l'ultimo
+                        return true;
                     }
                 }
         ).toList());
@@ -209,32 +196,18 @@ public class SequenceValidator implements HandlerStep {
      * @param paperTrackings oggetto principale della richiesta
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings) {
+    private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate) {
         log.info("Beginning validation for delivery failure cause for events : {}", events);
 
         for (Event event : events) {
             String statusCode = event.getStatusCode();
             String deliveryFailureCause = event.getDeliveryFailureCause();
 
-            if (StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002B.name().equals(statusCode) ||
-                    StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002E.name().equals(statusCode)) {
-                if (StringUtil.isNullOrEmpty(deliveryFailureCause)) {
-                    return generateCustomError(
-                            "deliveryFailureCause is null for statusCode=" + statusCode,
-                            events, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
-                    );
-                }
-                if ((StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002B.name().equals(statusCode)
-                        && !DeliveryFailureCauseEnum.containsCauseForB(deliveryFailureCause)) ||
-                        (StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRN002E.name().equals(statusCode)
-                                && !DeliveryFailureCauseEnum.containsCauseForE(deliveryFailureCause))) {
-                    return generateCustomError(
-                            "Invalid deliveryFailureCause: " + deliveryFailureCause,
-                            events, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR
-                    );
-                }
-
-                paperTrackings.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
+            StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
+            if (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) || statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))){
+                paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
+            } else {
+                return generateCustomError("Invalid deliveryFailureCause: " + deliveryFailureCause, events, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR);
             }
         }
         return Mono.just(events);
@@ -247,11 +220,10 @@ public class SequenceValidator implements HandlerStep {
      * @param events lista di eventi da validare
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateRegisteredLetterCode(List<Event> events, PaperTrackings paperTrackings) {
+    private Mono<List<Event>> validateRegisteredLetterCode(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate) {
         log.info("Beginning validation for registered letter codes for events : {}", events);
 
         String firstRegisteredLetterCode = events.getFirst().getRegisteredLetterCode();
-        // Tutti i registered letter code devono essere uguali nella sequenza
         boolean allRegisteredLetterCodeMatch = events.stream().allMatch(event -> event.getRegisteredLetterCode().equals(firstRegisteredLetterCode));
         if (!allRegisteredLetterCodeMatch) {
             return generateCustomError(
@@ -259,7 +231,7 @@ public class SequenceValidator implements HandlerStep {
                     events, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR
             );
         }
-        paperTrackings.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
+        paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
         return Mono.just(events);
     }
 
@@ -364,12 +336,12 @@ public class SequenceValidator implements HandlerStep {
                 ErrorType.ERROR)));
     }
 
-    private PaperTrackings enrichWithSequenceValidationTimestamp(PaperTrackings paperTrackings) {
-        paperTrackings.getValidationFlow().setSequencesValidationTimestamp(Instant.now());
-        //Setto questi parametri a null per non mandare in errore l'updateItem, visto che sono già considerati nel metodo
-        paperTrackings.setUpdatedAt(null);
-        paperTrackings.setTrackingId(null);
-        return paperTrackings;
+    private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setSequencesValidationTimestamp(Instant.now());
+        paperTrackingsToUpdate.setValidationFlow(validationFlow);
+        paperTrackingsToUpdate.getPaperStatus().setValidatedEvents(events);
+        return paperTrackingsToUpdate;
     }
-    
+
 }

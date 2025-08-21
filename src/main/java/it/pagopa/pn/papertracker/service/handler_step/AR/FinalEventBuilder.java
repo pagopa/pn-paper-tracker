@@ -72,7 +72,7 @@ public class FinalEventBuilder implements HandlerStep {
                                            StatusCodeEnum status,
                                            String logicalStatus,
                                            OffsetDateTime ts) {
-        return SendEventMapper.createSendEventsFromEventEntity(context.getTrackingId(), source, status, logicalStatus, ts)
+        return SendEventMapper.createSendEventsFromEventEntity(context.getPaperTrackings().getTrackingId(), source, status, logicalStatus, ts)
                 .flatMap(sendEvent -> enrichWithDiscoveredAddress(context, source, sendEvent));
     }
 

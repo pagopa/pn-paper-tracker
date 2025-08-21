@@ -3,14 +3,11 @@ package it.pagopa.pn.papertracker.config;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
 import it.pagopa.pn.papertracker.model.EventStatus;
-import it.pagopa.pn.papertracker.model.EventStatusCodeTypeEnum;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import lombok.Getter;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum.*;
