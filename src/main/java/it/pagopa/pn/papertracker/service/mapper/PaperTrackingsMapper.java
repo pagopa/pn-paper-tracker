@@ -12,12 +12,12 @@ import org.springframework.util.CollectionUtils;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Optional;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
@@ -25,13 +25,17 @@ public class PaperTrackingsMapper {
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
+        paperTrackings.setCreatedAt(now);
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
 
     public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType) {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
@@ -39,8 +43,11 @@ public class PaperTrackingsMapper {
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(pcRetryResponse.getParentRequestId());
         paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
+        paperTrackings.setCreatedAt(now);
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }

@@ -2,7 +2,6 @@ package it.pagopa.pn.papertracker.model;
 
 import lombok.Getter;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 @Getter
