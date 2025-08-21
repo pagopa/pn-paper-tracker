@@ -477,7 +477,6 @@ components:
           description: Identificativo retry di spedizione
           example: "PCRETRY_1"
       required:
-        - trackingId
         - productType
         - unifiedDeliveryDriver
         - attemptId

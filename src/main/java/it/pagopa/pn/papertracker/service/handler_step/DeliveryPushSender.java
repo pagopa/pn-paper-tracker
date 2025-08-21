@@ -75,6 +75,7 @@ public class DeliveryPushSender implements HandlerStep {
     }
 
 
+
     private PaperTrackings getPaperTrackingsDone() {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);

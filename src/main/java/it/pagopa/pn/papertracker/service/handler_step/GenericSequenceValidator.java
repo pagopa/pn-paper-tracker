@@ -179,6 +179,13 @@ public abstract class GenericSequenceValidator implements HandlerStep{
         ).toList());
     }
 
+    /**
+     * Valida la presenza e la correttezza del delivery failure cause negli eventi.
+     *
+     * @param events lista di eventi da validare
+     * @param paperTrackings oggetto principale della richiesta
+     * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
+     */
     private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate) {
         log.info("Beginning validation for delivery failure cause for events : {}", events);
 
