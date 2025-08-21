@@ -29,15 +29,15 @@ public class PaperTrackings {
     public static final String COL_STATE = "state";
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
-    public static final String ATTEMPT_ID_INDEX = "attemptId-index";
+    public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = ATTEMPT_ID_INDEX), @DynamoDbAttribute(COL_ATTEMPT_ID)}))
+    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = ATTEMPT_ID_PCRETRY_INDEX), @DynamoDbAttribute(COL_ATTEMPT_ID)}))
     private String attemptId;
 
-    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = ATTEMPT_ID_INDEX), @DynamoDbAttribute(COL_PC_RETRY)}))
+    @Getter(onMethod = @__({@DynamoDbSecondarySortKey(indexNames = ATTEMPT_ID_PCRETRY_INDEX), @DynamoDbAttribute(COL_PC_RETRY)}))
     private String pcRetry;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))

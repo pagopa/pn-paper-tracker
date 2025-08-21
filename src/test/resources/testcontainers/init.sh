@@ -57,6 +57,8 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
     --attribute-definitions \
         AttributeName=trackingId,AttributeType=S \
         AttributeName=ocrRequestId,AttributeType=S \
+        AttributeName=attemptId,AttributeType=S \
+        AttributeName=pcRetry,AttributeType=S \
     --key-schema \
         AttributeName=trackingId,KeyType=HASH \
     --provisioned-throughput \
@@ -66,6 +68,18 @@ aws --profile default --region us-east-1 --endpoint-url=http://localstack:4566 \
                         {
                             \"IndexName\": \"ocrRequestId-index\",
                             \"KeySchema\": [{\"AttributeName\":\"ocrRequestId\",\"KeyType\":\"HASH\"}],
+                            \"Projection\":{
+                                \"ProjectionType\":\"ALL\"
+                            },
+                             \"ProvisionedThroughput\": {
+                                 \"ReadCapacityUnits\": 10,
+                                 \"WriteCapacityUnits\": 5
+                             }
+                        },
+                        {
+                            \"IndexName\": \"attemptId-pcRetry-index\",
+                            \"KeySchema\": [{\"AttributeName\":\"attemptId\",\"KeyType\":\"HASH\"},
+                                           {\"AttributeName\":\"pcRetry\",\"KeyType\":\"RANGE\"}],
                             \"Projection\":{
                                 \"ProjectionType\":\"ALL\"
                             },

@@ -30,7 +30,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         // Then
-        paperTrackingsDAO.retrieveEntityByRequestId(requestId)
+        paperTrackingsDAO.retrieveEntityByTrackingId(requestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
                     assert retrieved.getTrackingId().equals(requestId);
@@ -47,6 +47,47 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         StepVerifier.create(paperTrackingsDAO.putIfAbsent(paperTrackings))
                 .expectError(PnPaperTrackerConflictException.class)
                 .verify();
+    }
+
+    @Test
+    void retrieveByAttemptId() {
+        String attemptId = "attemptId";
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setTrackingId(attemptId + ".PCRETRY_0");
+        paperTrackings.setAttemptId(attemptId);
+        paperTrackings.setPcRetry("PCRETRY_0");
+        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setState(PaperTrackingsState.KO);
+
+        paperTrackingsDAO.putIfAbsent(paperTrackings).block();
+
+        PaperTrackings paperTrackings2 = new PaperTrackings();
+        paperTrackings2.setTrackingId(attemptId + ".PCRETRY_1");
+        paperTrackings2.setAttemptId(attemptId);
+        paperTrackings2.setPcRetry("PCRETRY_1");
+        paperTrackings2.setProductType(ProductType.AR);
+        paperTrackings2.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings2.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+
+        paperTrackingsDAO.putIfAbsent(paperTrackings2).block();
+
+        // Then
+        List<PaperTrackings> response = paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, null)
+                .collectList()
+                .block();
+
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(2, response.size());
+        Assertions.assertTrue(response.stream().allMatch(track -> track.getAttemptId().equalsIgnoreCase(attemptId)
+                && track.getProductType().equals(ProductType.AR) && track.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE")));
+
+        Assertions.assertEquals("PCRETRY_0", response.getFirst().getPcRetry());
+        Assertions.assertEquals("PCRETRY_1", response.getLast().getPcRetry());
+        Assertions.assertEquals(attemptId + ".PCRETRY_0", response.getFirst().getTrackingId());
+        Assertions.assertEquals(attemptId + ".PCRETRY_1", response.getLast().getTrackingId());
+        Assertions.assertEquals(PaperTrackingsState.KO, response.getFirst().getState());
+        Assertions.assertEquals(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE, response.getLast().getState());
     }
 
     @Test
@@ -261,7 +302,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate).block();
 
         // Then
-        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(fisrtResponse);
         Assertions.assertNotNull(fisrtResponse.getEvents());
         Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
@@ -287,7 +328,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate1).block();
 
-        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(secondeResponse);
         Assertions.assertNotNull(secondeResponse.getEvents());
         Assertions.assertNotNull(secondeResponse.getUpdatedAt());

@@ -167,7 +167,7 @@ paths:
       description: >-
         Recupera il tracking della spedizione dato l'attemptId.
       tags:
-        - PaperTrackerAttempt
+        - PaperTrackerTracking
       operationId: retrieveTrackingsByAttemptId
       parameters:
         - $ref: '#/components/parameters/attemptId'
