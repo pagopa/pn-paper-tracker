@@ -50,11 +50,11 @@ public class PaperStatus {
     private List<Event> validatedEvents;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_TIMESTAMP)}))
-    private String finalDematTimestamp;
+    private Instant finalDematTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ESTIMATED_PAPER_DELIVERY_TIMESTAMP)}))
-    private String estimatedPaperDeliveryTimestamp;
+    private Instant estimatedPaperDeliveryTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP)}))
-    private String actualPaperDeliveryTimestamp;
+    private Instant actualPaperDeliveryTimestamp;
 }
