@@ -19,21 +19,25 @@ public class PaperTrackingsMapper {
     }
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(trackingCreationRequest.getTrackingId());
+        paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-        paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setCreatedAt(now);
+        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
 
     public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType) {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
         paperTrackings.setProductType(productType);
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setCreatedAt(now);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
