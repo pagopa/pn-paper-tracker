@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -25,7 +24,7 @@ public class ExternalChannelHandlerTest {
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(new StatusCodeConfiguration(), handlersFactoryAr);
+        externalChannelHandler = new ExternalChannelHandler(handlersFactoryAr);
     }
 
     @Test
@@ -39,7 +38,7 @@ public class ExternalChannelHandlerTest {
     @Test
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002F.name());
+        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
 
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 

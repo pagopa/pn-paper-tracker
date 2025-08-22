@@ -35,10 +35,8 @@ public class DeliveryPushSender implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
                 .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
-                .doOnNext(unused -> {
-                    PaperTrackings paperTrackingsToUpdate = getPaperTrackingsDone();
-                    context.setPaperTrackings(paperTrackingsToUpdate);
-                })
+                .map(sendEvent -> getPaperTrackingsDone())
+                .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
@@ -50,7 +48,7 @@ public class DeliveryPushSender implements HandlerStep {
      *
      * @param event evento da salvare nel target di output
      */
-    public Mono<Void> sendToOutputTarget(SendEvent event, String anonymizedDiscoveredAddressId) {
+    public Mono<SendEvent> sendToOutputTarget(SendEvent event, String anonymizedDiscoveredAddressId) {
         return Mono.just(event)
                 .flatMap(sendEvent -> {
                     log.info("Sending delivery push for event: {}", sendEvent);
@@ -73,8 +71,9 @@ public class DeliveryPushSender implements HandlerStep {
                         return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, anonymizedDiscoveredAddressId));
                     }
                 })
-                .then();
+                .thenReturn(event);
     }
+
 
 
     private PaperTrackings getPaperTrackingsDone() {
