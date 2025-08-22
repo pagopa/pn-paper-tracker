@@ -30,7 +30,7 @@ public class PaperTrackingsMapper {
         paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
         return paperTrackings;
     }
 
