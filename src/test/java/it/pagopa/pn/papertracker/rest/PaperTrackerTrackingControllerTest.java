@@ -34,7 +34,7 @@ class PaperTrackerTrackingControllerTest {
     void initTrackingReturnsOkResponse() {
         //ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
-        request.setTrackingId("test-request-id");
+        request.setAttemptId("test-request-id");
         request.setUnifiedDeliveryDriver("test-driver-id");
         request.setProductType("test-product-type");
         Mono<TrackingCreationRequest> requestMono = Mono.just(request);
