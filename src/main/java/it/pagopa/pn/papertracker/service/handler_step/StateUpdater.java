@@ -14,7 +14,7 @@ public class StateUpdater implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), context.getPaperTrackings())
+        return paperTrackingsDAO.updateItem(context.getTrackingId(), context.getPaperTrackings())
                 .then();
     }
 }

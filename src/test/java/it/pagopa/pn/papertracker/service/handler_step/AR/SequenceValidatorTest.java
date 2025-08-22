@@ -45,10 +45,10 @@ class SequenceValidatorTest {
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECRN0010", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
-                buildEvent("RECRN0011", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "", "", null),
-                buildEvent("RECRN0010", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "", "", null),
-                buildEvent("RECRN0011", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "", "", null),
+                buildEvent("RECRN010", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
+                buildEvent("RECRN011", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "", "", null),
+                buildEvent("RECRN010", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "", "", null),
+                buildEvent("RECRN011", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "", "", null),
                 buildEvent("RECRN003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "", "", null),
                 buildEvent("RECRN004A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "", "", null),
                 buildEvent("RECRN003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "", "", List.of(DocumentTypeEnum.AR.getValue())),
@@ -390,7 +390,7 @@ class SequenceValidatorTest {
         // Act & Assert
         StepVerifier.create(sequenceValidator.validateSequence(paperTrackings))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("deliveryFailureCause is null for statusCode=RECRN002B"))
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: "))
                 .verify();
     }
 

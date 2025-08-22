@@ -4,10 +4,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,6 +22,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 
@@ -35,6 +34,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setProductType(productType);
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 
