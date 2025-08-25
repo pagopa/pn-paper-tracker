@@ -51,7 +51,7 @@ public class DematValidator implements HandlerStep {
     public Mono<Void> validateDemat(HandlerContext context) {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String trackingId = paperTrackings.getTrackingId();
-        log.info("Start demait validation for trackingId={}", trackingId);
+        log.info("Starting demat validation for trackingId={}", trackingId);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
                     if (cfg.isEnableOcrValidation()) {
