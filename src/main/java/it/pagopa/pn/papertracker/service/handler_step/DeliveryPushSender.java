@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.StringUtil;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,7 +37,7 @@ public class DeliveryPushSender implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
                 .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
-                .map(sendEvent -> getPaperTrackingsDone())
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }
@@ -76,9 +78,15 @@ public class DeliveryPushSender implements HandlerStep {
 
 
 
-    private PaperTrackings getPaperTrackingsDone() {
+    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);
+        if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
+            paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
+        }
+        if(StringUtils.hasText(finalStatusCode)){
+            paperTrackings.getPaperStatus().setFinalStatusCode(finalStatusCode);
+        }
         return paperTrackings;
     }
 

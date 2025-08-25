@@ -154,7 +154,7 @@ class SequenceValidatorTest {
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
                 buildEvent("RECRN002D", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M01", List.of(DocumentTypeEnum.AR.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M01", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
                 buildEvent("RECRN002F", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());

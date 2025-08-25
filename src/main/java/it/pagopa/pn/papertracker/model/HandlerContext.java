@@ -18,5 +18,6 @@ public class HandlerContext {
     private List<SendEvent> eventsToSend = new ArrayList<>();
     private boolean stopExecution = false;
     private String eventId;
+    private String finalStatusCode;
 
 }

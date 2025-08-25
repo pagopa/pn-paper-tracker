@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
+import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -20,11 +21,14 @@ public class ExternalChannelHandlerTest {
     @Mock
     private HandlersFactoryAr handlersFactoryAr;
 
+    @Mock
+    private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
+
     private ExternalChannelHandler externalChannelHandler;
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(handlersFactoryAr);
+        externalChannelHandler = new ExternalChannelHandler(handlersFactoryAr, paperTrackerExceptionHandler);
     }
 
     @Test
