@@ -43,7 +43,7 @@ public class SequenceConfiguration {
 
         RECRN002F("RECRN002F", Set.of(
                 new SequenceElement("RECRN002D", null, false, "1"),
-                new SequenceElement("RECRN002E", Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.INDAGINE), true, "1"),
+                new SequenceElement("RECRN002E", Set.of(DocumentTypeEnum.PLICO, DocumentTypeEnum.INDAGINE), true, "1"),
                 new SequenceElement("RECRN002F", null, false, "1")
         )),
 
