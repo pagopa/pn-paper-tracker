@@ -125,10 +125,10 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
             }
             case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(DONE, paperTrackings.getState());
             }
             case INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(DONE, paperTrackings.getState());
             }
             case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
                 Assertions.assertEquals(KO, paperTrackings.getState());

@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -24,6 +24,7 @@ public class RetrySender implements HandlerStep {
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final PaperChannelClient paperChannelClient;
+    private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
@@ -37,8 +38,7 @@ public class RetrySender implements HandlerStep {
                                     context.setPaperTrackings(paperTrackingsToUpdate);
                                 });
                     } else {
-                        throw new PnPaperTrackerValidationException(String.format("Retry not found for trackingId: %s ", context.getPaperTrackings().getTrackingId()),
-                                PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
+                        return paperTrackerExceptionHandler.handleRetryError(PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
                                         List.of(context.getPaperProgressStatusEvent().getStatusCode()),
                                         ErrorCategory.MAX_RETRY_REACHED_ERROR,
                                         null,

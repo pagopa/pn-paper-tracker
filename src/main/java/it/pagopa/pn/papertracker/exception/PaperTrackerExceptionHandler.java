@@ -25,20 +25,28 @@ public class PaperTrackerExceptionHandler {
      * Per ogni eccezione intercettata, effettua una putItem sulla tabella PaperTrackingsError
      */
     public Mono<Void> handleInternalException(final PnPaperTrackerValidationException ex) {
-        return paperTrackerErrorService.insertPaperTrackingsErrors(ex.getError())
-                .filter(paperTrackingsErrors -> ex.getError().getType().equals(ErrorType.ERROR))
-                .doOnDiscard(PaperTrackingsErrors.class, paperTrackingsErrors -> log.info("Skipped updating PaperTrackings entity for error with type Warning"))
+        return handleError(ex.getError());
+    }
+
+    public Mono<Void> handleRetryError(PaperTrackingsErrors paperTrackingsErrors) {
+        return handleError(paperTrackingsErrors);
+    }
+
+    public Mono<Void> handleError(PaperTrackingsErrors paperTrackingsErrors) {
+        return paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors)
+                .filter(errors -> paperTrackingsErrors.getType().equals(ErrorType.ERROR))
+                .doOnDiscard(PaperTrackingsErrors.class, errors -> log.info("Skipped updating PaperTrackings entity for error with type Warning"))
                 .map(unused -> {
                     PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
                     paperTrackingsToUpdate.setState(PaperTrackingsState.KO);
-                    if (Objects.nonNull(ex.getError().getDetails().getCause()) && ex.getError().getDetails().getCause().equals(ErrorCause.OCR_KO)) {
+                    if (Objects.nonNull(paperTrackingsErrors.getDetails().getCause()) && paperTrackingsErrors.getDetails().getCause().equals(ErrorCause.OCR_KO)) {
                         ValidationFlow validationFlow = new ValidationFlow();
                         validationFlow.setDematValidationTimestamp(Instant.now());
                         paperTrackingsToUpdate.setValidationFlow(validationFlow);
                     }
                     return paperTrackingsToUpdate;
                 })
-                .flatMap(paperTrackingsToUpdate -> paperTrackerTrackingService.updatePaperTrackingsStatus(ex.getError().getTrackingId(), paperTrackingsToUpdate))
+                .flatMap(paperTrackingsToUpdate -> paperTrackerTrackingService.updatePaperTrackingsStatus(paperTrackingsErrors.getTrackingId(), paperTrackingsToUpdate))
                 .doOnError(throwable -> log.error("Error inserting entity into PaperTrackingsErrors: {}", throwable.getMessage(), throwable));
     }
 

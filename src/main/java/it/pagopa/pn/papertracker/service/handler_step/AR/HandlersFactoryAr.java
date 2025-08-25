@@ -107,6 +107,8 @@ public class HandlersFactoryAr implements HandlersFactory {
                         metadataUpserter,
                         duplicatedEventFiltering,
                         retrySender,
+                        intermediateEventsBuilder,
+                        deliveryPushSender,
                         stateUpdater
                 ), context);
     }
