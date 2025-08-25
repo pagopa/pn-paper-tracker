@@ -111,62 +111,276 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyResult(PaperTrackings paperTrackings, PaperTrackings newPaperTrackings, List<PaperTrackingsErrors> paperTrackingsErrors, List<PaperTrackerDryRunOutputs> paperTrackerDryRunOutputs, TestSequenceEnum testSequenceEnum) {
-        switch (testSequenceEnum){
+        verifyPaperTrackings(paperTrackings, testSequenceEnum);
+        verifyPaperErrors(paperTrackingsErrors, testSequenceEnum);
+        verifyOutput(paperTrackerDryRunOutputs, testSequenceEnum);
+    }
+
+    private void verifyOutput(List<PaperTrackerDryRunOutputs> paperTrackerDryRunOutputs, TestSequenceEnum testSequenceEnum) {
+    }
+
+    private void verifyPaperErrors(List<PaperTrackingsErrors> paperTrackingsErrors, TestSequenceEnum testSequenceEnum) {
+        switch (testSequenceEnum) {
+            case OK_CONSEGNATO_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case MANCATA_CONSEGNA_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+            case INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+            case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+            case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case MANCATA_CONSEGNA_GIACENZA_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case COMPIUTA_GIACENZA_GIACENZA_FASCICOLO_CHIUSO -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+            case OK_CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case OK_CONSEGNATO_FASCICOLO_CHIUSO_010_DUPLICATO_OK -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case OK_CONSEGNATO_FASCICOLO_CHIUSO_011_DUPLICATO_OK -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case CONSEGNATO_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+            case CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI -> {
+                Assertions.assertEquals(0, paperTrackingsErrors.size());
+            }
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
+                Assertions.assertEquals(1, paperTrackingsErrors.size());
+            }
+
+        }
+    }
+
+
+    private void verifyPaperTrackings(PaperTrackings paperTrackings, TestSequenceEnum testSequenceEnum) {
+        Assertions.assertNull(paperTrackings.getOcrRequestId());
+
+        switch (testSequenceEnum) {
             case OK_CONSEGNATO_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(3, paperTrackings.getEvents().size());
+                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case MANCATA_CONSEGNA_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(3, paperTrackings.getEvents().size());
+                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(3, paperTrackings.getEvents().size());
+                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case FURTO_SMARRIMENTO_DETERIORAMENTO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(1, paperTrackings.getEvents().size());
+                Assertions.assertNotNull(paperTrackings.getNextRequestIdPcretry());
             }
             case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(2, paperTrackings.getEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
             }
             case INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(3, paperTrackings.getEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
             }
             case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
                 Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(5, paperTrackings.getEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
             }
             case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(5, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case MANCATA_CONSEGNA_GIACENZA_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(5, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
-            case COMPIUTA_GIACENA_GIACENZA_FASCICOLO_CHIUSO -> {
+            case COMPIUTA_GIACENZA_GIACENZA_FASCICOLO_CHIUSO -> {
                 Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(5, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case OK_CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(6, paperTrackings.getEvents().size());
+                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case OK_CONSEGNATO_FASCICOLO_CHIUSO_010_DUPLICATO_OK -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(6, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case OK_CONSEGNATO_FASCICOLO_CHIUSO_011_DUPLICATO_OK -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(6, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case CONSEGNATO_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
                 Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(5, paperTrackings.getEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
             }
             case CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(4, paperTrackings.getEvents().size());
+                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(7, paperTrackings.getEvents().size());
+                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI -> {
                 Assertions.assertEquals(DONE, paperTrackings.getState());
+                Assertions.assertEquals(4, paperTrackings.getEvents().size());
+                Assertions.assertEquals(4, paperTrackings.getPaperStatus().getValidatedEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
+                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
+                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
+                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
+                // Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
+                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
                 Assertions.assertEquals(KO, paperTrackings.getState());
+                Assertions.assertEquals(3, paperTrackings.getEvents().size());
+                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
             }
-
         }
     }
 

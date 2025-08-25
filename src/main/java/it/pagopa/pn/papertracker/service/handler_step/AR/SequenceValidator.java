@@ -319,10 +319,12 @@ public class SequenceValidator implements HandlerStep {
     }
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {
+        Instant now = Instant.now();
         ValidationFlow validationFlow = new ValidationFlow();
-        validationFlow.setSequencesValidationTimestamp(Instant.now());
+        validationFlow.setSequencesValidationTimestamp(now);
         paperTrackingsToUpdate.setValidationFlow(validationFlow);
         paperTrackingsToUpdate.getPaperStatus().setValidatedEvents(events);
+        paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(now);
         return paperTrackingsToUpdate;
     }
 
