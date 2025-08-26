@@ -21,28 +21,28 @@ TODO: Aggiungi un diagramma dell'architettura qui.
 - Legge e scrive sulle code SQS: ExternalChannelToPaperTrackerQueue, PnOcrOutputsQueue, PnOcrInputsQueue, ExternalChannelsOutputsQueue
 
 #### Configurazione
-| Variabile Ambiente | Descrizione      | Default        | Obbligatorio   |
-|--------------------|------------------|----------------|----------------|
-| AWS_REGIONCODE        | N&#x2F;A | -   | Si  |
-| PN_CRON_ANALYZER        | Cron for which you send the metric to CloudWatch | -   | No  |
-| WIRE_TAP_LOG        | Activation of wire logs | -   | No  |
-| PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE        | DynamoDB table name for PaperTrackerDryRunOutputs | -   | Si  |
-| PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE        | DynamoDB table name for PaperTrackingsErrors | -   | Si  |
-| PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE        | DynamoDB table name for PaperTrackings | -   | Si  |
-| PN_PAPERTRACKER_PAPERCHANNELBASEURL        | N&#x2F;A | -   | Si  |
-| PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION        | DynamoDB PaperTrackings entity TTL duration | 3650d   | No  |
-| PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER        | Name of the SQS queue where external channel messages are sent | -   | Si  |
-| PN_PAPERTRACKER_QUEUEOCRINPUTSURL        | URL of the SQS queue where OCR inputs are sent | -   | Si  |
-| PN_PAPERTRACKER_QUEUEOCRINPUTSREGION        | Region of the SQS queue where OCR inputs are sent | -   | Si  |
-| PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE        | Name of the SQS queue where external channel outputs are sent | -   | Si  |
-| PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION        | Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s) | -   | Si  |
-| PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK        | If enabled truncate datetime to local date for refinement check | false   | No  |
-| PN_PAPERTRACKER_REFINEMENTDURATION        | Duration for refinement | -   | Si  |
-| PN_PAPERTRACKER_SAFESTORAGEBASEURL        | URL to the SafeStorage microservice | -   | Si  |
-| PN_PAPERTRACKER_SAFESTORAGECXID        | CxId for the SafeStorage microservice | -   | Si  |
-| PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS        | Name of the SQS queue where OCR outputs are sent | -   | Si  |
-| PN_PAPERTRACKER_SENDOUTPUTTODELIVERYPUSH        | If true, the microservice will send output to the delivery push service | false   | No  |
-| PN_PAPERTRACKER_ENABLEOCRVALIDATION        | Feature flag for enabling OCR validation | -   | No  |
+| Variabile Ambiente | Descrizione                                                             | Default | Obbligatorio |
+|--------------------|-------------------------------------------------------------------------|---------|--------------|
+| AWS_REGIONCODE      | AWS Region Code                                                         | -       | Si           |
+| PN_CRON_ANALYZER    | Cron for which you send the metric to CloudWatch                        | -       | No           |
+| WIRE_TAP_LOG        | Activation of wire logs                                                 | -       | No           |
+| PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE    | DynamoDB table name for PaperTrackerDryRunOutputs                       | -       | Si           |
+| PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE    | DynamoDB table name for PaperTrackingsErrors                            | -       | Si           |
+| PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE    | DynamoDB table name for PaperTrackings                                  | -       | Si           |
+| PN_PAPERTRACKER_PAPERCHANNELBASEURL    | Base url for paper-channel APIs                                         | -       | Si           |
+| PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION    | DynamoDB PaperTrackings entity TTL duration                             | -       | Sì           |
+| PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER    | Name of the SQS queue where external channel messages are sent          | -       | Si           |
+| PN_PAPERTRACKER_QUEUEOCRINPUTSURL    | URL of the SQS queue where OCR inputs are sent                          | -       | Si           |
+| PN_PAPERTRACKER_QUEUEOCRINPUTSREGION    | Region of the SQS queue where OCR inputs are sent                       | -       | Si           |
+| PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE    | Name of the SQS queue where external channel outputs are sent           | -       | Si           |
+| PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION    | Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)                   | -       | Si           |
+| PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK    | If enabled truncate datetime to local date for refinement check         | -       | Sì           |
+| PN_PAPERTRACKER_REFINEMENTDURATION    | Duration for refinement                                                 | -       | Si           |
+| PN_PAPERTRACKER_SAFESTORAGEBASEURL    | URL to the SafeStorage microservice                                     | -       | Si           |
+| PN_PAPERTRACKER_SAFESTORAGECXID    | CxId for the SafeStorage microservice                                   | -       | Si           |
+| PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS    | Name of the SQS queue where OCR outputs are sent                        | -       | Si           |
+| PN_PAPERTRACKER_SENDOUTPUTTODELIVERYPUSH    | If true, the microservice will send output to the delivery push service | -       | Sì           |
+| PN_PAPERTRACKER_ENABLEOCRVALIDATION    | Feature flag for enabling OCR validation                                | -       | Sì           |
 
 ## Testing in locale
 
