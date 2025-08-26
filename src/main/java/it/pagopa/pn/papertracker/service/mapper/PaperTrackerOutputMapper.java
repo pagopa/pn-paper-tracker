@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,15 +12,13 @@ public class PaperTrackerOutputMapper {
     private PaperTrackerOutputMapper() {
     }
 
-    public static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput toDtoPaperTrackerOutput(
-            it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs entity) {
+    public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
 
         if (entity == null) {
             return null;
         }
 
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput dto =
-                new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput();
+        PaperTrackerOutput dto = new PaperTrackerOutput();
 
         dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
         dto.setStatusCode(entity.getStatusCode());

@@ -33,13 +33,13 @@ import static it.pagopa.pn.papertracker.mapper.SendEventMapper.toAnalogAddress;
 public class FinalEventBuilder implements HandlerStep {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
-    private final StatusCodeConfiguration statusCodeConfiguration;
     private final DataVaultClient dataVaultClient;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .map(this::extractFinalEvent)
+                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event));
     }
 

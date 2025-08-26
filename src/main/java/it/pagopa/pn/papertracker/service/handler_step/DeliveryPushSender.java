@@ -2,11 +2,11 @@ package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.StringUtil;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
@@ -85,7 +85,9 @@ public class DeliveryPushSender implements HandlerStep {
             paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
         }
         if(StringUtils.hasText(finalStatusCode)){
-            paperTrackings.getPaperStatus().setFinalStatusCode(finalStatusCode);
+            PaperStatus paperStatus = new PaperStatus();
+            paperStatus.setFinalStatusCode(finalStatusCode);
+            paperTrackings.setPaperStatus(paperStatus );
         }
         return paperTrackings;
     }
