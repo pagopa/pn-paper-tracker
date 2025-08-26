@@ -1,11 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: 'Example microservice deploy'
+Description: 'Microservice deploy for pn-paper-tracker'
 
 Parameters:
   ProjectName:
     Type: String
-    Description: 'Usually pn can be pnXYZ where XYZ are the feature number, useful to create
-      experimental environments without crash official development environment'
+    Description: 'Usually pn can be pnXYZ where XYZ are the feature number, useful to create experimental environments without crash official development environment'
 
   AlarmSNSTopicArn:
     Type: String
@@ -37,7 +36,11 @@ Parameters:
 
   SubnetsIds:
     Type: String
-    Description: 'subnets ids comma separated list. Where to deploy the microservice'
+    Description: 'Subnets id list'
+
+  VpcEgressSubnetsIds:
+    Type: String
+    Description: 'Egress subnets'
 
   VpcId:
     Type: String
@@ -49,7 +52,7 @@ Parameters:
 
   ApplicationLoadBalancerListenerArn:
     Type: String
-    Description: 'Load balancer listener where HTTP endpoints is going to be registered'
+    Description: 'Load balancer listener where HTTP endpoints are going to be registered'
 
   ApplicationLoadBalancerDomain:
     Type: String
@@ -61,31 +64,267 @@ Parameters:
   
   LogsKinesisSourceStreamArn:
     Type: String
-    Description: 'Kinesis stream that receive logs'
-  
+    Description: 'Kinesis stream that receives logs'
+
   Version:
     Type: String
     Description: 'keep track of used projects commitIds'
 
+  EcsLogGroup:
+    Type: String
+    Description: 'ECS log group name'
+
+  WireTapLogActivation:
+    Type: String
+    Default: false
+    Description: Activation of wire logs
+    AllowedValues:
+      - true
+      - false
+
+  MountEfs:
+    Type: String
+    Default: false
+    AllowedValues:
+      - "true"
+      - "false"
+
+  FargateEFSFileSystemID:
+    Type: String
+    Description: "EFS Filesystem"
+
+  # Instance parameters
+  # 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
+  # 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
+  # 1024 (1 vCPU) - Available memory values: 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB
+  # 2048 (2 vCPU) - Available memory values: Between 4GB and 16GB in 1GB increments
+  # 4096 (4 vCPU) - Available memory values: Between 8GB and 30GB in 1GB increments
+  CpuValue:
+    Type: Number
+    Default: 1024
+    Description: Fargate virtual CPU quantity 1024 equals one vCPU
+
+  # 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+  # 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
+  # 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB - Available cpu values: 1024 (1 vCPU)
+  # Between 4GB and 16GB in 1GB increments - Available cpu values: 2048 (2 vCPU)
+  # Between 8GB and 30GB in 1GB increments - Available cpu values: 4096 (4 vCPU)
+  MemoryAmount:
+    Type: String
+    Default: 2GB
+    Description: memory amount reserved to the task pod.
+    AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
+
+  MinTasksNumber:
+    Default: 1
+    Type: Number
+    Description: minimum autoscaling number of tasks
+
+  MaxTasksNumber:
+    Default: 1
+    Type: Number
+    Description: maximum autoscaling number of tasks
+
+  PnCronAnalyzer:
+    Type: String
+    Default: '-'
+    Description: Cron for which you send the metric to CloudWatch
+
+  PnOcrOutputsQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where OCR outputs are sent'
+
+  PnOcrOutputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR outputs are sent'
+
+  ExternalChannelToPaperTrackerQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel messages are sent'
+
+  ExternalChannelToPaperTrackerQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel messages are sent'
+
+  PaperTrackingsErrorsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackingsErrors'
+
+  PaperTrackingsErrorsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackingsErrors'
+
+  PaperTrackingsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackings'
+
+  PaperTrackingsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackings'
+
+  PaperTrackerDryRunOutputsTableName:
+    Type: String
+    Description: 'DynamoDB table name for PaperTrackerDryRunOutputs'
+
+  PaperTrackerDryRunOutputsTableArn:
+    Type: String
+    Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
+
+  ExternalChannelsOutputsQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel outputs are sent'
+
+  ExternalChannelsOutputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel outputs are sent'
+
+  SandboxSafeStorageBaseUrl:
+    Type: String
+    Description: 'URL to the SafeStorage microservice'
+
+  SafeStorageCxId:
+    Type: String
+    Description: 'CxId for the SafeStorage microservice'
+
+  PnOcrInputsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where OCR inputs are sent'
+
+  PnOcrInputsQueueURL:
+    Type: String
+    Description: 'URL of the SQS queue where OCR inputs are sent'
+
+  PnOcrInputsQueueRegion:
+    Type: String
+    Description: 'Region of the SQS queue where OCR inputs are sent'
+
+  PnOcrOutputsQueueURL:
+    Type: String
+    Description: 'URL of the SQS queue where OCR outputs are sent'
+
+  OcrAwsRoleARN:
+    Type: String
+    Description: 'ARN of the IAM role in the OCR AWS account that can send messages to the PnOcrOutputsQueue'
+
+  OcrAwsAccountId:
+    Type: String
+    Description: 'AWS account ID of the OCR service'
+
+
 Resources:
 
-  # PN-TemplateBeMs microservice
-  TemplateBeMsMicroservice:
+  PaperTrackerMicroservice:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/ecs-service.yaml"
       Parameters:
-        MicroServiceUniqueName: !Sub '${ProjectName}-template-ms-be'
-        CpuValue: 512
-        MemoryAmount: 2GB
+        MicroServiceUniqueName: !Sub '${ProjectName}-paper-tracker'
+        CpuValue: !Ref CpuValue
+        MemoryAmount: !Ref MemoryAmount
+        MinTasksNumber: !Ref MinTasksNumber
+        MaxTasksNumber: !Ref MaxTasksNumber
+        HealthCheckPath: /actuator/health
+        EfsFilesystem: !Ref FargateEFSFileSystemID
+        MountEfs: !Ref MountEfs
+        WireTapLogActivation: !Ref WireTapLogActivation
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+        JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
-        MappedPaths: '/template-ms-be/*'
+        ContainerEnvEntry2: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
+        ContainerEnvEntry3: !Sub 'WIRE_TAP_LOG=${WireTapLogActivation}'
+        ContainerEnvEntry4: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE=${PaperTrackerDryRunOutputsTableName}'
+        ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
+        ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
+        ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
+        ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER=${ExternalChannelToPaperTrackerQueueName}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${PnOcrInputsQueueURL}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${PnOcrInputsQueueRegion}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
+        ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS=${PnOcrOutputsQueueName}'
+        MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
-        Subnets: !Ref SubnetsIds
+        Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
-        CloudwatchLogKinesisStreamArn: !Ref LogsKinesisSourceStreamArn
+        TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
+        EcsLogGroup: !Ref EcsLogGroup
+
+  PnOcrOutputsQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref PnOcrOutputsQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: AllowCrossAccountSend
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Ref PnOcrOutputsQueueURL
+            Condition:
+              StringEquals:
+                aws:PrincipalArn: !Ref OcrAwsRoleARN
+
+  PaperTrackerMicroserviceCloudWatchDashboard:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/microservice-cloudwatch-dashboard.yaml"
+      Parameters:
+        DashboardName: !Sub "${ProjectName}-paper-tracker"
+        AlarmArns: !Join
+          - ','
+          - - !GetAtt PaperTrackerMicroservice.Outputs.FatalLogsMetricAlarmArn
+        DynamoDBTableNames: !Join
+          - ','
+          - - !Ref PaperTrackingsTableName
+            - !Ref PaperTrackingsErrorsTableName
+            - !Ref PaperTrackerDryRunOutputsTableName
+        LogGroupsNames: !Join
+          - ','
+          - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
+
+  PaperTrackerMicroserviceTaskPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
+            Resource:
+              - !Sub "${PaperTrackingsTableArn}"
+              - !Sub "${PaperTrackerDryRunOutputsTableArn}"
+              - !Sub "${PaperTrackingsErrorsTableArn}"
+              - !Sub "${PaperTrackingsTableArn}/*"
+              - !Sub "${PaperTrackerDryRunOutputsTableArn}/*"
+              - !Sub "${PaperTrackingsErrorsTableArn}/*"
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:ChangeMessageVisibilityBatch
+              - sqs:DeleteMessage
+              - sqs:DeleteMessageBatch
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:ReceiveMessage
+              - sqs:SendMessage
+              - sqs:SendMessageBatch
+            Resource:
+              - !Ref ExternalChannelToPaperTrackerQueueARN
+              - !Ref PnOcrOutputsQueueARN
+              - !Ref PnOcrInputsQueueARN
+              - !Ref ExternalChannelsOutputsQueueARN
+

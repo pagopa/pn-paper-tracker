@@ -1,3 +1,15 @@
 {
-  "Parameters" : {}
+  "Parameters" : {
+    "MinTasksNumber": "1",
+    "MaxTasksNumber": "1",
+    "PnCronAnalyzer": "-",
+    "WireTapLogActivation": "false",
+    "MountEfs": "false",
+    "SafeStorageCxId": "pn-cons-000",
+    "PnOcrInputsQueueARN": "arn:aws:sqs:eu-south-1:830192246553:pn-mock_ocr_inputs",
+    "PnOcrInputsQueueURL": "https://sqs.eu-south-1.amazonaws.com/830192246553/pn-mock_ocr_inputs",
+    "PnOcrInputsQueueRegion": "eu-south-1",
+    "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
+    "OcrAwsAccountId": "830192246553"
+  }
 }
