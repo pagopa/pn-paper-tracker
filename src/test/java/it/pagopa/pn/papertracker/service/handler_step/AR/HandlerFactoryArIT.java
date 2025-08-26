@@ -15,10 +15,6 @@ import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
-import it.pagopa.pn.papertracker.model.SequenceElement;
-import lombok.Getter;
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,17 +22,16 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.function.Predicate;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.KO;
 import static it.pagopa.pn.papertracker.service.handler_step.AR.TestSequenceEnum.FURTO_SMARRIMENTO_DETERIORAMENTO;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -44,376 +39,479 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
-
     @Autowired
     private SequenceConfiguration sequenceConfiguration;
-
     @Autowired
     private PaperTrackingsDAO paperTrackingsDAO;
-
     @Autowired
     private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
-
     @Autowired
     private PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
 
     @MockitoBean
     private SafeStorageClient safeStorageClient;
-
     @MockitoBean
     private PaperChannelClient paperChannelClient;
-
     @MockitoBean
     private DataVaultClient dataVaultClient;
 
+
     @ParameterizedTest
     @EnumSource(value = TestSequenceEnum.class)
-    void testCsvInput(TestSequenceEnum testSequenceEnum) {
-        PcRetryResponse pcRetryResponse = null;
-        List<String> statusCodes = testSequenceEnum.getStatusCodes();
+    void testCsvInput(TestSequenceEnum seq) {
+        when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
         paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
-        when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
-        if (statusCodes.contains("RECRN006")) {
-            pcRetryResponse = new PcRetryResponse();
-            if (statusCodes.size() == 1) {
-                String newRequestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_1";
-                pcRetryResponse.setRetryFound(true);
-                pcRetryResponse.setRequestId(newRequestId);
-                pcRetryResponse.setParentRequestId(requestId);
-                pcRetryResponse.setDeliveryDriverId("POSTE");
-                pcRetryResponse.setPcRetry("PCRETRY_1");
 
-            } else {
-                pcRetryResponse.setRetryFound(false);
-            }
-            when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(pcRetryResponse));
-        }
+        PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
-        List<String> documentList = new ArrayList<>(testSequenceEnum.getSentDocuments());
-
+        List<String> remainingDocs = new ArrayList<>(seq.getSentDocuments());
         OffsetDateTime now = OffsetDateTime.now();
-        statusCodes.forEach(statusCode -> {
-            PaperProgressStatusEvent analogMail = createSimpleAnalogMail(requestId, now);
-            if(statusCode.equalsIgnoreCase("RECRN005C") || statusCode.equalsIgnoreCase("RECRN005B") || statusCode.equalsIgnoreCase("RECRN005A")){
-                analogMail.setClientRequestTimeStamp(analogMail.getClientRequestTimeStamp().plusDays(60));
-                analogMail.setStatusDateTime(analogMail.getStatusDateTime().plusDays(60));
-            }
-            StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeConfiguration = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
-            analogMail.setStatusCode(statusCode);
-            analogMail.setStatusDescription(statusCodeConfiguration.getStatusCodeDescription());
-            if (!CollectionUtils.isEmpty(statusCodeConfiguration.getDeliveryFailureCauseList())) {
-                analogMail.setDeliveryFailureCause(statusCodeConfiguration.getDeliveryFailureCauseList().getFirst().name());
-            }
-            if (!CollectionUtils.isEmpty(documentList)) {
-                analogMail.setAttachments(constructAttachments(statusCode, documentList));
-            }
-            SingleStatusUpdate extChannelMessage = new SingleStatusUpdate();
-            extChannelMessage.setAnalogMail(analogMail);
 
-            externalChannelHandler.handleExternalChannelMessage(extChannelMessage);
+        seq.getStatusCodes().forEach(code -> {
+            PaperProgressStatusEvent ev = createSimpleAnalogMail(requestId, now);
+            if (isOneOf(code, "RECRN005C","RECRN005B","RECRN005A")) {
+                ev.setClientRequestTimeStamp(ev.getClientRequestTimeStamp().plusDays(60));
+                ev.setStatusDateTime(ev.getStatusDateTime().plusDays(60));
+            }
+            var conf = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(code);
+            ev.setStatusCode(code);
+            ev.setStatusDescription(conf.getStatusCodeDescription());
+            if (!CollectionUtils.isEmpty(conf.getDeliveryFailureCauseList())) {
+                ev.setDeliveryFailureCause(conf.getDeliveryFailureCauseList().getFirst().name());
+            }
+            if (!CollectionUtils.isEmpty(remainingDocs)) {
+                ev.setAttachments(constructAttachments(code, remainingDocs));
+            }
+            SingleStatusUpdate msg = new SingleStatusUpdate();
+            msg.setAnalogMail(ev);
+            externalChannelHandler.handleExternalChannelMessage(msg);
         });
-        PaperTrackings newPaperTrackings = null;
-        PaperTrackings paperTrackings = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
-        if (Objects.nonNull(pcRetryResponse) && StringUtils.hasText(pcRetryResponse.getRequestId())) {
-            newPaperTrackings = paperTrackingsDAO.retrieveEntityByRequestId(pcRetryResponse.getRequestId()).block();
-        }
-        List<PaperTrackingsErrors> paperTrackingsErrors = paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block();
-        List<PaperTrackerDryRunOutputs> paperTrackerDryRunOutputs = paperTrackerDryRunOutputsDAO.retrieveOutputEvents(requestId).collectList().block();
-        verifyResult(paperTrackings, newPaperTrackings, paperTrackingsErrors, paperTrackerDryRunOutputs, testSequenceEnum);
+
+        PaperTrackings pt = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings ptNew = (pcRetryResponse != null && StringUtils.hasText(pcRetryResponse.getRequestId()))
+                ? paperTrackingsDAO.retrieveEntityByRequestId(pcRetryResponse.getRequestId()).block()
+                : null;
+
+        List<PaperTrackingsErrors> errors = paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block();
+        List<PaperTrackerDryRunOutputs> outputs = paperTrackerDryRunOutputsDAO.retrieveOutputEvents(requestId).collectList().block();
+
+        verifyPaperTrackings(pt, seq);
+        verifyNewPaperTrackings(ptNew, pt, seq);
+        verifyErrors(errors, seq);
+        verifyOutputs(outputs, seq);
     }
 
-    private void verifyResult(PaperTrackings paperTrackings, PaperTrackings newPaperTrackings, List<PaperTrackingsErrors> paperTrackingsErrors, List<PaperTrackerDryRunOutputs> paperTrackerDryRunOutputs, TestSequenceEnum testSequenceEnum) {
-        verifyPaperTrackings(paperTrackings, testSequenceEnum);
-        verifyPaperErrors(paperTrackingsErrors, testSequenceEnum);
-        verifyOutput(paperTrackerDryRunOutputs, testSequenceEnum);
-        verifyNewPaperTrackings(newPaperTrackings, paperTrackings, testSequenceEnum);
-    }
 
-    private void verifyNewPaperTrackings(PaperTrackings newPaperTrackings, PaperTrackings paperTrackings, TestSequenceEnum testSequenceEnum) {
-        if(testSequenceEnum.equals(FURTO_SMARRIMENTO_DETERIORAMENTO)){
-            Assertions.assertNotNull(newPaperTrackings);
-            Assertions.assertEquals(paperTrackings.getProductType(), newPaperTrackings.getProductType());
-            Assertions.assertEquals(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE, newPaperTrackings.getState());
-            Assertions.assertEquals(paperTrackings.getUnifiedDeliveryDriver(), newPaperTrackings.getUnifiedDeliveryDriver());
-            Assertions.assertTrue(newPaperTrackings.getTrackingId().endsWith(".RECINDEX_0.ATTEMPT_0.PCRETRY_1"));
-        }else{
-            Assertions.assertNull(newPaperTrackings);
-        }
-    }
-
-    private void verifyOutput(List<PaperTrackerDryRunOutputs> paperTrackerDryRunOutputs, TestSequenceEnum testSequenceEnum) {
-        //TODO: CHECK OUTPUT
-    }
-
-    private void verifyPaperErrors(List<PaperTrackingsErrors> paperTrackingsErrors, TestSequenceEnum testSequenceEnum) {
-        switch (testSequenceEnum) {
-            case OK_CONSEGNATO_FASCICOLO_CHIUSO, MANCATA_CONSEGNA_FASCICOLO_CHIUSO,
-                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO, FURTO_SMARRIMENTO_DETERIORAMENTO,
-                 CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO, MANCATA_CONSEGNA_GIACENZA_FASCICOLO_CHIUSO,
-                 OK_CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK, OK_CONSEGNATO_FASCICOLO_CHIUSO_010_DUPLICATO_OK,
-                 OK_CONSEGNATO_FASCICOLO_CHIUSO_011_DUPLICATO_OK, CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE,
-                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_STATO_NON_INERENTE,
-                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI,
-                 COMPIUTA_GIACENZA_GIACENZA_FASCICOLO_CHIUSO-> Assertions.assertEquals(0, paperTrackingsErrors.size());
-
-            case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO, INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(1, paperTrackingsErrors.size());
-                PaperTrackingsErrors paperTrackingsError = paperTrackingsErrors.getFirst();
-                Assertions.assertEquals(ErrorCategory.MAX_RETRY_REACHED_ERROR, paperTrackingsError.getErrorCategory());
-                Assertions.assertEquals(FlowThrow.RETRY_PHASE, paperTrackingsError.getFlowThrow());
-                Assertions.assertEquals(ErrorType.ERROR, paperTrackingsError.getType());
-                Assertions.assertNotNull(paperTrackingsError.getCreated());
-                Assertions.assertNotNull(paperTrackingsError.getTrackingId());
-                Assertions.assertNotNull(paperTrackingsError.getProductType());
-                Assertions.assertEquals("Retry not found for trackingId: " + paperTrackingsError.getTrackingId(), paperTrackingsError.getDetails().getMessage());
-                Assertions.assertNull(paperTrackingsError.getDetails().getCause());
-            }
-            case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI,
-                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
-                Assertions.assertEquals(1, paperTrackingsErrors.size());
-                PaperTrackingsErrors paperTrackingsError = paperTrackingsErrors.getFirst();
-                Assertions.assertEquals(ErrorCategory.ATTACHMENTS_ERROR, paperTrackingsError.getErrorCategory());
-                Assertions.assertEquals(FlowThrow.SEQUENCE_VALIDATION, paperTrackingsError.getFlowThrow());
-                Assertions.assertEquals(ErrorType.ERROR, paperTrackingsError.getType());
-                Assertions.assertNotNull(paperTrackingsError.getCreated());
-                Assertions.assertNotNull(paperTrackingsError.getTrackingId());
-                Assertions.assertNotNull(paperTrackingsError.getProductType());
-                Assertions.assertTrue(paperTrackingsError.getDetails().getMessage().contains("Attachments are not valid for the sequence element: "));
-                Assertions.assertNull(paperTrackingsError.getDetails().getCause());
-            }
-            case CONSEGNATO_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
-                Assertions.assertEquals(1, paperTrackingsErrors.size());
-                PaperTrackingsErrors paperTrackingsError = paperTrackingsErrors.getFirst();
-                Assertions.assertEquals(ErrorCategory.STATUS_CODE_ERROR, paperTrackingsError.getErrorCategory());
-                Assertions.assertEquals(FlowThrow.SEQUENCE_VALIDATION, paperTrackingsError.getFlowThrow());
-                Assertions.assertEquals(ErrorType.ERROR, paperTrackingsError.getType());
-                Assertions.assertNotNull(paperTrackingsError.getCreated());
-                Assertions.assertNotNull(paperTrackingsError.getTrackingId());
-                Assertions.assertNotNull(paperTrackingsError.getProductType());
-                Assertions.assertEquals("Necessary status code not found in events", paperTrackingsError.getDetails().getMessage());
-                Assertions.assertNull(paperTrackingsError.getDetails().getCause());
-            }
+    private void verifyNewPaperTrackings(PaperTrackings ptNew, PaperTrackings pt, TestSequenceEnum seq) {
+        if (seq.equals(FURTO_SMARRIMENTO_DETERIORAMENTO)) {
+            assertNotNull(ptNew);
+            assertEquals(pt.getProductType(), ptNew.getProductType());
+            assertEquals(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE, ptNew.getState());
+            assertEquals(pt.getUnifiedDeliveryDriver(), ptNew.getUnifiedDeliveryDriver());
+            assertTrue(ptNew.getTrackingId().endsWith(".RECINDEX_0.ATTEMPT_0.PCRETRY_1"));
+        } else {
+            assertNull(ptNew);
         }
     }
 
+    private void verifyOutputs(List<PaperTrackerDryRunOutputs> list, TestSequenceEnum seq) {
+        list.forEach(this::assertBaseDryRun);
 
-    private void verifyPaperTrackings(PaperTrackings paperTrackings, TestSequenceEnum testSequenceEnum) {
-        Assertions.assertNull(paperTrackings.getOcrRequestId());
-        Assertions.assertTrue(paperTrackings.getEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-
-        switch (testSequenceEnum) {
-            case OK_CONSEGNATO_FASCICOLO_CHIUSO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(3, paperTrackings.getEvents().size());
-                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+        switch (seq) {
+            case CONSEGNATO_FASCICOLO_CHIUSO -> {
+                assertEquals(3, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                assertSameRegisteredLetter(list, 0, 1, 2);
+                list.forEach(e -> {
+                    if (is(e, "RECRN001A")) { assertNoAttach(e); assertProgress(e); }
+                    else if (is(e, "RECRN001B")) { assertAttach(e, "AR"); assertProgress(e); }
+                    else if (is(e, "RECRN001C")) { assertNoAttach(e); assertOk(e); }
+                    assertNull(e.getDeliveryFailureCause());
+                });
             }
             case MANCATA_CONSEGNA_FASCICOLO_CHIUSO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(3, paperTrackings.getEvents().size());
-                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertEquals("M02", paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+                assertEquals(3, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                assertSameRegisteredLetter(list, 0, 1, 2);
+                list.forEach(e -> {
+                    if (is(e, "RECRN002A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002B")) { assertAttach(e, "Plico"); assertNotNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(3, paperTrackings.getEvents().size());
-                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertEquals("M01", paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+                assertEquals(4, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                assertEquals(2, count(list, e -> is(e, "RECRN002E")));
+                assertSameRegisteredLetter(list, 0, 1, 2, 3);
+                list.forEach(e -> {
+                    if (is(e, "RECRN002D")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002E")) { assertAttachAnyOf(e, "Plico","Indagine"); assertNotNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002F")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertKo(e); }
+                });
             }
             case FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(1, paperTrackings.getEvents().size());
-                Assertions.assertNotNull(paperTrackings.getNextRequestIdPcretry());
+                assertEquals(1, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> { assertNotNull(e.getRegisteredLetterCode()); assertNull(e.getDeliveryFailureCause()); assertProgress(e); });
             }
             case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(2, paperTrackings.getEvents().size());
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                assertEquals(2, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> { assertNotNull(e.getRegisteredLetterCode()); assertNull(e.getDeliveryFailureCause()); assertProgress(e); });
             }
             case INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(3, paperTrackings.getEvents().size());
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                assertEquals(3, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> { assertNotNull(e.getRegisteredLetterCode()); assertNull(e.getDeliveryFailureCause()); assertProgress(e); });
             }
-            case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI, CONSEGNATO_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
-                Assertions.assertEquals(KO, paperTrackings.getState());
-                Assertions.assertEquals(5, paperTrackings.getEvents().size());
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
+                assertEquals(4, list.size());
+                assertContainsStatus(list, List.of("RECRN010","RECRN011","RECRN003A","RECRN003B"));
+                list.forEach(e -> { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); });
             }
-            case CONSEGNATO_GIACENZA_FASCICOLO_CHIUSO, COMPIUTA_GIACENZA_GIACENZA_FASCICOLO_CHIUSO,
-                 MANCATA_CONSEGNA_GIACENZA_FASCICOLO_CHIUSO -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(5, paperTrackings.getEvents().size());
-                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO -> {
+                assertEquals(5, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    if (is(e, "RECRN003A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN003B")) { assertAttach(e, "AR"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN003C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
             }
-            case OK_CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(6, paperTrackings.getEvents().size());
-                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(List.of("RECRN001A", "RECRN001B", "RECRN001C")));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+            case MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO -> {
+                assertEquals(5, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    if (is(e, "RECRN004A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN004B")) { assertAttach(e, "Plico"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN004C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
             }
-            case OK_CONSEGNATO_FASCICOLO_CHIUSO_010_DUPLICATO_OK, OK_CONSEGNATO_FASCICOLO_CHIUSO_011_DUPLICATO_OK -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(6, paperTrackings.getEvents().size());
-                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(List.of("RECRN010", "RECRN011", "RECRN003A", "RECRN003B", "RECRN003C")));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+            case COMPIUTA_GIACENZA_PRESSO_GIACENZA_FASCICOLO_CHIUSO -> {
+                assertContainsStatus(list, seq.getStatusCodes());
+                assertTrue(list.stream().anyMatch(e -> is(e,"PNRN012")));
+                list.forEach(e -> {
+                    if (is(e, "RECRN005A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN005B")) { assertAttach(e, "Plico"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN005C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "PNRN012")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
+            }
+            case CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK -> {
+                assertEquals(6, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    if (is(e, "RECRN001A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN001B")) { assertAttach(e, "AR"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN001C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
+            }
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_010_DUPLICATO_OK,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_011_DUPLICATO_OK -> {
+                assertEquals(6, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    if (is(e, "RECRN003A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN003B")) { assertAttach(e, "AR"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN003C")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertOk(e); }
+                });
+            }
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
+                assertEquals(4, list.size());
+                assertContainsStatus(list, List.of("RECRN010","RECRN010","RECRN003A","RECRN003B"));
+                list.forEach(e -> {
+                    if (is(e, "RECRN003A")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN003B")) { assertAttach(e, "AR"); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                });
             }
             case CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(4, paperTrackings.getEvents().size());
-                Assertions.assertEquals(3, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(List.of("RECRN001A", "RECRN001B", "RECRN001C")));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+                assertEquals(4, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    assertNotNull(e.getRegisteredLetterCode());
+                    assertNull(e.getDeliveryFailureCause());
+                    if (is(e, "RECRN001A")) { assertNoAttach(e); assertProgress(e); }
+                    else if (is(e, "RECRN001B")) { assertAttach(e, "AR"); assertProgress(e); }
+                    else if (is(e, "RECRN001C")) { assertNoAttach(e); assertOk(e); }
+                });
             }
-            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(7, paperTrackings.getEvents().size());
-                Assertions.assertEquals(5, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(List.of("RECRN010", "RECRN011", "RECRN004A", "RECRN004B", "RECRN004C")));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertNull(paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+            case MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    assertNotNull(e.getRegisteredLetterCode());
+                    assertNull(e.getDeliveryFailureCause());
+                    if (is(e, "RECRN001A")) { assertNoAttach(e); assertProgress(e); }
+                    else if (is(e, "RECRN003B")) { assertAttach(e, "AR"); assertProgress(e); }
+                    else if (is(e, "RECRN004B")) { assertAttach(e, "Plico"); assertProgress(e); }
+                    else if (is(e, "RECRN001C")) { assertNoAttach(e); assertOk(e); }
+                });
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI -> {
-                Assertions.assertEquals(DONE, paperTrackings.getState());
-                Assertions.assertEquals(4, paperTrackings.getEvents().size());
-                Assertions.assertEquals(4, paperTrackings.getPaperStatus().getValidatedEvents().size());
-                Assertions.assertTrue(paperTrackings.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList().containsAll(testSequenceEnum.getStatusCodes()));
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
-                Assertions.assertEquals("M01", paperTrackings.getPaperStatus().getDeliveryFailureCause());
-                Assertions.assertFalse(paperTrackings.getValidationFlow().getOcrEnabled());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getSequencesValidationTimestamp());
-                Assertions.assertNotNull(paperTrackings.getValidationFlow().getDematValidationTimestamp());
-                Assertions.assertNull(paperTrackings.getValidationFlow().getOcrRequestTimestamp());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getRegisteredLetterCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getFinalStatusCode());
-                Assertions.assertNotNull(paperTrackings.getPaperStatus().getValidatedSequenceTimestamp());
+                assertEquals(4, list.size());
+                assertContainsStatus(list, seq.getStatusCodes());
+                list.forEach(e -> {
+                    if (is(e, "RECRN002D")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002E")) { assertAttachAnyOf(e, "Plico","Indagine"); assertNotNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002F")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertKo(e); }
+                });
             }
             case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
-                Assertions.assertEquals(KO, paperTrackings.getState());
-                Assertions.assertEquals(3, paperTrackings.getEvents().size());
-                Assertions.assertNull(paperTrackings.getNextRequestIdPcretry());
+                assertEquals(2, list.size());
+                assertContainsStatus(list, List.of("RECRN002D","RECRN002E"));
+                list.forEach(e -> {
+                    if (is(e, "RECRN002D")) { assertNoAttach(e); assertNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                    else if (is(e, "RECRN002E")) { assertAttach(e, "Plico"); assertNotNull(e.getDeliveryFailureCause()); assertProgress(e); }
+                });
             }
         }
+    }
+
+    private void verifyErrors(List<PaperTrackingsErrors> errs, TestSequenceEnum seq) {
+        switch (seq) {
+            case CONSEGNATO_FASCICOLO_CHIUSO, MANCATA_CONSEGNA_FASCICOLO_CHIUSO,
+                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO, FURTO_SMARRIMENTO_DETERIORAMENTO,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO, MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO,
+                 CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_010_DUPLICATO_OK,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_011_DUPLICATO_OK,
+                 CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE,
+                 MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_NON_INERENTE,
+                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI,
+                 COMPIUTA_GIACENZA_PRESSO_GIACENZA_FASCICOLO_CHIUSO -> assertEquals(0, errs.size());
+
+            case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO, INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO ->
+                    assertSingleError(errs, ErrorCategory.MAX_RETRY_REACHED_ERROR, FlowThrow.RETRY_PHASE,
+                            "Retry not found for trackingId: ");
+
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI,
+                 IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI ->
+                    assertSingleError(errs, ErrorCategory.ATTACHMENTS_ERROR, FlowThrow.SEQUENCE_VALIDATION,
+                            "Attachments are not valid for the sequence element: ");
+
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_ASSENTE ->
+                    assertSingleError(errs, ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION,
+                            "Necessary status code not found in events");
+        }
+    }
+
+    private void verifyPaperTrackings(PaperTrackings pt, TestSequenceEnum seq) {
+        assertNull(pt.getOcrRequestId());
+        assertTrue(pt.getEvents().stream().map(Event::getStatusCode).toList().containsAll(seq.getStatusCodes()));
+
+        switch (seq) {
+            case CONSEGNATO_FASCICOLO_CHIUSO -> assertValidatedDone(pt, 3, 3, null);
+            case MANCATA_CONSEGNA_FASCICOLO_CHIUSO -> assertValidatedDone(pt, 3, 3, "M02");
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO -> assertValidatedDone(pt, 3, 3, "M01");
+
+            case FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                assertEquals(DONE, pt.getState());
+                assertEquals(1, pt.getEvents().size());
+                assertNotNull(pt.getNextRequestIdPcretry());
+            }
+            case INESITO_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                assertEquals(DONE, pt.getState());
+                assertEquals(2, pt.getEvents().size());
+                assertNull(pt.getNextRequestIdPcretry());
+            }
+            case INESITO_INGIACENZA_FURTO_SMARRIMENTO_DETERIORAMENTO -> {
+                assertEquals(DONE, pt.getState());
+                assertEquals(3, pt.getEvents().size());
+                assertNull(pt.getNextRequestIdPcretry());
+            }
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO,
+                 COMPIUTA_GIACENZA_PRESSO_GIACENZA_FASCICOLO_CHIUSO,
+                 MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO -> assertValidatedDone(pt, 5, 5, null);
+
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_ASSENTE -> {
+                assertEquals(KO, pt.getState());
+                assertEquals(5, pt.getEvents().size());
+                assertNull(pt.getNextRequestIdPcretry());
+            }
+
+            case CONSEGNATO_FASCICOLO_CHIUSO_AB_DUPLICATI_OK -> assertValidatedDoneSubset(pt, 6, 3, null,
+                    List.of("RECRN001A", "RECRN001B", "RECRN001C"));
+
+            case CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_010_DUPLICATO_OK,
+                 CONSEGNATO_PRESSO_GIACENZA_FASCICOLO_CHIUSO_011_DUPLICATO_OK -> assertValidatedDoneSubset(pt, 6, 5, null,
+                    List.of("RECRN010", "RECRN011", "RECRN003A", "RECRN003B", "RECRN003C"));
+
+            case CONSEGNATO_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> assertValidatedDoneSubset(pt, 4, 3, null,
+                    List.of("RECRN001A","RECRN001B","RECRN001C"));
+
+            case MANCATA_CONSEGNA_PRESSO_GIACENZA_FASCICOLO_CHIUSO_STATO_NON_INERENTE -> assertValidatedDoneSubset(pt, 7, 5, null,
+                    List.of("RECRN010","RECRN011","RECRN004A","RECRN004B","RECRN004C"));
+
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_SEPARATI -> assertValidatedDone(pt, 4, 4, "M01");
+
+            case IRREPERIBILITA_ASSOLUTA_FASCICOLO_CHIUSO_ALLEGATI_MANCANTI -> {
+                assertEquals(KO, pt.getState());
+                assertEquals(3, pt.getEvents().size());
+                assertNull(pt.getNextRequestIdPcretry());
+            }
+        }
+    }
+
+    private void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
+        assertEquals(DONE, pt.getState());
+        assertEquals(totalEvents, pt.getEvents().size());
+        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
+        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+                .containsAll(pt.getEvents().stream().map(Event::getStatusCode).toList()));
+        assertNull(pt.getNextRequestIdPcretry());
+        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
+        assertFalse(pt.getValidationFlow().getOcrEnabled());
+        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
+        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
+        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
+        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
+        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
+        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
+    }
+
+    private void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
+        assertEquals(DONE, pt.getState());
+        assertEquals(totalEvents, pt.getEvents().size());
+        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
+        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+                .containsAll(expectedValidatedCodes));
+        assertNull(pt.getNextRequestIdPcretry());
+        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
+        assertFalse(pt.getValidationFlow().getOcrEnabled());
+        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
+        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
+        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
+        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
+        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
+        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
+    }
+
+    private void assertSingleError(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
+        assertEquals(1, errs.size());
+        PaperTrackingsErrors e = errs.getFirst();
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.ERROR, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNull(e.getDetails().getCause());
+    }
+
+    private void assertBaseDryRun(PaperTrackerDryRunOutputs e) {
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getStatusDetail());
+        assertNotNull(e.getStatusCode());
+        assertNotNull(e.getStatusDescription());
+        assertNotNull(e.getStatusDateTime());
+        assertNull(e.getAnonymizedDiscoveredAddressId());
+        assertNotNull(e.getClientRequestTimestamp());
+    }
+
+    private void assertSameRegisteredLetter(List<PaperTrackerDryRunOutputs> list, int... idx) {
+        String last = list.get(idx[idx.length - 1]).getRegisteredLetterCode();
+        for (int i : idx) assertEquals(last, list.get(i).getRegisteredLetterCode());
+    }
+
+    private void assertAttach(PaperTrackerDryRunOutputs e, String type) {
+        assertEquals(1, e.getAttachments().size());
+        assertEquals(type, e.getAttachments().getFirst().getDocumentType());
+    }
+
+    private void assertAttachAnyOf(PaperTrackerDryRunOutputs e, String... types) {
+        assertEquals(1, e.getAttachments().size());
+        String t = e.getAttachments().getFirst().getDocumentType();
+        assertTrue(Arrays.stream(types).anyMatch(t::equalsIgnoreCase));
+    }
+
+    private void assertNoAttach(PaperTrackerDryRunOutputs e) {
+        assertTrue(CollectionUtils.isEmpty(e.getAttachments()));
+    }
+
+    private void assertProgress(PaperTrackerDryRunOutputs e) { assertEquals("PROGRESS", e.getStatusCode()); }
+    private void assertOk(PaperTrackerDryRunOutputs e) { assertEquals("OK", e.getStatusCode()); }
+    private void assertKo(PaperTrackerDryRunOutputs e) { assertEquals("KO", e.getStatusCode()); }
+
+    private boolean is(PaperTrackerDryRunOutputs e, String status) { return status.equalsIgnoreCase(e.getStatusDetail()); }
+    private boolean isOneOf(String v, String... values) { return Arrays.stream(values).anyMatch(s -> s.equalsIgnoreCase(v)); }
+
+    private void assertContainsStatus(List<PaperTrackerDryRunOutputs> list, List<String> expected) {
+        List<String> details = list.stream().map(PaperTrackerDryRunOutputs::getStatusDetail).toList();
+        assertTrue(details.containsAll(expected));
+    }
+
+    private long count(List<PaperTrackerDryRunOutputs> list, Predicate<PaperTrackerDryRunOutputs> p) {
+        return list.stream().filter(p).count();
+    }
+
+    private PcRetryResponse wireRetryIfNeeded(List<String> statusCodes, String requestId, String iun) {
+        if (!statusCodes.contains("RECRN006")) return null;
+
+        PcRetryResponse resp = new PcRetryResponse();
+        if (statusCodes.size() == 1) {
+            String newRequestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_1";
+            resp.setRetryFound(true);
+            resp.setRequestId(newRequestId);
+            resp.setParentRequestId(requestId);
+            resp.setDeliveryDriverId("POSTE");
+            resp.setPcRetry("PCRETRY_1");
+        } else {
+            resp.setRetryFound(false);
+        }
+        when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(resp));
+        return resp;
     }
 
     private PaperTrackings getPaperTrackings(String requestId) {
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
-        paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-        paperTrackings.setCreatedAt(Instant.now());
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-        return paperTrackings;
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(ProductType.AR);
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        pt.setPaperStatus(new PaperStatus());
+        return pt;
     }
 
-    private List<AttachmentDetails> constructAttachments(String statusCode, List<String> documentList) {
-        List<String> documentTypeList = documentList.stream()
+    private List<AttachmentDetails> constructAttachments(String statusCode, List<String> documents) {
+        List<String> matches = documents.stream()
                 .filter(s -> s.split("-")[0].equalsIgnoreCase(statusCode))
                 .toList();
-
-        if (!CollectionUtils.isEmpty(documentTypeList)) {
-            List<AttachmentDetails> attachmentDetails = getAttachmentDetails(documentTypeList.getFirst());
-            documentList.remove(documentTypeList.getFirst());
-            return attachmentDetails;
+        if (!CollectionUtils.isEmpty(matches)) {
+            String first = matches.getFirst();
+            documents.remove(first);
+            return buildAttachmentDetails(first);
         }
         return Collections.emptyList();
     }
 
-    private List<AttachmentDetails> getAttachmentDetails(String first) {
-        List<String> types = Arrays.stream(first.split("-")[1].split("#")).toList();
+    private List<AttachmentDetails> buildAttachmentDetails(String token) {
+        List<String> types = Arrays.asList(token.split("-")[1].split("#"));
         return types.stream().map(type -> AttachmentDetails.builder()
-                        .documentType(type)
-                        .sha256("sha256")
-                        .id("id-" + first)
-                        .uri("https://example.com/" + first)
-                        .date(OffsetDateTime.now())
-                        .build())
-                .toList();
+                .documentType(type)
+                .sha256("sha256")
+                .id("id-" + token)
+                .uri("https://example.com/" + token)
+                .date(OffsetDateTime.now())
+                .build()).toList();
     }
 
     public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now) {
-        PaperProgressStatusEvent analogMail = new PaperProgressStatusEvent();
-        analogMail.requestId(requestId);
-        analogMail.setClientRequestTimeStamp(OffsetDateTime.now());
-        analogMail.setStatusDateTime(now);
-        analogMail.setIun("MUMR-VQMP-LDNZ-202303-H-1");
-        analogMail.setProductType("AR");
-        analogMail.setRegisteredLetterCode("registeredLetterCode");
-        return analogMail;
+        PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
+        ev.requestId(requestId);
+        ev.setClientRequestTimeStamp(OffsetDateTime.now());
+        ev.setStatusDateTime(now);
+        ev.setIun("iun");
+        ev.setProductType("AR");
+        ev.setRegisteredLetterCode("registeredLetterCode");
+        return ev;
     }
-
 }
