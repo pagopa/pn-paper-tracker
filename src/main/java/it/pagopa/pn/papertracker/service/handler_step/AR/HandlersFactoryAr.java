@@ -86,6 +86,8 @@ public class HandlersFactoryAr extends AbstractHandlersFactory implements Handle
                         metadataUpserter,
                         duplicatedEventFiltering,
                         retrySender,
+                        intermediateEventsBuilder,
+                        deliveryPushSender,
                         stateUpdater
                 ), context);
     }

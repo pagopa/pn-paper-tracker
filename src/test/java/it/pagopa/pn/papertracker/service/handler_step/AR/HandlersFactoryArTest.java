@@ -169,6 +169,8 @@ class HandlersFactoryArTest {
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))

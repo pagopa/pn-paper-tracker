@@ -4,6 +4,7 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -28,6 +29,7 @@ public class InternalEventHandler {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final HandlersFactoryAr handlersFactoryAr;
+    private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     public void handleOcrMessage(OcrDataResultPayload ocrResultMessage) {
         if (Objects.isNull(ocrResultMessage) || Objects.isNull(ocrResultMessage.getCommandId())) {
@@ -72,6 +74,7 @@ public class InternalEventHandler {
                                 }
                             };
                         })
+                        .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
                         .then())
                 .block();
 

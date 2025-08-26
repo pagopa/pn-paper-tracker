@@ -2,6 +2,8 @@ package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
+import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @CustomLog
 public class ExternalChannelHandler {
 
+    private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
     private final HandlersFactoryAr handlersFactoryAr;
     private final HandlersFactoryRir handlersFactoryRir;
     private static final String HANDLING_INTERMEDIATE_EVENT_LOG = "Handling Intermediate event for productType: [{}] and event: [{}]";
@@ -61,6 +64,7 @@ public class ExternalChannelHandler {
                         })
                         .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 )
+                .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
                 .block();
     }
 

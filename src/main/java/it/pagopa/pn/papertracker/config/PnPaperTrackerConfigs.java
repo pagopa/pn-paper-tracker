@@ -43,7 +43,7 @@ public class PnPaperTrackerConfigs {
     @Data
     public static class Topics {
         private String externalChannelToPaperTracker;
-        private String ocrOutputTopic;
+        private String pnOcrOutputs;
     }
 
 }

@@ -8,6 +8,8 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -31,6 +33,10 @@ public class PaperTrackingsMapper {
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setCreatedAt(now);
+        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 
@@ -48,7 +54,10 @@ public class PaperTrackingsMapper {
         paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
+        paperTrackings.setCreatedAt(now);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 

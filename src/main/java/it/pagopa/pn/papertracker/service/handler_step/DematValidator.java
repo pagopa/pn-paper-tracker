@@ -50,7 +50,7 @@ public class DematValidator implements HandlerStep {
     public Mono<Void> validateDemat(HandlerContext context) {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String trackingId = paperTrackings.getTrackingId();
-        log.info("Start demait validation for trackingId={}", trackingId);
+        log.info("Starting demat validation for trackingId={}", trackingId);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
                     if (cfg.getEnableOcrValidationFor().contains(ProductType.AR.name())) {
@@ -140,7 +140,8 @@ public class DematValidator implements HandlerStep {
         }
 
         for (Event event : finalDematList) {
-            event.getAttachments().stream()
+            Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
+                    .stream()
                     .filter(att -> OcrDocumentTypeEnum.valueOf(event.getProductType().name()).getDocumentTypes().contains(DocumentTypeEnum.fromValue(att.getDocumentType())))
                     .forEach(attachment -> attachments.putIfAbsent(attachment.getDocumentType(), attachment));
         }
