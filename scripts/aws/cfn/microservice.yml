@@ -34,6 +34,10 @@ Parameters:
     Type: String
     Description: 'The name of the ECS cluster where the microservice is going to be deployed'
 
+  SubnetsIds:
+    Type: String
+    Description: 'Subnets id list'
+
   VpcEgressSubnetsIds:
     Type: String
     Description: 'Egress subnets'
@@ -166,19 +170,6 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
-  EnableOcrValidation:
-    Type: String
-    Default: false
-    Description: 'Feature flag for enabling OCR validation'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
-  PaperTrackingsTtlDuration:
-    Type: String
-    Default: 3650d
-    Description: 'DynamoDB PaperTrackings entity TTL duration'
-
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
@@ -186,22 +177,6 @@ Parameters:
   ExternalChannelsOutputsQueueARN:
     Type: String
     Description: 'ARN of the SQS queue where external channel outputs are sent'
-
-  CompiutaGiacenzaArDuration:
-    Type: String
-    Description: 'Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)'
-
-  EnableTruncatedDateForRefinementCheck:
-    Type: String
-    Default: 'false'
-    Description: 'If enabled truncate datetime to local date for refinement check'
-    AllowedValues:
-      - 'true'
-      - 'false'
-
-  RefinementDuration:
-    Type: String
-    Description: 'Duration for refinement'
 
   SandboxSafeStorageBaseUrl:
     Type: String
@@ -234,14 +209,6 @@ Parameters:
   OcrAwsAccountId:
     Type: String
     Description: 'AWS account ID of the OCR service'
-
-  SendOutputToDeliveryPush:
-    Type: String
-    Default: 'false'
-    Description: 'If true, the microservice will send output to the delivery push service'
-    AllowedValues:
-      - 'true'
-      - 'false'
 
 
 Resources:

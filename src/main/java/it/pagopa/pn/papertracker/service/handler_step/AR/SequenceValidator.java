@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -49,7 +50,7 @@ public class SequenceValidator implements HandlerStep {
     public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings) {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
-        log.info("Beginning validation for sequence for paper tracking : {}", paperTrackings);
+        log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
         return extractSequenceFromEvents(paperTrackings.getEvents(), paperTrackings)
                 .filter(events -> !CollectionUtils.isEmpty(events))
                 .switchIfEmpty(generateCustomError("Invalid lastEvent for sequence validation", paperTrackings.getEvents(), paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR))
@@ -200,7 +201,9 @@ public class SequenceValidator implements HandlerStep {
                     String deliveryFailureCause = event.getDeliveryFailureCause();
                     StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(event.getStatusCode());
                     if (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) || statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) {
-                        paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
+                        if (StringUtils.hasText(deliveryFailureCause)) {
+                            paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
+                        }
                         return Mono.empty();
                     } else {
                         return generateCustomError("Invalid deliveryFailureCause: " + deliveryFailureCause, events, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR);
