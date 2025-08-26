@@ -2,13 +2,11 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 
 public class PaperProgressStatusEventMapper {
@@ -28,6 +26,9 @@ public class PaperProgressStatusEventMapper {
             event.setAttachments(paperProgressStatusEvent.getAttachments().stream()
                     .map(PaperProgressStatusEventMapper::buildAttachmentFromAttachmentDetail)
                     .toList());
+            PaperStatus paperStatus = new PaperStatus();
+            paperStatus.setFinalDematTimestamp(Instant.now());
+            paperTrackings.setPaperStatus(paperStatus);
         }
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
         event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());

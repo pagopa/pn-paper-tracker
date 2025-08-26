@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +38,9 @@ class FinalEventBuilderRirTest {
 
     @Mock
     DataVaultClient dataVaultClient;
+
+    @Mock
+    PaperTrackingsDAO paperTrackingsDAO;
 
     FinalEventBuilderRir finalEventBuilder;
 
@@ -50,7 +55,7 @@ class FinalEventBuilderRirTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        finalEventBuilder = new FinalEventBuilderRir(dataVaultClient);
+        finalEventBuilder = new FinalEventBuilderRir(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
@@ -82,6 +87,8 @@ class FinalEventBuilderRirTest {
 
         paperTrackings.setEvents(List.of(event, event1, event2));
         handlerContext.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
     }
 
     @Test

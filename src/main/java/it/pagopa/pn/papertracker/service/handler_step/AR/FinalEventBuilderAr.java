@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -25,17 +26,22 @@ import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCod
 public class FinalEventBuilderAr extends GenericFinalEventBuilder implements HandlerStep {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
+    private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public FinalEventBuilderAr(PnPaperTrackerConfigs pnPaperTrackerConfigs, DataVaultClient dataVaultClient) {
-        super(dataVaultClient);
+    public FinalEventBuilderAr(PnPaperTrackerConfigs pnPaperTrackerConfigs, DataVaultClient dataVaultClient, PaperTrackingsDAO paperTrackingsDAO) {
+        super(dataVaultClient, paperTrackingsDAO);
         this.pnPaperTrackerConfigs = pnPaperTrackerConfigs;
+        this.paperTrackingsDAO = paperTrackingsDAO;
     }
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(context)
-                .map(this::extractFinalEvent)
-                .flatMap(event -> handleFinalEvent(context, event));
+        return Mono.just(extractFinalEvent(context))
+                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
+                .flatMap(event -> handleFinalEvent(context, event))
+                .thenReturn(context)
+                .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .then();
     }
 
     private Mono<Void> handleFinalEvent(HandlerContext context, Event finalEvent) {

@@ -1,9 +1,7 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;

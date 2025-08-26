@@ -3,8 +3,10 @@ package it.pagopa.pn.papertracker.service.handler_step;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
+import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import software.amazon.awssdk.awscore.util.AwsHeader;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -22,12 +26,17 @@ import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRI002;
 import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.RECRI003C;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GenericFinalEventBuilderTest {
 
     @Mock
     DataVaultClient dataVaultClient;
+
+    @Mock
+    PaperTrackingsDAO paperTrackingsDAO;
 
     GenericFinalEventBuilder genericFinalEventBuilder;
 
@@ -44,7 +53,7 @@ class GenericFinalEventBuilderTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        genericFinalEventBuilder = new GenericFinalEventBuilder(dataVaultClient);
+        genericFinalEventBuilder = new GenericFinalEventBuilder(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -74,6 +83,8 @@ class GenericFinalEventBuilderTest {
 
         paperTrackings.setEvents(List.of(event, event1, event2));
         handlerContext.setPaperTrackings(paperTrackings);
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
     }
 
     @Test

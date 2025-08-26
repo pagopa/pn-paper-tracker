@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +38,9 @@ class FinalEventBuilderArTest {
 
     @Mock
     DataVaultClient dataVaultClient;
+
+    @Mock
+    PaperTrackingsDAO paperTrackingsDAO;
 
     FinalEventBuilderAr finalEventBuilder;
 
@@ -49,7 +55,7 @@ class FinalEventBuilderArTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient);
+        finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -104,6 +110,8 @@ class FinalEventBuilderArTest {
 
         paperTrackings.setEvents(List.of(event, event1, event2, event3, event4, event5, event6));
         handlerContext.setPaperTrackings(paperTrackings);
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
     }
 
     @Test

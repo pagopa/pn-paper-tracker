@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import java.util.function.Predicate;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.KO;
 import static it.pagopa.pn.papertracker.service.handler_step.AR.TestSequenceEnum.FURTO_SMARRIMENTO_DETERIORAMENTO;
+import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -58,7 +60,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
     @ParameterizedTest
     @EnumSource(value = TestSequenceEnum.class)
-    void testCsvInput(TestSequenceEnum seq) {
+    void testARSequence(TestSequenceEnum seq) {
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
 
         String iun = UUID.randomUUID().toString();
@@ -90,9 +92,9 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             externalChannelHandler.handleExternalChannelMessage(msg);
         });
 
-        PaperTrackings pt = paperTrackingsDAO.retrieveEntityByRequestId(requestId).block();
+        PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         PaperTrackings ptNew = (pcRetryResponse != null && StringUtils.hasText(pcRetryResponse.getRequestId()))
-                ? paperTrackingsDAO.retrieveEntityByRequestId(pcRetryResponse.getRequestId()).block()
+                ? paperTrackingsDAO.retrieveEntityByTrackingId(pcRetryResponse.getRequestId()).block()
                 : null;
 
         List<PaperTrackingsErrors> errors = paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block();
@@ -118,7 +120,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyOutputs(List<PaperTrackerDryRunOutputs> list, TestSequenceEnum seq) {
-        list.forEach(this::assertBaseDryRun);
+        list.forEach(TestUtils::assertBaseDryRun);
 
         switch (seq) {
             case CONSEGNATO_FASCICOLO_CHIUSO -> {
@@ -357,100 +359,6 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         }
     }
 
-    private void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
-        assertEquals(DONE, pt.getState());
-        assertEquals(totalEvents, pt.getEvents().size());
-        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
-                .containsAll(pt.getEvents().stream().map(Event::getStatusCode).toList()));
-        assertNull(pt.getNextRequestIdPcretry());
-        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
-        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
-        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
-        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
-        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
-    }
-
-    private void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
-        assertEquals(DONE, pt.getState());
-        assertEquals(totalEvents, pt.getEvents().size());
-        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
-                .containsAll(expectedValidatedCodes));
-        assertNull(pt.getNextRequestIdPcretry());
-        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
-        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
-        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
-        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
-        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
-    }
-
-    private void assertSingleError(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
-        assertEquals(1, errs.size());
-        PaperTrackingsErrors e = errs.getFirst();
-        assertEquals(cat, e.getErrorCategory());
-        assertEquals(flow, e.getFlowThrow());
-        assertEquals(ErrorType.ERROR, e.getType());
-        assertNotNull(e.getCreated());
-        assertNotNull(e.getTrackingId());
-        assertNotNull(e.getProductType());
-        assertTrue(e.getDetails().getMessage().contains(msgContains));
-        assertNull(e.getDetails().getCause());
-    }
-
-    private void assertBaseDryRun(PaperTrackerDryRunOutputs e) {
-        assertNotNull(e.getTrackingId());
-        assertNotNull(e.getCreated());
-        assertNotNull(e.getStatusDetail());
-        assertNotNull(e.getStatusCode());
-        assertNotNull(e.getStatusDescription());
-        assertNotNull(e.getStatusDateTime());
-        assertNull(e.getAnonymizedDiscoveredAddressId());
-        assertNotNull(e.getClientRequestTimestamp());
-    }
-
-    private void assertSameRegisteredLetter(List<PaperTrackerDryRunOutputs> list, int... idx) {
-        String last = list.get(idx[idx.length - 1]).getRegisteredLetterCode();
-        for (int i : idx) assertEquals(last, list.get(i).getRegisteredLetterCode());
-    }
-
-    private void assertAttach(PaperTrackerDryRunOutputs e, String type) {
-        assertEquals(1, e.getAttachments().size());
-        assertEquals(type, e.getAttachments().getFirst().getDocumentType());
-    }
-
-    private void assertAttachAnyOf(PaperTrackerDryRunOutputs e, String... types) {
-        assertEquals(1, e.getAttachments().size());
-        String t = e.getAttachments().getFirst().getDocumentType();
-        assertTrue(Arrays.stream(types).anyMatch(t::equalsIgnoreCase));
-    }
-
-    private void assertNoAttach(PaperTrackerDryRunOutputs e) {
-        assertTrue(CollectionUtils.isEmpty(e.getAttachments()));
-    }
-
-    private void assertProgress(PaperTrackerDryRunOutputs e) { assertEquals("PROGRESS", e.getStatusCode()); }
-    private void assertOk(PaperTrackerDryRunOutputs e) { assertEquals("OK", e.getStatusCode()); }
-    private void assertKo(PaperTrackerDryRunOutputs e) { assertEquals("KO", e.getStatusCode()); }
-
-    private boolean is(PaperTrackerDryRunOutputs e, String status) { return status.equalsIgnoreCase(e.getStatusDetail()); }
-    private boolean isOneOf(String v, String... values) { return Arrays.stream(values).anyMatch(s -> s.equalsIgnoreCase(v)); }
-
-    private void assertContainsStatus(List<PaperTrackerDryRunOutputs> list, List<String> expected) {
-        List<String> details = list.stream().map(PaperTrackerDryRunOutputs::getStatusDetail).toList();
-        assertTrue(details.containsAll(expected));
-    }
-
-    private long count(List<PaperTrackerDryRunOutputs> list, Predicate<PaperTrackerDryRunOutputs> p) {
-        return list.stream().filter(p).count();
-    }
-
     private PcRetryResponse wireRetryIfNeeded(List<String> statusCodes, String requestId, String iun) {
         if (!statusCodes.contains("RECRN006")) return null;
 
@@ -467,51 +375,5 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         }
         when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(resp));
         return resp;
-    }
-
-    private PaperTrackings getPaperTrackings(String requestId) {
-        PaperTrackings pt = new PaperTrackings();
-        pt.setTrackingId(requestId);
-        pt.setProductType(ProductType.AR);
-        pt.setUnifiedDeliveryDriver("POSTE");
-        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-        pt.setCreatedAt(Instant.now());
-        pt.setValidationFlow(new ValidationFlow());
-        pt.setPaperStatus(new PaperStatus());
-        return pt;
-    }
-
-    private List<AttachmentDetails> constructAttachments(String statusCode, List<String> documents) {
-        List<String> matches = documents.stream()
-                .filter(s -> s.split("-")[0].equalsIgnoreCase(statusCode))
-                .toList();
-        if (!CollectionUtils.isEmpty(matches)) {
-            String first = matches.getFirst();
-            documents.remove(first);
-            return buildAttachmentDetails(first);
-        }
-        return Collections.emptyList();
-    }
-
-    private List<AttachmentDetails> buildAttachmentDetails(String token) {
-        List<String> types = Arrays.asList(token.split("-")[1].split("#"));
-        return types.stream().map(type -> AttachmentDetails.builder()
-                .documentType(type)
-                .sha256("sha256")
-                .id("id-" + token)
-                .uri("https://example.com/" + token)
-                .date(OffsetDateTime.now())
-                .build()).toList();
-    }
-
-    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now) {
-        PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
-        ev.requestId(requestId);
-        ev.setClientRequestTimeStamp(OffsetDateTime.now());
-        ev.setStatusDateTime(now);
-        ev.setIun("iun");
-        ev.setProductType("AR");
-        ev.setRegisteredLetterCode("registeredLetterCode");
-        return ev;
     }
 }

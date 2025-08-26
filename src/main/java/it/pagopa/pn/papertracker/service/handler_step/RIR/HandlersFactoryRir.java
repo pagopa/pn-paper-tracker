@@ -87,15 +87,9 @@ public class HandlersFactoryRir extends AbstractHandlersFactory implements Handl
                         metadataUpserter,
                         duplicatedEventFiltering,
                         retrySender,
+                        intermediateEventsBuilder,
+                        deliveryPushSender,
                         stateUpdater
-                ), context);
-    }
-
-    @Override
-    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter
                 ), context);
     }
 
@@ -117,6 +111,14 @@ public class HandlersFactoryRir extends AbstractHandlersFactory implements Handl
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater
+                ), context);
+    }
+
+    @Override
+    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter
                 ), context);
     }
 }

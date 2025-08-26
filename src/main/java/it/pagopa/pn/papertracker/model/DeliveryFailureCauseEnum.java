@@ -22,30 +22,10 @@ public enum DeliveryFailureCauseEnum {
     F04,
     UNKNOWN;
 
-    public static boolean contains(String value) {
-        for (DeliveryFailureCauseEnum cause : values()) {
-            if (cause.getValue().equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean containsCauseForB(String value) {
-        for (DeliveryFailureCauseEnum cause : getCausesForStatusCodeB()) {
-            if (cause.getValue().equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static boolean containsCauseForE(String value) {
-        for (DeliveryFailureCauseEnum cause : getCausesForStatusCodeE()) {
-            if (cause.getValue().equals(value)) {
-                return true;
-            }
-        }
-        return false;
+    public static DeliveryFailureCauseEnum fromValue(String deliveryFailureCause) {
+        return Stream.of(values())
+                .filter(value -> value.name().equalsIgnoreCase(deliveryFailureCause))
+                .findFirst()
+                .orElse(UNKNOWN);
     }
 }

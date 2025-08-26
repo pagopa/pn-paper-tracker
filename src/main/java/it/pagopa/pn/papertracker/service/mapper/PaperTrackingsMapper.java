@@ -8,7 +8,6 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 
 import java.time.Duration;
@@ -107,8 +106,8 @@ public class PaperTrackingsMapper {
         return paperEvent;
     }
 
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment toDtoAttachment(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment entityAttachment) {
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment();
+    private static Attachment toDtoAttachment(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment entityAttachment) {
+        Attachment dto = new Attachment();
         dto.setId(entityAttachment.getId());
         dto.setDocumentType(entityAttachment.getDocumentType());
         dto.setUrl(entityAttachment.getUri());
@@ -116,7 +115,7 @@ public class PaperTrackingsMapper {
         return dto;
     }
 
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow toDtoValidationFlow(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow entity) {
+    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow toDtoValidationFlow(ValidationFlow entity) {
         it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow();
         dto.setOcrEnabled(entity.getOcrEnabled());
         dto.setSequencesValidationTimestamp(entity.getSequencesValidationTimestamp());
@@ -126,7 +125,7 @@ public class PaperTrackingsMapper {
         return dto;
     }
 
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus toDtoPaperStatus(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus entity) {
+    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus toDtoPaperStatus(PaperStatus entity) {
 
         it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus();
 

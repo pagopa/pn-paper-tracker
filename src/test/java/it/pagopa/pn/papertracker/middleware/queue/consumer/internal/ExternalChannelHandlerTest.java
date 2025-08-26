@@ -46,7 +46,7 @@ public class ExternalChannelHandlerTest {
     @Test
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002F.name());
+        SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
 
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 

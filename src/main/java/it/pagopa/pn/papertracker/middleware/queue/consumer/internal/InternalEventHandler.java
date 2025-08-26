@@ -11,6 +11,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
+import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -29,6 +30,7 @@ public class InternalEventHandler {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final HandlersFactoryAr handlersFactoryAr;
+    private final HandlersFactoryRir handlersFactoryRir;
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     public void handleOcrMessage(OcrDataResultPayload ocrResultMessage) {
@@ -67,7 +69,7 @@ public class InternalEventHandler {
                                                         FlowThrow.DEMAT_VALIDATION,
                                                         ErrorType.ERROR
                                                         )));
-                                case OK -> handlersFactoryAr.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, event.getId())).then();
+                                case OK -> callOcrResponseHandler(paperTrackings, event.getId());
                                 case PENDING -> {
                                     log.info("Ocr validation is still pending for requestId: {}", ocrResultMessage.getCommandId());
                                     yield Mono.empty();
@@ -78,6 +80,14 @@ public class InternalEventHandler {
                         .then())
                 .block();
 
+    }
+
+    private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, String eventId) {
+        return switch (paperTrackings.getProductType()){
+            case AR -> handlersFactoryAr.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, eventId));
+            case RIR -> handlersFactoryRir.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, eventId));
+            default -> Mono.error(new PaperTrackerException("Invalid productType: " + paperTrackings.getProductType()));
+        };
     }
 
     private Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {

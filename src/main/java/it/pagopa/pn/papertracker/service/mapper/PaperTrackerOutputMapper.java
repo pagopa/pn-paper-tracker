@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,6 @@ import java.util.List;
 public class PaperTrackerOutputMapper {
 
     public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
-
-        if (entity == null) {
-            return null;
-        }
 
         PaperTrackerOutput dto = new PaperTrackerOutput();
 

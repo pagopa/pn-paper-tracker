@@ -4,7 +4,10 @@ import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
@@ -26,17 +30,30 @@ import static it.pagopa.pn.papertracker.mapper.SendEventMapper.toAnalogAddress;
 public class GenericFinalEventBuilder implements HandlerStep {
 
     private final DataVaultClient dataVaultClient;
+    private final PaperTrackingsDAO paperTrackingsDAO;
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
         Event finalEvent = extractFinalEvent(context);
-        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(finalEvent.getStatusCode()).getStatus().name());
+        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
+                .thenReturn(finalEvent)
+                .doOnNext(event -> context.setFinalStatusCode(finalEvent.getStatusCode()))
+                .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .then();
     }
 
     protected Mono<Void> addEventToSend(HandlerContext ctx, Event finalEvent, String status) {
         return buildSendEvent(ctx, finalEvent, StatusCodeEnum.valueOf(status), finalEvent.getStatusCode(), finalEvent.getStatusTimestamp().atOffset(ZoneOffset.UTC))
                 .doOnNext(event -> ctx.getEventsToSend().add(event))
                 .then();
+    }
+
+    protected PaperTrackings getPaperTrackingsToUpdate() {
+        PaperTrackings paperTrackings = new PaperTrackings();
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setFinalEventBuilderTimestamp(Instant.now());
+        paperTrackings.setValidationFlow(validationFlow);
+        return paperTrackings;
     }
 
     protected Flux<SendEvent> buildSendEvent(HandlerContext context,

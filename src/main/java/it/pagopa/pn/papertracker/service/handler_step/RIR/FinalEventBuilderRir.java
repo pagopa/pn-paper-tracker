@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.service.handler_step.GenericFinalEventBuilder;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class FinalEventBuilderRir extends GenericFinalEventBuilder implements HandlerStep {
 
-    public FinalEventBuilderRir(DataVaultClient dataVaultClient) {
-        super(dataVaultClient);
+    public FinalEventBuilderRir(DataVaultClient dataVaultClient, PaperTrackingsDAO paperTrackingsDAO) {
+        super(dataVaultClient, paperTrackingsDAO);
     }
 }
