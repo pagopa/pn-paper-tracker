@@ -35,6 +35,15 @@ public class FinalEventBuilder implements HandlerStep {
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final DataVaultClient dataVaultClient;
 
+    /**
+     * Step che elabora l'evento finale in base alla logica di business definita.
+     * Se l'evento finale non è uno stato di giacenza, viene semplicemente aggiunto alla lista degli eventi da inviare.
+     * Se l'evento finale è uno stato di giacenza, viene verificata la differenza tra le date degli eventi RECRN010 e RECRN00XA.
+     * In base a questa differenza e alla configurazione, viene deciso se aggiungere l'evento finale e un evento PNRN012 alla lista degli eventi da inviare,
+     * oppure se lanciare un'eccezione in caso di errore di giacenza.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)

@@ -12,6 +12,11 @@ public class StateUpdater implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
+    /**
+     * Step che aggiorna lo stato del tracking nel database.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return paperTrackingsDAO.updateItem(context.getTrackingId(), context.getPaperTrackings())

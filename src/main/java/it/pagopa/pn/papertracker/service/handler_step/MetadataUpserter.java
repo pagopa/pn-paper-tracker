@@ -18,6 +18,12 @@ public class MetadataUpserter implements HandlerStep {
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final DataVaultClient dataVaultClient;
 
+    /**
+     * Step utilizzato per l'upsert dei metadati relativi all'evento di avanzamento. Inoltre se è presente l'indirizzo scoperto, si occupa di anonimizzarlo.
+     *  Alla fine del processo l'entità aggiornata viene settata nel context insieme al trackingId.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)

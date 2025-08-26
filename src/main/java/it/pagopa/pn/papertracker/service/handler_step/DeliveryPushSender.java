@@ -33,6 +33,11 @@ public class DeliveryPushSender implements HandlerStep {
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
     private final ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
 
+    /**
+     * Step che esegue l'invio degli eventi al target di output configurato, coda verso delivery-push oppure tabella di dry-run
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Flux.fromIterable(context.getEventsToSend())
