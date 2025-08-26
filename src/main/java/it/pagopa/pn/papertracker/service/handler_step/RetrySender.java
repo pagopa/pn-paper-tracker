@@ -26,6 +26,13 @@ public class RetrySender implements HandlerStep {
     private final PaperChannelClient paperChannelClient;
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
+    /**
+     * Step di invio della richiesta di retry al Paper Channel.
+     * In caso di esito positivo, aggiorna lo stato del paper tracking a "IN_RETRY".
+     * In caso di errore, gestisce l'eccezione tramite il PaperTrackerExceptionHandler.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return paperChannelClient.getPcRetry(context.getPaperTrackings().getTrackingId())
