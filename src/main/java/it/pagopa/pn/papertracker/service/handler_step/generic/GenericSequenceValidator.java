@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step;
+package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
@@ -10,6 +10,7 @@ import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.SequenceElement;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public abstract class GenericSequenceValidator implements HandlerStep{
+public abstract class GenericSequenceValidator implements HandlerStep {
 
     private final SequenceConfiguration sequenceConfiguration;
     private final PaperTrackingsDAO paperTrackingsDAO;
