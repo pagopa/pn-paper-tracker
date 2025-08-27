@@ -10,6 +10,11 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class IntermediateEventsBuilder implements HandlerStep {
 
+    /**
+     * Step che gestisce la logica di creazione degli eventi intermedi in base agli eventi validati presenti nel tracciamento.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return SendEventMapper.createSendEventsFromPaperProgressStatusEvent(context.getPaperProgressStatusEvent())

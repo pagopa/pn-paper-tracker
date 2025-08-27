@@ -31,6 +31,14 @@ public abstract class GenericSequenceValidator implements HandlerStep{
     private final PaperTrackingsDAO paperTrackingsDAO;
 
 
+    /**
+     * Step di validazione della sequenza degli eventi di una raccomandata.
+     * La validazione include controlli sulla presenza di eventi necessari, coerenza dei timestamp
+     * di business, validità dei documenti allegati, coerenza dei codici di lettera raccomandata e
+     * correttezza della causa di mancata consegna.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context.getPaperTrackings())

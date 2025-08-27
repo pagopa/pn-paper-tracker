@@ -41,6 +41,12 @@ public class DematValidator implements HandlerStep {
     private final OcrMomProducer ocrMomProducer;
     private final SafeStorageClient safeStorageClient;
 
+    /**
+     * Step che gestisce la validazione dematerializzazione. Se la validazione OCR è abilitata, invia un messaggio al servizio OCR e aggiorna lo stato del tracciamento.
+     * Se la validazione OCR non è abilitata, aggiorna direttamente lo stato del tracciamento.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return validateDemat(context)
