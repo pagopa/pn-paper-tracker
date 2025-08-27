@@ -24,6 +24,7 @@ public class PnPaperTrackerConfigs {
     private Topics topics;
     private boolean sendOutputToDeliveryPush;
     private List<String> enableOcrValidationFor;
+    private List<String> enableOcrValidationForFile;
     private String queueOcrInputName;
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;

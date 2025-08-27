@@ -65,10 +65,10 @@ class DematValidatorTest {
         event.setProductType(ProductType.AR);
         if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();
-            attachment.setUri("uri");
+            attachment.setUri("uri.pdf");
             attachment.setDocumentType("Indagine");
             Attachment attachment1 = new Attachment();
-            attachment1.setUri("uri");
+            attachment1.setUri("uri.pdf");
             attachment1.setDocumentType(documentType);
             event.setAttachments(List.of(attachment, attachment1));
         }
@@ -83,6 +83,7 @@ class DematValidatorTest {
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of("pdf"));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -101,6 +102,8 @@ class DematValidatorTest {
         context.getPaperTrackings().setPaperStatus(paperStatus);
 
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of("pdf"));
+
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -131,6 +134,8 @@ class DematValidatorTest {
     @Test
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR.name()));
+        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of("pdf"));
+
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));

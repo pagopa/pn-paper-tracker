@@ -110,8 +110,6 @@ class FinalEventBuilderArTest {
 
         paperTrackings.setEvents(List.of(event, event1, event2, event3, event4, event5, event6));
         handlerContext.setPaperTrackings(paperTrackings);
-
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
     }
 
     @Test
@@ -122,6 +120,8 @@ class FinalEventBuilderArTest {
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID);
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
@@ -168,6 +168,8 @@ class FinalEventBuilderArTest {
         handlerContext.setEventId(EVENT_ID + "6");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
 
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
@@ -187,6 +189,8 @@ class FinalEventBuilderArTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN004C.name());
         handlerContext.setEventId(EVENT_ID + "5");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
 
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
         when(cfg.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
@@ -207,6 +211,7 @@ class FinalEventBuilderArTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID + "4");
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
