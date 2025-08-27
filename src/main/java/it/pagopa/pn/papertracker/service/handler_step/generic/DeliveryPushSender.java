@@ -17,10 +17,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -41,11 +43,17 @@ public class DeliveryPushSender implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Flux.fromIterable(context.getEventsToSend())
-                .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
-                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
-                .doOnNext(context::setPaperTrackings)
-                .then();
+        List<SendEvent> filteredEvent = context.getEventsToSend().stream()
+                .filter(sendEvent -> !configs.getNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
+                .toList();
+        if(!CollectionUtils.isEmpty(filteredEvent)) {
+            return Flux.fromIterable(filteredEvent)
+                    .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
+                    .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
+                    .doOnNext(context::setPaperTrackings)
+                    .then();
+        }
+        return Mono.empty();
     }
 
     /**

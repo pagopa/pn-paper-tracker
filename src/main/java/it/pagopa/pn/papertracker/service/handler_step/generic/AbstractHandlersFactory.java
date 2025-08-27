@@ -20,6 +20,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final DematValidator dematValidator;
     private final GenericSequenceValidator sequenceValidator;
     private final RetrySender retrySender;
+    private final NotRetryableErrorInserting notRetryableErrorInserting;
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final StateUpdater stateUpdater;
 
@@ -42,18 +43,18 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 .then();
     }
 
-    ;
-
     /**
      * Metodo che prende in carico gli eventi finali per poi inviare la risposta a delivery-push.
      * I step da compiere sono i seguenti:
-     * - Upsert metadati e demat
-     * - Validazione triplette
-     * - Validazione demat tramite invio di un messaggio all'OCR
-     * - Costruzione evento finale
-     * - Invio evento finale a delivery-push
+     *  - Upsert metadati e demat
+     *  - filtraggio eventi duplicati
+     *  - Validazione triplette
+     *  - Validazione demat tramite invio di un messaggio all'OCR
+     *  - Costruzione evento finale
+     *  - Invio evento finale a delivery-push
+     *  - aggiornamento stato su PaperTrackings
      *
-     * @param context contesto in cui sono presenti tutti i dati necessari per il processo
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
@@ -73,11 +74,12 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     /**
      * Metodo che costruisce la lista di steps necessari al processamento di un evento intermedio.
      * I step da compiere sono i seguenti:
-     * - Upsert metadati e demat (se presenti)
-     * - Costruzione eventi intermedi
-     * - Invio a pn-delivery-push
+     *  - Upsert metadati e demat (se presenti)
+     *  - filtraggio eventi duplicati
+     *  - Costruzione eventi intermedi
+     *  - Invio a pn-delivery-push
      *
-     * @param context contesto in cui sono presenti tutti i dati necessari per il processo
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
@@ -94,10 +96,14 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     /**
      * Metodo che costruisce la lista di steps necessari al processamento di un evento di retry.
      * I step da compiere sono i seguenti:
-     * - Upsert metadati e demat (se presenti)
-     * - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  - Upsert metadati e demat (se presenti)
+     *  - filtraggio eventi duplicati
+     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  - costruzione dell'evento da inviare a pn-delivery-push
+     *  - invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
      *
-     * @param context contesto in cui sono presenti tutti i dati necessari per il processo
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
@@ -107,18 +113,46 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         metadataUpserter,
                         duplicatedEventFiltering,
                         retrySender,
+                        intermediateEventsBuilder,
+                        deliveryPushSender,
                         stateUpdater
+                ), context);
+    }
+
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON996, CON995, CON993).
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati
+     *  - filtraggio eventi duplicati
+     *  - inserimento errore nella tabella PaperTrackingsError
+     *  - costruzione dell'evento da inviare a pn-delivery-push
+     *  - invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
+    @Override
+    public Mono<Void> buildNotRetryableEventHandler(HandlerContext context) {
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter,
+                        duplicatedEventFiltering,
+                        notRetryableErrorInserting,
+                        intermediateEventsBuilder,
+                        deliveryPushSender
                 ), context);
     }
 
     /**
      * Metodo che costruisce la lista di steps necessari al processamento di un evento di risposta della validazione ocr.
      * I step da compiere sono i seguenti:
-     * - Upsert metadati e demat (se presenti)
-     * - Costruzione evento finale
-     * - Invio a pn-delivery-push
+     *  - Upsert metadati e demat (se presenti)
+     *  - Costruzione evento finale
+     *  - Invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
      *
-     * @param context contesto in cui sono presenti tutti i dati necessari per il processo
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override

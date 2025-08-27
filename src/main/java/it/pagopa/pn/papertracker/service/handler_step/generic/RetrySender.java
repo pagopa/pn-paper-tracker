@@ -40,19 +40,19 @@ public class RetrySender implements HandlerStep {
                 .doOnError(throwable -> log.error("Error retrieving retry for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> {
                     if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-                        return paperTrackingsDAO.putIfAbsent(PaperTrackingsMapper.toPaperTrackings(pcRetryResponse, pnPaperTrackerConfigs.getPaperTrackingsTtlDuration(), context.getPaperTrackings().getProductType()))
+                        return paperTrackingsDAO.putIfAbsent(PaperTrackingsMapper.toPaperTrackings(pcRetryResponse, pnPaperTrackerConfigs.getPaperTrackingsTtlDuration(), context.getPaperTrackings().getProductType(), context.getPaperTrackings().getAttemptId()))
                                 .doOnNext(paperTrackings -> {
                                     PaperTrackings paperTrackingsToUpdate = getPaperTrackingsPcretry(pcRetryResponse);
                                     context.setPaperTrackings(paperTrackingsToUpdate);
                                 });
                     } else {
                         return paperTrackerExceptionHandler.handleRetryError(PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
-                                        List.of(context.getPaperProgressStatusEvent().getStatusCode()),
-                                        ErrorCategory.MAX_RETRY_REACHED_ERROR,
-                                        null,
-                                        "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
-                                        FlowThrow.RETRY_PHASE,
-                                        ErrorType.ERROR));
+                                List.of(context.getPaperProgressStatusEvent().getStatusCode()),
+                                ErrorCategory.MAX_RETRY_REACHED_ERROR,
+                                null,
+                                "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
+                                FlowThrow.RETRY_PHASE,
+                                ErrorType.ERROR));
                     }
                 })
                 .then();

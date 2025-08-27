@@ -115,24 +115,6 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 .then();
     }
 
-    private Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2)))
-                : Duration.between(instant1, instant2);
-    }
-
-    private boolean isDifferenceGreaterRefinementDuration(Instant recrn010Timestamp, Instant recrn00xATimestamp) {
-        log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}", recrn010Timestamp, recrn00xATimestamp, pnPaperTrackerConfigs.getRefinementDuration());
-        return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
-                .compareTo(pnPaperTrackerConfigs.getRefinementDuration()) > 0;
-    }
-
-    private boolean isDifferenceGreaterOrEqualToStockDuration(Instant recrn010Timestamp, Instant recrn005ATimestamp) {
-        log.debug("recrn010Timestamp={}, recrn005ATimestamp={}, compiutaGiacenzaDuration={}", recrn010Timestamp, recrn005ATimestamp, pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration());
-        return getDurationBetweenDates(recrn010Timestamp, recrn005ATimestamp)
-                .compareTo(pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration()) >= 0;
-    }
-
     private Event getEvent(List<Event> events, StatusCodeConfiguration.StatusCodeConfigurationEnum code) {
         return events.stream()
                 .filter(e -> code.name().equals(e.getStatusCode()))
@@ -140,20 +122,124 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 .orElseThrow();
     }
 
+    /**
+     * Calculates the temporal distance between two {@link Instant}s according to the
+     * “truncate‑to‑date” settings.
+     *
+     * <p><strong>Behaviour</strong></p>
+     * <ul>
+     *   <li><b>Date‑based mode</b> –&nbsp;If
+     *       {@link it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()}
+     *       returns {@code true}, each instant is first converted to the civil date in the {@code Europe/Rome}
+     *       time‑zone (see {@link #toRomeDate(Instant)}).
+     *       The method then returns a {@link Duration} equal to the number of <em>calendar
+     *       days</em> between those two dates:
+     *       {@code Duration.ofDays(…)}. Sub‑day information and daylight‑saving gaps/overlaps are
+     *       deliberately ignored.</li>
+     *   <li><b>Time‑based mode</b> –&nbsp;If the flag is {@code false}, the method falls back to
+     *       {@link Duration#between( java.time.temporal.Temporal, java.time.temporal.Temporal)}
+     *       and preserves the full time‑of‑day component (hours, minutes, seconds, nanoseconds).</li>
+     * </ul>
+     *
+     * @param instant1 the starting instant (inclusive), must not be {@code null}
+     * @param instant2 the ending instant   (exclusive), must not be {@code null}
+     * @return a {@link Duration} representing either
+     *         <ul>
+     *           <li>the exact time‑based interval between the two instants, or</li>
+     *           <li>a whole‑days interval measured on the local calendar in Europe/Rome,</li>
+     *         </ul>
+     *         depending on the configuration flag
+     *
+     * @see #toRomeDate(Instant)
+     * @see Duration#between(java.time.temporal.Temporal, java.time.temporal.Temporal)
+     * @see it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()
+     */
+    protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
+        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.ofDays(
+                Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+                : Duration.between(instant1, instant2);
+    }
+
+    /**
+     * Adds a {@link Duration} to an {@link Instant}, respecting the
+     * “truncate‑to‑date” setting.
+     *
+     * <p>
+     * If {@link it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()}
+     * is {@code true}, the instant is first converted to its calendar date in {@code Europe/Rome};
+     * only the whole‑days part of the duration ({@link Duration#toDays()}) is applied,
+     * and the result is returned as the start‑of‑day {@link Instant}.
+     * Otherwise, the full duration is added in the usual way ({@link Instant#plus(java.time.temporal.TemporalAmount)}).
+     * </p>
+     *
+     * @param instant  the base moment
+     * @param duration the amount to add
+     * @return the adjusted {@link Instant}
+     */
+    protected Instant addDurationToInstant(Instant instant, Duration duration) {
+        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
+                ? romeDateToInstant(
+                toRomeDate(instant).plusDays(duration.toDays()))
+                : instant.plus(duration);
+    }
+
+    /**
+     * Checks whether the time difference between RECRN010 and RECRN00xA is
+     * greater than {@link it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#getRefinementDuration()}.
+     *
+     * @param recrn010Timestamp  The {@link Instant} of RECRN010.
+     * @param recrn00xATimestamp The {@link Instant} of RECRN00xA (e.g., RECRN003A).
+     * @return {@code true} if the difference is > the configured refinement duration; otherwise, {@code false}.
+     */
+    protected boolean isDifferenceGreaterRefinementDuration (
+            Instant recrn010Timestamp,
+            Instant recrn00xATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn00xATimestamp={}, refinementDuration={}",
+                recrn010Timestamp, recrn00xATimestamp, pnPaperTrackerConfigs.getRefinementDuration());
+        return getDurationBetweenDates(recrn010Timestamp, recrn00xATimestamp)
+                .compareTo(pnPaperTrackerConfigs.getRefinementDuration()) > 0;
+    }
+
+    /**
+     * Checks whether the time difference between RECRN010 and RECRN005A is
+     * greater than or equal to {@link it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#getCompiutaGiacenzaArDuration()}.
+     *
+     * @param recrn010Timestamp  The {@link Instant} of RECRN010.
+     * @param recrn005ATimestamp The {@link Instant} of RECRN005A.
+     * @return {@code true} if the difference is &ge; the compiuta giacenza AR duration; otherwise, {@code false}.
+     */
+    protected boolean isDifferenceGreaterOrEqualToStockDuration (
+            Instant recrn010Timestamp,
+            Instant recrn005ATimestamp) {
+        log.debug("recrn010Timestamp={}, recrn005ATimestamp={}, refinementDuration={}",
+                recrn010Timestamp, recrn005ATimestamp, pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration());
+        return getDurationBetweenDates(recrn010Timestamp, recrn005ATimestamp)
+                .compareTo(pnPaperTrackerConfigs.getCompiutaGiacenzaArDuration()) >= 0;
+    }
+
+    /**
+     * Converts the supplied {@link Instant} to a calendar date in the
+     * {@code Europe/Rome} time zone.
+     *
+     * @param instant the moment in time to convert; must not be {@code null}
+     * @return the corresponding {@link LocalDate} in Europe/Rome
+     */
     private LocalDate toRomeDate(Instant instant) {
         return instant.atZone(ZoneId.of("Europe/Rome"))
                 .toLocalDate();
     }
 
+    /**
+     * Converts the supplied {@link LocalDate} to an {@link Instant} that marks
+     * the start of that day (00:00) in the {@code Europe/Rome} time zone.
+     *
+     * @param date the calendar day to convert; must not be {@code null}
+     * @return the {@link Instant} at the start of the given day in Europe/Rome
+     */
     private Instant romeDateToInstant(LocalDate date) {
         ZoneId rome = ZoneId.of("Europe/Rome");
         return date.atStartOfDay(rome)
                 .toInstant();
-    }
-
-    private Instant addDurationToInstant(Instant instant, Duration duration) {
-        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? romeDateToInstant(toRomeDate(instant).plusDays(duration.toDays()))
-                : instant.plus(duration);
     }
 }

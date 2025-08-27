@@ -39,14 +39,14 @@ public class PaperTrackingsMapper {
         return paperTrackings;
     }
 
-    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType) {
+    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType, String attemptId) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
         paperTrackings.setProductType(productType);
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-        paperTrackings.setAttemptId(pcRetryResponse.getParentRequestId());
+        paperTrackings.setAttemptId(attemptId);
         paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();

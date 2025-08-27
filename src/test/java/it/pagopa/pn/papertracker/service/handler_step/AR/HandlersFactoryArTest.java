@@ -58,6 +58,9 @@ class HandlersFactoryArTest {
     @Mock
     private HandlerStep mockHandlerStep2;
 
+    @Mock
+    private NotRetryableErrorInserting notRetryableErrorInserting;
+
     @InjectMocks
     private HandlersFactoryAr handlersFactoryAr;
 
@@ -170,7 +173,8 @@ class HandlersFactoryArTest {
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
-
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         // Act
         StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))
                 .verifyComplete();
@@ -179,6 +183,28 @@ class HandlersFactoryArTest {
         InOrder inOrder = inOrder(metadataUpserter, retrySender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(retrySender).execute(handlerContext);
+    }
+
+    @Test
+    void buildNotRetryableEventHandler_ExecutesSuccessfully() {
+        // Arrange
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(notRetryableErrorInserting.execute(handlerContext)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(handlersFactoryAr.buildNotRetryableEventHandler(handlerContext))
+                .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(metadataUpserter, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, deliveryPushSender);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
+        inOrder.verify(notRetryableErrorInserting).execute(handlerContext);
+        inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
+        inOrder.verify(deliveryPushSender).execute(handlerContext);
     }
 
     @Test

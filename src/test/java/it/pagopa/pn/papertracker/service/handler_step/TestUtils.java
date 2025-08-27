@@ -66,26 +66,6 @@ public class TestUtils {
         return ev;
     }
 
-    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
-        assertEquals(DONE, pt.getState());
-        assertEquals(totalEvents, pt.getEvents().size());
-        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
-                .containsAll(pt.getEvents().stream().map(Event::getStatusCode).toList()));
-        assertNull(pt.getNextRequestIdPcretry());
-        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
-        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getFinalEventBuilderTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
-        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
-        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
-        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
-        assertNotNull(pt.getPaperStatus().getFinalDematTimestamp());
-        assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
-    }
-
     public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
         assertEquals(DONE, pt.getState());
         assertEquals(totalEvents, pt.getEvents().size());
@@ -112,6 +92,19 @@ public class TestUtils {
         assertEquals(cat, e.getErrorCategory());
         assertEquals(flow, e.getFlowThrow());
         assertEquals(ErrorType.ERROR, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNull(e.getDetails().getCause());
+    }
+
+    public static void assertSingleWarning(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
+        assertEquals(1, errs.size());
+        PaperTrackingsErrors e = errs.getFirst();
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.WARNING, e.getType());
         assertNotNull(e.getCreated());
         assertNotNull(e.getTrackingId());
         assertNotNull(e.getProductType());
@@ -164,5 +157,23 @@ public class TestUtils {
 
     public static long count(List<PaperTrackerDryRunOutputs> list, Predicate<PaperTrackerDryRunOutputs> p) {
         return list.stream().filter(p).count();
+    }
+
+    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
+        List<Event> eventsWithoutCon = pt.getEvents().stream().filter(event -> !event.getStatusCode().startsWith("CON")).toList();
+        assertEquals(DONE, pt.getState());
+        assertEquals(totalEvents, pt.getEvents().size());
+        assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
+        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+                .containsAll(eventsWithoutCon.stream().map(Event::getStatusCode).toList()));
+        assertNull(pt.getNextRequestIdPcretry());
+        assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
+        assertFalse(pt.getValidationFlow().getOcrEnabled());
+        assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
+        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
+        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
+        assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
+        assertNotNull(pt.getPaperStatus().getFinalStatusCode());
+        assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
     }
 }

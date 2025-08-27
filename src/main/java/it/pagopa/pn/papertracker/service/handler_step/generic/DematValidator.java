@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
+import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrDocumentTypeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -61,7 +62,7 @@ public class DematValidator implements HandlerStep {
         log.info("Starting demat validation for trackingId={}", trackingId);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
-                    if (cfg.getEnableOcrValidationFor().contains(paperTracking.getProductType().name())) {
+                    if (cfg.getEnableOcrValidationFor().contains(paperTracking.getProductType())) {
                         log.debug("OCR validation enabled");
                         return sendMessageToOcr(paperTracking, context);
                     } else {
@@ -77,7 +78,7 @@ public class DematValidator implements HandlerStep {
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
         String ocrRequestId = String.join("#", paperTracking.getTrackingId(), context.getEventId());
         Attachment attachment = retrieveFinalDemat(paperTracking.getTrackingId(), paperTracking.getPaperStatus().getValidatedEvents());
-        if(cfg.getEnableOcrValidationForFile().contains(retrieveFileType(attachment.getUri()))) {
+        if(cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri())))) {
             context.setStopExecution(true);
             return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
                     .doOnNext(presignedUrl -> {

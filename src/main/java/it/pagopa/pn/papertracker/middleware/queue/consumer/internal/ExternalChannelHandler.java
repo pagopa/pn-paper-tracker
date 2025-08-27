@@ -13,6 +13,7 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -29,6 +30,7 @@ public class ExternalChannelHandler {
     private final HandlersFactoryRir handlersFactoryRir;
     private static final String HANDLING_INTERMEDIATE_EVENT_LOG = "Handling Intermediate event for productType: [{}] and event: [{}]";
     private static final String HANDLING_RETRYABLE_EVENT_LOG = "Handling Retryable event for productType: [{}] and event: [{}]";
+    private static final String HANDLING_NOT_RETRYABLE_EVENT_LOG = "Handling NotRetryable event for productType: [{}] and event: [{}]";
     private static final String HANDLING_FINAL_EVENT_LOG = "Handling Final event for productType: [{}] and event: [{}]";
 
     /**
@@ -53,19 +55,31 @@ public class ExternalChannelHandler {
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
                             context.setEventId(UUID.randomUUID().toString());
                             String statusCode = payload.getAnalogMail().getStatusCode();
-                            ProductType productType = ProductType.fromValue(Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
-                                    .map(e -> e.getProductType().getValue())
-                                    .orElse("UNKNOWN"));
+                            String payloadProductType = payload.getAnalogMail().getProductType();
+                            ProductType productType = resolveProductType(statusCode, payloadProductType);
                             return switch (productType){
+                                case RS, ALL, RIS, _890 -> null;
                                 case AR -> handleAREvent(statusCode, context);
                                 case RIR -> handleRIREvent(statusCode, context);
-                                default -> handleUnrecognizedEventsHandler(context);
+                                case UNKNOWN -> handleUnrecognizedEventsHandler(context);
                             };
                         })
                         .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 )
                 .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
                 .block();
+    }
+
+    private ProductType resolveProductType(String statusCode, String payloadProductType) {
+        String eventProductType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
+                .map(e -> e.getProductType().getValue())
+                .orElse("UNKNOWN");
+        if(StringUtils.hasText(payloadProductType) && (eventProductType.equalsIgnoreCase(payloadProductType)
+                || eventProductType.equalsIgnoreCase("ALL"))){
+            return ProductType.fromValue(payloadProductType);
+        }else{
+            return ProductType.fromValue(eventProductType);
+        }
     }
 
     private Mono<Void> handleUnrecognizedEventsHandler(HandlerContext context) {
@@ -88,6 +102,10 @@ public class ExternalChannelHandler {
             case RETRYABLE_EVENT -> {
                 log.info(HANDLING_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
                 yield handlersFactoryRir.buildRetryEventHandler(context);
+            }
+            case NOT_RETRYABLE_EVENT -> {
+                log.info(HANDLING_NOT_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
+                yield handlersFactoryAr.buildNotRetryableEventHandler(context);
             }
             case FINAL_EVENT -> {
                 log.info(HANDLING_FINAL_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
@@ -112,6 +130,10 @@ public class ExternalChannelHandler {
             case RETRYABLE_EVENT -> {
                 log.info(HANDLING_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
                 yield handlersFactoryAr.buildRetryEventHandler(context);
+            }
+            case NOT_RETRYABLE_EVENT -> {
+                log.info(HANDLING_NOT_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
+                yield handlersFactoryAr.buildNotRetryableEventHandler(context);
             }
             case FINAL_EVENT -> {
                 log.info(HANDLING_FINAL_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
