@@ -33,10 +33,10 @@ public class NotRetryableErrorInserting implements HandlerStep {
         String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         PaperTrackingsErrors paperTrackingsErrors = PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
                 List.of(statusCode),
-                ErrorCategory.NOT_RETRYABLE_EVENT_HANDLING,
+                ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,
                 null,
                 StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatusCodeDescription(),
-                FlowThrow.NOT_RETRYABLE_EVENT_HANDLING,
+                FlowThrow.NOT_RETRYABLE_EVENT_HANDLER,
                 ErrorType.WARNING
         );
         return paperTrackerExceptionHandler.handleRetryError(paperTrackingsErrors);

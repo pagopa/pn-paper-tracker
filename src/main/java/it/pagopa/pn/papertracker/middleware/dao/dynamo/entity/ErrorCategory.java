@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum ErrorCategory {
 
     TRACKING_ID_NOT_FOUND("TrackingId non trovato"),
-    NOT_RETRYABLE_EVENT_HANDLING(""),
+    NOT_RETRYABLE_EVENT_ERROR(""),
     RENDICONTAZIONE_SCARTATA("Rendicontazione scartata"),
     DATE_ERROR("Errore nella validazione delle date della sequenza."),
     STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza."),
