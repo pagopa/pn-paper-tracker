@@ -1,22 +1,18 @@
 package it.pagopa.pn.papertracker.service.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackerOutputMapper {
 
-    private PaperTrackerOutputMapper() {
-    }
-
     public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
-
-        if (entity == null) {
-            return null;
-        }
 
         PaperTrackerOutput dto = new PaperTrackerOutput();
 
@@ -40,12 +36,11 @@ public class PaperTrackerOutputMapper {
     private static List<Attachment> getAttachments(PaperTrackerDryRunOutputs entity) {
         List<Attachment> attachmentsDto = new ArrayList<>();
         for (it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment att : entity.getAttachments()) {
-            Attachment attDto =
-                    new Attachment();
+            Attachment attDto = new Attachment();
             attDto.setId(att.getId());
             attDto.setDocumentType(att.getDocumentType());
             attDto.setUrl(att.getUri());
-            attDto.setDate(att.getDate() != null ? att.getDate().toString() : null);
+            attDto.setDate(att.getDate());
             attachmentsDto.add(attDto);
         }
         return attachmentsDto;

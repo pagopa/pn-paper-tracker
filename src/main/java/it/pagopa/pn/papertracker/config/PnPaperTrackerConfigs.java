@@ -1,12 +1,15 @@
 package it.pagopa.pn.papertracker.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.FileType;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.util.List;
 
 @Configuration
 @ConfigurationProperties(prefix = "pn.paper-tracker")
@@ -22,7 +25,9 @@ public class PnPaperTrackerConfigs {
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private boolean sendOutputToDeliveryPush;
-    private boolean enableOcrValidation;
+    private List<ProductType> enableOcrValidationFor;
+    private List<FileType> enableOcrValidationForFile;
+    private List<String> notSendToDeliveryPush;
     private String queueOcrInputName;
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;

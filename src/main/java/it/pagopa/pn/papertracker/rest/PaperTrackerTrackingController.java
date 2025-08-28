@@ -31,8 +31,6 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
      */
     @Override
     public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, final ServerWebExchange exchange) {
-        log.info("Received request initTracking - trackingCreationRequest={}", trackingCreationRequest);
-
         return trackingCreationRequest
                 .flatMap(paperTrackerEventService::insertPaperTrackings)
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
@@ -40,9 +38,13 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
 
     @Override
     public Mono<ResponseEntity<TrackingsResponse>> retrieveTrackings(Mono<TrackingsRequest> trackingsRequest, ServerWebExchange exchange) {
-        log.info("Received request retrieveTrackings - trackingsRequest={}", trackingsRequest);
-
         return trackingsRequest.flatMap(paperTrackerEventService::retrieveTrackings)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<TrackingsResponse>> retrieveTrackingsByAttemptId(String attemptId, String pcRetry, final ServerWebExchange exchange) {
+        return paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry)
                 .map(ResponseEntity::ok);
     }
 }

@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -25,10 +27,11 @@ import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FinalEventBuilderTest {
+class FinalEventBuilderArTest {
 
     @Mock
     PnPaperTrackerConfigs cfg;
@@ -36,7 +39,10 @@ class FinalEventBuilderTest {
     @Mock
     DataVaultClient dataVaultClient;
 
-    FinalEventBuilder finalEventBuilder;
+    @Mock
+    PaperTrackingsDAO paperTrackingsDAO;
+
+    FinalEventBuilderAr finalEventBuilder;
 
     HandlerContext handlerContext;
 
@@ -49,7 +55,7 @@ class FinalEventBuilderTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        finalEventBuilder = new FinalEventBuilder(cfg, dataVaultClient);
+        finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -115,6 +121,8 @@ class FinalEventBuilderTest {
         handlerContext.setEventId(EVENT_ID);
         when(cfg.getCompiutaGiacenzaArDuration()).thenReturn(Duration.ofDays(30));
 
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
@@ -160,6 +168,8 @@ class FinalEventBuilderTest {
         handlerContext.setEventId(EVENT_ID + "6");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
 
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
@@ -179,6 +189,8 @@ class FinalEventBuilderTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN004C.name());
         handlerContext.setEventId(EVENT_ID + "5");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
 
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
         when(cfg.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
@@ -199,6 +211,7 @@ class FinalEventBuilderTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID + "4");
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();

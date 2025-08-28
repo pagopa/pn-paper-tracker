@@ -41,7 +41,36 @@ public class StatusCodeConfiguration {
         RECRN004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - In Dematerializzazione", true),
         RECRN005B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - In Dematerializzazione", true),
         RECRN010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Inesito", false),
-        PNRN012(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Perfezionamento per decorrenza termini", false);
+        PNRN012(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Perfezionamento per decorrenza termini", false),
+
+        // RIR
+        RECRI001(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Avviato all’estero", false),
+        RECRI002(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false),
+        RECRI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto, smarrimento o deterioramento", false),
+        RECRI003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
+        RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Mancata consegna - pre-esito", false),
+        RECRI003B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
+        RECRI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Mancata consegna - In Dematerializzazione", true),
+        RECRI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.OK, List.of(),"Consegnato - Fascicolo Chiuso", false),
+        RECRI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.KO, List.of(), "Mancata consegna - Fascicolo Chiuso", false),
+
+        // CON
+        CON998(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato NODOC", false),
+        CON997(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato CAP/INTERNAZIONALE", false),
+        CON996(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato PDF", false),
+        CON995(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore stampa", false),
+        CON993(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore Stampa (parziale)", false),
+        CON080(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Stampato ed Imbustato", false),
+        CON020(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affido conservato", false),
+        CON010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Distinta Elettronica inviata a Recapitista", false),
+        CON011(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Distinta Elettronica Sigillata", false),
+        CON012(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "OK Distinta Elettronica da Recapitista", false),
+        CON09A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Materialità Pronta", false),
+        CON016(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "PICKUP Sigillata", false),
+        CON018(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Accettazione Recapitista", false);
+        //eventi non gestiti da paper-channel ma previsti dal consolidatore
+        //CON992(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "KO Distinta Elettronica da Recapitista", false),
+        //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
 
         private final EventTypeEnum codeType;
         private final ProductType productType;

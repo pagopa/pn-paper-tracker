@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
+import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,13 +23,16 @@ public class ExternalChannelHandlerTest {
     private HandlersFactoryAr handlersFactoryAr;
 
     @Mock
+    private HandlersFactoryRir handlersFactoryRir;
+
+    @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     private ExternalChannelHandler externalChannelHandler;
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(handlersFactoryAr, paperTrackerExceptionHandler);
+        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler, handlersFactoryAr, handlersFactoryRir);
     }
 
     @Test

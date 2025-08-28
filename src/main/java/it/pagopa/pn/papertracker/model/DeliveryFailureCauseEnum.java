@@ -16,6 +16,10 @@ public enum DeliveryFailureCauseEnum {
     M07,
     M08,
     M09,
+    F01,
+    F02,
+    F03,
+    F04,
     UNKNOWN;
 
     public static DeliveryFailureCauseEnum fromValue(String deliveryFailureCause) {

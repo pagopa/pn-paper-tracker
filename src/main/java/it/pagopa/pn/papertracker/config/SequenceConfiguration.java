@@ -63,7 +63,29 @@ public class SequenceConfiguration {
                 new SequenceElement("RECRN010", null, true, "1"),
                 new SequenceElement("RECRN011", null, true, "1"),
                 new SequenceElement("RECRN006", null, false, "1")
-        ));
+        )),
+
+        RECRI005("RECRI005", Set.of(
+                new SequenceElement("RECRI001", null, true, null),
+                new SequenceElement("RECRI005", null,  false, null)
+        )),
+
+        RECRI003C("RECRI003C", Set.of(
+                new SequenceElement("RECRI001", null, false, null),
+                new SequenceElement("RECRI002", null, false, null),
+                new SequenceElement("RECRI003A", null, false, "1"),
+                new SequenceElement("RECRI003B", Set.of(DocumentTypeEnum.AR), false, "1"),
+                new SequenceElement("RECRI003C", null ,false, "1")
+                )),
+
+        RECRI004C("RECRI004C", Set.of(
+                new SequenceElement("RECRI001", null,false, null),
+                new SequenceElement("RECRI002", null,false, null),
+                new SequenceElement("RECRI004A", null,false, "1"),
+                new SequenceElement("RECRI004B",  Set.of(DocumentTypeEnum.PLICO),false, "1"),
+                new SequenceElement("RECRI004C", null,false, "1")
+                ));
+
 
         private final String key;
         private final Set<SequenceElement> sequence;

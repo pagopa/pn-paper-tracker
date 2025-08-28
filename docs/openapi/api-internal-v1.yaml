@@ -167,10 +167,17 @@ paths:
       description: >-
         Recupera il tracking della spedizione dato l'attemptId.
       tags:
-        - PaperTrackerAttempt
+        - PaperTrackerTracking
       operationId: retrieveTrackingsByAttemptId
       parameters:
         - $ref: '#/components/parameters/attemptId'
+        - name: pcRetry
+          in: query
+          required: false
+          description: Identificativo della richiesta
+          schema:
+            type: string
+            maxLength: 102
       responses:
         '200':
           description: returns Tracking entities using the attemptId
@@ -255,6 +262,12 @@ components:
             - AWAITING_FINAL_STATUS_CODE
             - AWAITING_OCR
             - DONE
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     PaperEvent:
       type: object
       properties:
@@ -297,11 +310,12 @@ components:
           type: string
         date:
           type: string
+          format: date-time
     ValidationFlow:
       type: object
       properties:
         ocrEnabled:
-          type: string
+          type: boolean
         sequencesValidationTimestamp:
           type: string
           format: date-time
@@ -311,13 +325,9 @@ components:
         dematValidationTimestamp:
           type: string
           format: date-time
-        validatedAttachmentTimestamp:
+        finalEventBuilderTimestamp:
           type: string
           format: date-time
-        validatedAttachmentUri:
-          type: string
-        validatedAttachmentType:
-          type: string
     PaperStatus:
       type: object
       properties:
@@ -350,6 +360,18 @@ components:
           description: Lista di eventi validati
           items:
             $ref: '#/components/schemas/PaperEvent'
+        finalDematTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp evento demat finale
+        estimatedPaperDeliveryTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp provvisorio di affido al consolidatore, dato dal timestamp di creazione dell’oggetto tracking
+        actualPaperDeliveryTimestamp:
+          type: string
+          format: date-time
+          description: Timestamp corretto di affido al consolidatore
     TrackingErrorsResponse:
       type: object
       properties:
@@ -374,6 +396,7 @@ components:
           type: string
         created:
           type: string
+          format: date-time
         category:
           type: string
         details:
@@ -393,10 +416,15 @@ components:
           type: string
         productType:
           $ref: '#/components/schemas/ProductType'
+        type:
+          type: string
+          enum:
+            - ERROR
+            - WARNING
     PaperTrackerOutputsResponse:
       type: object
       properties:
-        result:
+        results:
           type: array
           items:
             type: object

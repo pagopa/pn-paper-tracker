@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
@@ -26,10 +26,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class SequenceValidator implements HandlerStep {
+public abstract class GenericSequenceValidator implements HandlerStep {
 
-    private final PaperTrackingsDAO paperTrackingsDAO;
     private final SequenceConfiguration sequenceConfiguration;
+    private final PaperTrackingsDAO paperTrackingsDAO;
+
 
     /**
      * Step di validazione della sequenza degli eventi di una raccomandata.

@@ -34,23 +34,28 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest) {
+        TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
+                .map(PaperTrackingsMapper::toTracking)
                 .collectList()
-                .map(paperTrackings -> {
-                    TrackingsResponse response = new TrackingsResponse();
-                    response.setTrackings(
-                            paperTrackings.stream()
-                                    .map(PaperTrackingsMapper::toTracking)
-                                    .collect(java.util.stream.Collectors.toList())
-                    );
-                    return response;
-                });
+                .doOnNext(response::setTrackings)
+                .thenReturn(response);
     }
 
     @Override
     public Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings) {
         return paperTrackingsDAO.updateItem(trackingId, paperTrackings)
                 .then();
+    }
+
+    @Override
+    public Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry) {
+        TrackingsResponse response = new TrackingsResponse();
+        return paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry)
+                .map(PaperTrackingsMapper::toTracking)
+                .collectList()
+                .doOnNext(response::setTrackings)
+                .thenReturn(response);
     }
 
 }

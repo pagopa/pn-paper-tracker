@@ -34,7 +34,8 @@ class PaperTrackerTrackingControllerTest {
     void initTrackingReturnsOkResponse() {
         //ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
-        request.setAttemptId("test-request-id");
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
         request.setUnifiedDeliveryDriver("test-driver-id");
         request.setProductType("test-product-type");
         Mono<TrackingCreationRequest> requestMono = Mono.just(request);
@@ -106,5 +107,40 @@ class PaperTrackerTrackingControllerTest {
                         && "Service error".equals(throwable.getMessage()))
                 .verify();
         verify(paperTrackerEventService, times(1)).retrieveTrackings(request);
+    }
+
+    @Test
+    void retrieveTrackingsByAttemptIdReturnsOkResponse() {
+        //ARRANGE
+        TrackingsResponse responseMock = new TrackingsResponse();
+
+        when(paperTrackerEventService.retrieveTrackingsByAttemptId("attemptId", "pcRetry")).thenReturn(Mono.just(responseMock));
+
+        //ACT
+        Mono<ResponseEntity<TrackingsResponse>> response = controller.retrieveTrackingsByAttemptId("attemptId", "pcRetry", null);
+
+        //ASSERT
+        StepVerifier.create(response)
+                .expectNext(ResponseEntity.ok(responseMock))
+                .verifyComplete();
+        verify(paperTrackerEventService, times(1)).retrieveTrackingsByAttemptId("attemptId", "pcRetry");
+    }
+
+    @Test
+    void retrieveTrackingsByAttemptIdHandlesError() {
+        //ARRANGE
+        TrackingsRequest request = new TrackingsRequest();
+
+        when(paperTrackerEventService.retrieveTrackingsByAttemptId("attemptId", "pcRetry")).thenReturn(Mono.error(new RuntimeException("Service error")));
+
+        //ACT
+        Mono<ResponseEntity<TrackingsResponse>> response = controller.retrieveTrackingsByAttemptId("attemptId", "pcRetry", null);
+
+        //ASSERT
+        StepVerifier.create(response)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && "Service error".equals(throwable.getMessage()))
+                .verify();
+        verify(paperTrackerEventService, times(1)).retrieveTrackingsByAttemptId("attemptId", "pcRetry");
     }
 }

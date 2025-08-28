@@ -15,6 +15,8 @@ public enum ProductType {
 
     RIS("RIS"),
 
+    ALL("ALL"),
+
     UNKNOWN("UNKNOWN");
 
     private final String value;

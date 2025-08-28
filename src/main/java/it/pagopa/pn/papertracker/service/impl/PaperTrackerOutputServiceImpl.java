@@ -1,8 +1,7 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutputsResponse;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutputsResponseResultInner;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutputsResponseResultsInner;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.service.PaperTrackerOutputService;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -24,23 +21,19 @@ public class PaperTrackerOutputServiceImpl implements PaperTrackerOutputService 
 
     @Override
     public Mono<PaperTrackerOutputsResponse> retrieveTrackingOutputs(TrackingsRequest trackingsRequest) {
+        PaperTrackerOutputsResponse paperTrackerOutputsResponse = new PaperTrackerOutputsResponse();
         return Flux.fromIterable(trackingsRequest.getTrackingIds())
                 .flatMap(trackingId -> paperTrackerDryRunOutputsDAO.retrieveOutputEvents(trackingId)
+                        .map(PaperTrackerOutputMapper::toDtoPaperTrackerOutput)
                         .collectList()
                         .map(paperTrackerDryRunOutputs -> {
-                            List<PaperTrackerOutput> paperTrackerOutputList = paperTrackerDryRunOutputs.stream()
-                                    .map(PaperTrackerOutputMapper::toDtoPaperTrackerOutput)
-                                    .toList();
-                            PaperTrackerOutputsResponseResultInner paperTrackerOutputsResponseResultInner = new PaperTrackerOutputsResponseResultInner();
+                            PaperTrackerOutputsResponseResultsInner paperTrackerOutputsResponseResultInner = new PaperTrackerOutputsResponseResultsInner();
                             paperTrackerOutputsResponseResultInner.setTrackingId(trackingId);
-                            paperTrackerOutputsResponseResultInner.setOutputs(paperTrackerOutputList);
+                            paperTrackerOutputsResponseResultInner.setOutputs(paperTrackerDryRunOutputs);
                             return paperTrackerOutputsResponseResultInner;
                         }))
                 .collectList()
-                .map(trackingErrorsResponseResultsInnerList -> {
-                    PaperTrackerOutputsResponse paperTrackerOutputsResponse = new PaperTrackerOutputsResponse();
-                    paperTrackerOutputsResponse.setResult(trackingErrorsResponseResultsInnerList);
-                    return paperTrackerOutputsResponse;
-                });
+                .doOnNext(paperTrackerOutputsResponse::setResults)
+                .map(paperTrackerOutputsResponseResultInners -> paperTrackerOutputsResponse);
     }
 }

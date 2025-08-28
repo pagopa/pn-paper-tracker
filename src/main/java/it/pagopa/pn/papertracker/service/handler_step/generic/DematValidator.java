@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DataDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
+import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrDocumentTypeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -27,6 +28,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import org.apache.commons.io.FilenameUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -60,9 +62,8 @@ public class DematValidator implements HandlerStep {
         log.info("Starting demat validation for trackingId={}", trackingId);
         return Mono.just(paperTrackings)
                 .flatMap(paperTracking -> {
-                    if (cfg.isEnableOcrValidation()) {
+                    if (cfg.getEnableOcrValidationFor().contains(paperTracking.getProductType())) {
                         log.debug("OCR validation enabled");
-                        context.setStopExecution(true);
                         return sendMessageToOcr(paperTracking, context);
                     } else {
                         log.debug("OCR validation disabled");
@@ -77,15 +78,24 @@ public class DematValidator implements HandlerStep {
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
         String ocrRequestId = String.join("#", paperTracking.getTrackingId(), context.getEventId());
         Attachment attachment = retrieveFinalDemat(paperTracking.getTrackingId(), paperTracking.getPaperStatus().getValidatedEvents());
-        return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
-                .doOnNext(presignedUrl -> {
-                    OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(attachment.getDocumentType()));
-                    ocrMomProducer.push(ocrEvent);
-                })
-                .map(ocrEvent -> getPaperTrackingsToUpdate(true, ocrRequestId, PaperTrackingsState.AWAITING_OCR))
-                .flatMap(paperTrackingsToUpdate -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTrackingsToUpdate))
-                .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
-                .then();
+        if(cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri())))) {
+            context.setStopExecution(true);
+            return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
+                    .doOnNext(presignedUrl -> {
+                        OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(attachment.getDocumentType()));
+                        ocrMomProducer.push(ocrEvent);
+                    })
+                    .map(ocrEvent -> getPaperTrackingsToUpdate(true, ocrRequestId, PaperTrackingsState.AWAITING_OCR))
+                    .flatMap(paperTrackingsToUpdate -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), paperTrackingsToUpdate))
+                    .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
+                    .then();
+        }
+        log.info("Attachment type {} not supported for OCR, skipping OCR request for trackingId={}", attachment.getDocumentType(), paperTracking.getTrackingId());
+        return Mono.empty();
+    }
+
+    private String retrieveFileType(String uri) {
+        return FilenameUtils.getExtension(uri);
     }
 
     private PaperTrackings getPaperTrackingsToUpdate(boolean ocrEnabled, String ocrRequestId, PaperTrackingsState state){

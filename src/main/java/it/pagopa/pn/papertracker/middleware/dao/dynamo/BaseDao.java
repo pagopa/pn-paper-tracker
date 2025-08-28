@@ -52,6 +52,17 @@ public class BaseDao<T> {
         return Mono.fromFuture(tableAsync.getItem(key));
     }
 
+    public Flux<T> queryByIndex(Key build, String indexName) {
+        QueryEnhancedRequest request = QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(build))
+                .build();
+
+        return Mono.from(tableAsync.index(indexName).query(request))
+                .map(Page::items)
+                .flatMapMany(Flux::fromIterable)
+                .doOnError(e -> log.error("Error querying index {}: {}", indexName, e.getMessage()));
+    }
+
     public Flux<T> retrieveFromIndex(String indexName, QueryConditional queryConditional) {
         return Mono.from(tableAsync.index(indexName)
                         .query(QueryEnhancedRequest.builder().queryConditional(queryConditional).build()))

@@ -4,11 +4,13 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOut
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -46,10 +48,37 @@ class PaperTrackerOutputServiceImplTest {
                 .thenReturn(Flux.just(paperTrackerDryRunOutputs2));
 
         Mono<PaperTrackerOutputsResponse> response = paperTrackerOutputService.retrieveTrackingOutputs(request);
+        StepVerifier.create(response)
+                .expectNextMatches(res -> res.getResults().getFirst().getTrackingId().equals("tracking1") &&
+                        res.getResults().getLast().getTrackingId().equals("tracking2"))
+                .verifyComplete();
+
+        verify(paperTrackerDryRunOutputsDAO, times(1)).retrieveOutputEvents("tracking1");
+        verify(paperTrackerDryRunOutputsDAO, times(1)).retrieveOutputEvents("tracking2");
+    }
+
+    @Test
+    void retrieveTrackingOutputsReturnsResponseWithoutOutputs() {
+        TrackingsRequest request = new TrackingsRequest();
+        request.setTrackingIds(List.of("tracking1", "tracking2"));
+        PaperTrackerDryRunOutputs paperTrackerDryRunOutputs1 = new PaperTrackerDryRunOutputs();
+        paperTrackerDryRunOutputs1.setTrackingId("tracking1");
+        PaperTrackerDryRunOutputs paperTrackerDryRunOutputs2 = new PaperTrackerDryRunOutputs();
+        paperTrackerDryRunOutputs2.setTrackingId("tracking2");
+
+        when(paperTrackerDryRunOutputsDAO.retrieveOutputEvents("tracking1"))
+                .thenReturn(Flux.empty());
+        when(paperTrackerDryRunOutputsDAO.retrieveOutputEvents("tracking2"))
+                .thenReturn(Flux.empty());
+
+        Mono<PaperTrackerOutputsResponse> response = paperTrackerOutputService.retrieveTrackingOutputs(request);
 
         StepVerifier.create(response)
-                .expectNextMatches(res -> res.getResult().getFirst().getTrackingId().equals("tracking1") &&
-                        res.getResult().getLast().getTrackingId().equals("tracking2"))
+                .expectNextMatches(res -> {
+                    Assertions.assertNotNull(res.getResults());
+                    return CollectionUtils.isEmpty(res.getResults().getFirst().getOutputs())  &&
+                            CollectionUtils.isEmpty(res.getResults().getLast().getOutputs());
+                })
                 .verifyComplete();
         verify(paperTrackerDryRunOutputsDAO, times(1)).retrieveOutputEvents("tracking1");
         verify(paperTrackerDryRunOutputsDAO, times(1)).retrieveOutputEvents("tracking2");
@@ -63,7 +92,7 @@ class PaperTrackerOutputServiceImplTest {
         Mono<PaperTrackerOutputsResponse> response = paperTrackerOutputService.retrieveTrackingOutputs(request);
 
         StepVerifier.create(response)
-                .expectNextMatches(res -> res.getResult().isEmpty())
+                .expectNextMatches(res -> res.getResults().isEmpty())
                 .verifyComplete();
         verifyNoInteractions(paperTrackerDryRunOutputsDAO);
     }

@@ -4,11 +4,13 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsR
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -50,6 +52,33 @@ class PaperTrackerErrorServiceImplTest {
         StepVerifier.create(response)
                 .expectNextMatches(res -> res.getResults().getFirst().getTrackingId().equals("tracking1") &&
                         res.getResults().getLast().getTrackingId().equals("tracking2"))
+                .verifyComplete();
+        verify(paperTrackingsErrorsDAO, times(1)).retrieveErrors("tracking1");
+        verify(paperTrackingsErrorsDAO, times(1)).retrieveErrors("tracking2");
+    }
+
+    @Test
+    void retrieveTrackingErrorsReturnsResponseWithoutErrors() {
+        TrackingsRequest request = new TrackingsRequest();
+        request.setTrackingIds(List.of("tracking1", "tracking2"));
+        PaperTrackingsErrors paperTrackingsErrors1 = new PaperTrackingsErrors();
+        paperTrackingsErrors1.setTrackingId("tracking1");
+        PaperTrackingsErrors paperTrackingsErrors2 = new PaperTrackingsErrors();
+        paperTrackingsErrors2.setTrackingId("tracking2");
+
+        when(paperTrackingsErrorsDAO.retrieveErrors("tracking1"))
+                .thenReturn(Flux.empty());
+        when(paperTrackingsErrorsDAO.retrieveErrors("tracking2"))
+                .thenReturn(Flux.empty());
+
+        Mono<TrackingErrorsResponse> response = paperTrackerErrorService.retrieveTrackingErrors(request);
+
+        StepVerifier.create(response)
+                .expectNextMatches(res -> {
+                    Assertions.assertNotNull(res.getResults());
+                    return CollectionUtils.isEmpty(res.getResults().getFirst().getErrors())  &&
+                            CollectionUtils.isEmpty(res.getResults().getLast().getErrors());
+                })
                 .verifyComplete();
         verify(paperTrackingsErrorsDAO, times(1)).retrieveErrors("tracking1");
         verify(paperTrackingsErrorsDAO, times(1)).retrieveErrors("tracking2");
