@@ -78,11 +78,11 @@ class SequenceValidatorArTest {
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "", null),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "", "M01", List.of(DocumentTypeEnum.INDAGINE.getValue())),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(3), "", "M01", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "M01", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "", "M01", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "M01", null),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "", "", List.of(DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(3), "", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "", "", List.of(DocumentTypeEnum.PLICO.getValue())),
                 buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "", "", null)
         ));
 
@@ -153,8 +153,8 @@ class SequenceValidatorArTest {
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECRN002D", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M01", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent("RECRN002D", timestamp, businessTimestamp, "REG123", "M03", null),
+                buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
                 buildEvent("RECRN002F", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
@@ -406,8 +406,8 @@ class SequenceValidatorArTest {
 
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECRN002A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRN002B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "TESTERR", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRN002A", timestamp, businessTimestamp, "REG123", "TESTERR", null),
+                buildEvent("RECRN002B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
                 buildEvent("RECRN002C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
