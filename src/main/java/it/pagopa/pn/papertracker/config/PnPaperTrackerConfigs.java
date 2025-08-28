@@ -3,7 +3,9 @@ package it.pagopa.pn.papertracker.config;
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.FileType;
+import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -15,6 +17,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "pn.paper-tracker")
 @Data
 @Import({SharedAutoConfiguration.class})
+@Slf4j
 public class PnPaperTrackerConfigs {
 
     private Dao dao;
@@ -48,6 +51,11 @@ public class PnPaperTrackerConfigs {
     public static class Topics {
         private String externalChannelToPaperTracker;
         private String pnOcrOutputs;
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("CONFIGURATIONS: {}", this);
     }
 
 }

@@ -37,9 +37,14 @@ public class ExternalChannelHandlerTest {
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_PROGRESS() {
+        //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002A.name());
         when(handlersFactoryAr.buildIntermediateEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+
+        //Act
         externalChannelHandler.handleExternalChannelMessage(payload);
+
+        //Assert
         verify(handlersFactoryAr).buildIntermediateEventsHandler(any(HandlerContext.class));
     }
 
@@ -47,19 +52,25 @@ public class ExternalChannelHandlerTest {
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
-
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
+        //Act
         externalChannelHandler.handleExternalChannelMessage(payload);
 
+        //Assert
         verify(handlersFactoryAr, times(1)).buildRetryEventHandler(any(HandlerContext.class));
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_OK() {
+        //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN004C.name());
         when(handlersFactoryAr.buildFinalEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+
+        //Act
         externalChannelHandler.handleExternalChannelMessage(payload);
+
+        //Assert
         verify(handlersFactoryAr).buildFinalEventsHandler(any(HandlerContext.class));
     }
 
@@ -68,7 +79,11 @@ public class ExternalChannelHandlerTest {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate("UNRECOGNIZED_STATUS");
         when(handlersFactoryAr.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+
+        //Act
         externalChannelHandler.handleExternalChannelMessage(payload);
+
+        //Assert
         verify(handlersFactoryAr).buildUnrecognizedEventsHandler(any(HandlerContext.class));
     }
 

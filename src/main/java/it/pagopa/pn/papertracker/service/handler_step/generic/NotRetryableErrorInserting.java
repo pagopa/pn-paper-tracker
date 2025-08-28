@@ -20,6 +20,14 @@ public class NotRetryableErrorInserting implements HandlerStep {
 
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
+    /**
+     * Step che costruisce un oggetto `PaperTrackingsErrors`, relativamente ad un evento notRetryable,
+     * utilizzando i dati forniti nel contesto
+     * e delega la gestione dell'errore al rispettivo handler.
+     *
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return {@link Mono<Void>}
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         String statusCode = context.getPaperProgressStatusEvent().getStatusCode();

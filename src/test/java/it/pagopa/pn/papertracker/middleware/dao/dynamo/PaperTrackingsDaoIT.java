@@ -20,6 +20,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void putIfAbsentAndRetrieveByRequestId() {
+        //Arrange
         String requestId = "test-request-id-1";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
@@ -29,7 +30,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
-        // Then
+        //Assert
         paperTrackingsDAO.retrieveEntityByTrackingId(requestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
@@ -51,6 +52,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void retrieveByAttemptId() {
+        //Arrange
         String attemptId = "attemptId";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(attemptId + ".PCRETRY_0");
@@ -72,11 +74,11 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.putIfAbsent(paperTrackings2).block();
 
-        // Then
         List<PaperTrackings> response = paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, null)
                 .collectList()
                 .block();
 
+        // Assert
         Assertions.assertNotNull(response);
         Assertions.assertEquals(2, response.size());
         Assertions.assertTrue(response.stream().allMatch(track -> track.getAttemptId().equalsIgnoreCase(attemptId)
@@ -92,6 +94,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void updateItemAndRetrieveByOcrRequestId() {
+        //Arrange
         String requestId = "test-request-id-2";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
@@ -158,7 +161,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                 })
                 .block();
 
-        // Then
+        //Assert
         paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrRequestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
@@ -253,6 +256,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void updateItemRequestIdNotExists() {
+        //Arrange
         String requestId = "test-request-id";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
@@ -263,6 +267,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String ocrRequestId = "test-ocr-request-id";
         paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
 
+        //Assert
         StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))
                 .expectError(PnPaperTrackerValidationException.class)
                 .verify();
@@ -270,6 +275,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void addEvents() {
+        //Arrange
         String requestId = "test-request-id-3";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
@@ -301,7 +307,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate).block();
 
-        // Then
+        //Assert
         PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(fisrtResponse);
         Assertions.assertNotNull(fisrtResponse.getEvents());

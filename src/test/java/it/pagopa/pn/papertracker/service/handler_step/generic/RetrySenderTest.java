@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step;
+package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
@@ -11,7 +11,6 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.generic.RetrySender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -56,6 +55,7 @@ public class RetrySenderTest {
         StepVerifier.create(retrySender.execute(context))
                 .verifyComplete();
 
+        //ASSERT
         verify(paperTrackingsDAO, times(1)).putIfAbsent(any());
         verify(paperTrackingsErrorsDAO, never()).insertError(any());
     }
