@@ -29,14 +29,17 @@ public class PaperTrackerOutputControllerTest {
 
     @Test
     void retrieveTrackingOutputsReturnsOkResponse() {
+        //Arrange
         TrackingsRequest request = new TrackingsRequest();
         Mono<TrackingsRequest> requestMono = Mono.just(request);
         PaperTrackerOutputsResponse responseMock = new PaperTrackerOutputsResponse();
 
         when(paperTrackerOutputService.retrieveTrackingOutputs(request)).thenReturn(Mono.just(responseMock));
 
+        //Act
         Mono<ResponseEntity<PaperTrackerOutputsResponse>> response = controller.retrieveTrackingOutputs(requestMono, null);
 
+        //Assert
         StepVerifier.create(response)
                 .expectNext(ResponseEntity.ok(responseMock))
                 .verifyComplete();
@@ -45,13 +48,16 @@ public class PaperTrackerOutputControllerTest {
 
     @Test
     void retrieveTrackingOutputsHandlesError() {
+        //Arrange
         TrackingsRequest request = new TrackingsRequest();
         Mono<TrackingsRequest> requestMono = Mono.just(request);
 
         when(paperTrackerOutputService.retrieveTrackingOutputs(request)).thenReturn(Mono.error(new RuntimeException("Service error")));
 
+        //Act
         Mono<ResponseEntity<PaperTrackerOutputsResponse>> response = controller.retrieveTrackingOutputs(requestMono, null);
 
+        //Assert
         StepVerifier.create(response)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException
                         && "Service error".equals(throwable.getMessage()))

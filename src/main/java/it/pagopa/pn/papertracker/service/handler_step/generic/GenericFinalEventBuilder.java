@@ -33,6 +33,12 @@ public class GenericFinalEventBuilder implements HandlerStep {
     private final DataVaultClient dataVaultClient;
     private final PaperTrackingsDAO paperTrackingsDAO;
 
+    /**
+     * Step che elabora l'evento finale in base alla logica di business definita.
+     * Viene semplicemente aggiunto alla lista degli eventi da inviare.
+     * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
+     * @return Mono(Void)
+     */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         Event finalEvent = extractFinalEvent(context);

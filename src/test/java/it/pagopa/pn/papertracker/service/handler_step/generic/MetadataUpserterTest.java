@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step;
+package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
@@ -8,7 +8,6 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.generic.MetadataUpserter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,9 +71,11 @@ class MetadataUpserterTest {
         when(paperTrackingsDAO.updateItem(any(), any(PaperTrackings.class)))
                 .thenReturn(Mono.empty());
 
+        // Act
         StepVerifier.create(metadataUpserter.execute(handlerContext))
                 .verifyComplete();
 
+        // Assert
         assertEquals(anonymizedDiscoveredAddressId, handlerContext.getAnonymizedDiscoveredAddressId());
         verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
 
@@ -88,13 +89,13 @@ class MetadataUpserterTest {
         when(paperTrackingsDAO.updateItem(eq("req-123"), any(PaperTrackings.class)))
                 .thenReturn(Mono.empty());
 
-            // Act
-            StepVerifier.create(metadataUpserter.execute(handlerContext))
-                    .verifyComplete();
+        // Act
+        StepVerifier.create(metadataUpserter.execute(handlerContext))
+                .verifyComplete();
 
-            // Assert
-            assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
-            verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
+        // Assert
+        assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
+        verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
 
     }
 

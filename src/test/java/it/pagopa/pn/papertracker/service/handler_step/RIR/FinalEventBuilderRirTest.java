@@ -113,6 +113,7 @@ class FinalEventBuilderRirTest {
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
 
+        // Assert
         Assertions.assertEquals("anonymized", handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
@@ -130,6 +131,7 @@ class FinalEventBuilderRirTest {
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
 
+        // Assert
         Assertions.assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());

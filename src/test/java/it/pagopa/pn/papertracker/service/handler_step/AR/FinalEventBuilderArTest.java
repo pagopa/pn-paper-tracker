@@ -208,14 +208,17 @@ class FinalEventBuilderArTest {
 
     @Test
     void buildFinalEvent_stockStatusFalse() {
+        // Arrange
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID + "4");
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
+        // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
 
+        // Assert
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRN002F.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
     }
