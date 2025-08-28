@@ -20,6 +20,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void insertAndRetrieveError() {
+        //Arrange
         IntStream.range(0, 3).forEach(i -> {
             PaperTrackerDryRunOutputs output = new PaperTrackerDryRunOutputs();
             output.setTrackingId("requestId1");
@@ -64,6 +65,7 @@ public class PaperTrackerDryRunOutputsDaoIT extends BaseTest.WithLocalStack {
 
         List<PaperTrackerDryRunOutputs> outputs = paperTrackerDryRunOutputsDAO.retrieveOutputEvents("requestId1").collectList().block();
 
+        //Assert
         Assertions.assertNotNull(outputs);
         Assertions.assertEquals(3, outputs.size());
         Assertions.assertTrue(outputs.stream().allMatch(e -> e.getTrackingId().equals("requestId1")));

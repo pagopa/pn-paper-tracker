@@ -19,6 +19,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
 
     @Test
     void insertAndRetrieveError() {
+        //Arrange
         IntStream.range(0, 3).forEach(i -> {
             PaperTrackingsErrors error = new PaperTrackingsErrors();
             error.setTrackingId("requestId1");
@@ -53,6 +54,7 @@ public class PaperTrackingsErrorsDaoIT extends BaseTest.WithLocalStack {
 
         List<PaperTrackingsErrors> errors = paperTrackingsErrorsDAO.retrieveErrors("requestId1").collectList().block();
 
+        //Assert
         Assertions.assertNotNull(errors);
         Assertions.assertEquals(3, errors.size());
         Assertions.assertTrue(errors.stream().allMatch(e -> e.getTrackingId().equals("requestId1")));

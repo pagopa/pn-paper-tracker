@@ -95,6 +95,7 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsReturnsResponseWithTrackings() {
+        //ARRANGE
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1", "tracking2"));
         PaperTrackings paperTracking1 = new PaperTrackings();
@@ -105,8 +106,10 @@ class PaperTrackerTrackingServiceImplTest {
         when(paperTrackingsDAO.retrieveAllByTrackingIds(request.getTrackingIds()))
                 .thenReturn(Flux.just(paperTracking1, paperTracking2));
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> res.getTrackings().equals(expectedResponse.getTrackings()))
                 .verifyComplete();
@@ -115,14 +118,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsReturnsResponseWithoutTrackings() {
+        //ARRANGE
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1", "tracking2"));
 
         when(paperTrackingsDAO.retrieveAllByTrackingIds(request.getTrackingIds()))
                 .thenReturn(Flux.empty());
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> CollectionUtils.isEmpty(res.getTrackings()))
                 .verifyComplete();
@@ -133,14 +139,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsHandlesEmptyTrackingIds() {
+        //ARRANGE
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(Collections.emptyList());
 
         when(paperTrackingsDAO.retrieveAllByTrackingIds(request.getTrackingIds()))
                 .thenReturn(Flux.empty());
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> res.getTrackings().isEmpty())
                 .verifyComplete();
@@ -149,14 +158,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsHandlesErrorFromDAO() {
+        //ARRANGE
         TrackingsRequest request = new TrackingsRequest();
         request.setTrackingIds(List.of("tracking1"));
 
         when(paperTrackingsDAO.retrieveAllByTrackingIds(request.getTrackingIds()))
                 .thenReturn(Flux.error(new RuntimeException("DAO error")));
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackings(request);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException
                         && "DAO error".equals(throwable.getMessage()))
@@ -166,6 +178,7 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsByAttemptIdReturnsResponseWithTrackings() {
+        //ARRANGE
         String attemptId = "attempt123";
         String pcRetry = "PCRETRY_0";
         PaperTrackings paperTracking1 = new PaperTrackings();
@@ -176,8 +189,10 @@ class PaperTrackerTrackingServiceImplTest {
         when(paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry))
                 .thenReturn(Flux.just(paperTracking1, paperTracking2));
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> res.getTrackings().equals(expectedResponse.getTrackings()))
                 .verifyComplete();
@@ -186,14 +201,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsByAttemptIdReturnsResponseWithoutTrackings() {
+        //ARRANGE
         String attemptId = "attempt123";
         String pcRetry = "PCRETRY_0";
 
         when(paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry))
                 .thenReturn(Flux.empty());
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> CollectionUtils.isEmpty(res.getTrackings()))
                 .verifyComplete();
@@ -202,14 +220,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsByAttemptIdHandlesEmptyTrackingIds() {
+        //ARRANGE
         String attemptId = "attempt123";
         String pcRetry = "PCRETRY_0";
 
         when(paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry))
                 .thenReturn(Flux.empty());
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectNextMatches(res -> res.getTrackings().isEmpty())
                 .verifyComplete();
@@ -218,14 +239,17 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Test
     void retrieveTrackingsByAttemptIdHandlesErrorFromDAO() {
+        //ARRANGE
         String attemptId = "attempt123";
         String pcRetry = "PCRETRY_0";
 
         when(paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry))
                 .thenReturn(Flux.error(new RuntimeException("DAO error")));
 
+        //ACT
         Mono<TrackingsResponse> response = paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry);
 
+        //ASSERT
         StepVerifier.create(response)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException
                         && "DAO error".equals(throwable.getMessage()))
