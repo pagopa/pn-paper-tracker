@@ -1,124 +1,33 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.DematValidator;
-import it.pagopa.pn.papertracker.service.handler_step.*;
-import lombok.RequiredArgsConstructor;
+import it.pagopa.pn.papertracker.service.handler_step.generic.NotRetryableErrorInserting;
+import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
-public class HandlersFactoryRir extends AbstractHandlersFactory implements HandlersFactory {
-    private final MetadataUpserter metadataUpserter;
-    private final DeliveryPushSender deliveryPushSender;
-    private final FinalEventBuilderRir finalEventBuilder;
-    private final IntermediateEventsBuilder intermediateEventsBuilder;
-    private final DematValidator dematValidator;
-    private final SequenceValidatorRir sequenceValidatorRir;
-    private final RetrySender retrySender;
-    private final DuplicatedEventFiltering duplicatedEventFiltering;
-    private final StateUpdater stateUpdater;
+public class HandlersFactoryRir extends AbstractHandlersFactory {
 
-    /**
-     * Metodo che prende in carico gli eventi finali per poi inviare la risposta a delivery-push.
-     * I step da compiere sono i seguenti:
-     *  - Upsert metadati e demat
-     *  - Validazione triplette
-     *  - Validazione demat tramite invio di un messaggio all'OCR
-     *  - Costruzione evento finale
-     *  - Invio evento finale a delivery-push
-     *
-     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
-     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
-     */
-    @Override
-    public Mono<Void> buildFinalEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter,
-                        duplicatedEventFiltering,
-                        sequenceValidatorRir,
-                        dematValidator,
-                        finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
-    }
-
-    /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento intermedio.
-     * I step da compiere sono i seguenti:
-     *  - Upsert metadati e demat (se presenti)
-     *  - Costruzione eventi intermedi
-     *  - Invio a pn-delivery-push
-     *
-     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
-     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
-     */
-    @Override
-    public Mono<Void> buildIntermediateEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter,
-                        duplicatedEventFiltering,
-                        intermediateEventsBuilder,
-                        deliveryPushSender
-                ), context);
-    }
-
-    /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento di retry.
-     * I step da compiere sono i seguenti:
-     *  - Upsert metadati e demat (se presenti)
-     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
-     *
-     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
-     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
-     */
-    @Override
-    public Mono<Void> buildRetryEventHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter,
-                        duplicatedEventFiltering,
-                        retrySender,
-                        intermediateEventsBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
-    }
-
-    /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento di risposta della validazione ocr.
-     * I step da compiere sono i seguenti:
-     *  - Upsert metadati e demat (se presenti)
-     *  - Costruzione evento finale
-     *  - Invio a pn-delivery-push
-     *
-     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
-     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
-     */
-    @Override
-    public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter,
-                        finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
-    }
-
-    @Override
-    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter
-                ), context);
+    public HandlersFactoryRir(MetadataUpserter metadataUpserter,
+                              DeliveryPushSender deliveryPushSender,
+                              FinalEventBuilderRir finalEventBuilder,
+                              IntermediateEventsBuilder intermediateEventsBuilder,
+                              DematValidator dematValidator,
+                              SequenceValidatorRir sequenceValidator,
+                              RetrySender retrySender,
+                              NotRetryableErrorInserting notRetryableErrorInserting,
+                              DuplicatedEventFiltering duplicatedEventFiltering,
+                              StateUpdater stateUpdater) {
+        super(metadataUpserter,
+                deliveryPushSender,
+                finalEventBuilder,
+                intermediateEventsBuilder,
+                dematValidator,
+                sequenceValidator,
+                retrySender,
+                notRetryableErrorInserting,
+                duplicatedEventFiltering,
+                stateUpdater);
     }
 }
