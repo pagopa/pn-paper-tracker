@@ -340,7 +340,6 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Route ExternalChannel Events to pn-paper-tracker
-      RoleArn: !GetAtt "EventBusEnqueuePaperTrackerRole.Arn"
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       EventPattern:
         detail-type: [ "ExternalChannelOutcomeEvent" ]
@@ -352,6 +351,7 @@ Resources:
       Targets:
         - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
           Id: !Sub ${ProjectName}-Logger-ExtCh2PaperTracker
+          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
           InputTransformer:
             InputPathsMap:
               "timestamp": "$.time"
@@ -373,7 +373,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Route CON020 Events from PAPER ENRICHER to pn-paper-tracker
-      RoleArn: !GetAtt "EventBusEnqueuePaperTrackerRole.Arn"
+
       EventBusName: !Sub '${ProjectName}-CoreEventBus'
       EventPattern:
         detail-type: [ "ExternalChannelOutcomeEvent" ]
@@ -385,6 +385,7 @@ Resources:
       Targets:
         - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
           Id: !Sub ${ProjectName}-Logger-Con020ToPaperTacker
+          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
           InputTransformer:
             InputPathsMap:
               "timestamp": "$.time"
