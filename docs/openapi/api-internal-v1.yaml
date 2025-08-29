@@ -262,6 +262,7 @@ components:
             - AWAITING_FINAL_STATUS_CODE
             - AWAITING_OCR
             - DONE
+            - KO
         createdAt:
           type: string
           format: date-time
