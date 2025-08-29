@@ -10,6 +10,8 @@
     "PnOcrInputsQueueURL": "https://sqs.eu-south-1.amazonaws.com/830192246553/pn-mock_ocr_inputs",
     "PnOcrInputsQueueRegion": "eu-south-1",
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
-    "OcrAwsAccountId": "830192246553"
+    "OcrAwsAccountId": "830192246553",
+    "AllowedPaperTrackerProductTypes": "AR,RIR",
+    "PaperTrackerExternalChannelUser": "pn-cons-000"
   }
 }
