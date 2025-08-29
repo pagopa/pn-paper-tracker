@@ -117,19 +117,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         return updateIfExists(Map.of(PaperTrackings.COL_TRACKING_ID, AttributeValue.builder().s(trackingId).build()), updateExpr, expressionAttributeValues, expressionAttributeNames, conditionExpression)
                 .map(updateItemResponse -> PaperTrackings.attributeValueMapToPaperTrackings(updateItemResponse.attributes()))
-                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()))
-                .onErrorMap(ConditionalCheckFailedException.class, ex -> {
-                    log.error("Conditional check exception on PaperTrackingsDAOImpl updateTrackings trackingId={} exmessage={}", trackingId, ex.getMessage());
-                    return new PnPaperTrackerValidationException(
-                            String.format("TrackingId %s does not exist", trackingId),
-                            PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
-                                    CollectionUtils.isEmpty(paperTrackings.getEvents()) ? List.of() : paperTrackings.getEvents().stream().map(Event::getStatusCode).toList(),
-                                    ErrorCategory.TRACKING_ID_NOT_FOUND,
-                                   null,
-                                    String.format("TrackingId %s does not exist", trackingId),
-                                    FlowThrow.INIT_TRACKING,
-                                    ErrorType.WARNING));
-                });
+                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()));
     }
 
     @Override

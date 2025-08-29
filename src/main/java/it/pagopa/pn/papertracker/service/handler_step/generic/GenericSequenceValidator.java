@@ -106,7 +106,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 ));
 
         return Flux.fromIterable(sequenceElements)
-                .filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getDocumentTypes()))
+                .filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType()))
                 .flatMap(sequenceElement -> {
                     List<String> documentTypes = statusCodeReceivedAttachments.getOrDefault(sequenceElement.getCode(), List.of());
                     return checkAttachments(documentTypes, sequenceElement, events, paperTrackings);
@@ -116,7 +116,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     }
 
     private Mono<Void> checkAttachments(List<String> documentTypes, SequenceElement sequenceElement, List<Event> events, PaperTrackings paperTrackings) {
-        if (new HashSet<>(documentTypes).containsAll(sequenceElement.getDocumentTypes().stream().map(DocumentTypeEnum::getValue).toList())) {
+        if (new HashSet<>(documentTypes).containsAll(sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue).toList())) {
             return Mono.empty();
         } else {
             return Mono.error(new PnPaperTrackerValidationException("Attachments are not valid for the sequence element: " + sequenceElement, PaperTrackingsErrorsMapper.buildPaperTrackingsError(

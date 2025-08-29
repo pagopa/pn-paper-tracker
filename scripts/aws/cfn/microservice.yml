@@ -210,6 +210,14 @@ Parameters:
     Type: String
     Description: 'AWS account ID of the OCR service'
 
+  AllowedPaperTrackerProductTypes:
+    Type: CommaDelimitedList
+    Default: "AR,RIR"
+    Description: productType list managed by paper tracker
+
+  PaperTrackerExternalChannelUser:
+    Type: String
+    Description: 'The clientId used by ExternalChannel to send events to PaperTracker'
 
 Resources:
 
@@ -328,3 +336,95 @@ Resources:
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
 
+  PnCoreEventBusToPaperTrackerQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route ExternalChannel Events to pn-paper-tracker
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "ExternalChannelOutcomeEvent" ]
+        detail:
+          clientId: [ !Ref PaperTrackerExternalChannelUser ]
+          analogMail:
+            statusCode: [ { "anything-but": "CON020" } ]
+            productType: !Ref AllowedPaperTrackerProductTypes
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-ExtCh2PaperTracker
+          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-ExtCh2PaperTracker'
+          Arn: !Ref ExternalChannelToPaperTrackerQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  PnCoreEventBusCon020ToPaperTrackerQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route CON020 Events from PAPER ENRICHER to pn-paper-tracker
+
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "ExternalChannelOutcomeEvent" ]
+        source: [ "PAPER ENRICHER" ]
+        detail:
+          analogMail:
+            statusCode: [ "CON020" ]
+            productType: !Ref AllowedPaperTrackerProductTypes
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-Con020ToPaperTacker
+          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-Con020ToPaperTracker'
+          Arn: !Ref ExternalChannelToPaperTrackerQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  EventBusEnqueuePaperTrackerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: putEventIntoQueues
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:ChangeMessageVisibilityBatch
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                  - sqs:SendMessageBatch
+                Effect: Allow
+                Resource:
+                  - !Ref ExternalChannelToPaperTrackerQueueARN
