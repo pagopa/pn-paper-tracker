@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -269,7 +270,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         //Assert
         StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))
-                .expectError(PnPaperTrackerValidationException.class)
+                .expectError(ConditionalCheckFailedException.class)
                 .verify();
     }
 
