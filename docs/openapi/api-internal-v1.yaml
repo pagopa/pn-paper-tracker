@@ -409,9 +409,13 @@ components:
         flowThrow:
           type: string
           enum:
+            - INIT_TRACKING
+            - NOT_RETRYABLE_EVENT_HANDLER
+            - DUPLICATED_EVENT_VALIDATION
             - SEQUENCE_VALIDATION
             - DEMAT_VALIDATION
             - FINAL_EVENT_BUILDING
+            - RETRY_PHASE
         eventThrow:
           type: string
         productType:

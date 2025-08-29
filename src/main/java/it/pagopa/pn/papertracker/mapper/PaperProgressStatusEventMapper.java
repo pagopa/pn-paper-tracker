@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.A
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -35,7 +36,9 @@ public class PaperProgressStatusEventMapper {
         event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
-        event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
+        if(StringUtils.hasText(paperProgressStatusEvent.getProductType())) {
+            event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
+        }
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
 
         paperTrackings.setEvents(List.of(event));

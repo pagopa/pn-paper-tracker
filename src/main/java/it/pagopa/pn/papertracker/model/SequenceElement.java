@@ -12,7 +12,7 @@ import java.util.Set;
 public class SequenceElement {
 
     private String code;
-    private Set<DocumentTypeEnum> documentTypes;
+    private Set<DocumentTypeEnum> requiredDocumentType;
     private boolean optional;
     private String dateValidationGroup;
 
