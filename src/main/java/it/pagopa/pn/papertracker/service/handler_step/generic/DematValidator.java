@@ -7,6 +7,7 @@ import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
@@ -153,7 +154,8 @@ public class DematValidator implements HandlerStep {
 
         if (CollectionUtils.isEmpty(finalDematList)) {
             log.error("Demat events not found for trackingId={}", trackingId);
-            throw new PaperTrackerException("Demat events not found");
+            //TODO:ERROR
+            throw new PnPaperTrackerValidationException("Demat events not found", null);
         }
 
         for (Event event : finalDematList) {
@@ -165,7 +167,8 @@ public class DematValidator implements HandlerStep {
 
         if (CollectionUtils.isEmpty(attachments) || attachments.size() > 1) {
             log.error("Invalid number of attachments for demat event found for trackingId={}", trackingId);
-            throw new PaperTrackerException("Invalid number of attachments for demat event");
+            //TODO:ERROR
+            throw new PnPaperTrackerValidationException("Invalid number of attachments for demat event", null);
         }
 
         return attachments.values().stream().toList().getFirst();
