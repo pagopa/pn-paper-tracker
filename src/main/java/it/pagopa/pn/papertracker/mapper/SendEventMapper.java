@@ -5,6 +5,8 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.Pa
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class SendEventMapper {
 
     /**

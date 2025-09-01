@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import org.junit.jupiter.api.Assertions;

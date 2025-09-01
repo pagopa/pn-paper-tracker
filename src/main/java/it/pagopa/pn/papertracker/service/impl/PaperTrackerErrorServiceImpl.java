@@ -6,7 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsReques
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
-import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsErrorsMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

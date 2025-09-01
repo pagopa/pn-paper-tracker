@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.mapper;
+package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperEvent;

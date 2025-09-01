@@ -2,16 +2,17 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.List;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperProgressStatusEventMapper {
 
     /**

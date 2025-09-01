@@ -6,9 +6,8 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsReques
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
-import it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 
-import static it.pagopa.pn.papertracker.service.mapper.PaperTrackingsMapper.toPaperTrackings;
+import static it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper.toPaperTrackings;
 
 @Service
 @Slf4j

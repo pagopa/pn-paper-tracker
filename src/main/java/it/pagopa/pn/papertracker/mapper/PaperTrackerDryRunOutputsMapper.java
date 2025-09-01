@@ -2,12 +2,19 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackerDryRunOutputsMapper {
 
     public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String anonymizedDiscoveredAddressId) {
@@ -41,8 +48,42 @@ public class PaperTrackerDryRunOutputsMapper {
         return dryRunOutput;
     }
 
-    private static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment buildAttachmentForExternalChannelOutputEvent(AttachmentDetails attachment) {
-        it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment attachmentEntity = new it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment();
+    public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
+
+        PaperTrackerOutput dto = new PaperTrackerOutput();
+
+        dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
+        dto.setStatusCode(entity.getStatusCode());
+        dto.setStatusDetail(entity.getStatusDetail());
+        dto.setStatusDescription(entity.getStatusDescription());
+        dto.setStatusDateTime(entity.getStatusDateTime());
+        dto.setDeliveryFailureCause(entity.getDeliveryFailureCause());
+        dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddressId());
+        dto.setClientRequestTimeStamp(entity.getClientRequestTimestamp());
+
+        if (entity.getAttachments() != null) {
+            List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> attachmentsDto = getAttachments(entity);
+            dto.setAttachments(attachmentsDto);
+        }
+
+        return dto;
+    }
+
+    private static List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> getAttachments(PaperTrackerDryRunOutputs entity) {
+        List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> attachmentsDto = new ArrayList<>();
+        for (it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment att : entity.getAttachments()) {
+            it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment attDto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment();
+            attDto.setId(att.getId());
+            attDto.setDocumentType(att.getDocumentType());
+            attDto.setUrl(att.getUri());
+            attDto.setDate(att.getDate());
+            attachmentsDto.add(attDto);
+        }
+        return attachmentsDto;
+    }
+
+    private static Attachment buildAttachmentForExternalChannelOutputEvent(AttachmentDetails attachment) {
+        Attachment attachmentEntity = new Attachment();
         attachmentEntity.setId(attachment.getId());
         attachmentEntity.setDate(attachment.getDate().toInstant());
         attachmentEntity.setDocumentType(attachment.getDocumentType());

@@ -5,7 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOut
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.service.PaperTrackerOutputService;
-import it.pagopa.pn.papertracker.service.mapper.PaperTrackerOutputMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerOutputMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
