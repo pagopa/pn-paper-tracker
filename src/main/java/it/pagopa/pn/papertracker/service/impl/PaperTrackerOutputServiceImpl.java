@@ -5,7 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOut
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.service.PaperTrackerOutputService;
-import it.pagopa.pn.papertracker.service.mapper.PaperTrackerOutputMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class PaperTrackerOutputServiceImpl implements PaperTrackerOutputService 
         PaperTrackerOutputsResponse paperTrackerOutputsResponse = new PaperTrackerOutputsResponse();
         return Flux.fromIterable(trackingsRequest.getTrackingIds())
                 .flatMap(trackingId -> paperTrackerDryRunOutputsDAO.retrieveOutputEvents(trackingId)
-                        .map(PaperTrackerOutputMapper::toDtoPaperTrackerOutput)
+                        .map(PaperTrackerDryRunOutputsMapper::toDtoPaperTrackerOutput)
                         .collectList()
                         .map(paperTrackerDryRunOutputs -> {
                             PaperTrackerOutputsResponseResultsInner paperTrackerOutputsResponseResultInner = new PaperTrackerOutputsResponseResultsInner();

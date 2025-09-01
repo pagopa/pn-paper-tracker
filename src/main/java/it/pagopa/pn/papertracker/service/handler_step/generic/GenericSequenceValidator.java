@@ -1,15 +1,11 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.model.SequenceElement;
+import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -208,7 +204,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         return Flux.fromIterable(events)
                 .flatMap(event -> {
                     String deliveryFailureCause = event.getDeliveryFailureCause();
-                    StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(event.getStatusCode());
+                   EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
                     if (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) || statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) {
                         if (StringUtils.hasText(deliveryFailureCause)) {
                             paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());

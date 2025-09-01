@@ -1,10 +1,12 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class SendEventMapper {
 
     /**
@@ -39,7 +42,7 @@ public class SendEventMapper {
     public static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, AttachmentDetails attachmentDetails) {
         SendEvent.SendEventBuilder builder = SendEvent.builder()
                 .requestId(progressEvent.getRequestId())
-                .statusCode(StatusCodeEnum.valueOf(StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
+                .statusCode(StatusCodeEnum.valueOf(EventStatusCodeEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
                 .statusDetail(progressEvent.getStatusCode())
                 .statusDescription(progressEvent.getProductType() + " - " + progressEvent.getStatusCode() + " - " + progressEvent.getStatusDescription())
                 .deliveryFailureCause(progressEvent.getDeliveryFailureCause())
