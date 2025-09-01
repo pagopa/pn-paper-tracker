@@ -136,7 +136,7 @@ public class PaperTrackingsMapper {
         dto.setValidatedSequenceTimestamp(entity.getValidatedSequenceTimestamp());
         dto.setValidatedAttachmentUri(entity.getValidatedAttachmentUri());
         dto.setValidatedAttachmentType(entity.getValidatedAttachmentType());
-        dto.setFinalDematTimestamp(entity.getFinalDematTimestamp());
+        dto.setFinalDematFound(entity.getFinalDematFound());
         dto.setEstimatedPaperDeliveryTimestamp(entity.getEstimatedPaperDeliveryTimestamp());
         dto.setActualPaperDeliveryTimestamp(entity.getActualPaperDeliveryTimestamp());
         if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){

@@ -1,11 +1,11 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
@@ -71,7 +71,7 @@ public class ExternalChannelHandler {
     }
 
     private ProductType resolveProductType(String statusCode, String payloadProductType) {
-        String eventProductType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
+        String eventProductType = Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCode))
                 .map(e -> e.getProductType().getValue())
                 .orElse("UNKNOWN");
         if(StringUtils.hasText(payloadProductType) && (eventProductType.equalsIgnoreCase(payloadProductType)
@@ -93,7 +93,7 @@ public class ExternalChannelHandler {
      * @param statusCode lo statusCode dell'evento
      */
     private Mono<Void> handleRIREvent(String statusCode, HandlerContext context) {
-        StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeConfigurationEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
+        EventStatusCodeEnum statusCodeConfigurationEnum = EventStatusCodeEnum.fromKey(statusCode);
         return switch (statusCodeConfigurationEnum.getCodeType()) {
             case INTERMEDIATE_EVENT -> {
                 log.info(HANDLING_INTERMEDIATE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
@@ -121,7 +121,7 @@ public class ExternalChannelHandler {
      * @param statusCode lo statusCode dell'evento
      */
     private Mono<Void> handleAREvent(String statusCode, HandlerContext context) {
-        StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeConfigurationEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
+        EventStatusCodeEnum statusCodeConfigurationEnum = EventStatusCodeEnum.fromKey(statusCode);
         return switch (statusCodeConfigurationEnum.getCodeType()) {
             case INTERMEDIATE_EVENT -> {
                 log.info(HANDLING_INTERMEDIATE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);

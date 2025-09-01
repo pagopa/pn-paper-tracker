@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
