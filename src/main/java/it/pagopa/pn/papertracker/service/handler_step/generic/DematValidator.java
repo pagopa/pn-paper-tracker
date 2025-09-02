@@ -14,6 +14,7 @@ import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -126,7 +127,7 @@ public class DematValidator implements HandlerStep {
                 .data(DataDTO.builder()
                         .documentType(DataDTO.DocumentType.valueOf(documentType.name()))
                         .productType(getProductType(paperTracking))
-                        .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
+                        .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(Optional.ofNullable(paperTracking.getUnifiedDeliveryDriver()).orElse(StringUtils.EMPTY).toUpperCase()))
                         .details(
                                 DetailsDTO.builder()
                                         .attachment(presignedUrl)
