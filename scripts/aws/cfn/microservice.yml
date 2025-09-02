@@ -130,6 +130,10 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
+  LogAlarmStrategy:
+    Type: String
+    Default: 'FATAL'
+
   PnOcrOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where OCR outputs are sent'
@@ -266,6 +270,7 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
   PnOcrOutputsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
