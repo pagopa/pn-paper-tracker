@@ -100,13 +100,8 @@ public class InternalEventHandler {
     }
 
     private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, String eventId) {
-        PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
-        paperTrackings.setTrackingId(paperTrackings.getTrackingId());
-        ValidationFlow validationFlow = new ValidationFlow();
-        validationFlow.setDematValidationTimestamp(Instant.now());
-        paperTrackings.setValidationFlow(validationFlow);
         HandlerContext handlerContext = new HandlerContext();
-        handlerContext.setPaperTrackings(paperTrackingsToUpdate);
+        handlerContext.setPaperTrackings(paperTrackings);
         handlerContext.setEventId(eventId);
         return handlerContext;
     }
