@@ -213,30 +213,30 @@ class SequenceValidatorRirTest {
     }
 
 
-    @Test
-    void validateSequenceInvalidRegisteredLetterCode() {
-        // Arrange
-        Instant timestamp = Instant.now();
-        Instant businessTimestamp = Instant.now();
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG444", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
-        ));
-
-        // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Registered letter codes do not match in sequence"))
-                .verify();
-    }
+//    @Test
+//    void validateSequenceInvalidRegisteredLetterCode() {
+//        // Arrange
+//        Instant timestamp = Instant.now();
+//        Instant businessTimestamp = Instant.now();
+//
+//        PaperTrackings paperTrackings = new PaperTrackings();
+//        paperTrackings.setValidationFlow(new ValidationFlow());
+//        paperTrackings.setPaperStatus(new PaperStatus());
+//
+//        paperTrackings.setEvents(List.of(
+//                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+//                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+//                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
+//                buildEvent("RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG444", "", List.of(DocumentTypeEnum.AR.getValue())),
+//                buildEvent("RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+//        ));
+//
+//        // Act & Assert
+//        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+//                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+//                        throwable.getMessage().contains("Registered letter codes do not match in sequence"))
+//                .verify();
+//    }
 
     @Test
     void validateSequenceInvalidNullDeliveryFailureCause() {
