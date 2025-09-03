@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class HandlerContext {
 
-    private PaperProgressStatusEvent paperProgressStatusEvent;
+    private PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
     private String trackingId;
     private PaperTrackings paperTrackings;
     private String anonymizedDiscoveredAddressId;
