@@ -134,7 +134,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
       Parameters:
-        QueueName: !Sub '${ProjectName}-ocr_outputs'
+        QueueName: !Sub '${ProjectName}-paper_tracker_ocr_outputs'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
         VisibilityTimeout: 300
         MaxReceiveCount: 10
