@@ -18,7 +18,6 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -101,6 +100,7 @@ public class InternalEventHandler {
 
     private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, String eventId) {
         HandlerContext handlerContext = new HandlerContext();
+        handlerContext.setTrackingId(paperTrackings.getTrackingId());
         handlerContext.setPaperTrackings(paperTrackings);
         handlerContext.setEventId(eventId);
         return handlerContext;
