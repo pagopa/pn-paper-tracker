@@ -17,7 +17,7 @@ public class TrackerUtility {
 
     public static String removePcretryFromRequestId(String requestId) {
         if (requestId == null) return null;
-        return requestId.replaceAll("PCRETRY_\\d+", "");
+        return requestId.replaceAll("\\.PCRETRY_\\d+", "");
     }
 
 }

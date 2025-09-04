@@ -22,7 +22,7 @@ public class TrackerUtilityTest {
     void removePcretryFromRequestIdRemovesPcretry() {
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_TMWL-NMRG-MKJK-202509-Q-1.RECINDEX_0.ATTEMPT_0.PCRETRY_0";
         String result = TrackerUtility.removePcretryFromRequestId(requestId);
-        Assertions.assertEquals("PREPARE_ANALOG_DOMICILE.IUN_TMWL-NMRG-MKJK-202509-Q-1.RECINDEX_0.ATTEMPT_0.", result);
+        Assertions.assertEquals("PREPARE_ANALOG_DOMICILE.IUN_TMWL-NMRG-MKJK-202509-Q-1.RECINDEX_0.ATTEMPT_0", result);
     }
 
     @Test
