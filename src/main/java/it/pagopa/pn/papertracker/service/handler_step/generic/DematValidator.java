@@ -5,7 +5,6 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -13,12 +12,10 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.FileType;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.model.OcrDocumentTypeEnum;
+import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -131,7 +128,7 @@ public class DematValidator implements HandlerStep {
                 .data(DataDTO.builder()
                         .documentType(DataDTO.DocumentType.valueOf(documentType.name()))
                         .productType(getProductType(paperTracking))
-                        .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver()))
+                        .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(Optional.ofNullable(paperTracking.getUnifiedDeliveryDriver()).orElse(StringUtils.EMPTY).toUpperCase()))
                         .details(
                                 DetailsDTO.builder()
                                         .attachment(presignedUrl)
@@ -149,7 +146,7 @@ public class DematValidator implements HandlerStep {
         Map<String, Attachment> attachments = new HashMap<>();
 
         List<Event> finalDematList = validatedEvents.reversed().stream()
-                .filter(event -> StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(event.getStatusCode()).isFinalDemat())
+                .filter(event -> EventStatusCodeEnum.fromKey(event.getStatusCode()).isFinalDemat())
                 .toList();
 
         if (CollectionUtils.isEmpty(finalDematList)) {

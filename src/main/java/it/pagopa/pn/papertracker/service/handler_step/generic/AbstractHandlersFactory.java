@@ -159,7 +159,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
         return buildEventsHandler(
                 List.of(
-                        metadataUpserter,
+//                        metadataUpserter,
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater

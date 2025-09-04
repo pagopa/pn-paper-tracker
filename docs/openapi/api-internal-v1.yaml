@@ -361,10 +361,9 @@ components:
           description: Lista di eventi validati
           items:
             $ref: '#/components/schemas/PaperEvent'
-        finalDematTimestamp:
-          type: string
-          format: date-time
-          description: Timestamp evento demat finale
+        finalDematFound:
+          type: boolean
+          description: Presenza evento demat finale
         estimatedPaperDeliveryTimestamp:
           type: string
           format: date-time

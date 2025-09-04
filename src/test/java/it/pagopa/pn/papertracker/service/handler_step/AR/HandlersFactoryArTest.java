@@ -210,7 +210,7 @@ class HandlersFactoryArTest {
     @Test
     void buildOcrResponseHandler() {
         // Arrange
-        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+//        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());

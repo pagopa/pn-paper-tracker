@@ -12,6 +12,7 @@
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
     "OcrAwsAccountId": "830192246553",
     "AllowedPaperTrackerProductTypes": "AR,RIR",
-    "PaperTrackerExternalChannelUser": "pn-cons-000"
+    "PaperTrackerExternalChannelUser": "pn-cons-000",
+    "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080"
   }
 }

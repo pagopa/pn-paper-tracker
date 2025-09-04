@@ -98,7 +98,7 @@ public class TestUtils {
         assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
-        assertNotNull(pt.getPaperStatus().getFinalDematTimestamp());
+        assertNotNull(pt.getPaperStatus().getFinalDematFound());
         assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
     }
 

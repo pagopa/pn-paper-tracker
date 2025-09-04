@@ -1,13 +1,13 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -19,7 +19,7 @@ import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @Component
 @Slf4j
@@ -57,11 +57,11 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
+            return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(statusCode).getStatus().name());
         }
 
         List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
-        StatusCodeConfiguration.StatusCodeConfigurationEnum configEnum = getRECRN00XA(statusCode);
+        EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
 
@@ -85,7 +85,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                             String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
                             FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR)));
         }
-        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
+        return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(statusCode).getStatus().name());
     }
 
     private boolean isStockStatus(String status) {
@@ -100,9 +100,9 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 : isDifferenceGreaterRefinementDuration(eventRECRN010.getStatusTimestamp(), eventRECRN00XA.getStatusTimestamp());
     }
 
-    private StatusCodeConfiguration.StatusCodeConfigurationEnum getRECRN00XA(String statusCode) {
+    private EventStatusCodeEnum getRECRN00XA(String statusCode) {
         final String status = statusCode.substring(0, statusCode.length() - 1).concat("A");
-        return StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(status);
+        return EventStatusCodeEnum.fromKey(status);
     }
 
     private Mono<Void> prepareFinalEventAndPNRN012toSend(HandlerContext context, Event finalEvent, Event recrn010) {
@@ -115,7 +115,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 .then();
     }
 
-    private Event getEvent(List<Event> events, StatusCodeConfiguration.StatusCodeConfigurationEnum code) {
+    private Event getEvent(List<Event> events, EventStatusCodeEnum code) {
         return events.stream()
                 .filter(e -> code.name().equals(e.getStatusCode()))
                 .findFirst()

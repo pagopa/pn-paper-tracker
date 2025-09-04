@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.mapper;
+package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;

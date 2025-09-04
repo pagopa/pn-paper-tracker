@@ -130,6 +130,10 @@ Parameters:
     Default: '-'
     Description: Cron for which you send the metric to CloudWatch
 
+  LogAlarmStrategy:
+    Type: String
+    Default: 'FATAL'
+
   PnOcrOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where OCR outputs are sent'
@@ -219,6 +223,10 @@ Parameters:
     Type: String
     Description: 'The clientId used by ExternalChannel to send events to PaperTracker'
 
+  DataVaultBaseUrl:
+    Type: String
+    Description: 'DataVault BaseUrl'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -252,6 +260,7 @@ Resources:
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS=${PnOcrOutputsQueueName}'
+        ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
@@ -261,6 +270,7 @@ Resources:
         LoadbalancerRulePriority: !Ref MicroserviceNumber
         TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
+        LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
   PnOcrOutputsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
