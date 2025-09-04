@@ -78,7 +78,7 @@ public class DeliveryPushSender implements HandlerStep {
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
-                                        .eventType("SEND_EVENT_RESPONSE")
+                                        .eventType("SEND_ANALOG_RESPONSE")
                                         .iun(TrackerUtility.getIunFromRequestId(sendEvent.getRequestId()))
                                         .build())
                                 .build();
