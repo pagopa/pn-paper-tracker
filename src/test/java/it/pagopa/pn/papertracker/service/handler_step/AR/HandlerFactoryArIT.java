@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -116,7 +117,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
             String finalCode = code.replace("[NOAUTODATETIME]","");
 
-            var conf = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(finalCode);
+            var conf = EventStatusCodeEnum.fromKey(finalCode);
             ev.setStatusCode(finalCode);
             ev.setStatusDescription(conf.getStatusCodeDescription());
             if (!CollectionUtils.isEmpty(conf.getDeliveryFailureCauseList())) {

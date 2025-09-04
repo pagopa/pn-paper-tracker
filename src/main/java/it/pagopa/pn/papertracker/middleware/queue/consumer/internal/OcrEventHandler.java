@@ -25,7 +25,7 @@ import java.util.Objects;
 @Component
 @RequiredArgsConstructor
 @CustomLog
-public class InternalEventHandler {
+public class OcrEventHandler {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final HandlersFactoryAr handlersFactoryAr;
