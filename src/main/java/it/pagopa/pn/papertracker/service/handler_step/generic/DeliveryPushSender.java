@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
+import it.pagopa.pn.api.dto.events.StandardEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -73,11 +74,12 @@ public class DeliveryPushSender implements HandlerStep {
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
-                                .header( GenericEventHeader.builder()
+                                .header( StandardEventHeader.builder()
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
                                         .eventType("SEND_EVENT_RESPONSE")
+                                        .iun(TrackerUtility.getIunFromRequestId(sendEvent.getRequestId()))
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
