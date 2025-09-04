@@ -71,6 +71,7 @@ public class DeliveryPushSender implements HandlerStep {
                     log.info("Sending delivery push for event: {}", sendEvent);
                     if (configs.isSendOutputToDeliveryPush()) {
                         log.info("Sending event to pn-external_channel_outputs");
+                        sendEvent.setRequestId(TrackerUtility.removePcretryFromRequestId(event.getRequestId()));
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
