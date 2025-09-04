@@ -16,6 +16,8 @@ public enum ErrorCategory {
     ATTACHMENTS_ERROR("Errore nella validazione degli allegati della sequenza"),
     MAX_RETRY_REACHED_ERROR("Numero massimo di retry raggiunto"),
     OCR_VALIDATION("Errore nella validazione OCR"),
+    DEMAT_EMPTY_EVENT("Errore evento per demat non trovato"),
+    DEMAT_ATTACHMENT_NUMBER_ERROR("Errore nel numero di attachment trovati per demat"),
     DUPLICATED_EVENT("Errore nella validazione della presenza di eventi duplicati");
 
     private final String value;
