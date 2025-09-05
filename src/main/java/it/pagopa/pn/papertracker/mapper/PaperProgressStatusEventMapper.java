@@ -24,7 +24,7 @@ public class PaperProgressStatusEventMapper {
      */
     public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
-                                                        String eventId) {
+                                                        String eventId, boolean dryRunEnabled) {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId(eventId);
@@ -51,6 +51,7 @@ public class PaperProgressStatusEventMapper {
             event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
         }
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
+        event.setDryRun(dryRunEnabled);
 
         paperTrackings.setEvents(List.of(event));
         return Mono.just(paperTrackings);

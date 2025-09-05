@@ -3,13 +3,10 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,12 +17,15 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.ATTEMPT_ID_PCRETRY_INDEX;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.*;
 import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo;
 
 @Component

@@ -68,7 +68,7 @@ public class OcrEventHandler {
                                                         FlowThrow.DEMAT_VALIDATION,
                                                         ErrorType.ERROR
                                                         )));
-                                case OK -> callOcrResponseHandler(paperTrackings, event.getId());
+                                case OK -> callOcrResponseHandler(paperTrackings, event);
                                 case PENDING -> {
                                     log.info("Ocr validation is still pending for requestId: {}", ocrResultMessage.getCommandId());
                                     yield Mono.empty();
@@ -81,10 +81,11 @@ public class OcrEventHandler {
 
     }
 
-    private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, String eventId) {
+    private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, Event event) {
+        HandlerContext context = buildContextAndAddDematValidationTimestamp(paperTrackings, event);
         return switch (paperTrackings.getProductType()){
-            case AR -> handlersFactoryAr.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, eventId));
-            case RIR -> handlersFactoryRir.buildOcrResponseHandler(buildContextAndAddDematValidationTimestamp(paperTrackings, eventId));
+            case AR -> handlersFactoryAr.buildOcrResponseHandler(context);
+            case RIR -> handlersFactoryRir.buildOcrResponseHandler(context);
             default -> Mono.error(new PaperTrackerException("Invalid productType: " + paperTrackings.getProductType()));
         };
     }
@@ -98,11 +99,12 @@ public class OcrEventHandler {
                         ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
     }
 
-    private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, String eventId) {
+    private HandlerContext buildContextAndAddDematValidationTimestamp(PaperTrackings paperTrackings, Event event) {
         HandlerContext handlerContext = new HandlerContext();
         handlerContext.setTrackingId(paperTrackings.getTrackingId());
         handlerContext.setPaperTrackings(paperTrackings);
-        handlerContext.setEventId(eventId);
+        handlerContext.setEventId(event.getId());
+        handlerContext.setDryRunEnabled(event.getDryRun());
         return handlerContext;
     }
 }

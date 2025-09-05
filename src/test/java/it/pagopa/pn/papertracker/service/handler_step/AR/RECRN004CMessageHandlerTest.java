@@ -117,7 +117,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -159,7 +159,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());

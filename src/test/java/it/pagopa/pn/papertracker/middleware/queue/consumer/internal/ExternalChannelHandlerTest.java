@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 import static org.mockito.Mockito.*;
 
@@ -42,7 +44,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildIntermediateEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
 
         //Assert
         verify(handlersFactoryAr).buildIntermediateEventsHandler(any(HandlerContext.class));
@@ -55,7 +57,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
 
         //Assert
         verify(handlersFactoryAr, times(1)).buildRetryEventHandler(any(HandlerContext.class));
@@ -68,7 +70,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildFinalEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
 
         //Assert
         verify(handlersFactoryAr).buildFinalEventsHandler(any(HandlerContext.class));
@@ -81,7 +83,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
 
         //Assert
         verify(handlersFactoryAr).buildUnrecognizedEventsHandler(any(HandlerContext.class));
@@ -94,5 +96,11 @@ public class ExternalChannelHandlerTest {
         analogMail.setStatusCode(statusCode);
         singleStatusUpdate.setAnalogMail(analogMail);
         return singleStatusUpdate;
+    }
+
+    private boolean getDryRunFlag() {
+        HashMap<String, Object> headers = new HashMap<>();
+        headers.put("dryRun", true);
+        return (boolean) headers.getOrDefault("dryRun", false);
     }
 }

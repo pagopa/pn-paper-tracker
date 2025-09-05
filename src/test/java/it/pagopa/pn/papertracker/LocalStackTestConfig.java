@@ -10,6 +10,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.DYNAMODB;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
@@ -44,6 +45,7 @@ public class LocalStackTestConfig {
         System.setProperty("spring.cloud.aws.region.static", localStack.getRegion());
         System.setProperty("spring.cloud.aws.credentials.access-key", localStack.getAccessKey());
         System.setProperty("spring.cloud.aws.credentials.secret-key", localStack.getSecretKey());
+        System.setProperty("pn.paper-tracker.saveAndNotSendToDeliveryPush", "CON018");
 
         try {
             System.setProperty("aws.sharedCredentialsFile", new ClassPathResource("testcontainers/credentials").getFile().getAbsolutePath());

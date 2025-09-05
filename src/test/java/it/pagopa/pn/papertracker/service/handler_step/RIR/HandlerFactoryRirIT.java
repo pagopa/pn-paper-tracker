@@ -63,7 +63,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
-        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate));
+        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true));
 
         //Assert
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
