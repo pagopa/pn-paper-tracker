@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.api.dto.events.StandardEventHeader;
+import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -75,12 +75,11 @@ public class DeliveryPushSender implements HandlerStep {
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
-                                .header( StandardEventHeader.builder()
+                                .header( GenericEventHeader.builder()
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
                                         .eventType("SEND_ANALOG_RESPONSE")
-                                        .iun(TrackerUtility.getIunFromRequestId(sendEvent.getRequestId()))
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
