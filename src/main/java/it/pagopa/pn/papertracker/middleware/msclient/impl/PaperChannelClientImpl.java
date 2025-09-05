@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import lombok.RequiredArgsConstructor;
@@ -18,17 +19,19 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class PaperChannelClientImpl implements PaperChannelClient {
 
+    public static final String RETRY = ".PCRETRY_";
+    public static final String PCRETRY = "PCRETRY_";
 
     private final PcRetryApi pcRetryApi;
     private final PnPaperTrackerConfigs config;
 
     @Override
-    public Mono<PcRetryResponse> getPcRetry(String trackingId, ProductType productType) {
-        if(config.getEnableRetrySendEngageFor().contains(productType)){
-            return getPcRetryPaperChannel(trackingId);
+    public Mono<PcRetryResponse> getPcRetry(PaperTrackings paperTrackings) {
+        if(config.getEnableRetrySendEngageFor().contains(paperTrackings.getProductType())){
+            return getPcRetryPaperChannel(paperTrackings.getTrackingId());
         }
         log.debug("giving mock response...");
-        return getPcRetryPaperMock(trackingId);
+        return getPcRetryPaperMock(paperTrackings);
     }
 
     private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId) {
@@ -41,10 +44,45 @@ public class PaperChannelClientImpl implements PaperChannelClient {
                 });
     }
 
-    private Mono<PcRetryResponse> getPcRetryPaperMock(String trackingId) {
-        return Mono.just(PcRetryResponse.builder()
-                .retryFound(false)
-                .requestId(trackingId)
-                .build());
+    private Mono<PcRetryResponse> getPcRetryPaperMock(PaperTrackings paperTrackings) {
+        PcRetryResponse pcRetryResponse = new PcRetryResponse();
+        pcRetryResponse.setParentRequestId(paperTrackings.getTrackingId());
+        pcRetryResponse.setDeliveryDriverId(paperTrackings.getUnifiedDeliveryDriver());
+
+        if (hasOtherAttempt(paperTrackings.getTrackingId())) {
+            pcRetryResponse.setRetryFound(true);
+            String newRequestId = setRetryRequestId(paperTrackings.getTrackingId());
+            setRetryRequestIdAndPcRetry(pcRetryResponse, newRequestId);
+        }
+
+        pcRetryResponse.setRetryFound(false);
+        return Mono.just(pcRetryResponse);
+    }
+
+    public boolean hasOtherAttempt(String requestId) {
+        return config.getMaxPcRetryMock() == -1 || config.getMaxPcRetryMock() >= getRetryAttempt(requestId);
+    }
+
+    private int getRetryAttempt(String requestId) {
+        int retry = 0;
+        if (requestId.contains(RETRY)) {
+            retry = Integer.parseInt(requestId.substring(requestId.lastIndexOf("_")+1));
+        }
+        return retry;
+    }
+
+    public String setRetryRequestId(String requestId) {
+        if (requestId.contains(RETRY)) {
+            String prefix = requestId.substring(0, requestId.indexOf(RETRY));
+            String attempt = String.valueOf(getRetryAttempt(requestId) + 1);
+            requestId = prefix.concat(RETRY).concat(attempt);
+        }
+        return requestId;
+    }
+
+    private void setRetryRequestIdAndPcRetry(PcRetryResponse pcRetryResponse, String newRequestId) {
+        String suffix = newRequestId.substring(newRequestId.indexOf(PCRETRY), newRequestId.length());
+        pcRetryResponse.setPcRetry(suffix);
+        pcRetryResponse.setRequestId(newRequestId);
     }
 }

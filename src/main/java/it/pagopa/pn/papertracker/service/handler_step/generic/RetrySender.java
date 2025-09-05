@@ -36,7 +36,7 @@ public class RetrySender implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return paperChannelClient.getPcRetry(context.getPaperTrackings().getTrackingId(), context.getPaperTrackings().getProductType())
+        return paperChannelClient.getPcRetry(context.getPaperTrackings())
                 .doOnError(throwable -> log.error("Error retrieving retry for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> {
                     if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
