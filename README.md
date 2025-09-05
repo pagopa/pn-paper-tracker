@@ -41,7 +41,6 @@ TODO: Aggiungi un diagramma dell'architettura qui.
 | PN_PAPERTRACKER_SAFESTORAGEBASEURL    | URL to the SafeStorage microservice                                     | -       | Si           |
 | PN_PAPERTRACKER_SAFESTORAGECXID    | CxId for the SafeStorage microservice                                   | -       | Si           |
 | PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS    | Name of the SQS queue where OCR outputs are sent                        | -       | Si           |
-| PN_PAPERTRACKER_SENDOUTPUTTODELIVERYPUSH    | If true, the microservice will send output to the delivery push service | -       | Sì           |
 | PN_PAPERTRACKER_ENABLEOCRVALIDATION    | Feature flag for enabling OCR validation                                | -       | Sì           |
 
 ## Testing in locale

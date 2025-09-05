@@ -47,7 +47,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(true);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId(), ProductType.AR)).thenReturn(Mono.just(response));
         when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
         when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
 
@@ -66,7 +66,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(false);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId(), ProductType.AR)).thenReturn(Mono.just(response));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -84,7 +84,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PnPaperTrackerNotFoundException webClientResponseException = mock(PnPaperTrackerNotFoundException.class);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(webClientResponseException));
+        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId(), ProductType.AR)).thenReturn(Mono.error(webClientResponseException));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))

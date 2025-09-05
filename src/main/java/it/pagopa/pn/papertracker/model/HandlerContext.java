@@ -19,5 +19,6 @@ public class HandlerContext {
     private boolean stopExecution = false;
     private String eventId;
     private String finalStatusCode;
+    private boolean dryRunEnabled;
 
 }

@@ -27,8 +27,9 @@ public class PnEventInboundService {
     @SqsListener(value = "${pn.paper-tracker.topics.external-channel-to-paper-tracker}")
     public void externalChannelConsumer(@Payload Message<SingleStatusUpdate> message, @Headers Map<String, Object> headers) {
         try {
-            log.debug("Handle message from pn-external_channel_to_paper_tracker with message {}", message);
-            externalChannelHandler.handleExternalChannelMessage(message.getPayload());
+            log.debug("Handle message from pn-external_channel_to_paper_tracker with message {} and headers {}", message, headers);
+            boolean dryRunEnabled = (boolean) headers.getOrDefault("dryRun", false);
+            externalChannelHandler.handleExternalChannelMessage(message.getPayload(), dryRunEnabled);
 
         } catch (Exception ex) {
             log.error("Error processing external channel result message: {}", ex.getMessage(), ex);

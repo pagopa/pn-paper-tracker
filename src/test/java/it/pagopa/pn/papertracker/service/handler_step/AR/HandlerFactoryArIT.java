@@ -47,6 +47,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     @Autowired
     private PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
 
+
     @MockitoBean
     private SafeStorageClient safeStorageClient;
     @MockitoBean
@@ -67,7 +68,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
-        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate));
+        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true));
 
         //Assert
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
@@ -477,7 +478,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
-        when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(resp));
+        when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }
 }

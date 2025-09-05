@@ -37,7 +37,7 @@ public class ExternalChannelHandler {
      *
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
-    public void handleExternalChannelMessage(SingleStatusUpdate payload) {
+    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled) {
         if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
@@ -52,6 +52,7 @@ public class ExternalChannelHandler {
                             HandlerContext context = new HandlerContext();
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
                             context.setEventId(UUID.randomUUID().toString());
+                            context.setDryRunEnabled(dryRunEnabled);
 
                             String statusCode = payload.getAnalogMail().getStatusCode();
                             String payloadProductType = payload.getAnalogMail().getProductType();
