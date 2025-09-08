@@ -166,7 +166,7 @@ Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
 
-  QueueProxyLambdaName:
+  PaperTrackerQueueProxyLambdaName:
     Value: !Sub ${ProjectName}-paper-tracker-QueueProxy
     
   PaperTrackingsErrorsTableName:

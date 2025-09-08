@@ -249,37 +249,32 @@ Parameters:
     Type: String
     Description: 'DataVault BaseUrl'
 
-  # QueueProxy Lambda
-  QueueProxyLambdaName:
+  # PaperTrackerQueueProxy Lambda
+  PaperTrackerQueueProxyLambdaName:
     Type: String
-    Description: Name of the QueueProxy Lambda.
+    Description: Name of the PaperTrackerQueueProxy Lambda.
 
-  QueueProxyLambdaRuntime:
+  PaperTrackerQueueProxyLambdaRuntime:
     Type: String
     Default: nodejs22.x
-    Description: Runtime of the DataIndexer Lambda.
+    Description: Runtime of the PaperTrackerQueueProxy Lambda.
 
-  QueueProxyLambdaMemory:
+  PaperTrackerQueueProxyLambdaMemory:
     Type: Number
     Default: 512
     MinValue: 512
     MaxValue: 10240
-    Description: Memory of the QueueProxy Lambda.
+    Description: Memory of the PaperTrackerQueueProxy Lambda.
 
-  QueueProxyMaximumConcurrency:
+  PaperTrackerQueueProxyMaximumConcurrency:
     Type: Number
     Default: 10
-    Description: Maximum concurrency of the QueueProxy Lambda.
+    Description: Maximum concurrency of the PaperTrackerQueueProxy Lambda.
 
-  PaperTrackerEnabledProducts:
+  PaperTrackerEnabledProductsModes:
     Type: String
     Default: ""
-    Description: Comma separated list of product types for which pn-paper-tracker is enabled. Es. "AR,RS,890,RIR,RIS"
-
-  PaperTrackerDryRunProducts:
-    Type: String
-    Default: ""
-    Description: Comma separated list of product types for which pn-paper-tracker is enabled in dry-run mode.
+    Description: Comma separated list of product types for which pn-paper-tracker is enabled in run or dry-run mode. Es. "AR:RUN,RS:DRY,890:DRY"
 
   PaperChannelEnabledProducts:
     Type: String
@@ -405,44 +400,43 @@ Resources:
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
 
-  # QueueProxy Lambda
-  QueueProxy:
+  # PaperTrackerQueueProxy Lambda
+  PaperTrackerQueueProxy:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Ref QueueProxyLambdaName
-      Runtime: !Ref QueueProxyLambdaRuntime
+      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
+      Runtime: !Ref PaperTrackerQueueProxyLambdaRuntime
       Handler: index.handler
-      Role: !GetAtt QueueProxyExecutionRole.Arn
+      Role: !GetAtt PaperTrackerQueueProxyExecutionRole.Arn
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/queueProxy.zip"
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/PaperTrackerQueueProxy.zip"
       Timeout: 30
-      MemorySize: !Ref QueueProxyLambdaMemory
+      MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
       Environment:
         Variables:
-          PAPER_TRACKER_ENABLED_PRODUCTS: !Ref PaperTrackerEnabledProducts
-          PAPER_TRACKER_DRY_RUN_PRODUCTS: !Ref PaperTrackerDryRunProducts
+          PAPER_TRACKER_ENABLED_PRODUCTS: !Ref PaperTrackerEnabledProductsModes
           PAPER_CHANNEL_ENABLED_PRODUCTS: !Ref PaperChannelEnabledProducts
           QUEUE_PAPER_CHANNEL: !Ref ExternalChannelsToPaperChannelDryrunQueueName
           QUEUE_PAPER_TRACKER: !Ref ExternalChannelToPaperTrackerQueueName
 
   # Event Source Mapping to trigger Lambda from SQS
-  QueueProxyEventSourceMapping:
+  PaperTrackerQueueProxyEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !Ref QueueProxyLambdaName
+      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
       BatchSize: 10  # Max messages per batch
       MaximumBatchingWindowInSeconds: 2
       FunctionResponseTypes:
         - ReportBatchItemFailures  # Enables partial batch failures
       ScalingConfig:
-        MaximumConcurrency: !Ref QueueProxyMaximumConcurrency
+        MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
 
-  QueueProxyExecutionRole:
+  PaperTrackerQueueProxyExecutionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${QueueProxyLambdaName}LambdaRole
+      RoleName: !Sub ${PaperTrackerQueueProxyLambdaName}LambdaRole
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -455,7 +449,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: QueueProxyPolicy
+        - PolicyName: PaperTrackerQueueProxyPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
