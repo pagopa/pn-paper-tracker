@@ -410,7 +410,7 @@ Resources:
       Role: !GetAtt PaperTrackerQueueProxyExecutionRole.Arn
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/PaperTrackerQueueProxy.zip"
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/queueProxy.zip"
       Timeout: 30
       MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
       Environment:
