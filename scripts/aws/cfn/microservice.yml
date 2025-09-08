@@ -410,7 +410,7 @@ Resources:
       Role: !GetAtt PaperTrackerQueueProxyExecutionRole.Arn
       Code:
         S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/PaperTrackerQueueProxy.zip"
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/queueProxy.zip"
       Timeout: 30
       MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
       Environment:
@@ -423,10 +423,9 @@ Resources:
   # Event Source Mapping to trigger Lambda from SQS
   PaperTrackerQueueProxyEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    DependsOn: PaperTrackerQueueProxy
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
+      FunctionName: !GetAtt PaperTrackerQueueProxy.FunctionName
       BatchSize: 10  # Max messages per batch
       MaximumBatchingWindowInSeconds: 2
       FunctionResponseTypes:
