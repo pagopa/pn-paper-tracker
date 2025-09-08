@@ -425,7 +425,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !GetAtt PaperTrackerQueueProxy.FunctionName
+      FunctionName: !Ref PaperTrackerQueueProxy
       BatchSize: 10  # Max messages per batch
       MaximumBatchingWindowInSeconds: 2
       FunctionResponseTypes:
