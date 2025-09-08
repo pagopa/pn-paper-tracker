@@ -7,11 +7,16 @@
   "scripts": {
     "test-build": "npm run-script test && npm run-script build",
     "build": "npm prune --production && rm -f ./function.zip && zip -r ./function.zip . -x '*.md' -x '*.env'",
-    "test": "node --test index.test.js"
+    "test": "mocha index.test.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.882.0"
+  },
+  "devDependencies": {
+    "chai": "^6.0.1",
+    "mocha": "^11.7.2",
+    "sinon": "^21.0.0"
   }
 }

@@ -1,6 +1,5 @@
-import test, { beforeEach } from "node:test";
-import assert from "node:assert/strict";
-import { mock } from "node:test";
+import { expect } from "chai";
+import sinon from "sinon";
 
 import {
   handler,
@@ -13,188 +12,176 @@ import {
 
 import * as sqsModule from "@aws-sdk/client-sqs";
 
+// Unit tests per le utility functions
+describe("Utility functions", () => {
+  beforeEach(() => {
+    // Reset config prima di ogni test
+    CONFIG.trackerEnabledProducts = ["AR", "RS"];
+    CONFIG.trackerDryRunProducts = ["RS"];
+    CONFIG.paperChannelEnabledProducts = ["890"];
+    CONFIG.queueTracker = "https://sqs.mock/tracker";
+    CONFIG.queuePaperChannel = "https://sqs.mock/channel";
 
-beforeEach(() => {
-  CONFIG.trackerEnabledProducts = ["AR", "RS"];
-  CONFIG.trackerDryRunProducts = ["RS"];
-  CONFIG.paperChannelEnabledProducts = ["890"];
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
-});
-
-// Unit tests
-test("parseEnvList returns cleaned array", () => {
-  // Arrange
-  const input = "AR, RS , ,890";
-
-  // Act
-  const result = parseEnvList(input);
-
-  // Assert
-  assert.deepEqual(result, ["AR", "RS", "890"]);
-  assert.deepEqual(parseEnvList(""), []);
-  assert.deepEqual(parseEnvList(undefined), []);
-});
-
-test("getProductConfig returns correct configuration", () => {
-  // Arrange
-  CONFIG.trackerEnabledProducts = ["AR", "RS"];
-  CONFIG.trackerDryRunProducts = ["RS"];
-  CONFIG.paperChannelEnabledProducts = ["890"];
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
-
-  // Act
-  const configAR = getProductConfig("AR");
-  const configRS = getProductConfig("RS");
-  const config890 = getProductConfig("890");
-
-  // Assert
-  assert.equal(configAR.isTrackerEnabled, true);
-  assert.equal(configAR.isDryRun, false);
-  assert.equal(configAR.isPaperChannelEnabled, false);
-
-  assert.equal(configRS.isTrackerEnabled, true);
-  assert.equal(configRS.isDryRun, true);
-  assert.equal(configRS.isPaperChannelEnabled, false);
-
-  assert.equal(config890.isTrackerEnabled, false);
-  assert.equal(config890.isPaperChannelEnabled, true);
-});
-
-test("createMessageAttributes copies attributes and adds dryRun when requested", () => {
-  // Arrange
-  const attrs = {
-    foo: { DataType: "String", StringValue: "bar" },
-  };
-
-  // Act
-  const noDry = createMessageAttributes(attrs);
-  const withDry = createMessageAttributes(attrs, true);
-
-  // Assert
-  assert.deepEqual(noDry.foo, attrs.foo);
-  assert.equal(noDry.dryRun, undefined);
-  assert.equal(withDry.dryRun.StringValue, "true");
-});
-
-test("validateConfig throws if queues are missing", () => {
-  // Arrange
-  CONFIG.queueTracker = undefined;
-  CONFIG.queuePaperChannel = undefined;
-
-  // Act & Assert
-  assert.throws(() => validateConfig(), /Missing required queue URLs/);
-
-  // Arrange again
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
-
-  // Act & Assert
-  assert.doesNotThrow(() => validateConfig());
-});
-
-// Handler happy path
-test("handler processes a valid record and sends to both queues", async () => {
-  // Arrange
-  CONFIG.trackerEnabledProducts = ["AR"];
-  CONFIG.trackerDryRunProducts = ["AR"];
-  CONFIG.paperChannelEnabledProducts = ["AR"];
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
-
-  const sendMock = mock.method(sqsModule.SQSClient.prototype, "send", async () => {
-    return { MessageId: "12345" };
+    // Ripristina eventuali stub/mocking di Sinon
+    sinon.restore();
   });
 
-  const record = {
-    messageId: "1",
-    body: JSON.stringify({ analogMail: { productType: "AR" } }),
-    messageAttributes: {},
-  };
+  it("parseEnvList returns cleaned array", () => {
+    // Arrange
+    const input = "AR, RS , ,890";
 
-  // Act
-  const result = await handler({ Records: [record] });
-  console.log(result);
+    // Act & Assert
+    expect(parseEnvList(input)).to.deep.equal(["AR", "RS", "890"]);
+    expect(parseEnvList("")).to.deep.equal([]);
+    expect(parseEnvList(undefined)).to.deep.equal([]);
+  });
 
-  // Assert
-  assert.deepEqual(result, { status: "ok" });
-  assert.equal(sendMock.mock.calls.length, 2, "Should send to tracker and channel");
-});
+  it("getProductConfig returns correct configuration", () => {
+    // Act
+    const configAR = getProductConfig("AR");
+    const configRS = getProductConfig("RS");
+    const config890 = getProductConfig("890");
 
-test("handler returns batchItemFailures for invalid JSON", async () => {
-  // Arrange
-  const badRecord = {
-    messageId: "bad1",
-    body: "{invalid json",
-    messageAttributes: {},
-  };
+    // Assert
+    expect(configAR.isTrackerEnabled).to.be.true;
+    expect(configAR.isDryRun).to.be.false;
+    expect(configAR.isPaperChannelEnabled).to.be.false;
 
-  // Act
-  const result = await handler({ Records: [badRecord] });
+    expect(configRS.isTrackerEnabled).to.be.true;
+    expect(configRS.isDryRun).to.be.true;
+    expect(configRS.isPaperChannelEnabled).to.be.false;
 
-  // Assert
-  assert.deepEqual(result, {
-    batchItemFailures: [{ itemIdentifier: "bad1" }],
+    expect(config890.isTrackerEnabled).to.be.false;
+    expect(config890.isPaperChannelEnabled).to.be.true;
+  });
+
+  it("createMessageAttributes copies attributes and adds dryRun when requested", () => {
+    // Arrange
+    const attrs = {
+      foo: { DataType: "String", StringValue: "bar" },
+    };
+
+    // Act
+    const noDry = createMessageAttributes(attrs);
+    const withDry = createMessageAttributes(attrs, true);
+
+    // Assert
+    expect(noDry.foo).to.deep.equal(attrs.foo);
+    expect(noDry.dryRun).to.be.undefined;
+    expect(withDry.dryRun.StringValue).to.equal("true");
+  });
+
+  it("validateConfig throws if queues are missing", () => {
+    // Arrange
+    CONFIG.queueTracker = undefined;
+    CONFIG.queuePaperChannel = undefined;
+
+    // Act & Assert
+    expect(() => validateConfig()).to.throw(/Missing required queue URLs/);
+
+    // Restore queues
+    CONFIG.queueTracker = "https://sqs.mock/tracker";
+    CONFIG.queuePaperChannel = "https://sqs.mock/channel";
+
+    expect(() => validateConfig()).to.not.throw();
   });
 });
 
-// Error scenarios
-test("handler fails when sending to tracker queue throws", async () => {
-  // Arrange
-  CONFIG.trackerEnabledProducts = ["AR"];
-  CONFIG.trackerDryRunProducts = ["AR"];
-  CONFIG.paperChannelEnabledProducts = ["AR"];
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
+// Unit tests per il handler
+describe("Handler", () => {
+  beforeEach(() => {
+    // Reset config e restore dei mock
+    CONFIG.trackerEnabledProducts = ["AR"];
+    CONFIG.trackerDryRunProducts = ["AR"];
+    CONFIG.paperChannelEnabledProducts = ["AR"];
+    CONFIG.queueTracker = "https://sqs.mock/tracker";
+    CONFIG.queuePaperChannel = "https://sqs.mock/channel";
 
-  const sendMock = mock.method(sqsModule.SQSClient.prototype, "send", async () => {
-    throw new Error("Tracker send failed");
+    sinon.restore();
   });
 
-  const record = {
-    messageId: "err1",
-    body: JSON.stringify({ analogMail: { productType: "AR" } }),
-    messageAttributes: {},
-  };
+  // Handler happy path
+  it("processes a valid record and sends to both queues", async () => {
+    // Arrange
+    const sendStub = sinon.stub(sqsModule.SQSClient.prototype, "send")
+      .resolves({ MessageId: "12345" });
 
-  // Act
-  const result = await handler({ Records: [record] });
+    const record = {
+      messageId: "1",
+      body: JSON.stringify({ analogMail: { productType: "AR" } }),
+      messageAttributes: {},
+    };
 
-  // Assert
-  assert.deepEqual(result, {
-    batchItemFailures: [{ itemIdentifier: "err1" }],
-  });
-  assert.equal(sendMock.mock.calls.length, 1, "Should stop after tracker failure");
-});
+    // Act
+    const result = await handler({ Records: [record] });
 
-test("handler fails when sending to paper channel queue throws", async () => {
-  // Arrange
-  CONFIG.trackerEnabledProducts = ["AR"];
-  CONFIG.trackerDryRunProducts = ["AR"];
-  CONFIG.paperChannelEnabledProducts = ["AR"];
-  CONFIG.queueTracker = "https://sqs.mock/tracker";
-  CONFIG.queuePaperChannel = "https://sqs.mock/channel";
-
-  const sendMock = mock.method(sqsModule.SQSClient.prototype, "send", async (cmd) => {
-    if (cmd.input.QueueUrl.includes("tracker")) {
-      return { MessageId: "tracker-ok" };
-    }
-    throw new Error("Paper channel send failed");
+    // Assert
+    expect(result).to.deep.equal({ status: "ok" });
+    expect(sendStub.callCount).to.equal(2, "Should send to tracker and channel");
   });
 
-  const record = {
-    messageId: "err2",
-    body: JSON.stringify({ analogMail: { productType: "AR" } }),
-    messageAttributes: {},
-  };
+  it("returns batchItemFailures for invalid JSON", async () => {
+    // Arrange
+    const badRecord = {
+      messageId: "bad1",
+      body: "{invalid json",
+      messageAttributes: {},
+    };
 
-  // Act
-  const result = await handler({ Records: [record] });
+    // Act
+    const result = await handler({ Records: [badRecord] });
 
-  // Assert
-  assert.deepEqual(result, {
-    batchItemFailures: [{ itemIdentifier: "err2" }],
+    // Assert
+    expect(result).to.deep.equal({
+      batchItemFailures: [{ itemIdentifier: "bad1" }],
+    });
   });
-  assert.equal(sendMock.mock.calls.length, 2, "Should try tracker first, then channel");
+
+  // Error scenarios
+  it("fails when sending to tracker queue throws", async () => {
+    // Arrange
+    const sendStub = sinon.stub(sqsModule.SQSClient.prototype, "send")
+      .rejects(new Error("Tracker send failed"));
+
+    const record = {
+      messageId: "err1",
+      body: JSON.stringify({ analogMail: { productType: "AR" } }),
+      messageAttributes: {},
+    };
+
+    // Act
+    const result = await handler({ Records: [record] });
+
+    // Assert
+    expect(result).to.deep.equal({
+      batchItemFailures: [{ itemIdentifier: "err1" }],
+    });
+    expect(sendStub.callCount).to.equal(1, "Should stop after tracker failure");
+  });
+
+  it("fails when sending to paper channel queue throws", async () => {
+    // Arrange
+    const sendStub = sinon.stub(sqsModule.SQSClient.prototype, "send")
+      .callsFake(async (cmd) => {
+        if (cmd.input.QueueUrl.includes("tracker")) {
+          return { MessageId: "tracker-ok" };
+        }
+        throw new Error("Paper channel send failed");
+      });
+
+    const record = {
+      messageId: "err2",
+      body: JSON.stringify({ analogMail: { productType: "AR" } }),
+      messageAttributes: {},
+    };
+
+    // Act
+    const result = await handler({ Records: [record] });
+
+    // Assert
+    expect(result).to.deep.equal({
+      batchItemFailures: [{ itemIdentifier: "err2" }],
+    });
+    expect(sendStub.callCount).to.equal(2, "Should try tracker first, then channel");
+  });
 });
