@@ -356,10 +356,10 @@
 								</additionalModelTypeAnnotations>
 							</configOptions>
 							<apiPackage>
-								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.api
+								${project.groupId}.papertracker.generated.openapi.msclient.externalchannel.api
 							</apiPackage>
 							<modelPackage>
-								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.model
+								${project.groupId}.papertracker.generated.openapi.msclient.externalchannel.model
 							</modelPackage>
 						</configuration>
 					</execution>

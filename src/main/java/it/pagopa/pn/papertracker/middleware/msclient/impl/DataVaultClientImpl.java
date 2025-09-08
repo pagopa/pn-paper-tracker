@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.msclient.impl;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.api.PaperAddressesApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;

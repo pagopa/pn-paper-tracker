@@ -3,7 +3,7 @@ package it.pagopa.pn.papertracker.middleware.queue.consumer;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,11 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AnalogAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
@@ -39,7 +44,7 @@ public class SendEventMapper {
                 );
     }
 
-    public static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, AttachmentDetails attachmentDetails) {
+    public static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails attachmentDetails) {
         SendEvent.SendEventBuilder builder = SendEvent.builder()
                 .requestId(progressEvent.getRequestId())
                 .statusCode(StatusCodeEnum.valueOf(EventStatusCodeEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
@@ -54,7 +59,7 @@ public class SendEventMapper {
             builder.discoveredAddress(toAnalogAddress(progressEvent.getDiscoveredAddress()));
         }
         if(Objects.nonNull(attachmentDetails)){
-            builder.attachments(List.of(attachmentDetails));
+            builder.attachments(buildPaperAttachmentDetailsFromExternalChannels(List.of(attachmentDetails)));
         }
 
         return builder.build();
@@ -86,7 +91,7 @@ public class SendEventMapper {
                 );
     }
 
-    public static SendEvent toSendEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, AttachmentDetails attachmentDetails) {
+    public static SendEvent toSendEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails attachmentDetails) {
         SendEvent.SendEventBuilder builder = SendEvent.builder()
                 .requestId(paperProgressStatusEvent.getRequestId())
                 .statusCode(statusCode)
@@ -102,7 +107,7 @@ public class SendEventMapper {
         }
 
         if(Objects.nonNull(attachmentDetails)){
-            builder.attachments(List.of(attachmentDetails));
+            builder.attachments(buildPaperAttachmentDetailsFromExternalChannels(List.of(attachmentDetails)));
         }
 
         return builder.build();
@@ -131,7 +136,16 @@ public class SendEventMapper {
                 .documentType(attachment.getDocumentType())
                 .date(attachment.getDate().atOffset(ZoneOffset.UTC))
                 .id(attachment.getId())
-                .uri(attachment.getUri())
+                .url(attachment.getUri())
+                .build()).toList();
+    }
+
+    private static List<it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails> buildPaperAttachmentDetailsFromExternalChannels(List<it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails> attachments) {
+        return attachments.stream().map(attachment -> AttachmentDetails.builder()
+                .documentType(attachment.getDocumentType())
+                .date(attachment.getDate())
+                .id(attachment.getId())
+                .url(attachment.getUri())
                 .build()).toList();
     }
 

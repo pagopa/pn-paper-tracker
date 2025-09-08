@@ -1,8 +1,8 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
