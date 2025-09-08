@@ -47,6 +47,17 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
+  QueueProxyLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
+      Parameters:
+        LogGroupName: !Sub ${ProjectName}-paper-tracker-QueueProxy
+        LogGroupRetention: !Ref LogRetention
+        LogGroupPrefix: /aws/lambda
+
   PaperTrackingsErrorsTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -136,8 +147,7 @@ Resources:
       Parameters:
         QueueName: !Sub '${ProjectName}-paper_tracker_ocr_outputs'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
-        VisibilityTimeout: 300
-        MaxReceiveCount: 10
+        VisibilityTimeout: 60
         DelaySeconds: 1
 
   ExternalChannelToPaperTrackerQueue:
@@ -149,14 +159,16 @@ Resources:
       Parameters:
         QueueName: !Sub '${ProjectName}-external_channel_to_paper_tracker'
         AlarmSNSTopicName: !Ref AlarmSNSTopicName
-        VisibilityTimeout: 300
-        MaxReceiveCount: 10
+        VisibilityTimeout: 60
         DelaySeconds: 1
 
 Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
 
+  QueueProxyLambdaName:
+    Value: !Sub ${ProjectName}-paper-tracker-QueueProxy
+    
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors
     Value: !Ref PaperTrackingsErrorsTable

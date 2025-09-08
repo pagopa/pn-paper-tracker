@@ -1,0 +1,17 @@
+{
+  "name": "queue-proxy-lambda",
+  "version": "1.0.0",
+  "description": "Lambda proxy for SQS paper queues",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test-build": "npm run-script test && npm run-script build",
+    "build": "npm prune --production && rm -f ./function.zip && zip -r ./function.zip . -x '*.md' -x '*.env'",
+    "test": "node --test index.test.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.882.0"
+  }
+}
