@@ -423,6 +423,7 @@ Resources:
   # Event Source Mapping to trigger Lambda from SQS
   PaperTrackerQueueProxyEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
+    DependsOn: PaperTrackerQueueProxy
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
       FunctionName: !Ref PaperTrackerQueueProxyLambdaName
