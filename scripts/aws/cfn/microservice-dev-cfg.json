@@ -15,8 +15,7 @@
     "PaperTrackerExternalChannelUser": "pn-cons-000",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "ExternalChannelsToPaperChannelDryrunQueueName": "pn-external_channel_to_paper_channel_dry_run",
-    "PaperTrackerEnabledProducts": "AR",
-    "PaperTrackerDryRunProducts": "AR",
+    "PaperTrackerEnabledProductsModes": "AR:DRY",
     "PaperChannelEnabledProducts": "AR,RS,890,RIR,RIS"
   }
 }

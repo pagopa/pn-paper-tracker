@@ -2,6 +2,8 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 const sqs = new SQSClient({});
 
+const VALID_PRODUCTS = ["AR", "RS", "890", "RIR", "RIS"];
+
 /**
  * Parse delle liste separate da virgole dalle variabili di ambiente
  * @param {string} envVar - Variabile di ambiente da parsare
@@ -14,12 +16,41 @@ export const parseEnvList = (envVar) => {
     .filter((item) => item !== "");
 }
 
-const VALID_PRODUCTS = ["AR", "RS", "890", "RIR", "RIS"];
+/**
+ * Parse della configurazione tracker con modalità (RUN/DRY)
+ * @param {string} envVar - Variabile di ambiente nel formato "AR:RUN,RS:DRY,890:DRY"
+ * @returns {object} Oggetto con prodotti abilitati e modalità dry run
+ */
+export const parseTrackerConfig = (envVar) => {
+  const config = {
+    trackerEnabledProducts: [],
+    trackerDryRunProducts: []
+  };
+
+  const items = parseEnvList(envVar);
+  
+  for (const item of items) {
+    const [product, mode] = item.split(":").map(part => part.trim());
+    
+    if(!VALID_PRODUCTS.includes(product)) {
+      throw new Error(`Invalid productType in tracker configuration: ${product}`);
+    }
+    if(!["DRY", "RUN"].includes(mode)) {
+      throw new Error(`Invalid dryRun mode in tracker configuration: ${mode}`);
+    }
+
+    config.trackerEnabledProducts.push(product);
+    if (mode === "DRY") {
+      config.trackerDryRunProducts.push(product);
+    }
+  }
+
+  return config;
+}
 
 // Confingurazione prodotti dalle variabili di ambiente
 export const CONFIG = {
-  trackerEnabledProducts: parseEnvList(process.env.PAPER_TRACKER_ENABLED_PRODUCTS),
-  trackerDryRunProducts: parseEnvList(process.env.PAPER_TRACKER_DRY_RUN_PRODUCTS),
+  ...parseTrackerConfig(process.env.PAPER_TRACKER_ENABLED_PRODUCTS),
   paperChannelEnabledProducts: parseEnvList(process.env.PAPER_CHANNEL_ENABLED_PRODUCTS),
   queueTracker: process.env.QUEUE_PAPER_TRACKER,
   queuePaperChannel: process.env.QUEUE_PAPER_CHANNEL

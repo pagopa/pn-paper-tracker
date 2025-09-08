@@ -7,6 +7,7 @@ import {
   getProductConfig,
   createMessageAttributes,
   validateConfig,
+  parseTrackerConfig,
   CONFIG
 } from "./index.js";
 
@@ -34,6 +35,54 @@ describe("Utility functions", () => {
     expect(parseEnvList(input)).to.deep.equal(["AR", "RS", "890"]);
     expect(parseEnvList("")).to.deep.equal([]);
     expect(parseEnvList(undefined)).to.deep.equal([]);
+  });
+
+  it("parseTrackerConfig parses tracker configuration with modes", () => {
+    // Test valid configurations
+    const config1 = parseTrackerConfig("AR:RUN,RS:DRY,890:DRY");
+    expect(config1.trackerEnabledProducts).to.deep.equal(["AR", "RS", "890"]);
+    expect(config1.trackerDryRunProducts).to.deep.equal(["RS", "890"]);
+
+    const config2 = parseTrackerConfig("AR:RUN,RS:RUN");
+    expect(config2.trackerEnabledProducts).to.deep.equal(["AR", "RS"]);
+    expect(config2.trackerDryRunProducts).to.deep.equal([]);
+
+    const config3 = parseTrackerConfig("RIR:DRY");
+    expect(config3.trackerEnabledProducts).to.deep.equal(["RIR"]);
+    expect(config3.trackerDryRunProducts).to.deep.equal(["RIR"]);
+
+    // Test edge cases
+    const configEmpty = parseTrackerConfig("");
+    expect(configEmpty.trackerEnabledProducts).to.deep.equal([]);
+    expect(configEmpty.trackerDryRunProducts).to.deep.equal([]);
+
+    const configUndefined = parseTrackerConfig(undefined);
+    expect(configUndefined.trackerEnabledProducts).to.deep.equal([]);
+    expect(configUndefined.trackerDryRunProducts).to.deep.equal([]);
+
+    // Test with spaces
+    const configSpaces = parseTrackerConfig(" AR : RUN , RS : DRY ");
+    expect(configSpaces.trackerEnabledProducts).to.deep.equal(["AR", "RS"]);
+    expect(configSpaces.trackerDryRunProducts).to.deep.equal(["RS"]);
+  });
+
+  it("parseTrackerConfig throws error for invalid product types", () => {
+    expect(() => parseTrackerConfig("INVALID:RUN")).to.throw(/Invalid productType in tracker configuration: INVALID/);
+    expect(() => parseTrackerConfig("AR:RUN,INVALID:DRY")).to.throw(/Invalid productType in tracker configuration: INVALID/);
+    expect(() => parseTrackerConfig("XYZ:DRY,RS:RUN")).to.throw(/Invalid productType in tracker configuration: XYZ/);
+  });
+
+  it("parseTrackerConfig throws error for invalid modes", () => {
+    expect(() => parseTrackerConfig("AR:INVALID")).to.throw(/Invalid dryRun mode in tracker configuration: INVALID/);
+    expect(() => parseTrackerConfig("AR:RUN,RS:UNKNOWN")).to.throw(/Invalid dryRun mode in tracker configuration: UNKNOWN/);
+    expect(() => parseTrackerConfig("AR:run")).to.throw(/Invalid dryRun mode in tracker configuration: run/);
+    expect(() => parseTrackerConfig("RS:dry")).to.throw(/Invalid dryRun mode in tracker configuration: dry/);
+  });
+
+  it("parseTrackerConfig throws error for malformed entries", () => {
+    expect(() => parseTrackerConfig("AR")).to.throw(/Invalid dryRun mode in tracker configuration: undefined/);
+    expect(() => parseTrackerConfig("AR:")).to.throw(/Invalid dryRun mode in tracker configuration: /);
+    expect(() => parseTrackerConfig(":RUN")).to.throw(/Invalid productType in tracker configuration: /);
   });
 
   it("getProductConfig returns correct configuration", () => {
