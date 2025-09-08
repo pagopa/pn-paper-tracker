@@ -397,7 +397,7 @@
 			<plugin>
 				<groupId>com.sngular</groupId>
 				<artifactId>scs-multiapi-maven-plugin</artifactId>
-				<version>6.1.0</version>
+				<version>6.2.1</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
