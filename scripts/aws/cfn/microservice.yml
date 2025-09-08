@@ -423,10 +423,9 @@ Resources:
   # Event Source Mapping to trigger Lambda from SQS
   PaperTrackerQueueProxyEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
-    DependsOn: PaperTrackerQueueProxy
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
+      FunctionName: !GetAtt PaperTrackerQueueProxy.FunctionName
       BatchSize: 10  # Max messages per batch
       MaximumBatchingWindowInSeconds: 2
       FunctionResponseTypes:
