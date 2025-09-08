@@ -26,6 +26,16 @@ Parameters:
     Type: Number
     Description: 'Disambiguation useful for load balancer rules'
 
+  MicroserviceBucketName:
+    Type: String
+    Default: ''
+    Description: 'Name of the bucket where the microservice files are copied during deploy'
+
+  MicroserviceBucketBaseKey:
+    Type: String
+    Default: ''
+    Description: 'Base key of the microservice in the s3 bucket'
+
   TemplateBucketBaseUrl:
     Type: String
     Description: 'The S3 bucket from which to fetch the templates used by this stack.'
@@ -150,6 +160,18 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where external channel messages are sent'
 
+  ExternalChannels2PaperChannelQueueName:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ExternalChannels2PaperChannelQueueARN:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
+  ExternalChannelsToPaperChannelDryrunQueueName:
+    Type: String
+    Description: 'Write paper-channel messages to this Queue'
+
   PaperTrackingsErrorsTableName:
     Type: String
     Description: 'DynamoDB table name for PaperTrackingsErrors'
@@ -226,6 +248,38 @@ Parameters:
   DataVaultBaseUrl:
     Type: String
     Description: 'DataVault BaseUrl'
+
+  # PaperTrackerQueueProxy Lambda
+  PaperTrackerQueueProxyLambdaName:
+    Type: String
+    Description: Name of the PaperTrackerQueueProxy Lambda.
+
+  PaperTrackerQueueProxyLambdaRuntime:
+    Type: String
+    Default: nodejs22.x
+    Description: Runtime of the PaperTrackerQueueProxy Lambda.
+
+  PaperTrackerQueueProxyLambdaMemory:
+    Type: Number
+    Default: 512
+    MinValue: 512
+    MaxValue: 10240
+    Description: Memory of the PaperTrackerQueueProxy Lambda.
+
+  PaperTrackerQueueProxyMaximumConcurrency:
+    Type: Number
+    Default: 10
+    Description: Maximum concurrency of the PaperTrackerQueueProxy Lambda.
+
+  PaperTrackerEnabledProductsModes:
+    Type: String
+    Default: ""
+    Description: Comma separated list of product types for which pn-paper-tracker is enabled in run or dry-run mode. Es. "AR:RUN,RS:DRY,890:DRY"
+
+  PaperChannelEnabledProducts:
+    Type: String
+    Default: ""
+    Description: Comma separated list of product types for which paper channel is enabled. Es. "AR,RS,890,RIR,RIS"
 
 Resources:
 
@@ -346,95 +400,66 @@ Resources:
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
 
-  PnCoreEventBusToPaperTrackerQueue:
-    Type: AWS::Events::Rule
+  # PaperTrackerQueueProxy Lambda
+  PaperTrackerQueueProxy:
+    Type: AWS::Lambda::Function
     Properties:
-      Description: Route ExternalChannel Events to pn-paper-tracker
-      EventBusName: !Sub '${ProjectName}-CoreEventBus'
-      EventPattern:
-        detail-type: [ "ExternalChannelOutcomeEvent" ]
-        detail:
-          clientId: [ !Ref PaperTrackerExternalChannelUser ]
-          analogMail:
-            statusCode: [ { "anything-but": "CON020" } ]
-            productType: !Ref AllowedPaperTrackerProductTypes
-      Targets:
-        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
-          Id: !Sub ${ProjectName}-Logger-ExtCh2PaperTracker
-          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
-          InputTransformer:
-            InputPathsMap:
-              "timestamp": "$.time"
-            InputTemplate: |
-              {
-                  "timestamp": <timestamp>,
-                  "ruleArn": <aws.events.rule-arn>,
-                  "ruleName": <aws.events.rule-name>,
-                  "ingestionTime": <aws.events.event.ingestion-time>,
-                  "originalEvent": <aws.events.event.json>
-              }
-        - Id: !Sub '${ProjectName}-CoreEventBus-ExtCh2PaperTracker'
-          Arn: !Ref ExternalChannelToPaperTrackerQueueARN
-          InputPath: $.detail
-          DeadLetterConfig:
-            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
+      Runtime: !Ref PaperTrackerQueueProxyLambdaRuntime
+      Handler: index.handler
+      Role: !GetAtt PaperTrackerQueueProxyExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/PaperTrackerQueueProxy.zip"
+      Timeout: 30
+      MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
+      Environment:
+        Variables:
+          PAPER_TRACKER_ENABLED_PRODUCTS: !Ref PaperTrackerEnabledProductsModes
+          PAPER_CHANNEL_ENABLED_PRODUCTS: !Ref PaperChannelEnabledProducts
+          QUEUE_PAPER_CHANNEL: !Ref ExternalChannelsToPaperChannelDryrunQueueName
+          QUEUE_PAPER_TRACKER: !Ref ExternalChannelToPaperTrackerQueueName
 
-  PnCoreEventBusCon020ToPaperTrackerQueue:
-    Type: AWS::Events::Rule
+  # Event Source Mapping to trigger Lambda from SQS
+  PaperTrackerQueueProxyEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
     Properties:
-      Description: Route CON020 Events from PAPER ENRICHER to pn-paper-tracker
+      EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
+      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
+      BatchSize: 10  # Max messages per batch
+      MaximumBatchingWindowInSeconds: 2
+      FunctionResponseTypes:
+        - ReportBatchItemFailures  # Enables partial batch failures
+      ScalingConfig:
+        MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
 
-      EventBusName: !Sub '${ProjectName}-CoreEventBus'
-      EventPattern:
-        detail-type: [ "ExternalChannelOutcomeEvent" ]
-        source: [ "PAPER ENRICHER" ]
-        detail:
-          analogMail:
-            statusCode: [ "CON020" ]
-            productType: !Ref AllowedPaperTrackerProductTypes
-      Targets:
-        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
-          Id: !Sub ${ProjectName}-Logger-Con020ToPaperTacker
-          RoleArn: !GetAtt EventBusEnqueuePaperTrackerRole.Arn
-          InputTransformer:
-            InputPathsMap:
-              "timestamp": "$.time"
-            InputTemplate: |
-              {
-                  "timestamp": <timestamp>,
-                  "ruleArn": <aws.events.rule-arn>,
-                  "ruleName": <aws.events.rule-name>,
-                  "ingestionTime": <aws.events.event.ingestion-time>,
-                  "originalEvent": <aws.events.event.json>
-              }
-        - Id: !Sub '${ProjectName}-CoreEventBus-Con020ToPaperTracker'
-          Arn: !Ref ExternalChannelToPaperTrackerQueueARN
-          InputPath: $.detail
-          DeadLetterConfig:
-            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
-
-  EventBusEnqueuePaperTrackerRole:
+  PaperTrackerQueueProxyExecutionRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${PaperTrackerQueueProxyLambdaName}LambdaRole
       AssumeRolePolicyDocument:
+        Version: '2012-10-17'
         Statement:
-          - Action: sts:AssumeRole
-            Effect: Allow
+          - Effect: Allow
             Principal:
-              Service: events.amazonaws.com
-        Version: "2012-10-17"
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: putEventIntoQueues
+        - PolicyName: PaperTrackerQueueProxyPolicy
           PolicyDocument:
+            Version: '2012-10-17'
             Statement:
-              - Sid: putEvents
+              - Effect: Allow
                 Action:
-                  - sqs:ChangeMessageVisibility
-                  - sqs:ChangeMessageVisibilityBatch
+                  - sqs:DeleteMessage
                   - sqs:GetQueueAttributes
-                  - sqs:GetQueueUrl
+                  - sqs:ReceiveMessage
                   - sqs:SendMessage
-                  - sqs:SendMessageBatch
-                Effect: Allow
                 Resource:
+                  - !Ref ExternalChannels2PaperChannelQueueARN
+                  - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
                   - !Ref ExternalChannelToPaperTrackerQueueARN
