@@ -417,15 +417,15 @@ Resources:
         Variables:
           PAPER_TRACKER_ENABLED_PRODUCTS: !Ref PaperTrackerEnabledProductsModes
           PAPER_CHANNEL_ENABLED_PRODUCTS: !Ref PaperChannelEnabledProducts
-          QUEUE_PAPER_CHANNEL: !Ref ExternalChannelsToPaperChannelDryrunQueueName
-          QUEUE_PAPER_TRACKER: !Ref ExternalChannelToPaperTrackerQueueName
+          QUEUE_URL_PAPER_CHANNEL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelsToPaperChannelDryrunQueueName}"
+          QUEUE_URL_PAPER_TRACKER: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelToPaperTrackerQueueName}"
 
   # Event Source Mapping to trigger Lambda from SQS
   PaperTrackerQueueProxyEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !GetAtt PaperTrackerQueueProxy.FunctionName
+      FunctionName: !Ref PaperTrackerQueueProxy
       BatchSize: 10  # Max messages per batch
       MaximumBatchingWindowInSeconds: 2
       FunctionResponseTypes:

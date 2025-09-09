@@ -52,8 +52,8 @@ export const parseTrackerConfig = (envVar) => {
 export const CONFIG = {
   ...parseTrackerConfig(process.env.PAPER_TRACKER_ENABLED_PRODUCTS),
   paperChannelEnabledProducts: parseEnvList(process.env.PAPER_CHANNEL_ENABLED_PRODUCTS),
-  queueTracker: process.env.QUEUE_PAPER_TRACKER,
-  queuePaperChannel: process.env.QUEUE_PAPER_CHANNEL
+  queueTracker: process.env.QUEUE_URL_PAPER_TRACKER,
+  queuePaperChannel: process.env.QUEUE_URL_PAPER_CHANNEL
 };
 
 /**
