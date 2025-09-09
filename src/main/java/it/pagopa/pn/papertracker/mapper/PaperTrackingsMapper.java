@@ -29,13 +29,9 @@ public class PaperTrackingsMapper {
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setEstimatedPaperDeliveryTimestamp(now);
-        paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
-        paperTrackings.setCreatedAt(now);
-        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).toEpochMilli());
         paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 
@@ -53,10 +49,7 @@ public class PaperTrackingsMapper {
         paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setCreatedAt(now);
         paperTrackings.setTtl(Instant.now().plus(paperTrackingsTtlDuration).toEpochMilli());
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
         return paperTrackings;
     }
 
@@ -68,8 +61,6 @@ public class PaperTrackingsMapper {
         tracking.setUnifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver());
         tracking.setOcrRequestId(paperTrackings.getOcrRequestId());
         tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
-        tracking.setPcRetry(paperTrackings.getNextRequestIdPcretry());
-        tracking.setAttemptId(paperTrackings.getAttemptId());
         tracking.setCreatedAt(paperTrackings.getCreatedAt());
         tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
         if(Objects.nonNull(paperTrackings.getProductType())){
