@@ -18,7 +18,7 @@ public class PaperTrackings {
     public static final String COL_ATTEMPT_ID = "attemptId";
     public static final String COL_PC_RETRY = "pcRetry";
     public static final String COL_EVENTS = "events";
-    public static final String COL_NOTIFICATION_STATE = "notificationState";
+    public static final String COL_PAPER_STATUS = "paperStatus";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
@@ -49,7 +49,7 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_EVENTS), @DynamoDbIgnoreNulls}))
     private List<Event> events;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_NOTIFICATION_STATE), @DynamoDbIgnoreNulls}))
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAPER_STATUS), @DynamoDbIgnoreNulls}))
     private PaperStatus paperStatus;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
