@@ -9,6 +9,7 @@ import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHand
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -25,10 +26,10 @@ public class PnEventInboundService {
     private final OcrEventHandler ocrEventHandler;
 
     @SqsListener(value = "${pn.paper-tracker.topics.external-channel-to-paper-tracker}")
-    public void externalChannelConsumer(@Payload Message<SingleStatusUpdate> message, @Headers Map<String, Object> headers) {
+    public void externalChannelConsumer(@Payload Message<SingleStatusUpdate> message, @Header(name = "dryRun", required = false) Boolean dryRun) {
         try {
-            log.debug("Handle message from pn-external_channel_to_paper_tracker with message {} and headers {}", message, headers);
-            boolean dryRunEnabled = Boolean.getBoolean((String) headers.getOrDefault("dryRun", "false"));
+            log.debug("Handle message from pn-external_channel_to_paper_tracker with message {} and dryRun {}", message, dryRun);
+            boolean dryRunEnabled = Boolean.TRUE.equals(dryRun);
             externalChannelHandler.handleExternalChannelMessage(message.getPayload(), dryRunEnabled);
 
         } catch (Exception ex) {
