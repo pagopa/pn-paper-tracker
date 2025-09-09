@@ -11,7 +11,6 @@
     "PnOcrInputsQueueRegion": "eu-south-1",
     "OcrAwsRoleARN": "arn:aws:iam::830192246553:role/pn-external-channels-TaskRole",
     "OcrAwsAccountId": "830192246553",
-    "AllowedPaperTrackerProductTypes": "AR,RIR",
     "PaperTrackerExternalChannelUser": "pn-cons-000",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "ExternalChannelsToPaperChannelDryrunQueueName": "pn-external_channel_to_paper_channel_dry_run",

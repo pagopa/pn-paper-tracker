@@ -96,38 +96,33 @@ public class ExternalChannelHandler {
      * @param factory    la factory specifica (RIR, AR, ecc.)
      */
     private Mono<Void> handleEvent(String statusCode, HandlerContext context, AbstractHandlersFactory factory) {
-        EventStatusCodeEnum statusCodeConfigurationEnum = EventStatusCodeEnum.fromKey(statusCode);
+        EventStatusCodeEnum eventStatusCodeEnum = EventStatusCodeEnum.fromKey(statusCode);
 
-        return switch (statusCodeConfigurationEnum.getCodeType()) {
+        return switch (eventStatusCodeEnum.getCodeType()) {
             case INTERMEDIATE_EVENT -> {
-                log.info(HANDLING_EVENT_LOG,
-                        "Intermediate",
-                        statusCodeConfigurationEnum.getProductType(),
-                        statusCode);
+                logStatusEvent("Intermediate", eventStatusCodeEnum, statusCode);
                 yield factory.buildIntermediateEventsHandler(context);
             }
             case RETRYABLE_EVENT -> {
-                log.info(HANDLING_EVENT_LOG,
-                        "Retryable",
-                        statusCodeConfigurationEnum.getProductType(),
-                        statusCode);
+                logStatusEvent("Retryable", eventStatusCodeEnum, statusCode);
                 yield factory.buildRetryEventHandler(context);
             }
             case NOT_RETRYABLE_EVENT -> {
-                log.info(HANDLING_EVENT_LOG,
-                        "NotRetryable",
-                        statusCodeConfigurationEnum.getProductType(),
-                        statusCode);
+                logStatusEvent("NotRetryable", eventStatusCodeEnum, statusCode);
                 yield factory.buildNotRetryableEventHandler(context);
             }
             case FINAL_EVENT -> {
-                log.info(HANDLING_EVENT_LOG,
-                        "Final",
-                        statusCodeConfigurationEnum.getProductType(),
-                        statusCode);
+                logStatusEvent("Final", eventStatusCodeEnum, statusCode);
                 yield factory.buildFinalEventsHandler(context);
             }
         };
+    }
+
+    private void logStatusEvent(String statusEvent, EventStatusCodeEnum eventStatusCodeEnum, String statusCode) {
+        log.info(HANDLING_EVENT_LOG,
+                statusEvent,
+                eventStatusCodeEnum.getProductType(),
+                statusCode);
     }
 
 }

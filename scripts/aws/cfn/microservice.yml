@@ -236,11 +236,6 @@ Parameters:
     Type: String
     Description: 'AWS account ID of the OCR service'
 
-  AllowedPaperTrackerProductTypes:
-    Type: CommaDelimitedList
-    Default: "AR,RIR"
-    Description: productType list managed by paper tracker
-
   PaperTrackerExternalChannelUser:
     Type: String
     Description: 'The clientId used by ExternalChannel to send events to PaperTracker'
