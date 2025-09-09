@@ -271,6 +271,18 @@ Parameters:
     Default: 10
     Description: Maximum concurrency of the PaperTrackerQueueProxy Lambda.
 
+  PaperTrackerQueueProxyBatchSize:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: Batch size of the PaperTrackerQueueProxy Lambda.
+
+  PaperTrackerQueueProxyMaximumBatchingWindowInSeconds:
+    Type: Number
+    Default: 0
+    MinValue: 0
+    Description: Maximum batching window in seconds of the PaperTrackerQueueProxy Lambda.
+
   PaperTrackerEnabledProductsModes:
     Type: String
     Default: ""
@@ -426,8 +438,8 @@ Resources:
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
       FunctionName: !Ref PaperTrackerQueueProxy
-      BatchSize: 10  # Max messages per batch
-      MaximumBatchingWindowInSeconds: 2
+      BatchSize: !!Ref PaperTrackerQueueProxyBatchSize  # Max messages per batch
+      MaximumBatchingWindowInSeconds: !Ref PaperTrackerQueueProxyMaximumBatchingWindowInSeconds
       FunctionResponseTypes:
         - ReportBatchItemFailures  # Enables partial batch failures
       ScalingConfig:
