@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.springframework.util.CollectionUtils;
 
@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
@@ -29,6 +30,21 @@ public class TestUtils {
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
+        return pt;
+    }
+
+    public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(ProductType.AR);
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        pt.setEvents(events);
         return pt;
     }
 
@@ -55,10 +71,10 @@ public class TestUtils {
                 .build()).toList();
     }
 
-    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now) {
+    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay) {
         PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
         ev.requestId(requestId);
-        ev.setClientRequestTimeStamp(OffsetDateTime.now());
+        ev.setClientRequestTimeStamp(now.plusSeconds(delay.getAndIncrement()));
         ev.setStatusDateTime(now);
         ev.setIun("iun");
         ev.setProductType("AR");

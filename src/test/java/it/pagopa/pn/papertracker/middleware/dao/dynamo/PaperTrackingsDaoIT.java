@@ -127,6 +127,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setStatusCode("RECRN004C");
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
+        event.setDryRun(true);
         event.setAttachments(List.of(attachment));
         PaperStatus notificationState1 = new PaperStatus();
         notificationState1.setFinalStatusCode("RECRN005C");
@@ -291,6 +292,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setStatusCode("IN_PROGRESS");
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
+        event.setDryRun(true);
 
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
@@ -323,6 +325,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event2.setRequestTimestamp(Instant.now());
         event2.setStatusCode("IN_PROGRESS");
         event2.setStatusTimestamp(Instant.now());
+        event2.setDryRun(false);
 
         Attachment attachment3 = new Attachment();
         attachment.setId("attachment-id-1");

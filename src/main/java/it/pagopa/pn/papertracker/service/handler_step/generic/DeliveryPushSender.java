@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -44,11 +45,11 @@ public class DeliveryPushSender implements HandlerStep {
     @Override
     public Mono<Void> execute(HandlerContext context) {
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
-                .filter(sendEvent -> !configs.getNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
+                .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
         if(!CollectionUtils.isEmpty(filteredEvent)) {
             return Flux.fromIterable(filteredEvent)
-                    .flatMap(event -> sendToOutputTarget(event, context.getAnonymizedDiscoveredAddressId()))
+                    .flatMap(event -> sendToOutputTarget(event, context))
                     .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
                     .doOnNext(context::setPaperTrackings)
                     .then();
@@ -64,12 +65,16 @@ public class DeliveryPushSender implements HandlerStep {
      *
      * @param event evento da salvare nel target di output
      */
-    public Mono<SendEvent> sendToOutputTarget(SendEvent event, String anonymizedDiscoveredAddressId) {
+    public Mono<SendEvent> sendToOutputTarget(SendEvent event, HandlerContext context) {
         return Mono.just(event)
                 .flatMap(sendEvent -> {
                     log.info("Sending delivery push for event: {}", sendEvent);
-                    if (configs.isSendOutputToDeliveryPush()) {
+                    if (context.isDryRunEnabled()) {
+                        log.info("Sending event to PnPaperTrackerDryRunOutputs");
+                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context.getAnonymizedDiscoveredAddressId()));
+                    } else {
                         log.info("Sending event to pn-external_channel_outputs");
+                        sendEvent.setRequestId(TrackerUtility.removePcretryFromRequestId(event.getRequestId()));
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
@@ -77,14 +82,11 @@ public class DeliveryPushSender implements HandlerStep {
                                         .publisher("pn-paper-tracking")
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
-                                        .eventType("SEND_EVENT_RESPONSE")
+                                        .eventType("SEND_ANALOG_RESPONSE")
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
                         return Mono.empty();
-                    } else {
-                        log.info("Sending event to PnPaperTrackerDryRunOutputs");
-                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, anonymizedDiscoveredAddressId));
                     }
                 })
                 .thenReturn(event);

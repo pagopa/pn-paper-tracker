@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -27,10 +28,11 @@ public class PnPaperTrackerConfigs {
     public String safeStorageCxId;
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
-    private boolean sendOutputToDeliveryPush;
-    private List<ProductType> enableOcrValidationFor;
-    private List<FileType> enableOcrValidationForFile;
-    private List<String> notSendToDeliveryPush;
+    private int maxPcRetryMock;
+    private List<ProductType> enableRetrySendEngageFor = new ArrayList<>();
+    private List<ProductType> enableOcrValidationFor = new ArrayList<>();
+    private List<FileType> enableOcrValidationForFile = new ArrayList<>();
+    private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
     private String queueOcrInputName;
     private String queueOcrInputsUrl;
     private String QueueOcrInputsRegion;

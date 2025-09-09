@@ -26,6 +26,7 @@ public class Event {
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_ID = "id";
+    public static final String COL_DRY_RUN = "dryRun";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
@@ -57,5 +58,8 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRY_RUN)}))
+    private Boolean dryRun;
 
 }

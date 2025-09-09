@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,11 +42,11 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         String discoveredAddress = "123 Main St";
-
-        when(config.isSendOutputToDeliveryPush()).thenReturn(true);
+        HandlerContext context = new HandlerContext();
+        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
+        deliveryPushSender.sendToOutputTarget(event, context).block();
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
@@ -57,12 +58,14 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         String discoveredAddress = "123 Main St";
+        HandlerContext context = new HandlerContext();
+        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        context.setDryRunEnabled(true);
 
-        when(config.isSendOutputToDeliveryPush()).thenReturn(false);
         when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
+        deliveryPushSender.sendToOutputTarget(event, context).block();
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
@@ -74,11 +77,11 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         String discoveredAddress = "123 Main St";
-
-        when(config.isSendOutputToDeliveryPush()).thenReturn(true);
+        HandlerContext context = new HandlerContext();
+        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, discoveredAddress).block();
+        deliveryPushSender.sendToOutputTarget(event, context).block();
 
         // Assert
         ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);

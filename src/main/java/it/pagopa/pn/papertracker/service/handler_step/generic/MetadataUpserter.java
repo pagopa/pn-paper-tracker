@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
@@ -29,7 +29,7 @@ public class MetadataUpserter implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(anonymizedDiscoveredAddressId -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), context.getAnonymizedDiscoveredAddressId(), context.getEventId()))
+                .flatMap(anonymizedDiscoveredAddressId -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), context.getAnonymizedDiscoveredAddressId(), context.getEventId(), context.isDryRunEnabled()))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
                 .doOnNext(paperTrackings -> {
                     context.setPaperTrackings(paperTrackings);

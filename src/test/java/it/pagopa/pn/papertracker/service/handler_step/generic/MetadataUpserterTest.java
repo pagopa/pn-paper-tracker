@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.DiscoveredAddress;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
@@ -108,7 +108,7 @@ class MetadataUpserterTest {
                      mockStatic(PaperProgressStatusEventMapper.class)) {
 
             mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, "", "eventId"))
+                            .toPaperTrackings(paperProgressStatusEvent, "", "eventId", true))
                     .thenReturn(Mono.error(mapperException));
 
             // Act & Assert

@@ -3,7 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
@@ -47,7 +47,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(true);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(any())).thenReturn(Mono.just(response));
         when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
         when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
 
@@ -66,7 +66,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(false);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
+        when(pcRetryApi.getPcRetry(any())).thenReturn(Mono.just(response));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -84,7 +84,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PnPaperTrackerNotFoundException webClientResponseException = mock(PnPaperTrackerNotFoundException.class);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(webClientResponseException));
+        when(pcRetryApi.getPcRetry(any())).thenReturn(Mono.error(webClientResponseException));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
