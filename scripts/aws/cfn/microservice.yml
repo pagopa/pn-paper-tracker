@@ -438,7 +438,7 @@ Resources:
     Properties:
       EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
       FunctionName: !Ref PaperTrackerQueueProxy
-      BatchSize: !!Ref PaperTrackerQueueProxyBatchSize  # Max messages per batch
+      BatchSize: !Ref PaperTrackerQueueProxyBatchSize  # Max messages per batch
       MaximumBatchingWindowInSeconds: !Ref PaperTrackerQueueProxyMaximumBatchingWindowInSeconds
       FunctionResponseTypes:
         - ReportBatchItemFailures  # Enables partial batch failures
