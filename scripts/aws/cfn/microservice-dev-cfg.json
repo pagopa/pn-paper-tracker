@@ -1,7 +1,9 @@
 {
   "Parameters" : {
     "MinTasksNumber": "2",
-    "MaxTasksNumber": "4",
+    "MaxTasksNumber": "10",
+    "AutoscalingThreshold": "1200",
+    "ConsumedQueueMessagePerMinute": "3300",
     "PnCronAnalyzer": "-",
     "WireTapLogActivation": "false",
     "MountEfs": "false",
