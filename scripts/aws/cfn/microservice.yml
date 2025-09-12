@@ -125,6 +125,11 @@ Parameters:
     Description: memory amount reserved to the task pod.
     AllowedValues: [ 2GB, 4GB, 6GB, 8GB ]
 
+  JavaToolOptions:
+    Type: String
+    Default: '-XX:MaxDirectMemorySize=256m'
+    Description: JavaToolOptions
+
   MinTasksNumber:
     Default: 1
     Type: Number
@@ -143,6 +148,59 @@ Parameters:
   LogAlarmStrategy:
     Type: String
     Default: 'FATAL'
+
+  # Autoscaling parameters
+  AutoscalingCheckPeriod:
+    Default: 60
+    Type: Number
+    Description: minimum autoscaling number of tasks\
+
+  AutoscalingDataPointN:
+    Default: 1
+    Type: Number
+    Description: activate when N datapoint on M
+
+  AutoscalingDataPointM:
+    Default: 1
+    Type: Number
+    Description: activate when N datapoint on M
+
+  AutoscalingThreshold:
+    Default: 70
+    Type: String
+
+  ConsumedQueueMessagePerMinute:
+    Type: Number
+    Default: 0
+    Description: Weight to assign to queue number of visible messages metric
+
+  HealthCheckTimeout:
+    Description: health check timeout seconds
+    Type: Number
+    Default: 5
+
+  HealthCheckInterval:
+    Description: Seconds between two health check
+    Type: Number
+    Default: 60
+
+  HealthyThresholdCount:
+    Description: |
+      The number of consecutive health checks successes required before considering 
+      an unhealthy target healthy. 
+    Type: Number
+    Default: 5
+  
+  UnhealthyThresholdCount:
+    Description: |
+      The number of consecutive health check failures required before considering a target unhealthy. 
+    Type: Number
+    Default: 2
+
+  ApplicationLoadBalancerMetricsDimensionName:
+    Type: String
+    Default: ''
+    Description: Application load balancer dimension name
 
   PnOcrOutputsQueueName:
     Type: String
@@ -278,6 +336,13 @@ Parameters:
     MinValue: 0
     Description: Maximum batching window in seconds of the PaperTrackerQueueProxy Lambda.
 
+  PaperTrackerQueueProxyTimeout:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    MaxValue: 900
+    Description: Timeout of the PaperTrackerQueueProxy Lambda.
+
   PaperTrackerEnabledProductsModes:
     Type: String
     Default: ""
@@ -301,11 +366,20 @@ Resources:
         MinTasksNumber: !Ref MinTasksNumber
         MaxTasksNumber: !Ref MaxTasksNumber
         HealthCheckPath: /actuator/health
+        HealthCheckTimeout: !Ref HealthCheckTimeout
+        HealthCheckInterval: !Ref HealthCheckInterval
+        HealthyThresholdCount: !Ref HealthyThresholdCount
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        AutoscalingStrategy: CUSTOM
+        AutoscalingThreshold: !Ref AutoscalingThreshold
+        AutoscalingCheckPeriod: !Ref AutoscalingCheckPeriod
         EfsFilesystem: !Ref FargateEFSFileSystemID
         MountEfs: !Ref MountEfs
         WireTapLogActivation: !Ref WireTapLogActivation
+        AutoscalingDataPointN: !Ref AutoscalingDataPointN
+        AutoscalingDataPointM: !Ref AutoscalingDataPointM
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
-        JavaToolOptions: '-XX:MaxDirectMemorySize=256m'
+        JavaToolOptions: !Ref JavaToolOptions
         ContainerImageURI: !Sub '${ContainerImageUri}'
         ContainerEnvEntry1: !Sub 'AWS_REGIONCODE=${AWS::Region}'
         ContainerEnvEntry2: !Sub 'PN_CRON_ANALYZER=${PnCronAnalyzer}'
@@ -366,6 +440,10 @@ Resources:
           - - !Ref PaperTrackingsTableName
             - !Ref PaperTrackingsErrorsTableName
             - !Ref PaperTrackerDryRunOutputsTableName
+        QueueArns: !Join
+          - ','
+          - - !Ref ExternalChannelToPaperTrackerQueueARN
+            - !Ref PnOcrOutputsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
@@ -418,7 +496,7 @@ Resources:
       Code:
         S3Bucket: !Ref MicroserviceBucketName
         S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/queueProxy.zip"
-      Timeout: 30
+      Timeout: !Ref PaperTrackerQueueProxyTimeout
       MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
       Environment:
         Variables:
@@ -426,6 +504,10 @@ Resources:
           PAPER_CHANNEL_ENABLED_PRODUCTS: !Ref PaperChannelEnabledProducts
           QUEUE_URL_PAPER_CHANNEL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelsToPaperChannelDryrunQueueName}"
           QUEUE_URL_PAPER_TRACKER: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelToPaperTrackerQueueName}"
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      TracingConfig:
+        Mode: Active
 
   # Event Source Mapping to trigger Lambda from SQS
   PaperTrackerQueueProxyEventSourceMapping:
@@ -470,3 +552,76 @@ Resources:
                   - !Ref ExternalChannels2PaperChannelQueueARN
                   - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
                   - !Ref ExternalChannelToPaperTrackerQueueARN
+
+  #### Alarm for custom metric Autoscaling
+  AlarmCustomAutoscaling:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-autoscaling-custom"
+      AlarmDescription: "Trigger scaling based on custom metric"
+      DatapointsToAlarm: !Ref AutoscalingDataPointN
+      ComparisonOperator: "GreaterThanOrEqualToThreshold"
+      Metrics:
+        - Id: m1
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "ExternalChannelToPaperTrackerQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: m2
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: QueueName
+                  Value: !Ref "PnOcrOutputsQueueName"
+              Namespace: "AWS/SQS"
+              MetricName: "ApproximateNumberOfMessagesVisible"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: m3
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt PaperTrackerMicroservice.Outputs.TargetGroupName
+              Namespace: "AWS/ApplicationELB"
+              MetricName: "RequestCountPerTarget"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Sum
+          ReturnData: False
+        - Id: m4
+          MetricStat:
+            Metric:
+              Dimensions:
+                - Name: TargetGroup
+                  Value: !GetAtt PaperTrackerMicroservice.Outputs.TargetGroupName
+                - Name: LoadBalancer
+                  Value: !Ref ApplicationLoadBalancerMetricsDimensionName
+              Namespace: "AWS/ApplicationELB"
+              MetricName: "HealthyHostCount"
+            Period: !Ref AutoscalingCheckPeriod
+            Stat: Average
+          ReturnData: False
+        - Id: code
+          Expression: !Sub "IF(m4==0, 101, (100*(m1+m2)) / (${ConsumedQueueMessagePerMinute} * m4) )"
+          Label: !Sub "${ProjectName}-paper-tracker-queue-custom-metric"
+          ReturnData: False
+        - Id: http
+          Expression: !Sub "(100 * m3) / ${AutoscalingThreshold}"
+          Label: !Sub "${ProjectName}-paper-tracker-http-custom-metric"
+          ReturnData: False
+        - Id: e1
+          Expression: "IF( code<http, http, code )"
+          Label: !Sub "${ProjectName}-paper-tracker-autoscale-custom-metric"
+      EvaluationPeriods: !Ref AutoscalingDataPointM
+      Threshold: 60
+      AlarmActions:
+        - !GetAtt PaperTrackerMicroservice.Outputs.ScaleUpPolicy
+      OKActions:
+        - !GetAtt PaperTrackerMicroservice.Outputs.ScaleDownPolicy
