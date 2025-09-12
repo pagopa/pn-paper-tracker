@@ -26,7 +26,7 @@ public class PnEventInboundService {
     public void externalChannelConsumer(
             @Payload Message<SingleStatusUpdate> message,
             @Header(name = "dryRun", required = false) Boolean dryRun,
-            @Header(name = "MessageId", required = false) String messageId
+            @Header(name = "MessageId") String messageId
     ) {
         try {
             log.debug("Handle message from pn-external_channel_to_paper_tracker with message {}, dryRun {} and messageId {}", message, dryRun, messageId);

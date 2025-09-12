@@ -18,8 +18,6 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -45,15 +43,16 @@ public class OcrEventHandler {
         MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
                         .flatMap(paperTrackings -> {
                             if(paperTrackings.getState().equals(PaperTrackingsState.DONE) || paperTrackings.getState().equals(PaperTrackingsState.KO)){
+                                String eventId = paperTrackings.getOcrRequestId().split("#")[1];
                                 Mono.error(new PnPaperTrackerValidationException(("Error in OCR validation for requestId: " + ocrResultMessage.getCommandId()),
                                         PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
                                                 "",
                                                 ErrorCategory.OCR_VALIDATION,
                                                 ErrorCause.OCR_DUPLICATED_EVENT,
-                                                ErrorCause.OCR_DUPLICATED_EVENT.getDescription(),
+                                                "CommandId: " + ocrResultMessage.getCommandId(),
                                                 FlowThrow.DEMAT_VALIDATION,
                                                 ErrorType.WARNING,
-                                                ""
+                                                eventId
                                         )));
                             }
                             Event event = extractFinalEventFromOcr(paperTrackings);

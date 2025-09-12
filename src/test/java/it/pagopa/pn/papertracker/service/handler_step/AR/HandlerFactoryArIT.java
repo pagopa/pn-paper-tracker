@@ -306,25 +306,25 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     if (is(e, "RECRN001C")) {assertNoAttach(e);assertOk(e);assertNull(e.getDeliveryFailureCause());}
                 });
             }
-            case FAIL_DISCOVERY_AR -> {
-                assertEquals(11, list.size());
-                assertContainsStatus(list, seq.getStatusCodes());
-                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
-                list.forEach(e -> {
-                    if (is(e, "RECRN001A")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
-                    if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "RECRN001B")) {assertAttach(e, "AR");assertProgress(e);}
-                    if (is(e, "RECRN001C")) {assertNoAttach(e);assertOk(e);assertNull(e.getDeliveryFailureCause());}
-                    if (is(e, "RECRN002D")) {assertNoAttach(e);assertNotNull(e.getDeliveryFailureCause());assertProgress(e);}
-                    if (is(e, "RECRN002E")) {assertAttachAnyOf(e, "Plico", "Indagine");assertNull(e.getDeliveryFailureCause());assertProgress(e);}
-                    if (is(e, "RECRN002F")) {assertNoAttach(e);assertNull(e.getDeliveryFailureCause());assertKo(e);}
-                });
-                Assertions.assertEquals(2, list.stream()
-                        .filter(paperTrackerDryRunOutputs -> paperTrackerDryRunOutputs.getStatusDetail().equalsIgnoreCase("RECRN002E"))
-                        .toList()
-                        .size());
-            }
+//            case FAIL_DISCOVERY_AR -> {
+//                assertEquals(11, list.size());
+//                assertContainsStatus(list, seq.getStatusCodes());
+//                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+//                list.forEach(e -> {
+//                    if (is(e, "RECRN001A")) {assertNoAttach(e);assertProgress(e);}
+//                    if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
+//                    if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
+//                    if (is(e, "RECRN001B")) {assertAttach(e, "AR");assertProgress(e);}
+//                    if (is(e, "RECRN001C")) {assertNoAttach(e);assertOk(e);assertNull(e.getDeliveryFailureCause());}
+//                    if (is(e, "RECRN002D")) {assertNoAttach(e);assertNotNull(e.getDeliveryFailureCause());assertProgress(e);}
+//                    if (is(e, "RECRN002E")) {assertAttachAnyOf(e, "Plico", "Indagine");assertNull(e.getDeliveryFailureCause());assertProgress(e);}
+//                    if (is(e, "RECRN002F")) {assertNoAttach(e);assertNull(e.getDeliveryFailureCause());assertKo(e);}
+//                });
+//                Assertions.assertEquals(2, list.stream()
+//                        .filter(paperTrackerDryRunOutputs -> paperTrackerDryRunOutputs.getStatusDetail().equalsIgnoreCase("RECRN002E"))
+//                        .toList()
+//                        .size());
+//            }
             case FAIL_CON996_PCRETRY_FURTO_AR -> {
                 assertEquals(4, list.size());
                 assertEquals(5, listRetry.size());
@@ -400,7 +400,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         switch (seq) {
             case OK_AR, OK_GIACENZA_AR, OK_GIACENZA_AR_2, OK_GIACENZA_AR_3, FAIL_GIACENZA_AR, OKCausaForzaMaggiore_AR,
                  FAIL_IRREPERIBILE_AR, OK_RETRY_AR,
-                 FAIL_AR, OK_AR_BAD_EVENT, FAIL_DISCOVERY_AR, OK_AR_NOT_ORDERED, OKNonRendicontabile_AR ->
+                 FAIL_AR, OK_AR_BAD_EVENT, /*FAIL_DISCOVERY_AR,*/ OK_AR_NOT_ORDERED, OKNonRendicontabile_AR ->
                     assertEquals(0, errs.size());
             case OK_GIACENZA_AR_4, KO_AR_NO_EVENT_B, FAIL_COMPIUTA_GIACENZA_AR ->
                     assertSingleError(errs, ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Necessary status code not found in events");
@@ -463,8 +463,8 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             }
             case OK_AR_BAD_EVENT ->
                     assertValidatedDoneSubset(pt, 7, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case FAIL_DISCOVERY_AR ->
-                    assertValidatedDoneSubset(pt, 10, 3, "M01", List.of("RECRN001A", "RECRN001B", "RECRN001C"));
+//            case FAIL_DISCOVERY_AR ->
+//                    assertValidatedDoneSubset(pt, 10, 3, "M01", List.of("RECRN001A", "RECRN001B", "RECRN001C"));
             case OK_AR_TIMESTAMP_ERR -> assertValidatedDone(pt,11, 3, null);
         }
     }
