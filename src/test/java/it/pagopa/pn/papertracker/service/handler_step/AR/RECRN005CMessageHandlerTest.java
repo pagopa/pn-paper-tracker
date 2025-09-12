@@ -54,6 +54,8 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
     private static final int DAYS_REFINEMENT = 10;
     private static final int STORAGE_DURATION_AR_DAYS = 30;
 
+    private final String eventId = "eventId";
+
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
     @Autowired
@@ -111,7 +113,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
@@ -150,7 +152,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
@@ -190,7 +192,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -234,7 +236,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
 
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));

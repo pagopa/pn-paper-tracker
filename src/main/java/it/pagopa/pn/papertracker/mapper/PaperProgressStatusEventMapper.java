@@ -28,6 +28,7 @@ public class PaperProgressStatusEventMapper {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId(eventId);
+        event.setIun(paperProgressStatusEvent.getIun());
         if (!CollectionUtils.isEmpty(paperProgressStatusEvent.getAttachments())) {
             event.setAttachments(paperProgressStatusEvent.getAttachments().stream()
                     .map(PaperProgressStatusEventMapper::buildAttachmentFromAttachmentDetail)
@@ -63,6 +64,7 @@ public class PaperProgressStatusEventMapper {
         attachment.setId(attachmentDetails.getId());
         attachment.setDocumentType(attachmentDetails.getDocumentType());
         attachment.setUri(attachmentDetails.getUri());
+        attachment.setSha256(attachmentDetails.getSha256());
         return attachment;
     }
 

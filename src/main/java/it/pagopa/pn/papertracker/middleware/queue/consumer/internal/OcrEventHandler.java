@@ -47,12 +47,13 @@ public class OcrEventHandler {
                             if(paperTrackings.getState().equals(PaperTrackingsState.DONE) || paperTrackings.getState().equals(PaperTrackingsState.KO)){
                                 Mono.error(new PnPaperTrackerValidationException(("Error in OCR validation for requestId: " + ocrResultMessage.getCommandId()),
                                         PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
-                                                Collections.emptyList(),
+                                                "",
                                                 ErrorCategory.OCR_VALIDATION,
                                                 ErrorCause.OCR_DUPLICATED_EVENT,
                                                 ErrorCause.OCR_DUPLICATED_EVENT.getDescription(),
                                                 FlowThrow.DEMAT_VALIDATION,
-                                                ErrorType.WARNING
+                                                ErrorType.WARNING,
+                                                ""
                                         )));
                             }
                             Event event = extractFinalEventFromOcr(paperTrackings);
@@ -61,12 +62,13 @@ public class OcrEventHandler {
                             return switch (validationStatus) {
                                 case KO -> Mono.error(new PnPaperTrackerValidationException(("Error in OCR validation for requestId: " + ocrResultMessage.getCommandId()),
                                                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings,
-                                                        List.of(statusCode),
+                                                        statusCode,
                                                         ErrorCategory.OCR_VALIDATION,
                                                         ErrorCause.OCR_KO,
                                                         ocrResultMessage.getData().getDescription(),
                                                         FlowThrow.DEMAT_VALIDATION,
-                                                        ErrorType.ERROR
+                                                        ErrorType.ERROR,
+                                                        event.getId()
                                                         )));
                                 case OK -> callOcrResponseHandler(paperTrackings, event);
                                 case PENDING -> {

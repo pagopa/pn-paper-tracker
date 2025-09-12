@@ -12,7 +12,6 @@ import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
-import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -68,7 +67,10 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
-        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true));
+        eventsToSend.forEach(singleStatusUpdate -> {
+            String messageId = UUID.randomUUID().toString();
+            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+        });
 
         //Assert
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();

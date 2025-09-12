@@ -15,6 +15,7 @@ public class Attachment {
     public static final String COL_DOCUMENT_TYPE = "documentType";
     public static final String COL_URI = "uri";
     public static final String COL_DATE = "date";
+    public static final String COL_SHA256 = "sha256";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
@@ -27,5 +28,8 @@ public class Attachment {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DATE)}))
     private Instant date;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SHA256)}))
+    private String sha256;
 
 }

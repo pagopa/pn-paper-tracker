@@ -76,7 +76,7 @@ public class DematValidator implements HandlerStep {
 
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
         String ocrRequestId = String.join("#", paperTracking.getTrackingId(), context.getEventId());
-        Attachment attachment = retrieveFinalDemat(paperTracking, paperTracking.getPaperStatus().getValidatedEvents());
+        Attachment attachment = retrieveFinalDemat(paperTracking, paperTracking.getPaperStatus().getValidatedEvents(), context);
         if(cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri())))) {
             context.setStopExecution(true);
             return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
@@ -143,7 +143,7 @@ public class DematValidator implements HandlerStep {
         return new OcrEvent(ocrHeader, ocrDataPayload);
     }
 
-    private Attachment retrieveFinalDemat(PaperTrackings paperTracking, List<Event> validatedEvents) {
+    private Attachment retrieveFinalDemat(PaperTrackings paperTracking, List<Event> validatedEvents, HandlerContext context) {
         Map<String, Attachment> attachments = new HashMap<>();
 
         List<Event> finalDematList = validatedEvents.reversed().stream()
@@ -154,12 +154,13 @@ public class DematValidator implements HandlerStep {
             log.error("Demat events not found for trackingId={}", paperTracking.getTrackingId());
             throw new PnPaperTrackerValidationException("Demat events not found", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                     paperTracking,
-                    paperTracking.getEvents().stream().map(Event::getStatusCode).toList(),
+                    context.getPaperProgressStatusEvent().getStatusCode(),
                     ErrorCategory.DEMAT_EMPTY_EVENT,
                     null,
                     "Demat events not found",
                     FlowThrow.SEQUENCE_VALIDATION,
-                    ErrorType.ERROR));
+                    ErrorType.ERROR,
+                    context.getEventId()));
         }
 
         for (Event event : finalDematList) {
@@ -173,12 +174,13 @@ public class DematValidator implements HandlerStep {
             log.error("Invalid number of attachments for demat event found for trackingId={}", paperTracking.getTrackingId());
             throw new PnPaperTrackerValidationException("Invalid number of attachments for demat event", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                     paperTracking,
-                    paperTracking.getEvents().stream().map(Event::getStatusCode).toList(),
+                    context.getPaperProgressStatusEvent().getStatusCode(),
                     ErrorCategory.DEMAT_ATTACHMENT_NUMBER_ERROR,
                     null,
                     "Invalid number of attachments for demat event",
                     FlowThrow.SEQUENCE_VALIDATION,
-                    ErrorType.ERROR));
+                    ErrorType.ERROR,
+                    context.getEventId()));
         }
 
         return attachments.values().stream().toList().getFirst();

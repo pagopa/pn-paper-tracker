@@ -117,12 +117,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         } else {
             return Mono.error(new PnPaperTrackerValidationException("Attachments are not valid for the sequence element: " + sequenceElement, PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                     paperTrackings,
-                    events.stream().map(Event::getStatusCode).toList(),
+                    "",
                     ErrorCategory.ATTACHMENTS_ERROR,
                     null,
                     "Attachments are not valid for the sequence element: " + sequenceElement,
                     FlowThrow.SEQUENCE_VALIDATION,
-                    ErrorType.ERROR)));
+                    ErrorType.ERROR,
+                    "")));
         }
     }
 
@@ -318,12 +319,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     private <T> Mono<T> generateCustomError(String message, List<Event> events, PaperTrackings paperTrackings, ErrorCategory errorCategory) {
         return Mono.error(new PnPaperTrackerValidationException(message, PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                 paperTrackings,
-                events.stream().map(Event::getStatusCode).toList(),
+                "",
                 errorCategory,
                 null,
                 message,
                 FlowThrow.SEQUENCE_VALIDATION,
-                ErrorType.ERROR)));
+                ErrorType.ERROR,
+                "")));
     }
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {

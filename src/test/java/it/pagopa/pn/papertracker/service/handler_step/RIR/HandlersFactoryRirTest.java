@@ -60,6 +60,9 @@ class HandlersFactoryRirTest {
     @Mock
     private HandlerStep mockHandlerStep2;
 
+    @Mock
+    private CheckTrackingState checkTrackingState;
+
     @InjectMocks
     private HandlersFactoryRir handlersFactoryRir;
 
@@ -125,11 +128,11 @@ class HandlersFactoryRirTest {
     void buildFinalEventsHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
@@ -137,9 +140,8 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, duplicatedEventFiltering, sequenceValidatorRir, dematValidator, finalEventBuilder, deliveryPushSender, stateUpdater);
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, deliveryPushSender, stateUpdater);
         inOrder.verify(metadataUpserter).execute(handlerContext);
-        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
         inOrder.verify(sequenceValidatorRir).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
@@ -151,6 +153,7 @@ class HandlersFactoryRirTest {
     void buildIntermediateEventsHandler_ExecutesMetadataUpserterAndDeliveryPushSender() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
@@ -170,8 +173,8 @@ class HandlersFactoryRirTest {
     void buildRetryEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
@@ -190,6 +193,7 @@ class HandlersFactoryRirTest {
     void buildNotRetryableEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());

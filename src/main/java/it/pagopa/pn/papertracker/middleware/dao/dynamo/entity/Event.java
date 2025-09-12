@@ -27,10 +27,14 @@ public class Event {
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_ID = "id";
     public static final String COL_DRY_RUN = "dryRun";
+    public static final String COL_IUN = "iun";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
+    private String iun;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_TIMESTAMP)}))
     private Instant requestTimestamp;

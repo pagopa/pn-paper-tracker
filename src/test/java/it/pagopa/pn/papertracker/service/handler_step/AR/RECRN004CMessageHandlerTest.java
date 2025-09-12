@@ -91,6 +91,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
     void when_RECRN004AGreaterThanRECRN010of10Days_then_pushPNRN012Status() {
         // Arrange
         var now = Instant.now();
+        String eventId = "eventId";
         Event eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT+1, ChronoUnit.DAYS));
         Event eventMetaRECRN011 = getEventMeta(STATUS_RECRN011, now);
         Event eventMetaRECRN004A = getEventMeta(STATUS_RECRN004A, now);
@@ -117,7 +118,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -133,6 +134,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
     void when_RECRN004ALessThanOrEqualToRECRN010Of10Days_then_pushOnQueue(){
         // Arrange
         var now = Instant.now();
+        String eventId = "eventId";
         Event eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
         Event eventMetaRECRN004A = getEventMeta(STATUS_RECRN004A, now);
         Event eventMetaRECRN011 = getEventMeta(STATUS_RECRN011, now);
@@ -159,7 +161,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());

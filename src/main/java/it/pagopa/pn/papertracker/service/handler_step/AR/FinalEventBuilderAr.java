@@ -81,9 +81,9 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
             log.error("The difference between RECRN005A and RECRN010 is greater than the configured duration, throwing exception");
             return Mono.error(new PnPaperTrackerValidationException(
                     "The difference between RECRN005A and RECRN010 is greater than the configured duration",
-                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings, List.of(finalEvent.getStatusCode()), ErrorCategory.RENDICONTAZIONE_SCARTATA, ErrorCause.GIACENZA_DATE_ERROR,
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings, finalEvent.getStatusCode(), ErrorCategory.RENDICONTAZIONE_SCARTATA, ErrorCause.GIACENZA_DATE_ERROR,
                             String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
-                            FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR)));
+                            FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR, finalEvent.getId())));
         }
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(statusCode).getStatus().name());
     }

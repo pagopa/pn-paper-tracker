@@ -32,9 +32,12 @@ public class ExternalChannelHandlerTest {
 
     private ExternalChannelHandler externalChannelHandler;
 
+    private String eventId;
+
     @BeforeEach
     void setUp() {
         externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler, handlersFactoryAr, handlersFactoryRir);
+        eventId = "eventId";
     }
 
     @Test
@@ -44,7 +47,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildIntermediateEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
         verify(handlersFactoryAr).buildIntermediateEventsHandler(any(HandlerContext.class));
@@ -57,7 +60,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
         verify(handlersFactoryAr, times(1)).buildRetryEventHandler(any(HandlerContext.class));
@@ -70,7 +73,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildFinalEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
         verify(handlersFactoryAr).buildFinalEventsHandler(any(HandlerContext.class));
@@ -83,7 +86,7 @@ public class ExternalChannelHandlerTest {
         when(handlersFactoryAr.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag());
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
         verify(handlersFactoryAr).buildUnrecognizedEventsHandler(any(HandlerContext.class));

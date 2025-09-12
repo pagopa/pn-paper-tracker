@@ -23,6 +23,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final NotRetryableErrorInserting notRetryableErrorInserting;
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final StateUpdater stateUpdater;
+    private final CheckTrackingState checkTrackingState;
 
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
@@ -62,7 +63,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
-                        duplicatedEventFiltering,
+                        checkTrackingState,
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
@@ -87,6 +88,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
+                        checkTrackingState,
                         duplicatedEventFiltering,
                         intermediateEventsBuilder,
                         deliveryPushSender
@@ -111,7 +113,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
-                        duplicatedEventFiltering,
+                        checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
                         deliveryPushSender,
@@ -137,6 +139,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return buildEventsHandler(
                 List.of(
                         metadataUpserter,
+                        checkTrackingState,
                         duplicatedEventFiltering,
                         notRetryableErrorInserting,
                         intermediateEventsBuilder,
@@ -159,7 +162,6 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
         return buildEventsHandler(
                 List.of(
-//                        metadataUpserter,
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater
