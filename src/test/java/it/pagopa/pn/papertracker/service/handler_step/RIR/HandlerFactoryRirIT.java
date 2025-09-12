@@ -57,14 +57,16 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         //Arrange
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
-        String eventId = "eventId";
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
         paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
-        eventsToSend.forEach(singleStatusUpdate -> externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, eventId));
+        eventsToSend.forEach(singleStatusUpdate -> {
+            String messageId = UUID.randomUUID().toString();
+            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+        });
 
         //Assert
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
