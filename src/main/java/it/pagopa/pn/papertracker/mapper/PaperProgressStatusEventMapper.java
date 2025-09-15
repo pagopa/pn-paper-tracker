@@ -53,6 +53,7 @@ public class PaperProgressStatusEventMapper {
         }
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
         event.setDryRun(dryRunEnabled);
+        event.setStatusDescription(paperProgressStatusEvent.getStatusDescription());
 
         paperTrackings.setEvents(List.of(event));
         return Mono.just(paperTrackings);
