@@ -365,6 +365,7 @@ Resources:
         MemoryAmount: !Ref MemoryAmount
         MinTasksNumber: !Ref MinTasksNumber
         MaxTasksNumber: !Ref MaxTasksNumber
+        HealthCheckPath: /actuator/health
         HealthCheckTimeout: !Ref HealthCheckTimeout
         HealthCheckInterval: !Ref HealthCheckInterval
         HealthyThresholdCount: !Ref HealthyThresholdCount
