@@ -73,12 +73,14 @@ export const validateConfig = () => {
  * @returns {object} getEnvConfingurazione del prodotto
  */
 export const getProductConfig = (productType) => {
+  const type = productType ?? "UNKNOWN";
+
   return {
-    isTrackerEnabled: CONFIG.trackerEnabledProducts.includes(productType),
-    isDryRun: CONFIG.trackerDryRunProducts.includes(productType),
-    isPaperChannelEnabled: CONFIG.paperChannelEnabledProducts.includes(productType),
+    isTrackerEnabled: CONFIG.trackerEnabledProducts.includes(type),
+    isDryRun: CONFIG.trackerDryRunProducts.includes(type),
+    isPaperChannelEnabled: CONFIG.paperChannelEnabledProducts.includes(type),
   };
-}
+};
 
 /**
  * Crea gli attributi del messaggio copiando quelli originali

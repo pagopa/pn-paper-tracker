@@ -134,6 +134,41 @@ describe("Utility functions", () => {
 
     expect(() => validateConfig()).to.not.throw();
   });
+
+  it("getProductConfig uses UNKNOWN fallback when productType is null or undefined", () => {
+    // Arrange
+    CONFIG.trackerEnabledProducts = ["UNKNOWN"];
+    CONFIG.trackerDryRunProducts = ["UNKNOWN"];
+    CONFIG.paperChannelEnabledProducts = ["UNKNOWN"];
+
+    // Act
+    const configNull = getProductConfig(null);
+    const configUndefined = getProductConfig(undefined);
+
+    // Assert
+    expect(configNull.isTrackerEnabled).to.be.true;
+    expect(configNull.isDryRun).to.be.true;
+    expect(configNull.isPaperChannelEnabled).to.be.true;
+
+    expect(configUndefined.isTrackerEnabled).to.be.true;
+    expect(configUndefined.isDryRun).to.be.true;
+    expect(configUndefined.isPaperChannelEnabled).to.be.true;
+  });
+
+  it("getProductConfig returns false if UNKNOWN is not configured", () => {
+    // Arrange
+    CONFIG.trackerEnabledProducts = ["AR"];
+    CONFIG.trackerDryRunProducts = ["RS"];
+    CONFIG.paperChannelEnabledProducts = ["890"];
+
+    // Act
+    const configNull = getProductConfig(null);
+
+    // Assert
+    expect(configNull.isTrackerEnabled).to.be.false;
+    expect(configNull.isDryRun).to.be.false;
+    expect(configNull.isPaperChannelEnabled).to.be.false;
+  });
 });
 
 // Unit tests per il handler
