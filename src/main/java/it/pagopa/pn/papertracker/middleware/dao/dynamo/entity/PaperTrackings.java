@@ -73,6 +73,10 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
 
+    // Costruito UNA volta sola
+    private static final TableSchema<PaperTrackings> SCHEMA =
+            TableSchema.fromBean(PaperTrackings.class);
+
     /**
      * Converte l'entity PaperTrackings in una mappa {@code Map<String, AttributeValue>} utilizzata da DynamoDB.
      */
@@ -87,9 +91,5 @@ public class PaperTrackings {
         if (item == null || item.isEmpty()) return null;
         return SCHEMA.mapToItem(item);
     }
-
-    // Costruito UNA volta sola
-    private static final TableSchema<PaperTrackings> SCHEMA =
-            TableSchema.fromBean(PaperTrackings.class);
 
 }
