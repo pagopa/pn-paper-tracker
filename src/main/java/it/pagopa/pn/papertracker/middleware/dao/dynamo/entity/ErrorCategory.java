@@ -19,7 +19,7 @@ public enum ErrorCategory {
     DEMAT_EMPTY_EVENT("Errore evento per demat non trovato"),
     DEMAT_ATTACHMENT_NUMBER_ERROR("Errore nel numero di attachment trovati per demat"),
     DUPLICATED_EVENT("Errore nella validazione della presenza di eventi duplicati"),
-    INCONSISTENT_STATE("Tracking completato o in attesa validaazione OCR");
+    INCONSISTENT_STATE("Tracking completato o in attesa validazione OCR");
 
     private final String value;
 
