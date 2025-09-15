@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -37,7 +36,7 @@ public class ExternalChannelHandler {
      *
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
-    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled) {
+    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled, String messageId) {
         if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
@@ -51,7 +50,7 @@ public class ExternalChannelHandler {
                         .flatMap(singleStatusUpdate -> {
                             HandlerContext context = new HandlerContext();
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
-                            context.setEventId(UUID.randomUUID().toString());
+                            context.setEventId(messageId);
                             context.setDryRunEnabled(dryRunEnabled);
 
                             String statusCode = payload.getAnalogMail().getStatusCode();

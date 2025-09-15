@@ -86,6 +86,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
     void when_RECRN003AGreaterThanRECRN010Of10Days_then_pushPNRN012Status() {
         // Arrange
         var now = Instant.now();
+        String eventId = "eventId";
         Event eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT + 1, ChronoUnit.DAYS));
         Event eventMetaRECRN011 = getEventMeta(STATUS_RECRN011, now);
         Event eventMetaRECRN003A = getEventMeta(STATUS_RECRN003A, now);
@@ -112,7 +113,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -128,6 +129,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
     void when_RECRN003ALessThanOrEqualToRECRN010Of10Days_then_pushOnQueue() {
         // Arrange
         var now = Instant.now();
+        String eventId = "eventId";
         Event eventMetaRECRN010 = getEventMeta(STATUS_RECRN010, now.minus(DAYS_REFINEMENT, ChronoUnit.DAYS));
         Event eventMetaRECRN011 = getEventMeta(STATUS_RECRN011, now);
         Event eventMetaRECRN003A = getEventMeta(STATUS_RECRN003A, now);
@@ -154,7 +156,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());

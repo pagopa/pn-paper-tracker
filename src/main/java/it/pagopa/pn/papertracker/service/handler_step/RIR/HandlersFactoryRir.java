@@ -18,7 +18,8 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               RetrySender retrySender,
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
-                              StateUpdater stateUpdater) {
+                              StateUpdater stateUpdater,
+                              CheckTrackingState checkTrackingState) {
         super(metadataUpserter,
                 deliveryPushSender,
                 finalEventBuilder,
@@ -28,6 +29,7 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                 retrySender,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
-                stateUpdater);
+                stateUpdater,
+                checkTrackingState);
     }
 }

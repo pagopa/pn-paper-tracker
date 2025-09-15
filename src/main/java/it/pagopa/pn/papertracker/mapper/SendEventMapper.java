@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
 public class SendEventMapper {
 
     /**
-     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro PaperTrackins in modo da fare l'upsert
+     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro SendEvent per l'invio a delivery-push
      *
-     * @param paperProgressStatusEvent
-     * @return PaperTrackings contenente il nuovo evento
+     * @param paperProgressStatusEvent evento intermedio ricevuto
+     * @return SendEvent contenente l'evento rimappato da inviare a delivery-push
      */
     public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(PaperProgressStatusEvent paperProgressStatusEvent) {
         return Mono.just(paperProgressStatusEvent)
@@ -65,19 +65,6 @@ public class SendEventMapper {
         return builder.build();
     }
 
-    public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime) {
-        return Mono.just(paperProgressStatusEvent)
-                .flatMapMany(progressEvent -> {
-                            if (!CollectionUtils.isEmpty(progressEvent.getAttachments())) {
-                                return Flux.fromIterable(progressEvent.getAttachments().stream()
-                                        .map(attachmentDetails -> toSendEvent(paperProgressStatusEvent, statusCode, statusDetail, statusDateTime, attachmentDetails))
-                                        .collect(Collectors.toList()));
-                            }
-                            return Flux.just(toSendEvent(paperProgressStatusEvent, statusCode, statusDetail, statusDateTime, null));
-                        }
-                );
-    }
-
     public static Flux<SendEvent> createSendEventsFromEventEntity(String requestId, Event event, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime) {
         return Mono.just(event)
                 .flatMapMany(progressEvent -> {
@@ -89,28 +76,6 @@ public class SendEventMapper {
                             return Flux.just(toSendEvent(requestId, event, statusCode, statusDetail, statusDateTime, null));
                         }
                 );
-    }
-
-    public static SendEvent toSendEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails attachmentDetails) {
-        SendEvent.SendEventBuilder builder = SendEvent.builder()
-                .requestId(paperProgressStatusEvent.getRequestId())
-                .statusCode(statusCode)
-                .statusDetail(statusDetail)
-                .statusDescription(paperProgressStatusEvent.getProductType() + " - " + statusDetail + " - " + paperProgressStatusEvent.getStatusDescription())
-                .deliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause())
-                .registeredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode())
-                .statusDateTime(statusDateTime)
-                .clientRequestTimeStamp(paperProgressStatusEvent.getClientRequestTimeStamp());
-
-        if(Objects.nonNull(paperProgressStatusEvent.getDiscoveredAddress())){
-            builder.discoveredAddress(toAnalogAddress(paperProgressStatusEvent.getDiscoveredAddress()));
-        }
-
-        if(Objects.nonNull(attachmentDetails)){
-            builder.attachments(buildPaperAttachmentDetailsFromExternalChannels(List.of(attachmentDetails)));
-        }
-
-        return builder.build();
     }
 
     public static SendEvent toSendEvent(String requestId, Event event, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, Attachment attachmentDetails) {

@@ -5,8 +5,10 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.util.CollectionUtils;
@@ -27,6 +29,9 @@ class SequenceValidatorRirTest {
     private final SequenceConfiguration sequenceConfiguration = new SequenceConfiguration();
 
     private SequenceValidatorRir sequenceValidatorRir;
+
+    @InjectMocks
+    private HandlerContext context;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +64,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .verifyComplete();
 
         // Assert
@@ -85,7 +90,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .verifyComplete();
 
         // Assert
@@ -111,7 +116,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .verifyComplete();
 
         // Assert
@@ -138,7 +143,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Attachments are not valid for the sequence"))
                 .verify();
@@ -157,7 +162,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid lastEvent for sequence validation"))
                 .verify();
@@ -183,7 +188,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid business timestamps"))
                 .verify();
@@ -206,7 +211,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
@@ -232,7 +237,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
                 .verify();
@@ -255,7 +260,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid deliveryFailureCause: "))
                 .verify();
@@ -278,7 +283,7 @@ class SequenceValidatorRirTest {
           ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings))
+        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid deliveryFailureCause: M12"))
                 .verify();

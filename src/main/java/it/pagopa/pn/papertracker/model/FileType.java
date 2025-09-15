@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum FileType {
-    PDF("pdf");
+    PDF("pdf"),
+    UNKNOWN("UNKNOWN");
 
     private final String value;
 
@@ -18,6 +19,6 @@ public enum FileType {
                 return ft;
             }
         }
-        throw new IllegalArgumentException("Unknown file type: " + fileType);
+        return UNKNOWN;
     }
 }

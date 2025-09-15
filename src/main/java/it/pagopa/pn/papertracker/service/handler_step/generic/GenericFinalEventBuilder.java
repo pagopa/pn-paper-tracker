@@ -59,6 +59,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
         PaperTrackings paperTrackings = new PaperTrackings();
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setFinalEventBuilderTimestamp(Instant.now());
+        validationFlow.setDematValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         return paperTrackings;
     }
