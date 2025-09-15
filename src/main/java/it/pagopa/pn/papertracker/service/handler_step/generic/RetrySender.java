@@ -15,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -47,12 +45,13 @@ public class RetrySender implements HandlerStep {
                                 });
                     } else {
                         return paperTrackerExceptionHandler.handleRetryError(PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
-                                List.of(context.getPaperProgressStatusEvent().getStatusCode()),
+                                context.getPaperProgressStatusEvent().getStatusCode(),
                                 ErrorCategory.MAX_RETRY_REACHED_ERROR,
                                 null,
                                 "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
                                 FlowThrow.RETRY_PHASE,
-                                ErrorType.ERROR));
+                                ErrorType.ERROR,
+                                context.getEventId()));
                     }
                 })
                 .then();

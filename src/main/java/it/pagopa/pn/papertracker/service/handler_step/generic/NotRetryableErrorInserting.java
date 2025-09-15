@@ -11,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -32,12 +30,13 @@ public class NotRetryableErrorInserting implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         PaperTrackingsErrors paperTrackingsErrors = PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
-                List.of(statusCode),
+                statusCode,
                 ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,
                 null,
                 EventStatusCodeEnum.fromKey(statusCode).getStatusCodeDescription(),
                 FlowThrow.NOT_RETRYABLE_EVENT_HANDLER,
-                ErrorType.WARNING
+                ErrorType.WARNING,
+                context.getEventId()
         );
         return paperTrackerExceptionHandler.handleRetryError(paperTrackingsErrors);
     }

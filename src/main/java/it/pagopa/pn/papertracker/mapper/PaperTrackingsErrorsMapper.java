@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -16,12 +15,13 @@ import java.util.Optional;
 public class PaperTrackingsErrorsMapper {
 
     public static PaperTrackingsErrors buildPaperTrackingsError(PaperTrackings paperTrackings,
-                                                                List<String> statusCodes,
+                                                                String statusCode,
                                                                 ErrorCategory errorCategory,
                                                                 ErrorCause errorCause,
                                                                 String errorMessage,
                                                                 FlowThrow flowThrow,
-                                                                ErrorType errorType) {
+                                                                ErrorType errorType,
+                                                                String eventIdThrow) {
         return PaperTrackingsErrors.builder()
                 .trackingId(paperTrackings.getTrackingId())
                 .created(Instant.now())
@@ -31,9 +31,10 @@ public class PaperTrackingsErrorsMapper {
                         .message(errorMessage)
                         .build())
                 .flowThrow(flowThrow)
-                .eventThrow(String.join(",", statusCodes))
+                .eventThrow(statusCode)
                 .productType(paperTrackings.getProductType())
                 .type(errorType)
+                .eventIdThrow(eventIdThrow)
                 .build();
     }
 
