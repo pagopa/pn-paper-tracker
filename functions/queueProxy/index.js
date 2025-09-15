@@ -59,13 +59,13 @@ export const CONFIG = {
 /**
  * Valida la getEnvConfingurazione e le variabili di ambiente
  */
-/*export const validateConfig = () => {
+export const validateConfig = () => {
   if (!CONFIG.queueTracker || !CONFIG.queuePaperChannel) {
     throw new Error(
       "Missing required queue URLs: QUEUE_PAPER_TRACKER, QUEUE_PAPER_CHANNEL"
     );
   }
-}*/
+}
 
 /**
  * Determina la modalità di processing per un prodotto
@@ -172,12 +172,12 @@ const processRecord = async (record) => {
 
     const productType = body?.analogMail?.productType;
 
-    if (!VALID_PRODUCTS.includes(productType)) {
-      logOperation("ERROR", messageId, {
-        error: `Invalid productType: ${productType}`,
-      });
-      throw new Error("Invalid productType");
-    }
+//    if (!VALID_PRODUCTS.includes(productType)) {
+//      logOperation("ERROR", messageId, {
+//        error: `Invalid productType: ${productType}`,
+//      });
+//      throw new Error("Invalid productType");
+//    }
 
     let config = getProductConfig(productType);
 
