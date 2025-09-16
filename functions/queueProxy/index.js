@@ -172,12 +172,12 @@ const processRecord = async (record) => {
 
     const productType = body?.analogMail?.productType;
 
-    if (!VALID_PRODUCTS.includes(productType)) {
-      logOperation("ERROR", messageId, {
-        error: `Invalid productType: ${productType}`,
-      });
-      throw new Error("Invalid productType");
-    }
+//    if (!VALID_PRODUCTS.includes(productType)) {
+//      logOperation("ERROR", messageId, {
+//        error: `Invalid productType: ${productType}`,
+//      });
+//      throw new Error("Invalid productType");
+//    }
 
     let config = getProductConfig(productType);
 
