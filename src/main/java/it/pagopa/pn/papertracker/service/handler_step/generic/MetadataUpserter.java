@@ -32,8 +32,12 @@ public class MetadataUpserter implements HandlerStep {
                 .flatMap(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), context.getAnonymizedDiscoveredAddressId(), context.getEventId(), context.isDryRunEnabled()))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
                 .doOnNext(paperTrackings -> {
+                    Long eventReceiveCount = paperTrackings.getEvents()
+                                    .stream().filter(event -> event.getId().equalsIgnoreCase(context.getEventId()))
+                                    .count();
                     context.setPaperTrackings(paperTrackings);
                     context.setTrackingId(paperTrackings.getTrackingId());
+                    context.setMessageReceiveCount(eventReceiveCount);
                 })
                 .then();
     }

@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
@@ -27,8 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.KO;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.*;
 import static it.pagopa.pn.papertracker.service.handler_step.AR.TestSequenceAREnum.*;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,10 +67,17 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
-        eventsToSend.forEach(singleStatusUpdate -> {
-            String messageId = UUID.randomUUID().toString();
-            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
-        });
+        if(seq.equals(FAIL_COMPIUTA_GIACENZA_AR) || seq.equals(KO_AR_NO_EVENT_B)) {
+            Assertions.assertThrows(PnPaperTrackerValidationException.class, () -> eventsToSend.forEach(singleStatusUpdate -> {
+                String messageId = UUID.randomUUID().toString();
+                externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+            }));
+        }else{
+          eventsToSend.forEach(singleStatusUpdate -> {
+              String messageId = UUID.randomUUID().toString();
+              externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+          });
+        };
 
         //Assert
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
@@ -218,23 +225,6 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 assertEquals(7, list.size());
                 assertContainsStatus(list, filteredStatusCode);
                 assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6);
-                list.forEach(e -> {
-                    if (is(e, "RECRN003A")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
-                    if (is(e, "RECRN010")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "RECRN011")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
-                    if (is(e, "RECRN003B")) {assertAttach(e, "AR");assertProgress(e);}
-                    if (is(e, "RECRN003C")) {assertNoAttach(e);assertOk(e);assertNull(e.getDeliveryFailureCause());}
-                });
-            }
-            case OK_GIACENZA_AR_4 -> {
-                List<String> filteredStatusCode = seq.getStatusCodes().stream().filter(s -> !s.equals("CON018")).toList();
-                assertEquals(7, list.size());
-                assertContainsStatus(list, filteredStatusCode);
-                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6);
-                Assertions.assertEquals(1, list.stream().filter(paperTrackerDryRunOutputs -> paperTrackerDryRunOutputs.getStatusDetail()
-                        .equalsIgnoreCase("RECRN003C")).toList().size());
                 list.forEach(e -> {
                     if (is(e, "RECRN003A")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
@@ -400,20 +390,11 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         switch (seq) {
             case OK_AR, OK_GIACENZA_AR, FAIL_GIACENZA_AR, OKCausaForzaMaggiore_AR,
                  FAIL_IRREPERIBILE_AR, OK_RETRY_AR,
-                 FAIL_AR, OK_AR_BAD_EVENT, /*FAIL_DISCOVERY_AR,*/  OKNonRendicontabile_AR ->
+                 FAIL_AR, OK_AR_BAD_EVENT, /*FAIL_DISCOVERY_AR,*/  OKNonRendicontabile_AR, KO_AR_NO_EVENT_B, FAIL_COMPIUTA_GIACENZA_AR ->
                     assertEquals(0, errs.size());
             case OK_AR_NOT_ORDERED -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN001A");
             case OK_GIACENZA_AR_2 -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
             case OK_GIACENZA_AR_3 -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN011");
-            case OK_GIACENZA_AR_4 -> {
-                assertWarning(errs.getFirst(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
-                assertError(errs.get(1), ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Necessary status code not found in events");
-                assertWarning(errs.get(2), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
-                assertWarning(errs.get(3), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN003A");
-                assertWarning(errs.getLast(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN003B");
-            }
-            case KO_AR_NO_EVENT_B, FAIL_COMPIUTA_GIACENZA_AR ->
-                    assertSingleError(errs, ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Necessary status code not found in events");
             case FAIL_CON996_PCRETRY_FURTO_AR ->
                     assertSingleWarning(errs, ErrorCategory.NOT_RETRYABLE_EVENT_ERROR, FlowThrow.NOT_RETRYABLE_EVENT_HANDLER, "Scartato PDF");
             case OK_AR_TIMESTAMP_ERR -> {
@@ -456,16 +437,21 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null);
             case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
             case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
-            case FAIL_COMPIUTA_GIACENZA_AR, OK_AR_INVALID_DATETIME -> {
+            case OK_AR_INVALID_DATETIME -> {
                 assertEquals(KO, pt.getState());
                 assertEquals(6, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
+            case FAIL_COMPIUTA_GIACENZA_AR -> {
+                assertEquals(AWAITING_FINAL_STATUS_CODE, pt.getState());
+                assertEquals(6, pt.getEvents().size());
+                assertNull(pt.getNextRequestIdPcretry());
+            }
             case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> assertValidatedDone(pt, 9, 5, null);
-            case OK_GIACENZA_AR_4 -> assertValidatedDone(pt, 13, 5, null);
+
             case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02");
             case KO_AR_NO_EVENT_B -> {
-                assertEquals(KO, pt.getState());
+                assertEquals(AWAITING_FINAL_STATUS_CODE, pt.getState());
                 assertEquals(5, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }

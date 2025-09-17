@@ -24,15 +24,25 @@ public class PaperTrackerExceptionHandler {
      * <p>
      * Per ogni eccezione intercettata, effettua una putItem sulla tabella PaperTrackingsError
      */
-    public Mono<Void> handleInternalException(final PnPaperTrackerValidationException ex) {
-        return handleError(ex.getError());
+    public Mono<Void> handleInternalException(final PnPaperTrackerValidationException ex, Long messageReceiveCount) {
+        return handleError(ex.getError(), messageReceiveCount, ex);
     }
 
     public Mono<Void> handleRetryError(PaperTrackingsErrors paperTrackingsErrors) {
-        return handleError(paperTrackingsErrors);
+        return handleError(paperTrackingsErrors, null, null);
     }
 
-    public Mono<Void> handleError(PaperTrackingsErrors paperTrackingsErrors) {
+    public Mono<Void> handleError(PaperTrackingsErrors paperTrackingsErrors, Long messageReceiveCount, PnPaperTrackerValidationException ex) {
+        if(ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory()) && messageReceiveCount < 5){
+            return Mono.error(ex);
+        }else if(ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory())){
+            log.error("Max retries reached for status code error, inserting error and updating PaperTrackings state to KO for trackingId: {}", paperTrackingsErrors.getTrackingId());
+            return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors).then(Mono.error(ex));
+        }
+        return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors);
+    }
+
+    private Mono<Void> insertErrorAndUpdateTrackingsEntity(PaperTrackingsErrors paperTrackingsErrors){
         return paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors)
                 .filter(errors -> paperTrackingsErrors.getType().equals(ErrorType.ERROR))
                 .doOnDiscard(PaperTrackingsErrors.class, errors -> log.info("Skipped updating PaperTrackings entity for error with type Warning"))

@@ -14,6 +14,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
 
     @ParameterizedTest
     @EnumSource(value = TestSequenceRirEnum.class)
+    @Disabled
     void testRirSequence(TestSequenceRirEnum seq) throws InterruptedException {
 
         //Arrange

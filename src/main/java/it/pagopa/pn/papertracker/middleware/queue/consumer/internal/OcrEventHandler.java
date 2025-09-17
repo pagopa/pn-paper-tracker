@@ -76,7 +76,7 @@ public class OcrEventHandler {
                                 }
                             };
                         })
-                        .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
+                        .onErrorResume(PnPaperTrackerValidationException.class, e -> paperTrackerExceptionHandler.handleInternalException(e, null))
                         .then())
                 .block();
 
