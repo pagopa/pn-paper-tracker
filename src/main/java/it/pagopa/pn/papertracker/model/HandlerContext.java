@@ -20,5 +20,6 @@ public class HandlerContext {
     private String eventId;
     private String finalStatusCode;
     private boolean dryRunEnabled;
+    private Long messageReceiveCount;
 
 }

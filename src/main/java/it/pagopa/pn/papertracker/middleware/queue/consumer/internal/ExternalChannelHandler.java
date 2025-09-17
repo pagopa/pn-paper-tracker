@@ -45,10 +45,11 @@ public class ExternalChannelHandler {
         String processName = "processExternalChannelMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
         log.logStartingProcess(processName);
+        HandlerContext context = new HandlerContext();
 
         MDCUtils.addMDCToContextAndExecute(Mono.just(payload)
                         .flatMap(singleStatusUpdate -> {
-                            HandlerContext context = new HandlerContext();
+
                             context.setPaperProgressStatusEvent(payload.getAnalogMail());
                             context.setEventId(messageId);
                             context.setDryRunEnabled(dryRunEnabled);
@@ -66,7 +67,7 @@ public class ExternalChannelHandler {
                         })
                         .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
                 )
-                .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
+                .onErrorResume(PnPaperTrackerValidationException.class, ex -> paperTrackerExceptionHandler.handleInternalException(ex, context.getMessageReceiveCount()))
                 .block();
     }
 
