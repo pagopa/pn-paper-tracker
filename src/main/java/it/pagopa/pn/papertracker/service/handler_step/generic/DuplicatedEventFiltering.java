@@ -18,9 +18,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.ZoneOffset;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Component
 @RequiredArgsConstructor
@@ -74,75 +75,81 @@ public class DuplicatedEventFiltering implements HandlerStep {
         );
     }
 
-    private Mono<Boolean> isDuplicatedEvent(Event event, PaperProgressStatusEvent paperProgressStatusEvent) {
-        boolean fieldsMatch =
-                checkField(event.getStatusCode(), paperProgressStatusEvent.getStatusCode()) &&
-                        checkField(event.getProductType().name(), paperProgressStatusEvent.getProductType()) &&
-                        checkField(event.getStatusTimestamp().toString(), paperProgressStatusEvent.getStatusDateTime().toString()) &&
-                        checkField(event.getRegisteredLetterCode(), paperProgressStatusEvent.getRegisteredLetterCode()) &&
-                        checkField(event.getStatusDescription(), paperProgressStatusEvent.getStatusDescription()) &&
-                        checkField(event.getDeliveryFailureCause(), paperProgressStatusEvent.getDeliveryFailureCause()) &&
-                        checkField(event.getIun(), paperProgressStatusEvent.getIun()) &&
-                        validateAttachments(event.getAttachments(), paperProgressStatusEvent.getAttachments());
+    public Mono<Boolean> isDuplicatedEvent(Event event, PaperProgressStatusEvent paperProgressStatusEvent)  {
+        boolean fieldsMatch = Objects.equals(paperProgressStatusEvent.getRegisteredLetterCode(),event.getRegisteredLetterCode())
+                && Objects.equals(paperProgressStatusEvent.getProductType(), event.getProductType().name())
+                && Objects.equals(paperProgressStatusEvent.getIun(), event.getIun())
+                && Objects.equals(paperProgressStatusEvent.getStatusCode(), event.getStatusCode())
+                && Objects.equals(paperProgressStatusEvent.getStatusDescription(), event.getStatusDescription())
+                && paperProgressStatusEvent.getStatusDateTime().truncatedTo(SECONDS).isEqual(event.getStatusTimestamp().truncatedTo(SECONDS).atOffset(ZoneOffset.UTC))
+                && Objects.equals(paperProgressStatusEvent.getDeliveryFailureCause(), event.getDeliveryFailureCause())
+                && isSameAttachments(paperProgressStatusEvent.getAttachments(), event.getAttachments());
 
-        if (!fieldsMatch) {
+        if(fieldsMatch){
+            return deanonymizeAddressAndCheckIt(event.getAnonymizedDiscoveredAddressId(), paperProgressStatusEvent);
+        }else {
             return Mono.just(false);
         }
 
-        return deanonymizeAddressAndCheckIt(event.getAnonymizedDiscoveredAddressId(), paperProgressStatusEvent);
-    }
-
-    private boolean checkField(String oldEventField, String newEventField) {
-        return (StringUtils.hasText(oldEventField) && StringUtils.hasText(newEventField) && oldEventField.equalsIgnoreCase(newEventField))
-                || (!StringUtils.hasText(oldEventField) && !StringUtils.hasText(newEventField));
-    }
-
-    private boolean validateAttachments(List<Attachment> attachments, List<AttachmentDetails> attachmentsDetails) {
-        if (Objects.isNull(attachments) && Objects.isNull(attachmentsDetails))
-            return true;
-        if (Objects.isNull(attachments) || Objects.isNull(attachmentsDetails))
-            return false;
-
-        List<AttachmentDetails> remappedAttachments = attachments.stream().map(attachment -> {
-            AttachmentDetails attachmentDetails = new AttachmentDetails();
-            attachmentDetails.setId(attachment.getId());
-            if (Objects.nonNull(attachment.getDate())) {
-                attachmentDetails.setDate(attachment.getDate().atOffset(ZoneOffset.UTC));
-            }
-            attachmentDetails.setDocumentType(attachment.getDocumentType());
-            attachmentDetails.setSha256(attachment.getSha256());
-            return attachmentDetails;
-        }).toList();
-
-        List<AttachmentDetails> attachmentsDetailsNoUri = attachmentsDetails.stream().map(att -> {
-            AttachmentDetails copy = new AttachmentDetails();
-            copy.setId(att.getId());
-            copy.setDate(att.getDate());
-            copy.setDocumentType(att.getDocumentType());
-            copy.setSha256(att.getSha256());
-            return copy;
-        }).toList();
-        return new HashSet<>(remappedAttachments).equals(new HashSet<>(attachmentsDetailsNoUri));
     }
 
     private Mono<Boolean> deanonymizeAddressAndCheckIt(String anonymizedDiscoveredAddressId, PaperProgressStatusEvent paperProgressStatusEvent) {
         if (StringUtils.hasText(anonymizedDiscoveredAddressId) && Objects.nonNull(paperProgressStatusEvent.getDiscoveredAddress()))
             return dataVaultClient.deAnonymizeDiscoveredAddress(paperProgressStatusEvent.getRequestId(), anonymizedDiscoveredAddressId)
-                    .map(paperAddress -> checkDiscoveredAddress(paperAddress, paperProgressStatusEvent.getDiscoveredAddress()));
+                    .map(paperAddress -> isSameAddress(paperAddress, paperProgressStatusEvent.getDiscoveredAddress()));
         return Mono.just(!StringUtils.hasText(anonymizedDiscoveredAddressId) && Objects.isNull(paperProgressStatusEvent.getDiscoveredAddress()));
     }
 
-    private boolean checkDiscoveredAddress(PaperAddress paperAddress, DiscoveredAddress discoveredAddress) {
-        return checkField(paperAddress.getName(), discoveredAddress.getName())
-                && checkField(paperAddress.getNameRow2(), discoveredAddress.getNameRow2())
-                && checkField(paperAddress.getAddress(), discoveredAddress.getAddress())
-                && checkField(paperAddress.getAddressRow2(), discoveredAddress.getAddressRow2())
-                && checkField(paperAddress.getCap(), discoveredAddress.getCap())
-                && checkField(paperAddress.getCity(), discoveredAddress.getCity())
-                && checkField(paperAddress.getCity2(), discoveredAddress.getCity2())
-                && checkField(paperAddress.getPr(), discoveredAddress.getPr())
-                && checkField(paperAddress.getCountry(), discoveredAddress.getCountry());
+    private static boolean isSameAttachments(List<AttachmentDetails> attachmentsDetails, List<Attachment> attachments) {
+
+        if(attachments == null) {
+            attachments = List.of();
+        }
+
+        if(attachmentsDetails == null) {
+            attachmentsDetails = List.of();
+        }
+
+        if(attachmentsDetails.isEmpty() && attachments.isEmpty()) {
+            return true;
+        }
+
+        if (attachments.isEmpty() || attachmentsDetails.isEmpty()) {
+            return false;
+        }
+
+        if (attachments.size() != attachmentsDetails.size()){
+            return false;
+        } else {
+
+            for (int i = 0; i<attachments.size(); i++) {
+                Attachment paperProgress = attachments.get(i);
+                AttachmentDetails eventAttachments = attachmentsDetails.get(i);
+                if(! (paperProgress.getDate().truncatedTo(SECONDS).atOffset(ZoneOffset.UTC).isEqual(eventAttachments.getDate().truncatedTo(SECONDS)) &&
+                        Objects.equals(paperProgress.getId(), eventAttachments.getId()) &&
+                        Objects.equals(paperProgress.getDocumentType(), eventAttachments.getDocumentType()) &&
+                        Objects.equals(paperProgress.getSha256(), eventAttachments.getSha256()))) {
+                    return false;
+                }
+            } return true;
+        }
     }
 
-
+    private static boolean isSameAddress (PaperAddress paperAddress, DiscoveredAddress discoveredAddress) {
+        if (paperAddress == null && discoveredAddress == null) {
+            return true;
+        }
+        if (paperAddress == null || discoveredAddress==null) {
+            return false;
+        }
+        return  Objects.equals(paperAddress.getName(), discoveredAddress.getName())
+                && Objects.equals(paperAddress.getNameRow2(), discoveredAddress.getNameRow2())
+                && Objects.equals(paperAddress.getAddress(), discoveredAddress.getAddress())
+                && Objects.equals(paperAddress.getAddressRow2(), discoveredAddress.getAddressRow2())
+                && Objects.equals(paperAddress.getCap(), discoveredAddress.getCap())
+                && Objects.equals(paperAddress.getCity(), discoveredAddress.getCity())
+                && Objects.equals(paperAddress.getCity2(), discoveredAddress.getCity2())
+                && Objects.equals(paperAddress.getPr(), discoveredAddress.getPr())
+                && Objects.equals(paperAddress.getCountry(), discoveredAddress.getCountry());
+    }
 }

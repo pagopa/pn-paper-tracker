@@ -18,6 +18,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,6 +36,7 @@ class DuplicatedEventFilteringTest {
     private DataVaultClient dataVaultClient;
 
     private HandlerContext context;
+    private OffsetDateTime offsetDateTime = OffsetDateTime.now();
 
     @BeforeEach
     void setup(){
@@ -43,6 +47,15 @@ class DuplicatedEventFilteringTest {
         attachment1.setId("attachment-id-1");
         attachment1.setDocumentType("DOCUMENT_TYPE");
         attachment1.setSha256("sha256hash");
+        attachment1.setDate(offsetDateTime.toInstant());
+        Event event = new Event();
+        event.setId("event-id-1");
+        event.setRequestTimestamp(Instant.now());
+        event.setStatusCode("RECRN003C");
+        event.setStatusTimestamp(Instant.now());
+        event.setProductType(ProductType.AR);
+        event.setAttachments(new ArrayList<>());
+        event.setAnonymizedDiscoveredAddressId("anonymized_addr_377a1b51-d241-4ce3-b1c8-0802650e48f4");
         Event event1 = new Event();
         event1.setId("event-id-1");
         event1.setRequestTimestamp(Instant.now());
@@ -54,6 +67,7 @@ class DuplicatedEventFilteringTest {
         Attachment attachment2 = new Attachment();
         attachment2.setId("attachment-id-2");
         attachment2.setDocumentType("DOCUMENT_TYPE2");
+        attachment2.setDate(offsetDateTime.toInstant());
         Event event2 = new Event();
         event2.setId("event-id-2");
         event2.setRequestTimestamp(Instant.now());
@@ -64,6 +78,7 @@ class DuplicatedEventFilteringTest {
         Attachment attachment3 = new Attachment();
         attachment3.setId("attachment-id-3");
         attachment3.setDocumentType("DOCUMENT_TYPE3");
+        attachment3.setDate(offsetDateTime.toInstant());
         Event event3 = new Event();
         event3.setId("event-id-3");
         event3.setRequestTimestamp(Instant.now());
@@ -71,7 +86,7 @@ class DuplicatedEventFilteringTest {
         event3.setStatusTimestamp(Instant.now());
         event3.setProductType(ProductType.AR);
         event3.setAttachments(List.of(attachment3));
-        paperTrackings.setEvents(List.of(event1, event2, event3));
+        paperTrackings.setEvents(List.of(event, event1, event2, event3));
         context.setPaperTrackings(paperTrackings);
     }
 
@@ -87,6 +102,7 @@ class DuplicatedEventFilteringTest {
         attachmentDetails.setDocumentType("DOCUMENT_TYPE");
         attachmentDetails.setUri("http://document-uri"); //verifico che l'uri non venga considerato nel confronto
         attachmentDetails.setSha256("sha256hash");
+        attachmentDetails.setDate(offsetDateTime);
         newEvent.setAttachments(List.of(attachmentDetails));
         DiscoveredAddress discoveredAddress = new DiscoveredAddress();
         discoveredAddress.setAddress("Via Roma");
@@ -115,9 +131,25 @@ class DuplicatedEventFilteringTest {
         AttachmentDetails attachmentDetails = new AttachmentDetails();
         attachmentDetails.setId("attachment-id-1");
         attachmentDetails.setDocumentType("DOCUMENT_TYPE2");
+        attachmentDetails.setDate(offsetDateTime);
         newEvent.setAttachments(List.of(attachmentDetails));
         context.setPaperProgressStatusEvent(newEvent);
         context.setEventId("event-id-4");
+
+        StepVerifier.create(duplicatedEventFiltering.execute(context))
+                .verifyComplete();
+        verifyNoInteractions(dataVaultClient);
+    }
+
+    @Test
+    void sameEventWithDifferentNoAttachments() {
+        PaperProgressStatusEvent newEvent = new PaperProgressStatusEvent();
+        newEvent.setStatusCode("RECRN003C");
+        newEvent.setStatusDateTime(context.getPaperTrackings().getEvents().getFirst().getStatusTimestamp().atOffset(java.time.ZoneOffset.UTC));
+        newEvent.setProductType(ProductType.AR.getValue());
+        newEvent.setAttachments(Collections.emptyList());
+        context.setPaperProgressStatusEvent(newEvent);
+        context.setEventId("event-id");
 
         StepVerifier.create(duplicatedEventFiltering.execute(context))
                 .verifyComplete();
@@ -151,6 +183,7 @@ class DuplicatedEventFilteringTest {
         AttachmentDetails attachmentDetails = new AttachmentDetails();
         attachmentDetails.setId("attachment-id-2");
         attachmentDetails.setDocumentType("DOCUMENT_TYPE2");
+        attachmentDetails.setDate(offsetDateTime);
         newEvent.setAttachments(List.of(attachmentDetails));
         newEvent.setDiscoveredAddress(new DiscoveredAddress());
         context.setPaperProgressStatusEvent(newEvent);
