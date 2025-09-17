@@ -175,8 +175,8 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 });
             }
             case OK_AR_NOT_ORDERED -> {
-                assertEquals(6, list.size());
-                assertContainsStatus(list, List.of("CON080", "CON020", "RECRN001A", "RECRN001B", "RECRN001A", "RECRN001C"));
+                assertEquals(5, list.size());
+                assertContainsStatus(list, List.of("CON080", "CON020", "RECRN001A", "RECRN001B", "RECRN001C"));
                 assertSameRegisteredLetter(list, 0, 1, 2, 3, 4);
                 list.forEach(e -> {
                     if (is(e, "RECRN001A")) {assertNoAttach(e);assertProgress(e);}
@@ -214,10 +214,10 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 });
             }
             case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> {
-                List<String> filteredStatusCode = seq.getStatusCodes().stream().filter(s -> !s.equals("CON018")).toList();
-                assertEquals(8, list.size());
+                List<String> filteredStatusCode = seq.getStatusCodes().stream().filter(s -> !s.equals("CON018")).distinct().toList();
+                assertEquals(7, list.size());
                 assertContainsStatus(list, filteredStatusCode);
-                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6, 7);
+                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6);
                 list.forEach(e -> {
                     if (is(e, "RECRN003A")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
@@ -230,9 +230,9 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             }
             case OK_GIACENZA_AR_4 -> {
                 List<String> filteredStatusCode = seq.getStatusCodes().stream().filter(s -> !s.equals("CON018")).toList();
-                assertEquals(11, list.size());
+                assertEquals(7, list.size());
                 assertContainsStatus(list, filteredStatusCode);
-                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4, 5, 6);
                 Assertions.assertEquals(1, list.stream().filter(paperTrackerDryRunOutputs -> paperTrackerDryRunOutputs.getStatusDetail()
                         .equalsIgnoreCase("RECRN003C")).toList().size());
                 list.forEach(e -> {
@@ -398,16 +398,30 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
     private void verifyErrors(List<PaperTrackingsErrors> errs, TestSequenceAREnum seq) {
         switch (seq) {
-            case OK_AR, OK_GIACENZA_AR, OK_GIACENZA_AR_2, OK_GIACENZA_AR_3, FAIL_GIACENZA_AR, OKCausaForzaMaggiore_AR,
+            case OK_AR, OK_GIACENZA_AR, FAIL_GIACENZA_AR, OKCausaForzaMaggiore_AR,
                  FAIL_IRREPERIBILE_AR, OK_RETRY_AR,
-                 FAIL_AR, OK_AR_BAD_EVENT, /*FAIL_DISCOVERY_AR,*/ OK_AR_NOT_ORDERED, OKNonRendicontabile_AR ->
+                 FAIL_AR, OK_AR_BAD_EVENT, /*FAIL_DISCOVERY_AR,*/  OKNonRendicontabile_AR ->
                     assertEquals(0, errs.size());
-            case OK_GIACENZA_AR_4, KO_AR_NO_EVENT_B, FAIL_COMPIUTA_GIACENZA_AR ->
+            case OK_AR_NOT_ORDERED -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN001A");
+            case OK_GIACENZA_AR_2 -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
+            case OK_GIACENZA_AR_3 -> assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN011");
+            case OK_GIACENZA_AR_4 -> {
+                assertWarning(errs.getFirst(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
+                assertError(errs.get(1), ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Necessary status code not found in events");
+                assertWarning(errs.get(2), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
+                assertWarning(errs.get(3), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN003A");
+                assertWarning(errs.getLast(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN003B");
+            }
+            case KO_AR_NO_EVENT_B, FAIL_COMPIUTA_GIACENZA_AR ->
                     assertSingleError(errs, ErrorCategory.STATUS_CODE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Necessary status code not found in events");
             case FAIL_CON996_PCRETRY_FURTO_AR ->
                     assertSingleWarning(errs, ErrorCategory.NOT_RETRYABLE_EVENT_ERROR, FlowThrow.NOT_RETRYABLE_EVENT_HANDLER, "Scartato PDF");
-            case OK_AR_INVALID_DATETIME, OK_AR_TIMESTAMP_ERR ->
-                    assertSingleError(errs, ErrorCategory.DATE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Invalid business timestamps");
+            case OK_AR_TIMESTAMP_ERR -> {
+                assertWarning(errs.getFirst(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN001B");
+                assertError(errs.get(1), ErrorCategory.DATE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Invalid business timestamps");
+                assertWarning(errs.getLast(), ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN001A");
+            }
+            case OK_AR_INVALID_DATETIME -> assertSingleError(errs, ErrorCategory.DATE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Invalid business timestamps");
 
         }
     }

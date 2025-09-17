@@ -10,6 +10,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -33,6 +34,8 @@ public class PaperProgressStatusEventMapper {
             event.setAttachments(paperProgressStatusEvent.getAttachments().stream()
                     .map(PaperProgressStatusEventMapper::buildAttachmentFromAttachmentDetail)
                     .toList());
+        }else{
+            event.setAttachments(new ArrayList<>());
         }
 
         // Controlla se è un evento demat della tripletta

@@ -102,6 +102,18 @@ public class TestUtils {
         assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
     }
 
+    public static void assertError(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.ERROR, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNull(e.getDetails().getCause());
+    }
+
+
     public static void assertSingleError(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(1, errs.size());
         PaperTrackingsErrors e = errs.getFirst();
@@ -118,6 +130,17 @@ public class TestUtils {
     public static void assertSingleWarning(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(1, errs.size());
         PaperTrackingsErrors e = errs.getFirst();
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.WARNING, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNull(e.getDetails().getCause());
+    }
+
+    public static void assertWarning(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(cat, e.getErrorCategory());
         assertEquals(flow, e.getFlowThrow());
         assertEquals(ErrorType.WARNING, e.getType());
