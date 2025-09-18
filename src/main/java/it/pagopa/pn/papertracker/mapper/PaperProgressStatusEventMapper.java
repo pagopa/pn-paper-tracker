@@ -46,6 +46,12 @@ public class PaperProgressStatusEventMapper {
             paperTrackings.setPaperStatus(paperStatus);
         }
 
+        if ("P000".equalsIgnoreCase(paperProgressStatusEvent.getStatusCode())) {
+            PaperStatus paperStatus = new PaperStatus();
+            paperStatus.setPaperDeliveryTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
+            paperTrackings.setPaperStatus(paperStatus);
+        }
+
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
         event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
         event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
