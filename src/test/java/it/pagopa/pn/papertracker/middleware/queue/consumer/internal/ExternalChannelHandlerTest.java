@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.mode
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersFactoryGeneric;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +29,9 @@ public class ExternalChannelHandlerTest {
     private HandlersFactoryRir handlersFactoryRir;
 
     @Mock
+    private HandlersFactoryGeneric handlersFactoryGeneric;
+
+    @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     private ExternalChannelHandler externalChannelHandler;
@@ -36,7 +40,8 @@ public class ExternalChannelHandlerTest {
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler, handlersFactoryAr, handlersFactoryRir);
+        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler, handlersFactoryAr,
+                handlersFactoryRir, handlersFactoryGeneric);
         eventId = "eventId";
     }
 
@@ -83,13 +88,13 @@ public class ExternalChannelHandlerTest {
     void handleExternalChannelMessage_callsAREventHandler_UNRECOGNIZED() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate("UNRECOGNIZED_STATUS");
-        when(handlersFactoryAr.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+        when(handlersFactoryGeneric.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
 
         //Act
         externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
-        verify(handlersFactoryAr).buildUnrecognizedEventsHandler(any(HandlerContext.class));
+        verify(handlersFactoryGeneric).buildUnrecognizedEventsHandler(any(HandlerContext.class));
     }
 
     private SingleStatusUpdate getSingleStatusUpdate(String statusCode) {

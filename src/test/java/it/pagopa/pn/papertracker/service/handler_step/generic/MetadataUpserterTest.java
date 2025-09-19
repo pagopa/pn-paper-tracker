@@ -108,7 +108,8 @@ class MetadataUpserterTest {
                      mockStatic(PaperProgressStatusEventMapper.class)) {
 
             mapperMock.when(() -> PaperProgressStatusEventMapper
-                            .toPaperTrackings(paperProgressStatusEvent, "", "eventId", true))
+                            .toPaperTrackings(paperProgressStatusEvent, "",
+                                    "eventId", true, false, false))
                     .thenReturn(Mono.error(mapperException));
 
             // Act & Assert
