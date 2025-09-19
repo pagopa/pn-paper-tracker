@@ -10,6 +10,7 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import it.pagopa.pn.papertracker.service.handler_step.generic.AbstractHandlersFactory;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersFactoryGeneric;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -28,6 +29,7 @@ public class ExternalChannelHandler {
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
     private final HandlersFactoryAr handlersFactoryAr;
     private final HandlersFactoryRir handlersFactoryRir;
+    private final HandlersFactoryGeneric handlersFactoryGeneric;
     private static final String HANDLING_EVENT_LOG = "Handling {} event for productType: [{}] and event: [{}]";
 
     /**
@@ -84,7 +86,7 @@ public class ExternalChannelHandler {
     }
 
     private Mono<Void> handleUnrecognizedEventsHandler(HandlerContext context) {
-        return handlersFactoryAr.buildUnrecognizedEventsHandler(context);
+        return handlersFactoryGeneric.buildUnrecognizedEventsHandler(context);
     }
 
     /**
