@@ -175,4 +175,13 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         metadataUpserter
                 ), context);
     }
+
+    @Override
+    public Mono<Void> buildSaveOnlyEventHandler(HandlerContext context) {
+        return buildEventsHandler(
+                List.of(
+                        metadataUpserter
+                ), context);
+    }
+
 }

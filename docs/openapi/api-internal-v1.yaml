@@ -367,7 +367,7 @@ components:
         paperDeliveryTimestamp:
           type: string
           format: date-time
-          description: Timestamp corretto di affido al consolidatore recuperato dallo statusCode P000
+          description: Timestamp di affido al consolidatore recuperato dallo statusCode P000
         actualPaperDeliveryTimestamp:
           type: string
           format: date-time

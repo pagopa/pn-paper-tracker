@@ -61,7 +61,7 @@ public class ExternalChannelHandler {
                             ProductType productType = resolveProductType(statusCode, payloadProductType);
 
                             return switch (productType){
-                                case RS, ALL, RIS, _890 -> null;
+                                case RS, ALL, RIS, _890 -> Mono.empty();
                                 case AR -> handleEvent(statusCode, context, handlersFactoryAr);
                                 case RIR -> handleEvent(statusCode, context, handlersFactoryRir);
                                 case UNKNOWN -> handleUnrecognizedEventsHandler(context);
@@ -116,6 +116,10 @@ public class ExternalChannelHandler {
             case FINAL_EVENT -> {
                 logStatusEvent("Final", eventStatusCodeEnum, statusCode);
                 yield factory.buildFinalEventsHandler(context);
+            }
+            case SAVE_ONLY_EVENT -> {
+                logStatusEvent("SaveOnly", eventStatusCodeEnum, statusCode);
+                yield factory.buildSaveOnlyEventHandler(context);
             }
         };
     }

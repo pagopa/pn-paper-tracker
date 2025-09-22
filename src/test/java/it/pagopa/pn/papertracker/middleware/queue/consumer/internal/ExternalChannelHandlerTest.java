@@ -97,11 +97,25 @@ public class ExternalChannelHandlerTest {
         verify(handlersFactoryGeneric).buildUnrecognizedEventsHandler(any(HandlerContext.class));
     }
 
+    @Test
+    void handleExternalChannelMessage_callsAREventHandler_P000() {
+        //Arrange
+        SingleStatusUpdate payload = getSingleStatusUpdate(P000.name());
+        when(handlersFactoryAr.buildSaveOnlyEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+
+        //Act
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
+
+        //Assert
+        verify(handlersFactoryAr).buildSaveOnlyEventHandler(any(HandlerContext.class));
+    }
+
     private SingleStatusUpdate getSingleStatusUpdate(String statusCode) {
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
         PaperProgressStatusEvent analogMail = new PaperProgressStatusEvent();
         analogMail.setRequestId("test-request-id");
         analogMail.setStatusCode(statusCode);
+        analogMail.setProductType("AR");
         singleStatusUpdate.setAnalogMail(analogMail);
         return singleStatusUpdate;
     }
