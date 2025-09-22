@@ -10,6 +10,7 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import it.pagopa.pn.papertracker.service.handler_step.generic.AbstractHandlersFactory;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersFactoryGeneric;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -28,6 +29,7 @@ public class ExternalChannelHandler {
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
     private final HandlersFactoryAr handlersFactoryAr;
     private final HandlersFactoryRir handlersFactoryRir;
+    private final HandlersFactoryGeneric handlersFactoryGeneric;
     private static final String HANDLING_EVENT_LOG = "Handling {} event for productType: [{}] and event: [{}]";
 
     /**
@@ -59,7 +61,7 @@ public class ExternalChannelHandler {
                             ProductType productType = resolveProductType(statusCode, payloadProductType);
 
                             return switch (productType){
-                                case RS, ALL, RIS, _890 -> null;
+                                case RS, ALL, RIS, _890 -> Mono.empty();
                                 case AR -> handleEvent(statusCode, context, handlersFactoryAr);
                                 case RIR -> handleEvent(statusCode, context, handlersFactoryRir);
                                 case UNKNOWN -> handleUnrecognizedEventsHandler(context);
@@ -84,7 +86,7 @@ public class ExternalChannelHandler {
     }
 
     private Mono<Void> handleUnrecognizedEventsHandler(HandlerContext context) {
-        return handlersFactoryAr.buildUnrecognizedEventsHandler(context);
+        return handlersFactoryGeneric.buildUnrecognizedEventsHandler(context);
     }
 
     /**
@@ -114,6 +116,10 @@ public class ExternalChannelHandler {
             case FINAL_EVENT -> {
                 logStatusEvent("Final", eventStatusCodeEnum, statusCode);
                 yield factory.buildFinalEventsHandler(context);
+            }
+            case SAVE_ONLY_EVENT -> {
+                logStatusEvent("SaveOnly", eventStatusCodeEnum, statusCode);
+                yield factory.buildSaveOnlyEventHandler(context);
             }
         };
     }

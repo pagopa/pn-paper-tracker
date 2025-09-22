@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.A
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -41,9 +42,11 @@ class DeliveryPushSenderTest {
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
         SendEvent event = getSendEvent();
+        PaperTrackings paperTrackings = new PaperTrackings();
         String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
         context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        context.setPaperTrackings(paperTrackings);
 
         // Act
         deliveryPushSender.sendToOutputTarget(event, context).block();
@@ -76,9 +79,11 @@ class DeliveryPushSenderTest {
     void testBuildDeliveryPushEvent() {
         // Arrange
         SendEvent event = getSendEvent();
+        PaperTrackings paperTrackings = new PaperTrackings();
         String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
         context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        context.setPaperTrackings(paperTrackings);
 
         // Act
         deliveryPushSender.sendToOutputTarget(event, context).block();

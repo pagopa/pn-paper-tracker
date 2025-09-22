@@ -28,7 +28,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         return pt;
     }
@@ -42,7 +42,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
         return pt;
@@ -99,7 +99,7 @@ public class TestUtils {
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
         assertNotNull(pt.getPaperStatus().getFinalDematFound());
-        assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
+        assertNotNull(pt.getPaperStatus().getPaperDeliveryTimestamp());
     }
 
     public static void assertError(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {

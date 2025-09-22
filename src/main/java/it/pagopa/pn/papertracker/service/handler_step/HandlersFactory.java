@@ -11,5 +11,6 @@ public interface HandlersFactory {
     Mono<Void> buildNotRetryableEventHandler(HandlerContext context);
     Mono<Void> buildOcrResponseHandler(HandlerContext context);
     Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context);
+    Mono<Void> buildSaveOnlyEventHandler(HandlerContext context);
 
 }

@@ -60,10 +60,12 @@ public enum EventStatusCodeEnum {
     CON012(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "OK Distinta Elettronica da Recapitista", false),
     CON09A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Materialità Pronta", false),
     CON016(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "PICKUP Sigillata", false),
-    CON018(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Accettazione Recapitista", false);
+    CON018(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Accettazione Recapitista", false),
     //eventi non gestiti da paper-channel ma previsti dal consolidatore
     //CON992(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "KO Distinta Elettronica da Recapitista", false),
     //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
+
+    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false);
 
     private final EventTypeEnum codeType;
     private final ProductType productType;
