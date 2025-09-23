@@ -1,9 +1,9 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.*;
+import it.pagopa.pn.papertracker.service.handler_step.Handler;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +16,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 
@@ -90,7 +88,7 @@ class HandlersFactoryArTest {
 
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Verify execution order
@@ -111,7 +109,7 @@ class HandlersFactoryArTest {
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .expectError(RuntimeException.class)
                 .verify();
 
@@ -133,7 +131,7 @@ class HandlersFactoryArTest {
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -157,7 +155,8 @@ class HandlersFactoryArTest {
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildIntermediateEventsHandler(handlerContext))
+        Handler handler = handlersFactoryAr.buildIntermediateEventsHandler(handlerContext);
+        StepVerifier.create(handler.execute(handlerContext))
                 .verifyComplete();
 
         // Verify both steps were executed in the correct order
@@ -179,7 +178,7 @@ class HandlersFactoryArTest {
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         // Act
-        StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -200,7 +199,7 @@ class HandlersFactoryArTest {
         when(notRetryableErrorInserting.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildNotRetryableEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildNotRetryableEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -221,7 +220,7 @@ class HandlersFactoryArTest {
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
     }
 
@@ -235,7 +234,7 @@ class HandlersFactoryArTest {
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
     }
 
@@ -250,7 +249,7 @@ class HandlersFactoryArTest {
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert - verify the same context instance is passed to all steps
@@ -267,7 +266,7 @@ class HandlersFactoryArTest {
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildSaveOnlyEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildSaveOnlyEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert

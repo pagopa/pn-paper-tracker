@@ -2,7 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.*;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,12 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -86,7 +82,7 @@ class HandlersFactoryRirTest {
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -109,7 +105,7 @@ class HandlersFactoryRirTest {
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryRir.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
+        StepVerifier.create(handlersFactoryRir.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .expectError(RuntimeException.class)
                 .verify();
 
@@ -131,7 +127,7 @@ class HandlersFactoryRirTest {
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -154,7 +150,7 @@ class HandlersFactoryRirTest {
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryRir.buildIntermediateEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildIntermediateEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Verify both steps were executed in the correct order
@@ -175,7 +171,7 @@ class HandlersFactoryRirTest {
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryRir.buildRetryEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildRetryEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -195,7 +191,7 @@ class HandlersFactoryRirTest {
         when(notRetryableErrorInserting.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryRir.buildNotRetryableEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildNotRetryableEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
@@ -214,7 +210,7 @@ class HandlersFactoryRirTest {
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
-        StepVerifier.create(handlersFactoryRir.buildOcrResponseHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
     }
 
@@ -224,7 +220,7 @@ class HandlersFactoryRirTest {
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryRir.buildSaveOnlyEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryRir.buildSaveOnlyEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert

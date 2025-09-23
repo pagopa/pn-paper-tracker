@@ -9,9 +9,9 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
-import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -26,9 +26,8 @@ import java.util.Objects;
 public class OcrEventHandler {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final HandlersFactoryAr handlersFactoryAr;
-    private final HandlersFactoryRir handlersFactoryRir;
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
+    private final HandlersRegistry handlersRegistry;
 
     public void handleOcrMessage(OcrDataResultPayload ocrResultMessage) {
         if (Objects.isNull(ocrResultMessage) || Objects.isNull(ocrResultMessage.getCommandId())) {
@@ -84,11 +83,7 @@ public class OcrEventHandler {
 
     private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, Event event) {
         HandlerContext context = buildContextAndAddDematValidationTimestamp(paperTrackings, event);
-        return switch (paperTrackings.getProductType()){
-            case AR -> handlersFactoryAr.buildOcrResponseHandler(context);
-            case RIR -> handlersFactoryRir.buildOcrResponseHandler(context);
-            default -> Mono.error(new PaperTrackerException("Invalid productType: " + paperTrackings.getProductType()));
-        };
+        return handlersRegistry.handleEvent(paperTrackings.getProductType(), EventTypeEnum.OCR_RESPONSE_EVENT, context);
     }
 
     private Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {
