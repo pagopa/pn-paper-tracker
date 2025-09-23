@@ -219,20 +219,6 @@ class HandlersFactoryRirTest {
     }
 
     @Test
-    void buildUnrecognizedEventsHandler_ExecutesMetadataUpserter() {
-        // Arrange
-        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
-
-        // Act
-        StepVerifier.create(handlersFactoryRir.buildUnrecognizedEventsHandler(handlerContext))
-                .verifyComplete();
-
-        // Assert
-        InOrder inOrder = inOrder(metadataUpserter);
-        inOrder.verify(metadataUpserter).execute(handlerContext);
-    }
-
-    @Test
     void buildSaveOnlyEventHandler_ExecutesMetadataUpserter() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());

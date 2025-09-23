@@ -18,8 +18,8 @@ public class HandlersRegistry {
         this.unrecognizedHandler = unrecognizedHandler;
     }
 
-    public Mono<Void> handleEvent(ProductType type, EventTypeEnum eventType, HandlerContext ctx) {
-        return Optional.ofNullable(registry.get(type))
+    public Mono<Void> handleEvent(ProductType productType, EventTypeEnum eventType, HandlerContext ctx) {
+        return Optional.ofNullable(registry.get(productType))
                 .map(abstractHandlersFactory -> abstractHandlersFactory.handle(eventType, ctx))
                 .orElseGet(() -> unrecognizedHandler.handle(ctx));
     }

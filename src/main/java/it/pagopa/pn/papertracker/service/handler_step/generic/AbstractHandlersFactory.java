@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.util.function.Function;
 
 import java.util.EnumMap;
 import java.util.List;
@@ -32,18 +33,20 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
 
     public abstract ProductType getProductType();
 
-    private final Map<EventTypeEnum, java.util.function.Function<HandlerContext, Mono<Void>>> dispatchers =
+    private final Map<EventTypeEnum, Function<HandlerContext, Mono<Void>>> dispatchers =
             new EnumMap<>(EventTypeEnum.class) {{
                 put(EventTypeEnum.INTERMEDIATE_EVENT, AbstractHandlersFactory.this::buildIntermediateEventsHandler);
                 put(EventTypeEnum.RETRYABLE_EVENT, AbstractHandlersFactory.this::buildRetryEventHandler);
                 put(EventTypeEnum.NOT_RETRYABLE_EVENT, AbstractHandlersFactory.this::buildNotRetryableEventHandler);
                 put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
+                put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
             }};
 
-    public Mono<Void> handle(EventTypeEnum type, HandlerContext context) {
-        var handler = dispatchers.get(type);
+    public Mono<Void> handle(EventTypeEnum eventType, HandlerContext context) {
+        log.info("Handling {} event for productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
+        var handler = dispatchers.get(eventType);
         if (Objects.isNull(handler)) {
-            log.error("No handler founded for EventType ={} (trackingId={})", type, context.getTrackingId());
+            log.error("No handler founded for EventType ={} and productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
             return Mono.empty();
         }
         return handler.apply(context);
