@@ -5,12 +5,11 @@ import reactor.core.publisher.Mono;
 
 public interface HandlersFactory {
 
-    Mono<Void> buildFinalEventsHandler(HandlerContext context);
-    Mono<Void> buildIntermediateEventsHandler(HandlerContext context);
-    Mono<Void> buildRetryEventHandler(HandlerContext context);
-    Mono<Void> buildNotRetryableEventHandler(HandlerContext context);
-    Mono<Void> buildOcrResponseHandler(HandlerContext context);
-    Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context);
-    Mono<Void> buildSaveOnlyEventHandler(HandlerContext context);
+    Handler buildFinalEventsHandler(HandlerContext context);
+    Handler buildIntermediateEventsHandler(HandlerContext context);
+    Handler buildRetryEventHandler(HandlerContext context);
+    Handler buildNotRetryableEventHandler(HandlerContext context);
+    Handler buildOcrResponseHandler(HandlerContext context);
+    Handler buildSaveOnlyEventHandler(HandlerContext context);
 
 }

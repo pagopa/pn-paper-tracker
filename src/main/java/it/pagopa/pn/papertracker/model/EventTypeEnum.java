@@ -5,5 +5,6 @@ public enum EventTypeEnum {
     RETRYABLE_EVENT,
     NOT_RETRYABLE_EVENT,
     FINAL_EVENT,
-    SAVE_ONLY_EVENT
+    SAVE_ONLY_EVENT,
+    OCR_RESPONSE_EVENT
 }
