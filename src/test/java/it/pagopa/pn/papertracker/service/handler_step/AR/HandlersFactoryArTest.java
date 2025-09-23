@@ -1,5 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.*;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
@@ -80,30 +82,23 @@ class HandlersFactoryArTest {
         // Arrange
         List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
                 .verifyComplete();
 
         // Verify execution order
-        InOrder inOrder = inOrder(mockHandlerStep1, mockHandlerStep2);
-        inOrder.verify(mockHandlerStep1).execute(handlerContext);
-        inOrder.verify(mockHandlerStep2).execute(handlerContext);
-    }
-
-    @Test
-    void buildEventsHandler_WithEmptyStepsList_CompletesSuccessfully() {
-        // Arrange
-        List<HandlerStep> emptySteps = Collections.emptyList();
-
-        // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(emptySteps, handlerContext))
-                .verifyComplete();
-
-        // Verify no steps were executed
-        verifyNoInteractions(mockHandlerStep1, mockHandlerStep2);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingState,duplicatedEventFiltering, deliveryPushSender, intermediateEventsBuilder);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
+        inOrder.verify(deliveryPushSender).execute(handlerContext);
     }
 
     @Test
@@ -112,18 +107,18 @@ class HandlersFactoryArTest {
         List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
         RuntimeException testException = new RuntimeException("Second step failed");
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.error(testException));
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
                 .expectError(RuntimeException.class)
                 .verify();
 
         // Verify both steps were attempted in order
-        InOrder inOrder = inOrder(mockHandlerStep1, mockHandlerStep2);
-        inOrder.verify(mockHandlerStep1).execute(handlerContext);
-        inOrder.verify(mockHandlerStep2).execute(handlerContext);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingState);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
     }
 
     @Test
@@ -233,32 +228,37 @@ class HandlersFactoryArTest {
     @Test
     void buildEventsHandler_WithSingleStep_ExecutesSuccessfully() {
         // Arrange
-        List<HandlerStep> singleStep = Collections.singletonList(mockHandlerStep1);
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(singleStep, handlerContext))
+        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
                 .verifyComplete();
-
-        verify(mockHandlerStep1).execute(handlerContext);
-        verify(mockHandlerStep2, never()).execute(any());
     }
 
     @Test
     void buildEventsHandler_VerifyContextPassedToAllSteps() {
         // Arrange
-        List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.handle(EventTypeEnum.INTERMEDIATE_EVENT, new HandlerContext()))
                 .verifyComplete();
 
         // Assert - verify the same context instance is passed to all steps
-        verify(mockHandlerStep1).execute(handlerContext);
-        verify(mockHandlerStep2).execute(handlerContext);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingState,duplicatedEventFiltering, deliveryPushSender, intermediateEventsBuilder);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
+        inOrder.verify(deliveryPushSender).execute(handlerContext);
     }
 
     @Test

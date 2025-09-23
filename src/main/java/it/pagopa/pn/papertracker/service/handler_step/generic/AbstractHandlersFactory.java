@@ -1,5 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.HandlersFactory;
@@ -8,7 +10,10 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,6 +30,25 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final StateUpdater stateUpdater;
     private final CheckTrackingState checkTrackingState;
 
+    public abstract ProductType getProductType();
+
+    private final Map<EventTypeEnum, java.util.function.Function<HandlerContext, Mono<Void>>> dispatchers =
+            new EnumMap<>(EventTypeEnum.class) {{
+                put(EventTypeEnum.INTERMEDIATE_EVENT, AbstractHandlersFactory.this::buildIntermediateEventsHandler);
+                put(EventTypeEnum.RETRYABLE_EVENT, AbstractHandlersFactory.this::buildRetryEventHandler);
+                put(EventTypeEnum.NOT_RETRYABLE_EVENT, AbstractHandlersFactory.this::buildNotRetryableEventHandler);
+                put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
+            }};
+
+    public Mono<Void> handle(EventTypeEnum type, HandlerContext context) {
+        var handler = dispatchers.get(type);
+        if (Objects.isNull(handler)) {
+            log.error("No handler founded for EventType ={} (trackingId={})", type, context.getTrackingId());
+            return Mono.empty();
+        }
+        return handler.apply(context);
+    }
+
     /**
      * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
      *
@@ -32,7 +56,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      * @param context HandlerContext che contiene i dati per i processi
      * @return Mono Void se tutto è andato a buon fine, altrimenti Mono Error
      */
-    public Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context) {
+    private Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context) {
         return Flux.fromIterable(steps)
                 .concatMap(step -> {
                     if (context.isStopExecution()) {
@@ -165,14 +189,6 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater
-                ), context);
-    }
-
-    @Override
-    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
-                List.of(
-                        metadataUpserter
                 ), context);
     }
 }
