@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.service.handler_step.generic.NotRetryableErrorInserting;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import lombok.extern.slf4j.Slf4j;
@@ -19,17 +20,13 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
                               StateUpdater stateUpdater,
-                              CheckTrackingState checkTrackingState) {
-        super(metadataUpserter,
-                deliveryPushSender,
-                finalEventBuilder,
-                intermediateEventsBuilder,
-                dematValidator,
-                sequenceValidator,
-                retrySender,
-                notRetryableErrorInserting,
-                duplicatedEventFiltering,
-                stateUpdater,
-                checkTrackingState);
+                              CheckTrackingState checkTrackingState,
+                              RetrySenderCON996 retrySenderCON996) {
+        super(metadataUpserter, deliveryPushSender, finalEventBuilder, intermediateEventsBuilder,
+                dematValidator, sequenceValidator, retrySender, notRetryableErrorInserting,
+                duplicatedEventFiltering, stateUpdater, checkTrackingState, retrySenderCON996);
     }
+
+    @Override
+    public ProductType getProductType() { return ProductType.RIR; }
 }

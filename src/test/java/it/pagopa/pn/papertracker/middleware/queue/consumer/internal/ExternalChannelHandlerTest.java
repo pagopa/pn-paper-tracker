@@ -3,10 +3,10 @@ package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
-import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
-import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
-import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersFactoryGeneric;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,10 +26,7 @@ public class ExternalChannelHandlerTest {
     private HandlersFactoryAr handlersFactoryAr;
 
     @Mock
-    private HandlersFactoryRir handlersFactoryRir;
-
-    @Mock
-    private HandlersFactoryGeneric handlersFactoryGeneric;
+    private HandlersRegistry handleRegistry;
 
     @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
@@ -40,8 +37,7 @@ public class ExternalChannelHandlerTest {
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler, handlersFactoryAr,
-                handlersFactoryRir, handlersFactoryGeneric);
+        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler,handleRegistry);
         eventId = "eventId";
     }
 
@@ -49,65 +45,52 @@ public class ExternalChannelHandlerTest {
     void handleExternalChannelMessage_callsAREventHandler_PROGRESS() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002A.name());
-        when(handlersFactoryAr.buildIntermediateEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+        when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
         externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
-        verify(handlersFactoryAr).buildIntermediateEventsHandler(any(HandlerContext.class));
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any());
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_KO() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
-        when(handlersFactoryAr.buildRetryEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+        when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
         externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
-        verify(handlersFactoryAr, times(1)).buildRetryEventHandler(any(HandlerContext.class));
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any());
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_OK() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN004C.name());
-        when(handlersFactoryAr.buildFinalEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+        when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
         externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
-        verify(handlersFactoryAr).buildFinalEventsHandler(any(HandlerContext.class));
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any());
     }
 
     @Test
     void handleExternalChannelMessage_callsAREventHandler_UNRECOGNIZED() {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate("UNRECOGNIZED_STATUS");
-        when(handlersFactoryGeneric.buildUnrecognizedEventsHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
+        when(handleRegistry.handleEvent(eq(ProductType.UNKNOWN),eq(null), any())).thenReturn(Mono.empty());
 
         //Act
         externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
 
         //Assert
-        verify(handlersFactoryGeneric).buildUnrecognizedEventsHandler(any(HandlerContext.class));
-    }
-
-    @Test
-    void handleExternalChannelMessage_callsAREventHandler_P000() {
-        //Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate(P000.name());
-        when(handlersFactoryAr.buildSaveOnlyEventHandler(any(HandlerContext.class))).thenReturn(Mono.empty());
-
-        //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
-
-        //Assert
-        verify(handlersFactoryAr).buildSaveOnlyEventHandler(any(HandlerContext.class));
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.UNKNOWN),eq(null), any());
     }
 
     private SingleStatusUpdate getSingleStatusUpdate(String statusCode) {
@@ -115,7 +98,6 @@ public class ExternalChannelHandlerTest {
         PaperProgressStatusEvent analogMail = new PaperProgressStatusEvent();
         analogMail.setRequestId("test-request-id");
         analogMail.setStatusCode(statusCode);
-        analogMail.setProductType("AR");
         singleStatusUpdate.setAnalogMail(analogMail);
         return singleStatusUpdate;
     }

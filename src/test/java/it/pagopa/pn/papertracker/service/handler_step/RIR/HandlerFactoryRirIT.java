@@ -233,7 +233,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
-        when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(resp));
+        when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }
 }

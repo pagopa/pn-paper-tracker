@@ -23,16 +23,16 @@ public class PaperChannelClientImpl implements PaperChannelClient {
     private final PnPaperTrackerConfigs config;
 
     @Override
-    public Mono<PcRetryResponse> getPcRetry(PaperTrackings paperTrackings) {
+    public Mono<PcRetryResponse> getPcRetry(PaperTrackings paperTrackings, Boolean checkApplyRasterization) {
         if(config.getEnableRetrySendEngageFor().contains(paperTrackings.getProductType())){
-            return getPcRetryPaperChannel(paperTrackings.getTrackingId());
+            return getPcRetryPaperChannel(paperTrackings.getTrackingId(), checkApplyRasterization);
         }
         log.debug("giving mock response...");
         return PcRetryUtilsMock.getPcRetryPaperMock(paperTrackings, config.getMaxPcRetryMock());
     }
 
-    private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId) {
-        return pcRetryApi.getPcRetry(trackingId)
+    private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId, Boolean checkApplyRasterization) {
+        return pcRetryApi.getPcRetry(trackingId, checkApplyRasterization)
                 .onErrorResume(throwable -> {
                     if (throwable instanceof WebClientResponseException webEx && webEx.getStatusCode() == HttpStatus.NOT_FOUND) {
                         return Mono.error(new PnPaperTrackerNotFoundException("RequestId not found", webEx.getMessage()));
