@@ -12,5 +12,4 @@ public interface HandlersFactory {
     Handler buildOcrResponseHandler(HandlerContext context);
     Handler buildSaveOnlyEventHandler(HandlerContext context);
     Handler buildCon996EventHandler(HandlerContext context);
-
 }
