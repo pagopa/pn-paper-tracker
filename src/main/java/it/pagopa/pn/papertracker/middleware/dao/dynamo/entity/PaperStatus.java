@@ -22,7 +22,7 @@ public class PaperStatus {
     public static final String COL_VALIDATED_ATTACHMENT_TYPE = "validatedAttachmentType";
     public static final String COL_VALIDATED_EVENTS = "validatedEvents";
     public static final String COL_FINAL_DEMAT_FOUND = "finalDematFound";
-    public static final String COL_ESTIMATED_PAPER_DELIVERY_TIMESTAMP = "estimatedPaperDeliveryTimestamp";
+    public static final String COL_PAPER_DELIVERY_TIMESTAMP = "paperDeliveryTimestamp";
     public static final String COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP = "actualPaperDeliveryTimestamp";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
@@ -52,8 +52,8 @@ public class PaperStatus {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_FOUND)}))
     private Boolean finalDematFound;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ESTIMATED_PAPER_DELIVERY_TIMESTAMP)}))
-    private Instant estimatedPaperDeliveryTimestamp;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAPER_DELIVERY_TIMESTAMP)}))
+    private Instant paperDeliveryTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP)}))
     private Instant actualPaperDeliveryTimestamp;

@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +24,8 @@ public class PaperProgressStatusEventMapper {
      */
     public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
-                                                        String eventId, boolean dryRunEnabled) {
+                                                        String eventId, boolean dryRunEnabled,
+                                                        boolean isFinalDemat, boolean isP000event) {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId(eventId);
@@ -38,11 +38,15 @@ public class PaperProgressStatusEventMapper {
             event.setAttachments(new ArrayList<>());
         }
 
-        // Controlla se è un evento demat della tripletta
-        boolean isFinalDemat = checkIfIsFinalDemat(paperProgressStatusEvent.getStatusCode());
         if(isFinalDemat) {
             PaperStatus paperStatus = new PaperStatus();
             paperStatus.setFinalDematFound(true);
+            paperTrackings.setPaperStatus(paperStatus);
+        }
+
+        if (isP000event) {
+            PaperStatus paperStatus = new PaperStatus();
+            paperStatus.setPaperDeliveryTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
             paperTrackings.setPaperStatus(paperStatus);
         }
 
@@ -72,8 +76,4 @@ public class PaperProgressStatusEventMapper {
         return attachment;
     }
 
-    private static boolean checkIfIsFinalDemat(String eventStatusCode) {
-        var parsedStatusCode = EventStatusCodeEnum.fromKey(eventStatusCode);
-        return parsedStatusCode != null && parsedStatusCode.isFinalDemat();
-    }
 }

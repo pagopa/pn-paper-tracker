@@ -364,10 +364,10 @@ components:
         finalDematFound:
           type: boolean
           description: Presenza evento demat finale
-        estimatedPaperDeliveryTimestamp:
+        paperDeliveryTimestamp:
           type: string
           format: date-time
-          description: Timestamp provvisorio di affido al consolidatore, dato dal timestamp di creazione dell’oggetto tracking
+          description: Timestamp di affido al consolidatore recuperato dallo statusCode P000
         actualPaperDeliveryTimestamp:
           type: string
           format: date-time
