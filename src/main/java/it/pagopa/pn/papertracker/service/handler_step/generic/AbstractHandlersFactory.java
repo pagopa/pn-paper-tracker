@@ -28,7 +28,6 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final RetrySender retrySender;
     private final NotRetryableErrorInserting notRetryableErrorInserting;
     private final DuplicatedEventFiltering duplicatedEventFiltering;
-    private final StateUpdater stateUpdater;
     private final CheckTrackingState checkTrackingState;
     private final CheckOcrResponse checkOcrResponse;
 
@@ -77,8 +76,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
+                        deliveryPushSender
                 ));
     }
 
@@ -126,8 +124,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
-                        deliveryPushSender,
-                        stateUpdater
+                        deliveryPushSender
                 ));
     }
 
@@ -139,7 +136,6 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      *  - inserimento errore nella tabella PaperTrackingsError
      *  - costruzione dell'evento da inviare a pn-delivery-push
      *  - invio a pn-delivery-push
-     *  - aggiornamento stato su PaperTrackings
      *
      * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
@@ -174,8 +170,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
+                        deliveryPushSender
                 ));
     }
 
