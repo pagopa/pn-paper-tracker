@@ -30,6 +30,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final StateUpdater stateUpdater;
     private final CheckTrackingState checkTrackingState;
+    private final RetrySenderCON996 retrySenderCON996;
 
     public abstract ProductType getProductType();
 
@@ -41,6 +42,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
                 put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
                 put(EventTypeEnum.OCR_RESPONSE_EVENT, AbstractHandlersFactory.this::buildOcrResponseHandler);
+                put(EventTypeEnum.CON996_EVENT, AbstractHandlersFactory.this::buildCon996EventHandler);
             }};
 
     public Handler build(EventTypeEnum eventType, HandlerContext context) {
@@ -182,6 +184,19 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter
+                ));
+    }
+
+    @Override
+    public Handler buildCon996EventHandler(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
+                        metadataUpserter,
+                        checkTrackingState,
+                        duplicatedEventFiltering,
+                        retrySenderCON996,
+                        intermediateEventsBuilder,
+                        deliveryPushSender
                 ));
     }
 }
