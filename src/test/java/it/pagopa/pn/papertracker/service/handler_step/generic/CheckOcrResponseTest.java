@@ -16,6 +16,9 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @ExtendWith(MockitoExtension.class)
 class CheckOcrResponseTest {
 
@@ -29,6 +32,8 @@ class CheckOcrResponseTest {
         // Act & Assert
         StepVerifier.create(checkOcrResponse.execute(context))
                 .verifyComplete();
+        assertEquals("event-id-1", context.getEventId());
+        assertTrue(context.isDryRunEnabled());
     }
 
     @Test
@@ -48,10 +53,11 @@ class CheckOcrResponseTest {
         // Act & Assert
         StepVerifier.create(checkOcrResponse.execute(context))
                 .verifyComplete();
+        assertTrue(context.isStopExecution());
     }
 
     @Test
-    void executeShouldThrowExceptionWhenStateIsFinal() {
+    void executeShouldThrowExceptionWhenStateIsNotAwaitingOcr() {
         // Arrange
         HandlerContext context = getContext(Data.ValidationStatus.OK, PaperTrackingsState.DONE);
         // Act & Assert
@@ -70,7 +76,7 @@ class CheckOcrResponseTest {
         event.setId("event-id-1");
         event.setStatusCode("RECRN003C");
         event.setProductType(ProductType.AR);
-        event.setDryRun(false);
+        event.setDryRun(true);
         Event event1 = new Event();
         event1.setId("event-id-2");
         event1.setStatusCode("RECRN003B");
