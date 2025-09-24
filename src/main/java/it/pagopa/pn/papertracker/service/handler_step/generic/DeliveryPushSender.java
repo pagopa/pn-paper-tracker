@@ -55,8 +55,7 @@ public class DeliveryPushSender implements HandlerStep {
 
         return Flux.fromIterable(filteredEvent)
                 .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
-                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) ||
-                        StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
+                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
                 .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
                 .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
                 .then();
