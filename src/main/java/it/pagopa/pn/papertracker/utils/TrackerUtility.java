@@ -1,8 +1,5 @@
 package it.pagopa.pn.papertracker.utils;
 
-import it.pagopa.pn.papertracker.exception.PaperTrackerException;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +22,8 @@ public class TrackerUtility {
         return String.join("#", trackingId, eventId);
     }
 
-    public static Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {
-        String eventId = paperTrackings.getOcrRequestId().split("#")[1];
-        return paperTrackings.getEvents().stream()
-                .filter(event -> eventId.equalsIgnoreCase(event.getId()))
-                .findFirst()
-                .orElseThrow(() -> new PaperTrackerException("Invalid ocr requestId: " + paperTrackings.getOcrRequestId() +
-                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
+    public static String getEventIdFromOcrRequestId(String ocrRequestId) {
+        return ocrRequestId.split("#")[1];
     }
 
 }

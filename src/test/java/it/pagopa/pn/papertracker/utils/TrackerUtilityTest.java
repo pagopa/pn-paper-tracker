@@ -1,12 +1,7 @@
 package it.pagopa.pn.papertracker.utils;
 
-import it.pagopa.pn.papertracker.exception.PaperTrackerException;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 public class TrackerUtilityTest {
 
@@ -43,30 +38,10 @@ public class TrackerUtilityTest {
     }
 
     @Test
-    void extractFinalEventFromOcrReturnsCorrectEvent() {
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setOcrRequestId("trackingId123#eventId456");
-        Event event1 = new Event();
-        event1.setId("eventId123");
-        Event event2 = new Event();
-        event2.setId("eventId456");
-        paperTrackings.setEvents(List.of(event1, event2));
-
-        Event result = TrackerUtility.extractFinalEventFromOcr(paperTrackings);
-        Assertions.assertEquals("eventId456", result.getId());
-    }
-
-    @Test
-    void extractFinalEventFromOcrThrowsExceptionForInvalidOcrRequestId() {
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setOcrRequestId("trackingId123#eventIdNotExist");
-        Event event1 = new Event();
-        event1.setId("eventId123");
-        Event event2 = new Event();
-        event2.setId("eventId456");
-        paperTrackings.setEvents(List.of(event1, event2));
-
-        Assertions.assertThrows(PaperTrackerException.class, () -> TrackerUtility.extractFinalEventFromOcr(paperTrackings));
+    void getEventIdFromOcrRequestId() {
+        String ocrRequestId = "trackingId123#eventId456";
+        String result = TrackerUtility.getEventIdFromOcrRequestId(ocrRequestId);
+        Assertions.assertEquals("eventId456", result);
     }
 
 }

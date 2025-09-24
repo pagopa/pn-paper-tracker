@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
@@ -39,7 +40,7 @@ public class CheckOcrResponse implements HandlerStep {
 
         return Mono.just(context.getPaperTrackings())
                 .flatMap(paperTrackings -> {
-                    Event event = TrackerUtility.extractFinalEventFromOcr(paperTrackings);
+                    Event event = extractFinalEventFromOcr(paperTrackings);
 
                     if (isNotAwaitingOcr(paperTrackings)) {
                         return handleFinalStateError(event, paperTrackings, ocrResultMessage);
@@ -96,6 +97,15 @@ public class CheckOcrResponse implements HandlerStep {
                 context.setStopExecution(true);
                 yield Mono.empty();
         };
+    }
+
+    private Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {
+        String eventId = TrackerUtility.getEventIdFromOcrRequestId(paperTrackings.getOcrRequestId());
+        return paperTrackings.getEvents().stream()
+                .filter(event -> eventId.equalsIgnoreCase(event.getId()))
+                .findFirst()
+                .orElseThrow(() -> new PaperTrackerException("Invalid ocr requestId: " + paperTrackings.getOcrRequestId() +
+                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
     }
 
 }
