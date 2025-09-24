@@ -28,4 +28,20 @@ public class TrackerUtilityTest {
         String eventStatusCode = "P001";
         Assertions.assertFalse(TrackerUtility.checkIfIsP000event(eventStatusCode));
     }
+
+    @Test
+    void buildOcrRequestIdReturnsCorrectFormat() {
+        String trackingId = "trackingId123";
+        String eventId = "eventId456";
+        String result = TrackerUtility.buildOcrRequestId(trackingId, eventId);
+        Assertions.assertEquals("trackingId123#eventId456", result);
+    }
+
+    @Test
+    void getEventIdFromOcrRequestId() {
+        String ocrRequestId = "trackingId123#eventId456";
+        String result = TrackerUtility.getEventIdFromOcrRequestId(ocrRequestId);
+        Assertions.assertEquals("eventId456", result);
+    }
+
 }

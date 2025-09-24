@@ -18,4 +18,12 @@ public class TrackerUtility {
         return P000.name().equalsIgnoreCase(eventStatusCode);
     }
 
+    public static String buildOcrRequestId(String trackingId, String eventId) {
+        return String.join("#", trackingId, eventId);
+    }
+
+    public static String getEventIdFromOcrRequestId(String ocrRequestId) {
+        return ocrRequestId.split("#")[1];
+    }
+
 }

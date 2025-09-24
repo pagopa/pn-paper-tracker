@@ -18,7 +18,8 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                              RetrySender retrySender,
                              NotRetryableErrorInserting notRetryableErrorInserting,
                              DuplicatedEventFiltering duplicatedEventFiltering,
-                             CheckTrackingState checkTrackingState) {
+                             CheckTrackingState checkTrackingState,
+                             CheckOcrResponse checkOcrResponse) {
         super(metadataUpserter,
                 deliveryPushSender,
                 finalEventBuilder,
@@ -28,7 +29,8 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                 retrySender,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
-                checkTrackingState);
+                checkTrackingState,
+                checkOcrResponse);
     }
 
     @Override
