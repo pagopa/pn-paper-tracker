@@ -60,6 +60,9 @@ class HandlersFactoryRirTest {
     @Mock
     private CheckTrackingState checkTrackingState;
 
+    @Mock
+    private CheckOcrResponse checkOcrResponse;
+
     @InjectMocks
     private HandlersFactoryRir handlersFactoryRir;
 
@@ -206,6 +209,7 @@ class HandlersFactoryRirTest {
     @Test
     void buildOcrResponseHandler() {
         // Arrange
+        when(checkOcrResponse.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());

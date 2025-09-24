@@ -20,10 +20,20 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
                               StateUpdater stateUpdater,
-                              CheckTrackingState checkTrackingState) {
-        super(metadataUpserter, deliveryPushSender, finalEventBuilder, intermediateEventsBuilder,
-                dematValidator, sequenceValidator, retrySender, notRetryableErrorInserting,
-                duplicatedEventFiltering, stateUpdater, checkTrackingState);
+                              CheckTrackingState checkTrackingState,
+                              CheckOcrResponse checkOcrResponse) {
+        super(metadataUpserter,
+                deliveryPushSender,
+                finalEventBuilder,
+                intermediateEventsBuilder,
+                dematValidator,
+                sequenceValidator,
+                retrySender,
+                notRetryableErrorInserting,
+                duplicatedEventFiltering,
+                stateUpdater,
+                checkTrackingState,
+                checkOcrResponse);
     }
 
     @Override

@@ -30,6 +30,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final StateUpdater stateUpdater;
     private final CheckTrackingState checkTrackingState;
+    private final CheckOcrResponse checkOcrResponse;
 
     public abstract ProductType getProductType();
 
@@ -171,6 +172,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     public Handler buildOcrResponseHandler(HandlerContext context) {
         return new HandlerImpl(
                 List.of(
+                        checkOcrResponse,
                         finalEventBuilder,
                         deliveryPushSender,
                         stateUpdater
