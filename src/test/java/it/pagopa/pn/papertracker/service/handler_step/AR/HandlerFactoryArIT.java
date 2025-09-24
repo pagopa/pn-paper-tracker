@@ -24,6 +24,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.*;
 import static it.pagopa.pn.papertracker.service.handler_step.AR.TestSequenceAREnum.*;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -80,6 +82,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         };
 
         //Assert
+        await().pollDelay(Duration.ofSeconds(1)).until(() -> true);
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         PaperTrackings ptNew = (pcRetryResponse != null && StringUtils.hasText(pcRetryResponse.getRequestId()))
                 ? paperTrackingsDAO.retrieveEntityByTrackingId(pcRetryResponse.getRequestId()).block()

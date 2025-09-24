@@ -38,9 +38,6 @@ class HandlersFactoryArTest {
     private FinalEventBuilderAr finalEventBuilder;
 
     @Mock
-    private StateUpdater stateUpdater;
-
-    @Mock
     private DuplicatedEventFiltering duplicatedEventFiltering;
 
     @Mock
@@ -128,21 +125,19 @@ class HandlersFactoryArTest {
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, checkTrackingState, sequenceValidatorAr, dematValidator, finalEventBuilder, deliveryPushSender, stateUpdater);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingState, sequenceValidatorAr, dematValidator, finalEventBuilder, deliveryPushSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(checkTrackingState).execute(handlerContext);
         inOrder.verify(sequenceValidatorAr).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
         inOrder.verify(deliveryPushSender).execute(handlerContext);
-        inOrder.verify(stateUpdater).execute(handlerContext);
     }
 
     @Test
@@ -174,7 +169,6 @@ class HandlersFactoryArTest {
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         // Act
@@ -218,7 +212,6 @@ class HandlersFactoryArTest {
 //        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
         StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();

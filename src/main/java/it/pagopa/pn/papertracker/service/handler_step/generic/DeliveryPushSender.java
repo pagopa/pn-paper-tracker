@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
@@ -34,6 +35,7 @@ public class DeliveryPushSender implements HandlerStep {
 
     private final PnPaperTrackerConfigs configs;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
+    private final PaperTrackingsDAO paperTrackingsDAO;
     private final ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
 
     /**
@@ -46,14 +48,17 @@ public class DeliveryPushSender implements HandlerStep {
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
                 .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
-        if(!CollectionUtils.isEmpty(filteredEvent)) {
-            return Flux.fromIterable(filteredEvent)
-                    .flatMap(event -> sendToOutputTarget(event, context))
-                    .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
-                    .doOnNext(context::setPaperTrackings)
-                    .then();
+
+        if (CollectionUtils.isEmpty(filteredEvent)) {
+            return Mono.empty();
         }
-        return Mono.empty();
+
+        return Flux.fromIterable(filteredEvent)
+                .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
+                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
+                .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
+                .then();
     }
 
     /**
@@ -90,9 +95,6 @@ public class DeliveryPushSender implements HandlerStep {
                 })
                 .thenReturn(event);
     }
-
-
-
 
     private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();
