@@ -111,6 +111,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      *  - Upsert metadati e demat (se presenti)
      *  - filtraggio eventi duplicati
      *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category MAX_RETRY_REACHED_ERROR
      *  - costruzione dell'evento da inviare a pn-delivery-push
      *  - invio a pn-delivery-push
      *  - aggiornamento stato su PaperTrackings
@@ -131,7 +132,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     }
 
     /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON996, CON995, CON993).
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON995, CON993).
      * I step da compiere sono i seguenti:
      *  - Upsert metadati
      *  - filtraggio eventi duplicati
@@ -184,6 +185,20 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 ));
     }
 
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento CON996.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati
+     *  - filtraggio eventi duplicati
+     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category NOT_RETRYABLE_EVENT_ERROR
+     *  - costruzione dell'evento da inviare a pn-delivery-push
+     *  - invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
     @Override
     public Handler buildCon996EventHandler(HandlerContext context) {
         return new HandlerImpl(
