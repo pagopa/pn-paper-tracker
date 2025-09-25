@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import reactor.core.publisher.Mono;
 
 public interface HandlersFactory {
 
@@ -11,5 +10,5 @@ public interface HandlersFactory {
     Handler buildNotRetryableEventHandler(HandlerContext context);
     Handler buildOcrResponseHandler(HandlerContext context);
     Handler buildSaveOnlyEventHandler(HandlerContext context);
-
+    Handler buildCon996EventHandler(HandlerContext context);
 }

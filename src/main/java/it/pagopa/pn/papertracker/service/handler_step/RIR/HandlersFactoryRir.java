@@ -20,7 +20,8 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
                               CheckTrackingState checkTrackingState,
-                              CheckOcrResponse checkOcrResponse) {
+                              CheckOcrResponse checkOcrResponse,
+                              RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
                 deliveryPushSender,
                 finalEventBuilder,
@@ -31,7 +32,8 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
                 checkTrackingState,
-                checkOcrResponse);
+                checkOcrResponse,
+                retrySenderCON996);
     }
 
     @Override
