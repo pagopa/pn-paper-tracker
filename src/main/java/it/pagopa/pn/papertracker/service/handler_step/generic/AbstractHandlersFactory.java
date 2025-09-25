@@ -30,6 +30,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final DuplicatedEventFiltering duplicatedEventFiltering;
     private final CheckTrackingState checkTrackingState;
     private final CheckOcrResponse checkOcrResponse;
+    private final RetrySenderCON996 retrySenderCON996;
 
     public abstract ProductType getProductType();
 
@@ -41,6 +42,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
                 put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
                 put(EventTypeEnum.OCR_RESPONSE_EVENT, AbstractHandlersFactory.this::buildOcrResponseHandler);
+                put(EventTypeEnum.CON996_EVENT, AbstractHandlersFactory.this::buildCon996EventHandler);
             }};
 
     public Handler build(EventTypeEnum eventType, HandlerContext context) {
@@ -109,6 +111,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      *  - Upsert metadati e demat (se presenti)
      *  - filtraggio eventi duplicati
      *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category MAX_RETRY_REACHED_ERROR
      *  - costruzione dell'evento da inviare a pn-delivery-push
      *  - invio a pn-delivery-push
      *  - aggiornamento stato su PaperTrackings
@@ -129,7 +132,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     }
 
     /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON996, CON995, CON993).
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON995, CON993).
      * I step da compiere sono i seguenti:
      *  - Upsert metadati
      *  - filtraggio eventi duplicati
@@ -179,6 +182,33 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter
+                ));
+    }
+
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento CON996.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati
+     *  - filtraggio eventi duplicati
+     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category NOT_RETRYABLE_EVENT_ERROR
+     *  - costruzione dell'evento da inviare a pn-delivery-push
+     *  - invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
+    @Override
+    public Handler buildCon996EventHandler(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
+                        metadataUpserter,
+                        checkTrackingState,
+                        duplicatedEventFiltering,
+                        retrySenderCON996,
+                        intermediateEventsBuilder,
+                        deliveryPushSender
                 ));
     }
 }

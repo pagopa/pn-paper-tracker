@@ -50,7 +50,7 @@ public enum EventStatusCodeEnum {
     // CON
     CON998(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato NODOC", false),
     CON997(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato CAP/INTERNAZIONALE", false),
-    CON996(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato PDF", false),
+    CON996(EventTypeEnum.CON996_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato PDF", false),
     CON995(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore stampa", false),
     CON993(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore Stampa (parziale)", false),
     CON080(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Stampato ed Imbustato", false),

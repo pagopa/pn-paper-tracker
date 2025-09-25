@@ -298,9 +298,9 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<!-- aggiornare con il commitId di develop -->
+							<!-- aggiornare con il commitId di develop dopo il rilascio della fix del bug PN-16533-->
 							<inputSpec>
-								https://raw.githubusercontent.com/pagopa/pn-paper-channel/b8533c9330718146dfe16dd158173698eb0916c1/docs/openapi/api-internal-v1.yaml
+								https://raw.githubusercontent.com/pagopa/pn-paper-channel/3690259216c94bb7402c9641d0344e222048a191/docs/openapi/api-internal-v1.yaml
 							</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
