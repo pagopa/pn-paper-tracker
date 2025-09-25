@@ -71,13 +71,13 @@ public class TestUtils {
                 .build()).toList();
     }
 
-    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay) {
+    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay, String productType) {
         PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
         ev.requestId(requestId);
         ev.setClientRequestTimeStamp(now.plusSeconds(delay.getAndIncrement()));
         ev.setStatusDateTime(now);
         ev.setIun("iun");
-        ev.setProductType("AR");
+        ev.setProductType(productType);
         ev.setRegisteredLetterCode("registeredLetterCode");
         return ev;
     }

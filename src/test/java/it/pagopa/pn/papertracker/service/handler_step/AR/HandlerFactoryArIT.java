@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
@@ -108,17 +109,19 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         List<String> requiredDoc = new ArrayList<>(seq.getSentDocuments());
         AtomicInteger counter = new AtomicInteger();
         AtomicInteger delay = new AtomicInteger(0);
+        String productType = ProductType.AR.getValue();
+
         return seq.getStatusCodes().stream().map(code -> {
             PaperProgressStatusEvent ev;
             if (ifRetrySequenceBeforeRetryEvent(seq, counter)) {
-                ev = createSimpleAnalogMail(requestId, now, delay);
+                ev = createSimpleAnalogMail(requestId, now, delay, productType);
                 counter.getAndIncrement();
             } else if (ifRetrySequenceAfterRetryEvent(seq, counter)) {
                 String newRequestId = requestId.substring(0, requestId.length() - 1).concat("1");
-                ev = createSimpleAnalogMail(newRequestId,now.plusMinutes(1), delay);
+                ev = createSimpleAnalogMail(newRequestId,now.plusMinutes(1), delay, productType);
                 counter.getAndIncrement();
             } else {
-                ev = createSimpleAnalogMail(requestId, now, delay);
+                ev = createSimpleAnalogMail(requestId, now, delay, productType);
             }
             //replace statusDateTime only for A,B,C events
             if (code.endsWith("A") || code.endsWith("B") || code.endsWith("C")) {
