@@ -58,13 +58,14 @@ class GenericFinalEventBuilderTest {
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         Event event = new Event();
-        event.setStatusCode("RECRI001");
+        event.setStatusCode("RECRI004A");
+        event.setDeliveryFailureCause("F01");
         event.setStatusTimestamp(now);
         event.setRequestTimestamp(now);
         event.setId(EVENT_ID + "1");
 
         Event event1 = new Event();
-        event1.setStatusCode("RECRI002");
+        event1.setStatusCode("RECRI004C");
         event1.setStatusTimestamp(now);
         event1.setRequestTimestamp(now);
         event1.setId(EVENT_ID + "2");
@@ -75,7 +76,15 @@ class GenericFinalEventBuilderTest {
         event2.setRequestTimestamp(now);
         event2.setId(EVENT_ID);
 
-        paperTrackings.setEvents(List.of(event, event1, event2));
+        Event event3 = new Event();
+        event3.setStatusCode("RECRI003A");
+        event3.setDeliveryFailureCause("M02");
+        event3.setStatusTimestamp(now);
+        event3.setRequestTimestamp(now);
+        event3.setId(EVENT_ID);
+
+        paperTrackings.setEvents(List.of(event, event1, event2, event3));
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(event, event1, event2, event3));
         handlerContext.setPaperTrackings(paperTrackings);
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
@@ -95,12 +104,13 @@ class GenericFinalEventBuilderTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRI003C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     @Test
-    void genericFinalEvent_RECRI002() {
+    void genericFinalEvent_RECRI004C() {
         // Arrange
-        handlerContext.setPaperProgressStatusEvent(getFinalEvent("RECRI002"));
+        handlerContext.setPaperProgressStatusEvent(getFinalEvent("RECRI004C"));
         handlerContext.setEventId(EVENT_ID + "2");
 
         // Act
@@ -109,8 +119,9 @@ class GenericFinalEventBuilderTest {
 
         // Assert
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
-        Assertions.assertEquals(RECRI002.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
-        Assertions.assertEquals(StatusCodeEnum.PROGRESS, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals(RECRI004C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertEquals(StatusCodeEnum.KO, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals("F01", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
@@ -119,10 +130,8 @@ class GenericFinalEventBuilderTest {
         finalEvent.setRequestId("req-123");
         finalEvent.setClientRequestTimeStamp(OffsetDateTime.now());
         finalEvent.setRegisteredLetterCode("RL123");
-        finalEvent.setDeliveryFailureCause("M02");
         finalEvent.setAttachments(new ArrayList<>());
         finalEvent.setStatusDateTime(OffsetDateTime.now());
-        finalEvent.setProductType("AR");
         return finalEvent;
     }
 }

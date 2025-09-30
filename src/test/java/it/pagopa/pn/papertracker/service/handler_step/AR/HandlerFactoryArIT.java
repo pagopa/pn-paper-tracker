@@ -404,7 +404,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     }
                     if (is(e, "RECRN002F")) {
                         assertNoAttach(e);
-                        assertNull(e.getDeliveryFailureCause());
+                        assertNotNull(e.getDeliveryFailureCause());
                         assertKo(e);
                     }
                     if (is(e, "CONO20")) {
