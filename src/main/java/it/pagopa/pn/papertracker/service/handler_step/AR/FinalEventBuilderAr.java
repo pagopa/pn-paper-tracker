@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
+import it.pagopa.pn.papertracker.mapper.SendEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
@@ -61,7 +62,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         }
 
         List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
-        EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
+        EventStatusCodeEnum configEnum = buildRECRN00xAD(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
 
@@ -100,26 +101,14 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 : isDifferenceGreaterRefinementDuration(eventRECRN010.getStatusTimestamp(), eventRECRN00XA.getStatusTimestamp());
     }
 
-    private EventStatusCodeEnum getRECRN00XA(String statusCode) {
-        final String status = statusCode.substring(0, statusCode.length() - 1).concat("A");
-        return EventStatusCodeEnum.fromKey(status);
-    }
-
     private Mono<Void> prepareFinalEventAndPNRN012toSend(HandlerContext context, Event finalEvent, Event recrn010) {
         OffsetDateTime pnrn012Time = addDurationToInstant(recrn010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()).atOffset(ZoneOffset.UTC);
 
-        return buildSendEvent(context, finalEvent, StatusCodeEnum.OK, PNRN012.name(), pnrn012Time)
+        return SendEventMapper.createSendEventsFromEventEntity(context.getTrackingId(), finalEvent, StatusCodeEnum.OK, PNRN012.name(), pnrn012Time)
                 .doOnNext(context.getEventsToSend()::add)
                 .flatMap(se -> buildSendEvent(context, finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusTimestamp().atOffset(ZoneOffset.UTC)))
                 .doOnNext(context.getEventsToSend()::add)
                 .then();
-    }
-
-    private Event getEvent(List<Event> events, EventStatusCodeEnum code) {
-        return events.stream()
-                .filter(e -> code.name().equals(e.getStatusCode()))
-                .findFirst()
-                .orElseThrow();
     }
 
     /**
