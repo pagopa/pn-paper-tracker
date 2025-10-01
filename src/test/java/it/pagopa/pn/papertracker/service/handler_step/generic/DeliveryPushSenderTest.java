@@ -5,6 +5,9 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.A
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -21,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class DeliveryPushSenderTest {
@@ -32,6 +36,9 @@ class DeliveryPushSenderTest {
     private PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
 
     @Mock
+    private PaperTrackingsDAO paperTrackingsDAO;
+
+    @Mock
     private ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
 
     @InjectMocks
@@ -41,9 +48,11 @@ class DeliveryPushSenderTest {
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
         SendEvent event = getSendEvent();
+        PaperTrackings paperTrackings = new PaperTrackings();
         String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
         context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        context.setPaperTrackings(paperTrackings);
 
         // Act
         deliveryPushSender.sendToOutputTarget(event, context).block();
@@ -76,9 +85,11 @@ class DeliveryPushSenderTest {
     void testBuildDeliveryPushEvent() {
         // Arrange
         SendEvent event = getSendEvent();
+        PaperTrackings paperTrackings = new PaperTrackings();
         String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
         context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        context.setPaperTrackings(paperTrackings);
 
         // Act
         deliveryPushSender.sendToOutputTarget(event, context).block();
@@ -88,6 +99,46 @@ class DeliveryPushSenderTest {
         verify(externalChannelOutputsMomProducer).push(captor.capture());
         Assertions.assertEquals(event, captor.getValue().getPayload().getSendEvent());
     }
+
+    @Test
+    void testExecuteFinalStatusCodeNullAndNextRequestIdPcretryNull() {
+        // Arrange
+        SendEvent event = getSendEvent();
+        HandlerContext context = new HandlerContext();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        context.setPaperTrackings(paperTrackings);
+        context.setEventsToSend(Collections.singletonList(event));
+
+        // Act
+        deliveryPushSender.execute(context).block();
+
+        // Assert
+        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verify(paperTrackingsDAO, never()).updateItem(anyString(), any(PaperTrackings.class));
+    }
+
+    @Test
+    void testExecuteFinalStatusCodeNotNull() {
+        // Arrange
+        SendEvent event = getSendEvent();
+        HandlerContext context = new HandlerContext();
+        context.setFinalStatusCode("RECRN001C");
+        PaperTrackings paperTrackings = new PaperTrackings();
+        context.setPaperTrackings(paperTrackings);
+        context.setEventsToSend(Collections.singletonList(event));
+
+        // Act
+        deliveryPushSender.execute(context).block();
+
+        // Assert
+        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
+        Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
+    }
+
 
     private SendEvent getSendEvent() {
         SendEvent event = new SendEvent();

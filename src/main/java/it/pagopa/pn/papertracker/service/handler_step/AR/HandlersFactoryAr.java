@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
-import it.pagopa.pn.papertracker.service.handler_step.generic.NotRetryableErrorInserting;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -18,8 +18,9 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                              RetrySender retrySender,
                              NotRetryableErrorInserting notRetryableErrorInserting,
                              DuplicatedEventFiltering duplicatedEventFiltering,
-                             StateUpdater stateUpdater,
-                             CheckTrackingState checkTrackingState) {
+                             CheckTrackingState checkTrackingState,
+                             CheckOcrResponse checkOcrResponse,
+                             RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
                 deliveryPushSender,
                 finalEventBuilder,
@@ -29,7 +30,11 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                 retrySender,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
-                stateUpdater,
-                checkTrackingState);
+                checkTrackingState,
+                checkOcrResponse,
+                retrySenderCON996);
     }
+
+    @Override
+    public ProductType getProductType() { return ProductType.AR; }
 }

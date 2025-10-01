@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
@@ -14,7 +15,6 @@ import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +23,14 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.papertracker.service.handler_step.RIR.TestSequenceRirEnum.OK_RETRY_RIR;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -53,7 +55,6 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
 
     @ParameterizedTest
     @EnumSource(value = TestSequenceRirEnum.class)
-    @Disabled
     void testRirSequence(TestSequenceRirEnum seq) throws InterruptedException {
 
         //Arrange
@@ -71,6 +72,8 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         });
 
         //Assert
+        await().pollDelay(Duration.ofSeconds(1)).until(() -> true);
+
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         PaperTrackings ptNew = (pcRetryResponse != null && StringUtils.hasText(pcRetryResponse.getRequestId()))
                 ? paperTrackingsDAO.retrieveEntityByTrackingId(pcRetryResponse.getRequestId()).block()
@@ -96,24 +99,19 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         List<String> requiredDoc = new ArrayList<>(seq.getSentDocuments());
         AtomicInteger counter = new AtomicInteger();
         AtomicInteger delay = new AtomicInteger(0);
+        String productType = ProductType.RIR.getValue();
+
         return seq.getStatusCodes().stream().map(code -> {
             PaperProgressStatusEvent ev;
             if (ifRetrySequenceBeforeRetryEvent(seq, counter)) {
-                ev = createSimpleAnalogMail(requestId, now, delay);
+                ev = createSimpleAnalogMail(requestId, now, delay, productType);
                 counter.getAndIncrement();
             } else if (ifRetrySequenceAfterRetryEvent(seq, counter)) {
                 String newRequestId = requestId.substring(0, requestId.length() - 1).concat("1");
-                ev = createSimpleAnalogMail(newRequestId,now.plusMinutes(1), delay);
+                ev = createSimpleAnalogMail(newRequestId,now.plusMinutes(1), delay, productType);
                 counter.getAndIncrement();
             } else {
-                ev = createSimpleAnalogMail(requestId, now, delay);
-            }
-            //replace statusDateTime only for A,B,C events
-            if (code.endsWith("A") || code.endsWith("B") || code.endsWith("C")) {
-                ev.setStatusDateTime(ev.getStatusDateTime().plusMinutes(2));
-            }
-            if(code.endsWith("[NOAUTODATETIME]")){
-                ev.setStatusDateTime(ev.getStatusDateTime().plusMinutes(5));
+                ev = createSimpleAnalogMail(requestId, now, delay, productType);
             }
 
             String finalCode = code.replace("[NOAUTODATETIME]","");
@@ -176,11 +174,22 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
             case OK_RETRY_RIR -> {
                 assertEquals(3, list.size());
                 assertContainsStatus(list, List.of("CON080", "CON020", "RECRI005"));
+                assertContainsStatus(listRetry, List.of("CON080", "CON020", "RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"));
                 assertSameRegisteredLetter(list, 0, 1, 2);
                 list.forEach(e -> {
                     if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
-                    if (is(e, "RECRI005")) {assertNoAttach(e);assertProgress(e);}});
+                    if (is(e, "RECRI005")) {assertNoAttach(e);assertProgress(e);assertNotNull(e.getDeliveryFailureCause());}}
+                );
+                listRetry.forEach(e -> {
+                    if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
+                    if (is(e, "RECRI001")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECRI002")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECRI003A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECRI003B")) {assertAttach(e, "AR");assertProgress(e);}
+                    if (is(e, "RECRI003C")) {assertNoAttach(e);assertOk(e);assertNull(e.getDeliveryFailureCause());}}
+                );
             }
         }
     }
@@ -233,7 +242,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
-        when(paperChannelClient.getPcRetry(any())).thenReturn(Mono.just(resp));
+        when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }
 }

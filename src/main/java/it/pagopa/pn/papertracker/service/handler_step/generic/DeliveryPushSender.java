@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
@@ -13,7 +14,6 @@ import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
-import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,6 +35,7 @@ public class DeliveryPushSender implements HandlerStep {
 
     private final PnPaperTrackerConfigs configs;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
+    private final PaperTrackingsDAO paperTrackingsDAO;
     private final ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
 
     /**
@@ -47,14 +48,17 @@ public class DeliveryPushSender implements HandlerStep {
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
                 .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
-        if(!CollectionUtils.isEmpty(filteredEvent)) {
-            return Flux.fromIterable(filteredEvent)
-                    .flatMap(event -> sendToOutputTarget(event, context))
-                    .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
-                    .doOnNext(context::setPaperTrackings)
-                    .then();
+
+        if (CollectionUtils.isEmpty(filteredEvent)) {
+            return Mono.empty();
         }
-        return Mono.empty();
+
+        return Flux.fromIterable(filteredEvent)
+                .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
+                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
+                .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
+                .then();
     }
 
     /**
@@ -74,7 +78,7 @@ public class DeliveryPushSender implements HandlerStep {
                         return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context.getAnonymizedDiscoveredAddressId()));
                     } else {
                         log.info("Sending event to pn-external_channel_outputs");
-                        sendEvent.setRequestId(TrackerUtility.removePcretryFromRequestId(event.getRequestId()));
+                        sendEvent.setRequestId(context.getPaperTrackings().getAttemptId());
                         DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
@@ -91,9 +95,6 @@ public class DeliveryPushSender implements HandlerStep {
                 })
                 .thenReturn(event);
     }
-
-
-
 
     private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();

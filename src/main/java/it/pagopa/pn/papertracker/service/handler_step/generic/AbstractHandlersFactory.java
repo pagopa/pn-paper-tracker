@@ -1,14 +1,20 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.service.handler_step.Handler;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerImpl;
 import it.pagopa.pn.papertracker.service.handler_step.HandlersFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,26 +28,31 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final RetrySender retrySender;
     private final NotRetryableErrorInserting notRetryableErrorInserting;
     private final DuplicatedEventFiltering duplicatedEventFiltering;
-    private final StateUpdater stateUpdater;
     private final CheckTrackingState checkTrackingState;
+    private final CheckOcrResponse checkOcrResponse;
+    private final RetrySenderCON996 retrySenderCON996;
 
-    /**
-     * Metodo che data una lista di HandlerStep esegue ogni step, passando il contex per eventuali modifiche ai dati
-     *
-     * @param steps   HandlerStep da eseguire
-     * @param context HandlerContext che contiene i dati per i processi
-     * @return Mono Void se tutto è andato a buon fine, altrimenti Mono Error
-     */
-    public Mono<Void> buildEventsHandler(List<HandlerStep> steps, HandlerContext context) {
-        return Flux.fromIterable(steps)
-                .concatMap(step -> {
-                    if (context.isStopExecution()) {
-                        log.debug("Requested stop execution for trackingId: {} on step: {}", context.getTrackingId(), step.getClass().getSimpleName());
-                        return Mono.empty();
-                    }
-                    return step.execute(context);
-                })
-                .then();
+    public abstract ProductType getProductType();
+
+    private final Map<EventTypeEnum, Function<HandlerContext, Handler>> dispatchers =
+            new EnumMap<>(EventTypeEnum.class) {{
+                put(EventTypeEnum.INTERMEDIATE_EVENT, AbstractHandlersFactory.this::buildIntermediateEventsHandler);
+                put(EventTypeEnum.RETRYABLE_EVENT, AbstractHandlersFactory.this::buildRetryEventHandler);
+                put(EventTypeEnum.NOT_RETRYABLE_EVENT, AbstractHandlersFactory.this::buildNotRetryableEventHandler);
+                put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
+                put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
+                put(EventTypeEnum.OCR_RESPONSE_EVENT, AbstractHandlersFactory.this::buildOcrResponseHandler);
+                put(EventTypeEnum.CON996_EVENT, AbstractHandlersFactory.this::buildCon996EventHandler);
+            }};
+
+    public Handler build(EventTypeEnum eventType, HandlerContext context) {
+        log.info("Handling {} event for productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
+        var handler = dispatchers.get(eventType);
+        if (Objects.isNull(handler)) {
+            log.error("No handler founded for EventType ={} and productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
+            throw new PaperTrackerException(String.format("No handler founded for EventType =%s and productType: %s", eventType, getProductType()));
+        }
+        return handler.apply(context);
     }
 
     /**
@@ -59,17 +70,16 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
-    public Mono<Void> buildFinalEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildFinalEventsHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
                         metadataUpserter,
                         checkTrackingState,
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
+                        deliveryPushSender
+                ));
     }
 
     /**
@@ -84,15 +94,15 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
-    public Mono<Void> buildIntermediateEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildIntermediateEventsHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
                         metadataUpserter,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         intermediateEventsBuilder,
                         deliveryPushSender
-                ), context);
+                ));
     }
 
     /**
@@ -101,6 +111,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      *  - Upsert metadati e demat (se presenti)
      *  - filtraggio eventi duplicati
      *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category MAX_RETRY_REACHED_ERROR
      *  - costruzione dell'evento da inviare a pn-delivery-push
      *  - invio a pn-delivery-push
      *  - aggiornamento stato su PaperTrackings
@@ -109,34 +120,32 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
-    public Mono<Void> buildRetryEventHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildRetryEventHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
                         metadataUpserter,
                         checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
+                        deliveryPushSender
+                ));
     }
 
     /**
-     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON996, CON995, CON993).
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento notRetryable (CON998, CON997, CON995, CON993).
      * I step da compiere sono i seguenti:
      *  - Upsert metadati
      *  - filtraggio eventi duplicati
      *  - inserimento errore nella tabella PaperTrackingsError
      *  - costruzione dell'evento da inviare a pn-delivery-push
      *  - invio a pn-delivery-push
-     *  - aggiornamento stato su PaperTrackings
      *
      * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
-    public Mono<Void> buildNotRetryableEventHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildNotRetryableEventHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
                         metadataUpserter,
                         checkTrackingState,
@@ -144,7 +153,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         notRetryableErrorInserting,
                         intermediateEventsBuilder,
                         deliveryPushSender
-                ), context);
+                ));
     }
 
     /**
@@ -159,20 +168,47 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
      */
     @Override
-    public Mono<Void> buildOcrResponseHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildOcrResponseHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
+                        checkOcrResponse,
                         finalEventBuilder,
-                        deliveryPushSender,
-                        stateUpdater
-                ), context);
+                        deliveryPushSender
+                ));
     }
 
     @Override
-    public Mono<Void> buildUnrecognizedEventsHandler(HandlerContext context) {
-        return buildEventsHandler(
+    public Handler buildSaveOnlyEventHandler(HandlerContext context) {
+        return new HandlerImpl(
                 List.of(
                         metadataUpserter
-                ), context);
+                ));
+    }
+
+    /**
+     * Metodo che costruisce la lista di steps necessari al processamento di un evento CON996.
+     * I step da compiere sono i seguenti:
+     *  - Upsert metadati
+     *  - filtraggio eventi duplicati
+     *  - chiamata PaperChannel per richiedere il nuovo PCRETRY se esistente, e salva la nuova entità se esiste un nuovo PCRETRY
+     *  altrimenti inserisce un errore nella tabella degli errori con category NOT_RETRYABLE_EVENT_ERROR
+     *  - costruzione dell'evento da inviare a pn-delivery-push
+     *  - invio a pn-delivery-push
+     *  - aggiornamento stato su PaperTrackings
+     *
+     * @param context   contesto in cui sono presenti tutti i dati necessari per il processo
+     * @return Empty Mono se tutto è andato a buon fine, altrimenti un Mono Error
+     */
+    @Override
+    public Handler buildCon996EventHandler(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
+                        metadataUpserter,
+                        checkTrackingState,
+                        duplicatedEventFiltering,
+                        retrySenderCON996,
+                        intermediateEventsBuilder,
+                        deliveryPushSender
+                ));
     }
 }

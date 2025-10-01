@@ -129,7 +129,10 @@ class FinalEventBuilderArTest {
         // Assert
         Assertions.assertEquals(2, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
+        Assertions.assertEquals(RECRN005C.name(), handlerContext.getEventsToSend().getLast().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, handlerContext.getEventsToSend().getLast().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getLast().getDeliveryFailureCause());
     }
 
     @Test
@@ -178,6 +181,7 @@ class FinalEventBuilderArTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRN003C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.valueOf(RECRN003C.getStatus().name()), handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     @Test
@@ -202,12 +206,15 @@ class FinalEventBuilderArTest {
         Assertions.assertEquals(2, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(PNRN012.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
         Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getStatusDateTime());
+        Assertions.assertEquals(RECRN004C.name(), handlerContext.getEventsToSend().getLast().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.PROGRESS, handlerContext.getEventsToSend().getLast().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getLast().getDeliveryFailureCause());
     }
 
     @Test
     void buildFinalEvent_stockStatusFalse() {
         // Arrange
+        setValidatedEvents(RECRN002D.name(), Instant.now());
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID + "4");
@@ -220,6 +227,7 @@ class FinalEventBuilderArTest {
         // Assert
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRN002F.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     private void setValidatedEvents(String statusCode, Instant statusTimestamp) {
@@ -228,6 +236,7 @@ class FinalEventBuilderArTest {
         event.setStatusCode(statusCode);
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
+        event.setDeliveryFailureCause("M02");
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
         attachment.setDocumentType("DOCUMENT_TYPE");

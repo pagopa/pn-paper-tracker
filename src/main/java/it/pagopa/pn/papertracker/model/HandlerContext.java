@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.model;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
@@ -21,5 +22,6 @@ public class HandlerContext {
     private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
+    private OcrDataResultPayload ocrDataResultPayload;
 
 }

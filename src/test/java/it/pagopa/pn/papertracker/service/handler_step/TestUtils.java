@@ -28,7 +28,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         return pt;
     }
@@ -42,7 +42,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
         return pt;
@@ -71,13 +71,13 @@ public class TestUtils {
                 .build()).toList();
     }
 
-    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay) {
+    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay, String productType) {
         PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
         ev.requestId(requestId);
         ev.setClientRequestTimeStamp(now.plusSeconds(delay.getAndIncrement()));
         ev.setStatusDateTime(now);
         ev.setIun("iun");
-        ev.setProductType("AR");
+        ev.setProductType(productType);
         ev.setRegisteredLetterCode("registeredLetterCode");
         return ev;
     }
@@ -99,7 +99,7 @@ public class TestUtils {
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
         assertNotNull(pt.getPaperStatus().getFinalDematFound());
-        assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
+        assertNotNull(pt.getPaperStatus().getPaperDeliveryTimestamp());
     }
 
     public static void assertError(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {

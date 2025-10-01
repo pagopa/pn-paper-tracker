@@ -28,7 +28,6 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         paperTrackings.setValidationFlow(new ValidationFlow());
@@ -46,7 +45,6 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(now);
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
@@ -128,7 +126,7 @@ public class PaperTrackingsMapper {
         dto.setValidatedAttachmentUri(entity.getValidatedAttachmentUri());
         dto.setValidatedAttachmentType(entity.getValidatedAttachmentType());
         dto.setFinalDematFound(entity.getFinalDematFound());
-        dto.setEstimatedPaperDeliveryTimestamp(entity.getEstimatedPaperDeliveryTimestamp());
+        dto.setPaperDeliveryTimestamp(entity.getPaperDeliveryTimestamp());
         dto.setActualPaperDeliveryTimestamp(entity.getActualPaperDeliveryTimestamp());
         if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){
             dto.setValidatedEvents(entity.getValidatedEvents().stream().map(PaperTrackingsMapper::toPaperEvent).toList());

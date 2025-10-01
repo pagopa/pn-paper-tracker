@@ -3,9 +3,11 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -29,17 +31,29 @@ public class MetadataUpserter implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(context.getPaperProgressStatusEvent(), context.getAnonymizedDiscoveredAddressId(), context.getEventId(), context.isDryRunEnabled()))
-                .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getPaperProgressStatusEvent().getRequestId(), paperTrackings))
-                .doOnNext(paperTrackings -> {
-                    Long eventReceiveCount = paperTrackings.getEvents()
-                                    .stream().filter(event -> event.getId().equalsIgnoreCase(context.getEventId()))
-                                    .count();
-                    context.setPaperTrackings(paperTrackings);
-                    context.setTrackingId(paperTrackings.getTrackingId());
-                    context.setMessageReceiveCount(eventReceiveCount);
-                })
+                .flatMap(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                        context.getPaperProgressStatusEvent(),
+                        context.getAnonymizedDiscoveredAddressId(),
+                        context.getEventId(),
+                        context.isDryRunEnabled(),
+                        TrackerUtility.checkIfIsFinalDemat(context.getPaperProgressStatusEvent().getStatusCode()),
+                        TrackerUtility.checkIfIsP000event(context.getPaperProgressStatusEvent().getStatusCode())
+                ))
+                .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(
+                        context.getPaperProgressStatusEvent().getRequestId(),
+                        paperTrackings
+                ))
+                .doOnNext(paperTrackings -> updateContextWithTrackingInfo(context, paperTrackings))
                 .then();
+    }
+
+    private void updateContextWithTrackingInfo(HandlerContext context, PaperTrackings paperTrackings) {
+        Long eventReceiveCount = paperTrackings.getEvents().stream()
+                .filter(event -> event.getId().equalsIgnoreCase(context.getEventId()))
+                .count();
+        context.setPaperTrackings(paperTrackings);
+        context.setTrackingId(paperTrackings.getTrackingId());
+        context.setMessageReceiveCount(eventReceiveCount);
     }
 
     private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {

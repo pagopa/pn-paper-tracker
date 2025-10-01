@@ -11,19 +11,19 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RetrySender implements HandlerStep {
+public class RetrySenderCON996 implements HandlerStep {
 
     private final PaperChannelClient paperChannelClient;
     private final PcRetryService pcRetryService;
 
     /**
-     * Step di invio della richiesta di retry al Paper Channel per tutti gli eventi di Retry escluso il CON996.
+     * Step di invio della richiesta di retry al Paper Channel per tutti gli eventi CON996.
      * @return Mono(Void)
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return paperChannelClient.getPcRetry(context.getPaperTrackings(), Boolean.FALSE)
+        return paperChannelClient.getPcRetry(context.getPaperTrackings(), Boolean.TRUE)
                 .doOnError(throwable -> log.error("Error retrieving retry on CON996 for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
-                .flatMap(pcRetryResponse -> pcRetryService.handlePcRetryResponse(pcRetryResponse, Boolean.FALSE, context));
+                .flatMap(pcRetryResponse -> pcRetryService.handlePcRetryResponse(pcRetryResponse, Boolean.TRUE, context));
     }
 }

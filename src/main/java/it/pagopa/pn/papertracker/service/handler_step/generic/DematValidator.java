@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -75,7 +76,7 @@ public class DematValidator implements HandlerStep {
     }
 
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
-        String ocrRequestId = String.join("#", paperTracking.getTrackingId(), context.getEventId());
+        String ocrRequestId = TrackerUtility.buildOcrRequestId(paperTracking.getTrackingId(), context.getEventId());
         Attachment attachment = retrieveFinalDemat(paperTracking, paperTracking.getPaperStatus().getValidatedEvents(), context);
         if(cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri())))) {
             context.setStopExecution(true);
