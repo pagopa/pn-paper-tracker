@@ -54,8 +54,6 @@ class FinalEventBuilderRirTest {
         handlerContext.setTrackingId("req-123");
         finalEventBuilder = new FinalEventBuilderRir(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
-        PaperStatus paperStatus = new PaperStatus();
-        paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
@@ -66,6 +64,7 @@ class FinalEventBuilderRirTest {
         paperTrackings.setValidationFlow(validationFlow);
         Event event = new Event();
         event.setStatusCode("RECRI003A");
+        event.setDeliveryFailureCause("M02");
         event.setStatusTimestamp(now);
         event.setRequestTimestamp(now);
         event.setId(EVENT_ID + "1");
@@ -77,12 +76,13 @@ class FinalEventBuilderRirTest {
         event1.setId(EVENT_ID + "2");
 
         Event event2 = new Event();
-        event2.setStatusCode("RECRN003C");
+        event2.setStatusCode("RECRI003C");
         event2.setStatusTimestamp(now);
         event2.setRequestTimestamp(now);
         event2.setId(EVENT_ID);
 
         paperTrackings.setEvents(List.of(event, event1, event2));
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(event, event1, event2));
         handlerContext.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
@@ -115,6 +115,7 @@ class FinalEventBuilderRirTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     @Test
@@ -133,6 +134,7 @@ class FinalEventBuilderRirTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getLast().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
@@ -141,10 +143,9 @@ class FinalEventBuilderRirTest {
         finalEvent.setRequestId("req-123");
         finalEvent.setClientRequestTimeStamp(OffsetDateTime.now());
         finalEvent.setRegisteredLetterCode("RL123");
-        finalEvent.setDeliveryFailureCause("M02");
         finalEvent.setAttachments(new ArrayList<>());
         finalEvent.setStatusDateTime(OffsetDateTime.now());
-        finalEvent.setProductType("AR");
+        finalEvent.setProductType("RIR");
         return finalEvent;
     }
 }

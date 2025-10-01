@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.mapper.SendEventMapper.toAnalogAddress;
@@ -70,7 +71,8 @@ public class GenericFinalEventBuilder implements HandlerStep {
                                              String logicalStatus,
                                              OffsetDateTime ts) {
         return SendEventMapper.createSendEventsFromEventEntity(context.getTrackingId(), source, status, logicalStatus, ts)
-                .flatMap(sendEvent -> enrichWithDiscoveredAddress(context, source, sendEvent));
+                .flatMap(sendEvent -> enrichWithDiscoveredAddress(context, sendEvent))
+                .flatMap(sendEvent -> enrichWithDeliveryFailureCause(context, sendEvent));
     }
 
     protected Event extractFinalEvent(HandlerContext context) {
@@ -80,7 +82,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
                 .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
     }
 
-    protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, Event source, SendEvent sendEvent) {
+    protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
         if (!StringUtils.hasText(context.getPaperTrackings().getPaperStatus().getDiscoveredAddress())) {
             return Mono.just(sendEvent);
         }
@@ -98,5 +100,27 @@ public class GenericFinalEventBuilder implements HandlerStep {
                 .thenReturn(sendEvent);
     }
 
+    protected Event getEvent(List<Event> events, EventStatusCodeEnum code) {
+        return events.stream()
+                .filter(e -> code.name().equals(e.getStatusCode()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    protected EventStatusCodeEnum buildRECRN00xAD(String finalStatusCode) {
+        String status = finalStatusCode.endsWith("F")
+                ? finalStatusCode.substring(0, finalStatusCode.length() - 1).concat("D")
+                : finalStatusCode.substring(0, finalStatusCode.length() - 1).concat("A");
+        return EventStatusCodeEnum.fromKey(status);
+    }
+
+    private Mono<SendEvent> enrichWithDeliveryFailureCause(HandlerContext ctx, SendEvent sendEvent) {
+        Event eventRECRN00xAD = getEvent(
+                ctx.getPaperTrackings().getPaperStatus().getValidatedEvents(),
+                buildRECRN00xAD(sendEvent.getStatusDetail())
+        );
+        sendEvent.setDeliveryFailureCause(eventRECRN00xAD.getDeliveryFailureCause());
+        return Mono.just(sendEvent);
+    }
 
 }

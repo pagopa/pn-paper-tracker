@@ -37,9 +37,10 @@ public class OcrEventHandler {
         log.logStartingProcess(processName);
 
         MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
-                .flatMap(paperTrackings -> callOcrResponseHandler(paperTrackings, ocrResultMessage))
-                .onErrorResume(PnPaperTrackerValidationException.class, e -> paperTrackerExceptionHandler.handleInternalException(e, null))
-                .then());
+                        .flatMap(paperTrackings -> callOcrResponseHandler(paperTrackings, ocrResultMessage))
+                        .onErrorResume(PnPaperTrackerValidationException.class, e -> paperTrackerExceptionHandler.handleInternalException(e, null))
+                        .then())
+                .block();
     }
 
     private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, OcrDataResultPayload ocrResultMessage) {

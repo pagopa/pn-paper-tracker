@@ -61,6 +61,7 @@ public class ExternalChannelHandler {
 
     private HandlerContext initializeContext(SingleStatusUpdate payload, boolean dryRunEnabled, String messageId) {
         HandlerContext context = new HandlerContext();
+        context.setTrackingId(payload.getAnalogMail().getRequestId());
         context.setPaperProgressStatusEvent(payload.getAnalogMail());
         context.setEventId(messageId);
         context.setDryRunEnabled(dryRunEnabled);
