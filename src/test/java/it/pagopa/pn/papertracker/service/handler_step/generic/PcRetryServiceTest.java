@@ -1,14 +1,9 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -19,8 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import java.time.Duration;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.CON996;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN006;
@@ -34,12 +27,6 @@ public class PcRetryServiceTest {
     private PcRetryService pcRetryService;
 
     @Mock
-    private PaperTrackingsDAO paperTrackingsDAO;
-
-    @Mock
-    private PnPaperTrackerConfigs pnPaperTrackerConfigs;
-
-    @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
     @Test
@@ -47,15 +34,14 @@ public class PcRetryServiceTest {
         //ARRANGE
         PcRetryResponse response = getPcRetryResponse(true);
         HandlerContext context = getHandlerContext(CON996.name());
-        when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(1));
-        when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
         StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.TRUE, context))
                 .verifyComplete();
 
         //ASSERT
-        verify(paperTrackingsDAO, times(1)).putIfAbsent(any());
+        Assertions.assertEquals(response.getRequestId(), context.getPaperTrackings().getNextRequestIdPcretry());
+        Assertions.assertEquals(PaperTrackingsState.DONE, context.getPaperTrackings().getState());
         verify(paperTrackerExceptionHandler, never()).handleRetryError(any());
     }
 
@@ -74,7 +60,6 @@ public class PcRetryServiceTest {
         //ASSERT
         PaperTrackingsErrors paperTrackingsErrors = captor.getValue();
         Assertions.assertEquals(ErrorCategory.NOT_RETRYABLE_EVENT_ERROR, paperTrackingsErrors.getErrorCategory());
-        verify(paperTrackingsDAO, never()).putIfAbsent(any());
         verify(paperTrackerExceptionHandler, times(1)).handleRetryError(any());
     }
 
@@ -83,15 +68,14 @@ public class PcRetryServiceTest {
         //ARRANGE
         PcRetryResponse response = getPcRetryResponse(true);
         HandlerContext context = getHandlerContext(RECRN006.name());
-        when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(1));
-        when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
         //ACT
         StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.FALSE, context))
                 .verifyComplete();
 
         //ASSERT
-        verify(paperTrackingsDAO, times(1)).putIfAbsent(any());
+        Assertions.assertEquals(response.getRequestId(), context.getPaperTrackings().getNextRequestIdPcretry());
+        Assertions.assertEquals(PaperTrackingsState.DONE, context.getPaperTrackings().getState());
         verify(paperTrackerExceptionHandler, never()).handleRetryError(any());
     }
 
@@ -110,7 +94,6 @@ public class PcRetryServiceTest {
         //ASSERT
         PaperTrackingsErrors paperTrackingsErrors = captor.getValue();
         Assertions.assertEquals(ErrorCategory.MAX_RETRY_REACHED_ERROR, paperTrackingsErrors.getErrorCategory());
-        verify(paperTrackingsDAO, never()).putIfAbsent(any());
         verify(paperTrackerExceptionHandler, times(1)).handleRetryError(captor.capture());
     }
 

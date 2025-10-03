@@ -75,11 +75,14 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 .thenReturn(Mono.just(r1));
 
         if (seq.equals(FAIL_CON996_PCRETRY_FURTO_AR)) {
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r2.getRequestId())).block();
             when(paperChannelClient.getPcRetry(any(), eq(true)))
                     .thenReturn(Mono.just(r1));
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r2));
         }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)){
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r1));
         }

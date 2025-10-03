@@ -1,11 +1,8 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -19,8 +16,6 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class PcRetryService {
 
-    private final PaperTrackingsDAO paperTrackingsDAO;
-    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
     /**
      * Gestione della risposta del Paper Channel alla richiesta di retry.
@@ -32,14 +27,11 @@ public class PcRetryService {
      * @param context contesto dell'handler
      * @return Mono(Void)
      */
-    public Mono<Void> handlePcRetryResponse(PcRetryResponse pcRetryResponse, Boolean isCON996, HandlerContext context){
+    public Mono<Void> handlePcRetryResponse(PcRetryResponse pcRetryResponse, Boolean isCON996, HandlerContext context) {
         if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-            return paperTrackingsDAO.putIfAbsent(PaperTrackingsMapper.toPaperTrackings(pcRetryResponse, pnPaperTrackerConfigs.getPaperTrackingsTtlDuration(), context.getPaperTrackings().getProductType(), context.getPaperTrackings().getAttemptId()))
-                    .doOnNext(paperTrackings -> {
-                        PaperTrackings paperTrackingsToUpdate = getPaperTrackingsPcretry(pcRetryResponse);
-                        context.setPaperTrackings(paperTrackingsToUpdate);
-                    })
-                    .then();
+            PaperTrackings paperTrackingsToUpdate = getPaperTrackingsPcretry(pcRetryResponse);
+            context.setPaperTrackings(paperTrackingsToUpdate);
+            return Mono.empty();
         } else {
             PaperTrackingsErrors paperTrackingsErrors = Boolean.TRUE.equals(isCON996) ? buildErrorForCON996(context) : buildErrorForGeneric(context);
             return paperTrackerExceptionHandler.handleRetryError(paperTrackingsErrors);
