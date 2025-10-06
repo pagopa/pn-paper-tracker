@@ -242,6 +242,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(newRequestId)).block();
         when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }
