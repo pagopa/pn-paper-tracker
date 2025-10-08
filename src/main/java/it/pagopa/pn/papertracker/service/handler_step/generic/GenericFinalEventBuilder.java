@@ -21,10 +21,6 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Objects;
-
-import static it.pagopa.pn.papertracker.mapper.SendEventMapper.toAnalogAddress;
 
 @Component
 @Slf4j
@@ -45,7 +41,6 @@ public class GenericFinalEventBuilder implements HandlerStep {
         Event finalEvent = extractFinalEvent(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
-                .doOnNext(event -> context.setFinalStatusCode(finalEvent.getStatusCode()))
                 .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }
@@ -71,8 +66,12 @@ public class GenericFinalEventBuilder implements HandlerStep {
                                              String logicalStatus,
                                              OffsetDateTime ts) {
         return SendEventMapper.createSendEventsFromEventEntity(context.getTrackingId(), source, status, logicalStatus, ts)
-                .flatMap(sendEvent -> enrichWithDiscoveredAddress(context, sendEvent))
-                .flatMap(sendEvent -> enrichWithDeliveryFailureCause(context, sendEvent));
+                .flatMap(sendEvent -> enrichWithDeliveryFailureCauseAndDiscoveredAddress(context, sendEvent));
+    }
+
+    private Mono<SendEvent> enrichWithDeliveryFailureCauseAndDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
+        sendEvent.setDeliveryFailureCause(context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause());
+        return enrichWithDiscoveredAddress(context, sendEvent);
     }
 
     protected Event extractFinalEvent(HandlerContext context) {
@@ -83,44 +82,14 @@ public class GenericFinalEventBuilder implements HandlerStep {
     }
 
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
-        if (!StringUtils.hasText(context.getPaperTrackings().getPaperStatus().getDiscoveredAddress())) {
+        if (!StringUtils.hasText(context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress())) {
             return Mono.just(sendEvent);
         }
-
-        if (Objects.nonNull(context.getPaperProgressStatusEvent()) &&
-                Objects.nonNull(context.getPaperProgressStatusEvent().getDiscoveredAddress())) {
-            sendEvent.setDiscoveredAddress(toAnalogAddress(context.getPaperProgressStatusEvent().getDiscoveredAddress()));
-            return Mono.just(sendEvent);
-        }
-
-        return dataVaultClient.deAnonymizeDiscoveredAddress(context.getPaperTrackings().getTrackingId(), context.getPaperTrackings().getPaperStatus().getDiscoveredAddress())
+        context.setAnonymizedDiscoveredAddressId(context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress());
+        return dataVaultClient.deAnonymizeDiscoveredAddress(context.getPaperTrackings().getTrackingId(), context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress())
                 .map(SendEventMapper::toAnalogAddress)
                 .doOnNext(sendEvent::setDiscoveredAddress)
-                .doOnNext(analogAddress -> context.setAnonymizedDiscoveredAddressId(context.getPaperTrackings().getPaperStatus().getDiscoveredAddress()))
                 .thenReturn(sendEvent);
-    }
-
-    protected Event getEvent(List<Event> events, EventStatusCodeEnum code) {
-        return events.stream()
-                .filter(e -> code.name().equals(e.getStatusCode()))
-                .findFirst()
-                .orElseThrow();
-    }
-
-    protected EventStatusCodeEnum buildRECRN00xAD(String finalStatusCode) {
-        String status = finalStatusCode.endsWith("F")
-                ? finalStatusCode.substring(0, finalStatusCode.length() - 1).concat("D")
-                : finalStatusCode.substring(0, finalStatusCode.length() - 1).concat("A");
-        return EventStatusCodeEnum.fromKey(status);
-    }
-
-    private Mono<SendEvent> enrichWithDeliveryFailureCause(HandlerContext ctx, SendEvent sendEvent) {
-        Event eventRECRN00xAD = getEvent(
-                ctx.getPaperTrackings().getPaperStatus().getValidatedEvents(),
-                buildRECRN00xAD(sendEvent.getStatusDetail())
-        );
-        sendEvent.setDeliveryFailureCause(eventRECRN00xAD.getDeliveryFailureCause());
-        return Mono.just(sendEvent);
     }
 
 }

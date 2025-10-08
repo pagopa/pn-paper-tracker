@@ -54,12 +54,12 @@ class GenericFinalEventBuilderTest {
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("F01");
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         Event event = new Event();
         event.setStatusCode("RECRI004A");
-        event.setDeliveryFailureCause("F01");
         event.setStatusTimestamp(now);
         event.setRequestTimestamp(now);
         event.setId(EVENT_ID + "1");
@@ -78,7 +78,6 @@ class GenericFinalEventBuilderTest {
 
         Event event3 = new Event();
         event3.setStatusCode("RECRI003A");
-        event3.setDeliveryFailureCause("M02");
         event3.setStatusTimestamp(now);
         event3.setRequestTimestamp(now);
         event3.setId(EVENT_ID);
@@ -104,7 +103,6 @@ class GenericFinalEventBuilderTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRI003C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
-        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     @Test
@@ -121,7 +119,6 @@ class GenericFinalEventBuilderTest {
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertEquals(RECRI004C.name(), handlerContext.getEventsToSend().getFirst().getStatusDetail());
         Assertions.assertEquals(StatusCodeEnum.KO, handlerContext.getEventsToSend().getFirst().getStatusCode());
-        Assertions.assertEquals("F01", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {

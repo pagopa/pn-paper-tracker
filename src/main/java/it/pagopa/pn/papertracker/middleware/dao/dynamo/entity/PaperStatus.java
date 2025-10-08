@@ -32,7 +32,7 @@ public class PaperStatus {
     private String deliveryFailureCause;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    private String anonymizedDiscoveredAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_STATUS_CODE)}))
     private String finalStatusCode;

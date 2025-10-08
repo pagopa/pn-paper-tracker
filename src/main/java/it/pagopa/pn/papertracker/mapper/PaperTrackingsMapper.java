@@ -120,7 +120,7 @@ public class PaperTrackingsMapper {
 
         dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
         dto.setDeliveryFailureCause(entity.getDeliveryFailureCause());
-        dto.setDiscoveredAddress(entity.getDiscoveredAddress());
+        dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddress());
         dto.setFinalStatusCode(entity.getFinalStatusCode());
         dto.setValidatedSequenceTimestamp(entity.getValidatedSequenceTimestamp());
         dto.setValidatedAttachmentUri(entity.getValidatedAttachmentUri());

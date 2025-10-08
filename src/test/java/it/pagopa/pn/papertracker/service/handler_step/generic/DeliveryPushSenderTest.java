@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
@@ -49,9 +50,7 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         PaperTrackings paperTrackings = new PaperTrackings();
-        String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
-        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
         context.setPaperTrackings(paperTrackings);
 
         // Act
@@ -66,10 +65,11 @@ class DeliveryPushSenderTest {
     void testSendToOutputTarget_SendToDryRunOutputs() {
         // Arrange
         SendEvent event = getSendEvent();
-        String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
-        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setPaperStatus(new PaperStatus());
         context.setDryRunEnabled(true);
+        context.setPaperTrackings(paperTrackings);
 
         when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
@@ -86,9 +86,7 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         PaperTrackings paperTrackings = new PaperTrackings();
-        String discoveredAddress = "123 Main St";
         HandlerContext context = new HandlerContext();
-        context.setAnonymizedDiscoveredAddressId(discoveredAddress);
         context.setPaperTrackings(paperTrackings);
 
         // Act
