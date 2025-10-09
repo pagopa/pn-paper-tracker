@@ -4,6 +4,8 @@ import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentDryRunMomProducer;
+import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentRunMomProducer;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
 import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
@@ -31,13 +33,23 @@ public class ExternalChannelHandlerTest {
     @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
+    @Mock
+    UninitializedShipmentDryRunMomProducer uninitializedShipmentDryRunProducer;
+
+    @Mock
+    UninitializedShipmentRunMomProducer uninitializedShipmentRunProducer;
+
     private ExternalChannelHandler externalChannelHandler;
 
     private String eventId;
 
     @BeforeEach
     void setUp() {
-        externalChannelHandler = new ExternalChannelHandler(paperTrackerExceptionHandler,handleRegistry);
+        externalChannelHandler = new ExternalChannelHandler(
+                                        paperTrackerExceptionHandler,
+                                        handleRegistry,
+                                        uninitializedShipmentDryRunProducer,
+                                        uninitializedShipmentRunProducer);
         eventId = "eventId";
     }
 

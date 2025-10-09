@@ -25,7 +25,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 @TestConfiguration
 public class LocalStackTestConfig {
 
-    static LocalStackContainer localStack =
+    public static LocalStackContainer localStack =
             new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4"))
                     .withServices(DYNAMODB, SQS) // ← AGGIUNTO SQS!
                     .withClasspathResourceMapping("testcontainers/init.sh",
