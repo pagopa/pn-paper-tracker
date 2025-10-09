@@ -508,8 +508,8 @@ Resources:
               - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref UninitializedShipmentDryRunQueueName
-              - !Ref UninitializedShipmentRunQueueName
+              - !Ref UninitializedShipmentDryRunQueueARN
+              - !Ref UninitializedShipmentRunQueueARN
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:
