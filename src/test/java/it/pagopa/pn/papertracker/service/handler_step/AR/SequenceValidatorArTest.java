@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
@@ -37,6 +38,9 @@ class SequenceValidatorArTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
+        paperProgressStatusEvent.setStatusCode("RECRN001C");
+        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
         sequenceValidatorAr = new SequenceValidatorAr(sequenceConfiguration, paperTrackingsDAO);
     }
 

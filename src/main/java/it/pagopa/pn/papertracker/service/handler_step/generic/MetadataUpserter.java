@@ -31,7 +31,7 @@ public class MetadataUpserter implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                .map(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
                         context.getPaperProgressStatusEvent(),
                         context.getAnonymizedDiscoveredAddressId(),
                         context.getEventId(),
@@ -60,7 +60,6 @@ public class MetadataUpserter implements HandlerStep {
         DiscoveredAddress discoveredAddress = handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress();
         if (Objects.nonNull(discoveredAddress)) {
             return dataVaultClient.anonymizeDiscoveredAddress(handlerContext.getPaperProgressStatusEvent().getRequestId(), discoveredAddress)
-                    .doOnNext(handlerContext::setAnonymizedDiscoveredAddressId)
                     .thenReturn(handlerContext);
         }
         return Mono.just(handlerContext);

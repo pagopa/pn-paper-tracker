@@ -49,7 +49,6 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(extractFinalEvent(context))
-                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
                 .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
@@ -65,7 +64,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         }
 
         List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
-        EventStatusCodeEnum configEnum = buildRECRN00xAD(statusCode);
+        EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
 
@@ -118,6 +117,11 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 : isDifferenceGreaterRefinementDuration(eventRECRN010.getStatusTimestamp(), eventRECRN00XA.getStatusTimestamp());
     }
 
+    private EventStatusCodeEnum getRECRN00XA(String statusCode) {
+        final String status = statusCode.substring(0, statusCode.length() - 1).concat("A");
+        return EventStatusCodeEnum.fromKey(status);
+    }
+
     private Mono<Void> prepareFinalEventAndPNRN012toSend(HandlerContext context, Event finalEvent, Event recrn010) {
         OffsetDateTime pnrn012Time = addDurationToInstant(recrn010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()).atOffset(ZoneOffset.UTC);
 
@@ -126,6 +130,13 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 .flatMap(se -> buildSendEvent(context, finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusTimestamp().atOffset(ZoneOffset.UTC)))
                 .doOnNext(context.getEventsToSend()::add)
                 .then();
+    }
+
+    private Event getEvent(List<Event> events, EventStatusCodeEnum code) {
+        return events.stream()
+                .filter(e -> code.name().equals(e.getStatusCode()))
+                .findFirst()
+                .orElseThrow();
     }
 
     /**

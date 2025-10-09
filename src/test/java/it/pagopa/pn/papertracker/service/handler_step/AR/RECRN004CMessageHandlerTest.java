@@ -178,8 +178,6 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         var eventMeta = new Event();
         eventMeta.setId(UUID.randomUUID().toString());
         eventMeta.setStatusCode(statusCode);
-        eventMeta.setAnonymizedDiscoveredAddressId("address1_uuid");
-        eventMeta.setDeliveryFailureCause("failureCause1");
         eventMeta.setStatusTimestamp(time);
         eventMeta.setRegisteredLetterCode("registeredLetterCode");
         eventMeta.setRequestTimestamp(time); //aggiunto
