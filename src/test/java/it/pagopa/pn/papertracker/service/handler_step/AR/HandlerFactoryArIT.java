@@ -104,11 +104,11 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         //Assert
         await().pollDelay(Duration.ofSeconds(1)).until(() -> true);
         PaperTrackings pt = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
-        PaperTrackings ptNew = (r1 != null && StringUtils.hasText(r1.getRequestId()))
+        PaperTrackings ptNew = StringUtils.hasText(r1.getRequestId())
                 ? paperTrackingsDAO.retrieveEntityByTrackingId(r1.getRequestId()).block()
                 : null;
 
-        PaperTrackings ptNew2 = (r2 != null && StringUtils.hasText(r2.getRequestId()))
+        PaperTrackings ptNew2 = StringUtils.hasText(r2.getRequestId())
                 ? paperTrackingsDAO.retrieveEntityByTrackingId(r2.getRequestId()).block()
                 : null;
 
@@ -197,7 +197,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
         list.forEach(TestUtils::assertBaseDryRun);
 
         switch (seq) {
-            case OK_AR -> {
+            case OK_AR, OK_AR_NOT_ORDERED -> {
                 assertEquals(5, list.size());
                 assertContainsStatus(list, List.of("CON080", "CON020", "RECRN001A", "RECRN001B", "RECRN001C"));
                 assertSameRegisteredLetter(list, 0, 1, 2, 3, 4);
@@ -240,34 +240,6 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     }
                     if (is(e, "RECRN015")) {
                         assertNoAttach(e);
-                        assertProgress(e);
-                    }
-                    if (is(e, "CON080")) {
-                        assertNoAttach(e);
-                        assertProgress(e);
-                    }
-                    if (is(e, "RECRN001B")) {
-                        assertAttach(e, "AR");
-                        assertProgress(e);
-                    }
-                    if (is(e, "RECRN001C")) {
-                        assertNoAttach(e);
-                        assertOk(e);
-                        assertNull(e.getDeliveryFailureCause());
-                    }
-                });
-            }
-            case OK_AR_NOT_ORDERED -> {
-                assertEquals(5, list.size());
-                assertContainsStatus(list, List.of("CON080", "CON020", "RECRN001A", "RECRN001B", "RECRN001C"));
-                assertSameRegisteredLetter(list, 0, 1, 2, 3, 4);
-                list.forEach(e -> {
-                    if (is(e, "RECRN001A")) {
-                        assertNoAttach(e);
-                        assertProgress(e);
-                    }
-                    if (is(e, "CONO20")) {
-                        assertEquals(1, e.getAttachments().size());
                         assertProgress(e);
                     }
                     if (is(e, "CON080")) {

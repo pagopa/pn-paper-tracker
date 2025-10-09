@@ -7,7 +7,6 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ public class PaperProgressStatusEventMapper {
      * @param anonymizedDiscoveredAddressId l'id dell'indirizzo anonimizzato
      * @return PaperTrackings contenente il nuovo evento
      */
-    public static Mono<PaperTrackings> toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
+    public static PaperTrackings toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
                                                         String eventId, boolean dryRunEnabled,
                                                         boolean isFinalDemat, boolean isP000event) {
@@ -63,7 +62,7 @@ public class PaperProgressStatusEventMapper {
         event.setStatusDescription(paperProgressStatusEvent.getStatusDescription());
 
         paperTrackings.setEvents(List.of(event));
-        return Mono.just(paperTrackings);
+        return paperTrackings;
     }
 
     public static Attachment buildAttachmentFromAttachmentDetail(AttachmentDetails attachmentDetails) {

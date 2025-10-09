@@ -145,7 +145,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setAttachments(List.of(attachment));
         PaperStatus notificationState1 = new PaperStatus();
         notificationState1.setFinalStatusCode("RECRN005C");
-        notificationState1.setDiscoveredAddress("address discovered");
+        notificationState1.setAnonymizedDiscoveredAddress("address discovered");
         notificationState1.setValidatedEvents(List.of(event));
         paperTrackingsToUpdate.setPaperStatus(notificationState1);
 
@@ -164,7 +164,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getPaperStatus() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
                     assert paperTrackingsUpdated.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert paperTrackingsUpdated.getPaperStatus().getDiscoveredAddress().equals("address discovered");
+                    assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
@@ -193,7 +193,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getPaperStatus() != null;
                     assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
                     assert retrieved.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert retrieved.getPaperStatus().getDiscoveredAddress().equals("address discovered");
+                    assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert retrieved.getPaperStatus().getValidatedEvents() != null;
                     assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
                     assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
@@ -227,7 +227,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getPaperStatus() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
                     assert paperTrackingsUpdated.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert paperTrackingsUpdated.getPaperStatus().getDiscoveredAddress().equals("address discovered");
+                    assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
@@ -256,7 +256,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getPaperStatus() != null;
                     assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
                     assert retrieved.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert retrieved.getPaperStatus().getDiscoveredAddress().equals("address discovered");
+                    assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert retrieved.getPaperStatus().getValidatedEvents() != null;
                     assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
                     assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");

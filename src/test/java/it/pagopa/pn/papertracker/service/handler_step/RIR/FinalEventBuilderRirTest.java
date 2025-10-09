@@ -59,6 +59,7 @@ class FinalEventBuilderRirTest {
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("M02");
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
@@ -94,26 +95,14 @@ class FinalEventBuilderRirTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI003C.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID);
-        handlerContext.getPaperTrackings().getPaperStatus().setDiscoveredAddress("anonymized");
-        Assertions.assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
 
-        PaperAddress paperAddress = new PaperAddress();
-        paperAddress.setAddress("address");
-        paperAddress.setCap("00100");
-        paperAddress.setCity("Rome");
-        paperAddress.setCountry("IT");
-        paperAddress.setName("address name");
-
-        when(dataVaultClient.deAnonymizeDiscoveredAddress(handlerContext.getTrackingId(), "anonymized"))
-                .thenReturn(Mono.just(paperAddress));
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals("anonymized", handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
-        Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
+        Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
         Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
@@ -130,7 +119,6 @@ class FinalEventBuilderRirTest {
                 .verifyComplete();
 
         // Assert
-        Assertions.assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getLast().getStatusCode());

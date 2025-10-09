@@ -15,7 +15,7 @@ public class PaperStatus {
 
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_DELIVERY_FAILURE_CAUSE = "deliveryFailureCause";
-    public static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
+    public static final String COL_ANONYMIZED_DISCOVERED_ADDRESS = "anonymizedDiscoveredAddress";
     public static final String COL_FINAL_STATUS_CODE = "finalStatusCode";
     public static final String COL_VALIDATED_SEQUENCE_TIMESTAMP = "validatedSequenceTimestamp";
     public static final String COL_VALIDATED_ATTACHMENT_URI = "validatedAttachmentUri";
@@ -31,8 +31,8 @@ public class PaperStatus {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ANONYMIZED_DISCOVERED_ADDRESS)}))
+    private String anonymizedDiscoveredAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_STATUS_CODE)}))
     private String finalStatusCode;

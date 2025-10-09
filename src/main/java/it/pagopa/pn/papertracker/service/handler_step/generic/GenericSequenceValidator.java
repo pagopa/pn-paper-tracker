@@ -33,6 +33,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * La validazione include controlli sulla presenza di eventi necessari, coerenza dei timestamp
      * di business, validità dei documenti allegati, coerenza dei codici di lettera raccomandata e
      * correttezza della causa di mancata consegna.
+     *
      * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
      * @return Mono(Void)
      */
@@ -55,6 +56,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings, HandlerContext context) {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
+        context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode());
         log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
         return extractSequenceFromEvents(paperTrackings.getEvents())
                 .filter(events -> !CollectionUtils.isEmpty(events))
@@ -64,8 +66,34 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context))
                 .flatMap(events -> validateAttachments(events, paperTrackings, context))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate, context))
-                .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, paperTrackingsToUpdate, context))
+                .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, context))
+                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, context))
                 .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(events, paperTrackingsToUpdate)));
+    }
+
+    private Mono<List<Event>> enrichPaperTrackingToUpdateWithAddressAndFailureCause(List<Event> events, PaperTrackings paperTrackingsToUpdate, HandlerContext context) {
+        return Mono.justOrEmpty(events.stream()
+                        .filter(e -> e.getStatusCode().equalsIgnoreCase(preCloseMetaStatusCode(context.getFinalStatusCode())))
+                        .findFirst())
+                .doOnNext(preCloseEvent -> {
+                    if (StringUtils.hasText(preCloseEvent.getAnonymizedDiscoveredAddressId())) {
+                        paperTrackingsToUpdate.getPaperStatus().setAnonymizedDiscoveredAddress(preCloseEvent.getAnonymizedDiscoveredAddressId());
+                    }
+                    if(StringUtils.hasText(preCloseEvent.getDeliveryFailureCause())){
+                        paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(preCloseEvent.getDeliveryFailureCause());
+                    }
+                })
+                .thenReturn(events);
+    }
+
+    private String preCloseMetaStatusCode(String finalStatusCode) {
+        String lastLetter = finalStatusCode.substring(finalStatusCode.length() - 1);
+        if (lastLetter.equals("C")) {
+            return finalStatusCode.substring(0, finalStatusCode.length() - 1) + "A";
+        } else if (lastLetter.equals("F")) {
+            return finalStatusCode.substring(0, finalStatusCode.length() - 1) + "D";
+        }
+        return finalStatusCode;
     }
 
     /**
@@ -200,23 +228,18 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings oggetto principale della richiesta
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate, HandlerContext context) {
+    private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, HandlerContext context) {
         log.info("Beginning validation for delivery failure cause for events : {}", events);
         return Flux.fromIterable(events)
                 .flatMap(event -> {
                     String deliveryFailureCause = event.getDeliveryFailureCause();
-                   EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
-                    if (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) || statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) {
-                        if (StringUtils.hasText(deliveryFailureCause)) {
-                            paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(event.getDeliveryFailureCause());
-                        }
-                        return Mono.empty();
-                    } else {
+                    EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
+                    if (!CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && !statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) {
                         return generateCustomError("Invalid deliveryFailureCause: " + deliveryFailureCause, context, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR);
                     }
+                    return Mono.just(event);
                 })
-                .then()
-                .thenReturn(events);
+                .collectList();
     }
 
     /**

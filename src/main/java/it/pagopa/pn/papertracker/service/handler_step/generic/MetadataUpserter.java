@@ -33,7 +33,7 @@ public class MetadataUpserter implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
-                .flatMap(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                .map(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
                         context.getPaperProgressStatusEvent(),
                         context.getAnonymizedDiscoveredAddressId(),
                         context.getEventId(),
