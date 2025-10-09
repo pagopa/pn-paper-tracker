@@ -60,6 +60,7 @@ public class MetadataUpserter implements HandlerStep {
         DiscoveredAddress discoveredAddress = handlerContext.getPaperProgressStatusEvent().getDiscoveredAddress();
         if (Objects.nonNull(discoveredAddress)) {
             return dataVaultClient.anonymizeDiscoveredAddress(handlerContext.getPaperProgressStatusEvent().getRequestId(), discoveredAddress)
+                    .doOnNext(handlerContext::setAnonymizedDiscoveredAddressId)
                     .thenReturn(handlerContext);
         }
         return Mono.just(handlerContext);
