@@ -2,10 +2,8 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnoreNulls;
 
 import java.time.Instant;
@@ -28,6 +26,7 @@ public class Event {
     public static final String COL_ID = "id";
     public static final String COL_DRY_RUN = "dryRun";
     public static final String COL_IUN = "iun";
+    public static final String COL_CREATED_AT = "createdAt";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
@@ -65,5 +64,8 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRY_RUN)}))
     private Boolean dryRun;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
+    private Instant createdAt;
 
 }

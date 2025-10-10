@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +61,7 @@ public class PaperProgressStatusEventMapper {
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
         event.setDryRun(dryRunEnabled);
         event.setStatusDescription(paperProgressStatusEvent.getStatusDescription());
+        event.setCreatedAt(Instant.now());
 
         paperTrackings.setEvents(List.of(event));
         return paperTrackings;

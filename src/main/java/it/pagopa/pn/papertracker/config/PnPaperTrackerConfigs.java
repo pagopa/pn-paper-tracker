@@ -29,7 +29,6 @@ public class PnPaperTrackerConfigs {
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private int maxPcRetryMock;
-    private List<ProductType> enableRetrySendEngageFor = new ArrayList<>();
     private List<ProductType> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
