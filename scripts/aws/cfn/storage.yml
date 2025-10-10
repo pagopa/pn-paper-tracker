@@ -163,7 +163,7 @@ Resources:
         VisibilityTimeout: 60
         DelaySeconds: 1
 
-  UninitializedShipmentDryRun:
+  UninitializedShipmentRunQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
     DeletionPolicy: Retain
