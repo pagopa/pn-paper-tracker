@@ -230,6 +230,22 @@ Parameters:
     Type: String
     Description: 'Write paper-channel messages to this Queue'
 
+  UninitializedShipmentDryRunQueueName:
+    Type: String
+    Description: 'Write uninitialized shipment dryrun messages to this Queue'
+
+  UninitializedShipmentDryRunQueueARN:
+    Type: String
+    Description: 'Write uninitialized shipment dryrun messages to this Queue'
+
+  UninitializedShipmentRunQueueName:
+    Type: String
+    Description: 'Write uninitialized shipment messages to this Queue'
+
+  UninitializedShipmentRunQueueARN:
+    Type: String
+    Description: 'Write uninitialized shipment messages to this Queue'
+
   PaperTrackingsErrorsTableName:
     Type: String
     Description: 'DynamoDB table name for PaperTrackingsErrors'
@@ -393,14 +409,16 @@ Resources:
         ContainerEnvEntry5: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE=${PaperTrackingsErrorsTableName}'
         ContainerEnvEntry6: !Sub 'PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE=${PaperTrackingsTableName}'
         ContainerEnvEntry7: !Sub 'PN_PAPERTRACKER_PAPERCHANNELBASEURL=http://${ApplicationLoadBalancerDomain}:8080'
-        ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER=${ExternalChannelToPaperTrackerQueueName}'
-        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSURL=${PnOcrInputsQueueURL}'
-        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_QUEUEOCRINPUTSREGION=${PnOcrInputsQueueRegion}'
-        ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
+        ContainerEnvEntry9: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKERQUEUE=${ExternalChannelToPaperTrackerQueueName}'
+        ContainerEnvEntry10: !Sub 'PN_PAPERTRACKER_TOPICS_QUEUEOCRINPUTSURL=${PnOcrInputsQueueURL}'
+        ContainerEnvEntry11: !Sub 'PN_PAPERTRACKER_TOPICS_QUEUEOCRINPUTSREGION=${PnOcrInputsQueueRegion}'
+        ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
-        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS=${PnOcrOutputsQueueName}'
+        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTSQUEUE=${PnOcrOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTDRYRUNQUEUE=${UninitializedShipmentDryRunQueueName}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTRUNQUEUE=${UninitializedShipmentRunQueueName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -490,6 +508,8 @@ Resources:
               - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
+              - !Ref UninitializedShipmentDryRunQueueARN
+              - !Ref UninitializedShipmentRunQueueARN
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:

@@ -33,6 +33,7 @@ import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.ke
 public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements PaperTrackingsDAO {
 
     private final String ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM = "PN_PAPER_TRACKER_DUPLICATED_ITEM";
+    private final String ERROR_CODE_PAPER_TRACKER_NOT_FOUND = "PN_PAPER_TRACKER_NOT_FOUND";
 
     public PaperTrackingsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
@@ -117,7 +118,14 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         return updateIfExists(Map.of(PaperTrackings.COL_TRACKING_ID, AttributeValue.builder().s(trackingId).build()), updateExpr, expressionAttributeValues, expressionAttributeNames, conditionExpression)
                 .map(updateItemResponse -> PaperTrackings.attributeValueMapToPaperTrackings(updateItemResponse.attributes()))
-                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()));
+                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()))
+                .onErrorMap(ConditionalCheckFailedException.class, e -> {
+                    log.info("Item with trackingId {} not found — cannot update", trackingId);
+                    return new PnPaperTrackerNotFoundException(
+                            ERROR_CODE_PAPER_TRACKER_NOT_FOUND,
+                            String.format("PaperTracking with trackingId %s not found", trackingId)
+                    );
+                });
     }
 
     @Override

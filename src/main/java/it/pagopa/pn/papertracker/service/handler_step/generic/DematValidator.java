@@ -30,14 +30,14 @@ import java.time.ZoneId;
 import java.util.*;
 import org.apache.commons.io.FilenameUtils;
 
+import static it.pagopa.pn.papertracker.utils.QueueConst.OCR_REQUEST_EVENT_TYPE;
+import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
+
 @Service
 @RequiredArgsConstructor
 public class DematValidator implements HandlerStep {
 
     private static final Logger log = LoggerFactory.getLogger(DematValidator.class);
-
-    private static final String PUBLISHER = "paper-tracker-ocr";
-    private static final String OCR_REQUEST_EVENT_TYPE = "OCR_REQUEST";
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final PnPaperTrackerConfigs cfg;

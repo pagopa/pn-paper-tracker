@@ -29,14 +29,11 @@ public class PnPaperTrackerConfigs {
     private Duration paperTrackingsTtlDuration;
     private Topics topics;
     private int maxPcRetryMock;
+
     private List<ProductType> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
-    private String queueOcrInputName;
-    private String queueOcrInputsUrl;
-    private String QueueOcrInputsRegion;
-    private String externalChannelOutputsQueue;
-    private String externalChannelToPaperTrackerUrl;
+
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private Duration refinementDuration;
@@ -50,8 +47,15 @@ public class PnPaperTrackerConfigs {
 
     @Data
     public static class Topics {
-        private String externalChannelToPaperTracker;
-        private String pnOcrOutputs;
+        // Consumer
+        private String externalChannelToPaperTrackerQueue;
+        private String pnOcrOutputsQueue;
+        // Producer
+        private String queueOcrInputsUrl;
+        private String queueOcrInputsRegion;
+        private String externalChannelOutputsQueue;
+        private String uninitializedShipmentDryRunQueue;
+        private String uninitializedShipmentRunQueue;
     }
 
     @PostConstruct

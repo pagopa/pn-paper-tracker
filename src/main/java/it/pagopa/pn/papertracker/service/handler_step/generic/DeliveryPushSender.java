@@ -27,6 +27,9 @@ import java.util.List;
 import java.time.Instant;
 import java.util.UUID;
 
+import static it.pagopa.pn.papertracker.utils.QueueConst.DELIVERY_PUSH_EVENT_TYPE;
+import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -83,10 +86,10 @@ public class DeliveryPushSender implements HandlerStep {
                                 .builder()
                                 .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
                                 .header( GenericEventHeader.builder()
-                                        .publisher("pn-paper-tracking")
+                                        .publisher(PUBLISHER)
                                         .eventId(UUID.randomUUID().toString())
                                         .createdAt( Instant.now() )
-                                        .eventType("SEND_ANALOG_RESPONSE")
+                                        .eventType(DELIVERY_PUSH_EVENT_TYPE)
                                         .build())
                                 .build();
                         externalChannelOutputsMomProducer.push(deliveryPushEvent);
