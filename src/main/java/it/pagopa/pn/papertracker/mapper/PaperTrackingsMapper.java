@@ -86,6 +86,7 @@ public class PaperTrackingsMapper {
         paperEvent.setStatusTimestamp(event.getStatusTimestamp());
         paperEvent.setDeliveryFailureCause(event.getDeliveryFailureCause());
         paperEvent.setRegisteredLetterCode(event.getRegisteredLetterCode());
+        paperEvent.setCreatedAt(event.getCreatedAt());
         if(!CollectionUtils.isEmpty(event.getAttachments())){
             paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
         }

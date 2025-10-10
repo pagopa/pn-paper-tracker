@@ -292,6 +292,9 @@ components:
             $ref: '#/components/schemas/Attachment'
         registeredLetterCode:
           type: string
+        createdAt:
+          type: string
+          format: date-time
     ProductType:
       type: string
       enum:

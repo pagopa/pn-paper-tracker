@@ -4,8 +4,8 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.utils.PcRetryUtilsMock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +23,12 @@ public class PaperChannelClientImpl implements PaperChannelClient {
     private final PnPaperTrackerConfigs config;
 
     @Override
-    public Mono<PcRetryResponse> getPcRetry(PaperTrackings paperTrackings, Boolean checkApplyRasterization) {
-        if(config.getEnableRetrySendEngageFor().contains(paperTrackings.getProductType())){
-            return getPcRetryPaperChannel(paperTrackings.getTrackingId(), checkApplyRasterization);
+    public Mono<PcRetryResponse> getPcRetry(HandlerContext context, Boolean checkApplyRasterization) {
+        if(!context.isDryRunEnabled()){
+            return getPcRetryPaperChannel(context.getPaperTrackings().getTrackingId(), checkApplyRasterization);
         }
         log.debug("giving mock response...");
-        return PcRetryUtilsMock.getPcRetryPaperMock(paperTrackings, config.getMaxPcRetryMock());
+        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock());
     }
 
     private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId, Boolean checkApplyRasterization) {
