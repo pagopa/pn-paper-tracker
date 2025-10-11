@@ -28,7 +28,7 @@ public class PaperChannelClientImpl implements PaperChannelClient {
             return getPcRetryPaperChannel(context.getPaperTrackings().getTrackingId(), checkApplyRasterization);
         }
         log.debug("giving mock response...");
-        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock());
+        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock(), context.getPaperProgressStatusEvent().getStatusCode());
     }
 
     private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId, Boolean checkApplyRasterization) {

@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.CON996;
+
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PcRetryUtilsMock {
 
@@ -13,12 +15,12 @@ public class PcRetryUtilsMock {
     public static final String PCRETRY = "PCRETRY_";
 
 
-    static public Mono<PcRetryResponse> getPcRetryPaperMock(PaperTrackings paperTrackings, int maxRetry) {
+    static public Mono<PcRetryResponse> getPcRetryPaperMock(PaperTrackings paperTrackings, int maxRetry, String statusCode) {
         PcRetryResponse pcRetryResponse = new PcRetryResponse();
         pcRetryResponse.setParentRequestId(paperTrackings.getTrackingId());
         pcRetryResponse.setDeliveryDriverId(paperTrackings.getUnifiedDeliveryDriver());
 
-        if (hasOtherAttempt(paperTrackings.getTrackingId(), maxRetry)) {
+        if (hasOtherAttempt(paperTrackings.getTrackingId(), statusCode.equalsIgnoreCase(CON996.name()) ? 0 : maxRetry)) {
             pcRetryResponse.setRetryFound(true);
             String newRequestId = setRetryRequestId(paperTrackings.getTrackingId());
             setRetryRequestIdAndPcRetry(pcRetryResponse, newRequestId);
