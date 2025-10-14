@@ -26,6 +26,7 @@ tags:
   - name: PaperTrackerAttempt
   - name: PaperTrackerError
   - name: PaperTrackerOutput
+  - name: NotificationRework
 paths:
   /status:
     get:
@@ -191,6 +192,35 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/sequence':
+    get:
+      summary: Recupera le sequence e il finalStatus di una richiesta di rework
+      description: >-
+        Permette la verifica della possibilità di rework di una notifica
+      tags:
+        - NotificationRework
+      operationId: notificationRework
+      parameters:
+        - $ref: '#/components/parameters/queryStatusCode'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceResponse"
+        '400':
+          description: Bad request - Invalid status code
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
 components:
   parameters:
     attemptId:
@@ -205,7 +235,12 @@ components:
         pattern: ^[ -~]*$
         maxLength: 1024
       example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
-
+    queryStatusCode:
+      in: query
+      name: statusCode
+      required: true
+      schema:
+        type: string
   schemas:
     TrackingsRequest:
       type: object
@@ -488,3 +523,15 @@ components:
         - unifiedDeliveryDriver
         - attemptId
         - pcRetry
+    SequenceResponse:
+      type: object
+      properties:
+        finalStatusCode:
+          type: string
+          enum:
+            - OK
+            - KO
+        sequence:
+          type: array
+          items:
+            type: string
