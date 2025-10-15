@@ -170,4 +170,34 @@ class NotificationReworkServiceImplTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    void notificationRework_shouldThrowExceptionForInvalidStatusCode() {
+        String invalidStatusCode = "INVALID";
+        String deliveryFailureCause = "M02";
+
+        StepVerifier.create(service.notificationRework(invalidStatusCode, deliveryFailureCause))
+                .expectErrorMatches(throwable -> {
+                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        return ex.getProblem().getDetail().contains("statusCode INVALID is invalid");
+                    }
+                    return false;
+                })
+                .verify();
+    }
+
+    @Test
+    void notificationRework_shouldThrowExceptionForEmptyStatusCode() {
+        String emptyStatusCode = "";
+        String deliveryFailureCause = "M02";
+
+        StepVerifier.create(service.notificationRework(emptyStatusCode, deliveryFailureCause))
+                .expectErrorMatches(throwable -> {
+                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        return ex.getProblem().getDetail().contains("is invalid");
+                    }
+                    return false;
+                })
+                .verify();
+    }
 }

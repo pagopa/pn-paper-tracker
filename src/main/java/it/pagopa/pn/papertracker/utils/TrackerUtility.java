@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Optional;
+
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.P000;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN002C;
 
@@ -39,7 +41,8 @@ public class TrackerUtility {
                 return EventStatus.KO;
             }
         }
-        return EventStatusCodeEnum.fromKey(statusCode).getStatus();
+        return Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCode))
+                .map(EventStatusCodeEnum::getStatus)
+                .orElse(null);
     }
-
 }
