@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.evaluateStatusCodeAndRetrieveStatus;
@@ -59,7 +60,8 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            String eventStatus = evaluateStatusCodeAndRetrieveStatus(statusCode, context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause()).name();
+            var eventStatusEnum = evaluateStatusCodeAndRetrieveStatus(statusCode, context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause());
+            String eventStatus = Objects.nonNull(eventStatusEnum) ? eventStatusEnum.name() : null;
             return addEventToSend(context, finalEvent, eventStatus);
         }
 
