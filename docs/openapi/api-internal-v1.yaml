@@ -199,7 +199,7 @@ paths:
         Permette la verifica della possibilità di rework di una notifica
       tags:
         - NotificationRework
-      operationId: notificationRework
+      operationId: retrieveSequenceAndFinalStatus
       parameters:
         - $ref: '#/components/parameters/queryStatusCode'
         - $ref: '#/components/parameters/deliveryFailureCause'
