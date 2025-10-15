@@ -202,6 +202,7 @@ paths:
       operationId: notificationRework
       parameters:
         - $ref: '#/components/parameters/queryStatusCode'
+        - $ref: '#/components/parameters/deliveryFailureCause'
       responses:
         '200':
           description: Success
@@ -239,6 +240,12 @@ components:
       in: query
       name: statusCode
       required: true
+      schema:
+        type: string
+    deliveryFailureCause:
+      in: query
+      name: deliveryFailureCause
+      required: false
       schema:
         type: string
   schemas:
