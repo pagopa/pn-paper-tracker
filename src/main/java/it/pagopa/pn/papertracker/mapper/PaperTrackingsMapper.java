@@ -61,6 +61,8 @@ public class PaperTrackingsMapper {
         tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
         tracking.setCreatedAt(paperTrackings.getCreatedAt());
         tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
+        tracking.setRefined(paperTrackings.isRefined());
+        tracking.setRecag012StatusTimestamp(paperTrackings.getRecag012StatusTimestamp());
         if(Objects.nonNull(paperTrackings.getProductType())){
             tracking.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().getValue()));
         }

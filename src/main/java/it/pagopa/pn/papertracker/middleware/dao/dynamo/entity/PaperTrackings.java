@@ -28,6 +28,8 @@ public class PaperTrackings {
     public static final String COL_UPDATED_AT = "updatedAt";
     public static final String COL_STATE = "state";
     public static final String COL_TTL = "ttl";
+    public static final String COL_REFINED = "refined";
+    public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
 
@@ -72,6 +74,12 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REFINED)}))
+    private boolean refined;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECAG012_STATUS_TIMESTAMP)}))
+    private Instant recag012StatusTimestamp;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =
