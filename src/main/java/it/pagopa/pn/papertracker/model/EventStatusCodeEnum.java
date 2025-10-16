@@ -65,7 +65,41 @@ public enum EventStatusCodeEnum {
     //CON992(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "KO Distinta Elettronica da Recapitista", false),
     //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
 
-    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false);
+    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false),
+
+    // 890
+    RECAG001A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
+    RECAG002A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato a persona abilitata - pre-esito", false),
+    RECAG003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(M02, M05, M06, M07, M08, M09), "Mancata consegna - pre-esito", false),
+    RECAG003D(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(M01, M03, M04), "Irreperibilità Assoluta - pre-esito", false),
+    RECAG002B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato a persona abilitata - In Dematerializzazione", true),
+    RECAG003B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna - In Dematerializzazione", true),
+    RECAG001B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
+    RECAG003E(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Irreperibilità Assoluta - In Dematerializzazione", true),
+    RECAG002C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato a persona abilitata - Fascicolo Chiuso", false),
+    RECAG003C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(M02, M05, M06, M07, M08, M09), "Mancata consegna - Fascicolo Chiuso", false),
+    RECAG001C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
+    RECAG003F(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.KO, List.of(), "Irreperibilità Assoluta - Fascicolo Chiuso", false),
+    RECAG010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Inesito", false),
+    RECAG004(EventTypeEnum.RETRYABLE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
+    RECAG015(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(C01, C02, C03, C04, C05, C06), "Causa Forza Maggiore", false),
+    RECAG013(EventTypeEnum.RETRYABLE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Non Rendicontabile", false),
+    RECAG011A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "In giacenza", false),
+    RECAG011B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "In giacenza - In Dematerializzazione", true),
+    RECAG012(EventTypeEnum.RECAG012_EVENT, ProductType._890, EventStatus.OK, List.of(), "Accettazione 23L", false),
+    RECAG005A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - pre-esito", false),
+    RECAG005B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - In Dematerializzazione", true),
+    RECAG005C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG006A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - pre-esito", false),
+    RECAG006B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - In Dematerializzazione", true),
+    RECAG006C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG007A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - pre-esito", false),
+    RECAG007B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - In Dematerializzazione", true),
+    RECAG007C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG008A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - pre-esito", false),
+    RECAG008B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - In Dematerializzazione", true),
+    RECAG008C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false);
+
 
     private final EventTypeEnum codeType;
     private final ProductType productType;
