@@ -10,9 +10,7 @@ import it.pagopa.pn.papertracker.service.handler_step.HandlersFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -34,20 +32,22 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
 
     public abstract ProductType getProductType();
 
-    private final Map<EventTypeEnum, Function<HandlerContext, Handler>> dispatchers =
-            new EnumMap<>(EventTypeEnum.class) {{
-                put(EventTypeEnum.INTERMEDIATE_EVENT, AbstractHandlersFactory.this::buildIntermediateEventsHandler);
-                put(EventTypeEnum.RETRYABLE_EVENT, AbstractHandlersFactory.this::buildRetryEventHandler);
-                put(EventTypeEnum.NOT_RETRYABLE_EVENT, AbstractHandlersFactory.this::buildNotRetryableEventHandler);
-                put(EventTypeEnum.FINAL_EVENT, AbstractHandlersFactory.this::buildFinalEventsHandler);
-                put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
-                put(EventTypeEnum.OCR_RESPONSE_EVENT, AbstractHandlersFactory.this::buildOcrResponseHandler);
-                put(EventTypeEnum.CON996_EVENT, AbstractHandlersFactory.this::buildCon996EventHandler);
-            }};
+    public Function<HandlerContext, Handler> getDispatcher(EventTypeEnum eventType) {
+        return switch (eventType) {
+            case INTERMEDIATE_EVENT -> this::buildIntermediateEventsHandler;
+            case RETRYABLE_EVENT -> this::buildRetryEventHandler;
+            case NOT_RETRYABLE_EVENT -> this::buildNotRetryableEventHandler;
+            case FINAL_EVENT -> this::buildFinalEventsHandler;
+            case SAVE_ONLY_EVENT -> this::buildSaveOnlyEventHandler;
+            case OCR_RESPONSE_EVENT -> this::buildOcrResponseHandler;
+            case CON996_EVENT -> this::buildCon996EventHandler;
+            default -> throw new IllegalStateException("Unexpected value: " + eventType);
+        };
+    }
 
     public Handler build(EventTypeEnum eventType, HandlerContext context) {
         log.info("Handling {} event for productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
-        var handler = dispatchers.get(eventType);
+        var handler = getDispatcher(eventType);
         if (Objects.isNull(handler)) {
             log.error("No handler founded for EventType ={} and productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
             throw new PaperTrackerException(String.format("No handler founded for EventType =%s and productType: %s", eventType, getProductType()));
