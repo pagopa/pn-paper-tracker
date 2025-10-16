@@ -11,6 +11,4 @@ public interface HandlersFactory {
     Handler buildOcrResponseHandler(HandlerContext context);
     Handler buildSaveOnlyEventHandler(HandlerContext context);
     Handler buildCon996EventHandler(HandlerContext context);
-    Handler buildStockIntermediateEventHandler(HandlerContext context);
-    Handler buildRecag012EventHandler(HandlerContext context);
 }
