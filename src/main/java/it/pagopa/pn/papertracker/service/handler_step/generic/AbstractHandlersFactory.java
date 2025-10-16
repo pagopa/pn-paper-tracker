@@ -7,6 +7,8 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.Handler;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerImpl;
 import it.pagopa.pn.papertracker.service.handler_step.HandlersFactory;
+import it.pagopa.pn.papertracker.service.handler_step._890.RECAG012AEventBuilder;
+import it.pagopa.pn.papertracker.service.handler_step._890.RECAG012EventChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +33,8 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     private final CheckTrackingState checkTrackingState;
     private final CheckOcrResponse checkOcrResponse;
     private final RetrySenderCON996 retrySenderCON996;
+    private final RECAG012EventChecker recag012EventChecker;
+    private final RECAG012AEventBuilder recag012AEventBuilder;
 
     public abstract ProductType getProductType();
 
@@ -43,6 +47,8 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 put(EventTypeEnum.SAVE_ONLY_EVENT, AbstractHandlersFactory.this::buildSaveOnlyEventHandler);
                 put(EventTypeEnum.OCR_RESPONSE_EVENT, AbstractHandlersFactory.this::buildOcrResponseHandler);
                 put(EventTypeEnum.CON996_EVENT, AbstractHandlersFactory.this::buildCon996EventHandler);
+                put(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, AbstractHandlersFactory.this::buildStockIntermediateEventHandler);
+                put(EventTypeEnum.RECAG012_EVENT, AbstractHandlersFactory.this::buildRecag012EventHandler);
             }};
 
     public Handler build(EventTypeEnum eventType, HandlerContext context) {
@@ -209,6 +215,20 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         retrySenderCON996,
                         intermediateEventsBuilder,
                         deliveryPushSender
+                ));
+    }
+
+    @Override
+    public Handler buildStockIntermediateEventHandler(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
+                ));
+    }
+
+    @Override
+    public Handler buildRecag012EventHandler(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
                 ));
     }
 }
