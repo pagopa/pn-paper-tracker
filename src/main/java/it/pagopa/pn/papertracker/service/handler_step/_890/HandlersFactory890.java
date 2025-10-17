@@ -67,6 +67,12 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
     public Handler buildStockIntermediateEventHandler(HandlerContext context) {
         return new HandlerImpl(
                 List.of(
+                        metadataUpserter,
+                        checkTrackingState,
+                        duplicatedEventFiltering,
+                        recag012EventChecker,
+                        intermediateEventsBuilder,
+                        deliveryPushSender
                 ));
     }
 

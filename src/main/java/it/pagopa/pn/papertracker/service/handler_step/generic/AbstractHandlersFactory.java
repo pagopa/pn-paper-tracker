@@ -17,18 +17,18 @@ import java.util.function.Function;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractHandlersFactory implements HandlersFactory {
-    private final MetadataUpserter metadataUpserter;
-    private final DeliveryPushSender deliveryPushSender;
-    private final GenericFinalEventBuilder finalEventBuilder;
-    private final IntermediateEventsBuilder intermediateEventsBuilder;
-    private final DematValidator dematValidator;
-    private final GenericSequenceValidator sequenceValidator;
-    private final RetrySender retrySender;
-    private final NotRetryableErrorInserting notRetryableErrorInserting;
-    private final DuplicatedEventFiltering duplicatedEventFiltering;
-    private final CheckTrackingState checkTrackingState;
-    private final CheckOcrResponse checkOcrResponse;
-    private final RetrySenderCON996 retrySenderCON996;
+    protected final MetadataUpserter metadataUpserter;
+    protected final DeliveryPushSender deliveryPushSender;
+    protected final GenericFinalEventBuilder finalEventBuilder;
+    protected final IntermediateEventsBuilder intermediateEventsBuilder;
+    protected final DematValidator dematValidator;
+    protected final GenericSequenceValidator sequenceValidator;
+    protected final RetrySender retrySender;
+    protected final NotRetryableErrorInserting notRetryableErrorInserting;
+    protected final DuplicatedEventFiltering duplicatedEventFiltering;
+    protected final CheckTrackingState checkTrackingState;
+    protected final CheckOcrResponse checkOcrResponse;
+    protected final RetrySenderCON996 retrySenderCON996;
 
     public abstract ProductType getProductType();
 
