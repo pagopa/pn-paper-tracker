@@ -65,7 +65,10 @@ public enum EventStatusCodeEnum {
     //CON992(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "KO Distinta Elettronica da Recapitista", false),
     //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
 
-    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false);
+    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false),
+    P011(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore di sintassi", false),
+    P012(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore semantico", false),
+    P013(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore di trasformazione", false);
 
     private final EventTypeEnum codeType;
     private final ProductType productType;
