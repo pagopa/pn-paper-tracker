@@ -318,6 +318,14 @@ Parameters:
     Type: String
     Description: 'DataVault BaseUrl'
 
+  externalChannelToReworkEventValidationQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel rework validation events are sent'
+
+  externalChannelToReworkEventValidationQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel rework validation events are sent'
+
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxyLambdaName:
     Type: String
