@@ -188,6 +188,18 @@ Resources:
         VisibilityTimeout: 60
         DelaySeconds: 1
 
+  ExternalChannelToReworkEventValidationQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-external_channel_to_rework_event_validation'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 60
+        DelaySeconds: 1
+
 Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
@@ -227,6 +239,11 @@ Outputs:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
   ExternalChannelToPaperTrackerQueueARN:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueARN
+
+  ExternalChannelToReworkEventValidationQueueName:
+    Value: !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueName
+  ExternalChannelToReworkEventValidationQueueARN:
+    Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueARN
 
   UninitializedShipmentDryRunQueueName:
     Value: !GetAtt UninitializedShipmentDryRunQueue.Outputs.QueueName
