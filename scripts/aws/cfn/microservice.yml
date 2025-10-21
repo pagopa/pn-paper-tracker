@@ -270,6 +270,14 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
+  NotificationReworkEventsErrorTableName:
+    Type: String
+    Description: 'DynamoDB table name for NotificationReworkEventsError'
+
+  NotificationReworkEventsErrorTableArn:
+    Type:  String
+    Description: 'DynamoDB table ARN for NotificationReworkEventsError'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
