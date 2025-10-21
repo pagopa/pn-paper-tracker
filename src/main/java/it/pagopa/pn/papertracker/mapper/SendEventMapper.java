@@ -10,6 +10,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.Pa
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
@@ -26,20 +27,24 @@ import java.util.stream.Collectors;
 public class SendEventMapper {
 
     /**
-     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro SendEvent per l'invio a delivery-push
+     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro SendEvent per l'invio a delivery-push.
+     * Se si tratta di un evento intermedio senza allegati ed è un final demat, non viene inviato a delivery-push.
      *
      * @param paperProgressStatusEvent evento intermedio ricevuto
      * @return SendEvent contenente l'evento rimappato da inviare a delivery-push
      */
     public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(PaperProgressStatusEvent paperProgressStatusEvent) {
+        boolean isFinalDemat = TrackerUtility.checkIfIsFinalDemat(paperProgressStatusEvent.getStatusCode());
         return Mono.just(paperProgressStatusEvent)
                 .flatMapMany(progressEvent -> {
                             if (!CollectionUtils.isEmpty(progressEvent.getAttachments())) {
                                 return Flux.fromIterable(progressEvent.getAttachments().stream()
                                         .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
                                         .collect(Collectors.toList()));
-                            }
-                            return Flux.just(buildSendEvent(progressEvent, null));
+                            } else if(!isFinalDemat)
+                                return Flux.just(buildSendEvent(progressEvent, null));
+
+                            return Flux.empty();
                         }
                 );
     }
