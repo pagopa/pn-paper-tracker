@@ -91,7 +91,7 @@ public class PaperTrackingsMapper {
             paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
         }
         if(Objects.nonNull(event.getProductType())) {
-            it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue());
+            paperEvent.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue()));
         }
         return paperEvent;
     }
