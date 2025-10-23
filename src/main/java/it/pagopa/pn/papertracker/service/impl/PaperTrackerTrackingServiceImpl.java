@@ -4,10 +4,10 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,18 +27,23 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
+        log.info("Insert paper trackings by trackingCreationRequest: {}", trackingCreationRequest);
         Duration paperTrackingsTtlDuration = pnPaperTrackerConfigs.getPaperTrackingsTtlDuration();
         return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, paperTrackingsTtlDuration)).then();
     }
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest) {
-        TrackingsResponse response = new TrackingsResponse();
+        log.info("Retrieve trackings by trackingsRequest: {}", trackingsRequest);
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
                 .map(PaperTrackingsMapper::toTracking)
                 .collectList()
-                .doOnNext(response::setTrackings)
-                .thenReturn(response);
+                .doOnNext(trackings -> log.info("Retrieved {} trackings for request {}", trackings.size(), trackingsRequest))
+                .map(trackings -> {
+                    TrackingsResponse response = new TrackingsResponse();
+                    response.setTrackings(trackings);
+                    return response;
+                });
     }
 
     @Override
@@ -49,12 +54,16 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry) {
-        TrackingsResponse response = new TrackingsResponse();
+        log.info("Retrieve trackings by attemptId: {} with pcRetry: {}", attemptId, pcRetry);
         return paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry)
                 .map(PaperTrackingsMapper::toTracking)
                 .collectList()
-                .doOnNext(response::setTrackings)
-                .thenReturn(response);
+                .doOnNext(trackings -> log.info("Retrieved {} trackings for attemptId {}", trackings.size(), attemptId))
+                .map(trackings -> {
+                    TrackingsResponse response = new TrackingsResponse();
+                    response.setTrackings(trackings);
+                    return response;
+                });
     }
 
 }
