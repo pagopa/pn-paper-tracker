@@ -35,12 +35,15 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     private final String ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM = "PN_PAPER_TRACKER_DUPLICATED_ITEM";
     private final String ERROR_CODE_PAPER_TRACKER_NOT_FOUND = "PN_PAPER_TRACKER_NOT_FOUND";
 
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
+
     public PaperTrackingsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
                 dynamoDbAsyncClient,
                 cfg.getDao().getPaperTrackingsTable(),
                 PaperTrackings.class
         );
+        this.pnPaperTrackerConfigs = cfg;
     }
 
     @Override
@@ -67,6 +70,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     @Override
     public Mono<PaperTrackings> putIfAbsent(PaperTrackings entity) {
         String expression = String.format("%s(%s)", ATTRIBUTE_NOT_EXISTS, PaperTrackings.COL_TRACKING_ID);
+        entity.setTtl(Instant.now().plus(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).getEpochSecond());
 
         return putIfAbsent(expression, entity)
                 .onErrorMap(ConditionalCheckFailedException.class, ex -> {
