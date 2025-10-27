@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.FileType;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class PnPaperTrackerConfigs {
     private List<ProductType> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
+    private List<DocumentTypeEnum> requiredDemats890 = new ArrayList<>();
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
