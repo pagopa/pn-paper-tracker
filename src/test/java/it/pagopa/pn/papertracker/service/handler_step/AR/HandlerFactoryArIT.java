@@ -81,7 +81,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     .thenReturn(Mono.just(r1));
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r2));
-        }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)){
+        }else if(seq.equals(OK_RETRY_AR) || seq.equals(OK_RETRY_AR_2) || seq.equals(OKNonRendicontabile_AR)){
             paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r1));
@@ -181,12 +181,14 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
     private boolean ifRetrySequenceBeforeRetryEvent(TestSequenceAREnum seq, AtomicInteger counter) {
         return (seq.equals(FAIL_CON996_PCRETRY_FURTO_AR) && counter.get() == 0) ||
-                ((seq.equals(OKNonRendicontabile_AR) || seq.equals(OK_RETRY_AR)) && counter.get() < 3);
+                ((seq.equals(OKNonRendicontabile_AR) || seq.equals(OK_RETRY_AR)) && counter.get() < 3) ||
+                (seq.equals(OK_RETRY_AR_2) && counter.get() < 5);
     }
 
     private boolean ifRetrySequenceAfterRetryEvent(TestSequenceAREnum seq, AtomicInteger counter) {
         return (seq.equals(FAIL_CON996_PCRETRY_FURTO_AR) && counter.get() >= 1 && counter.get() < 4) ||
-                ((seq.equals(OKNonRendicontabile_AR) || seq.equals(OK_RETRY_AR)) && counter.get() >= 3);
+                ((seq.equals(OKNonRendicontabile_AR) || seq.equals(OK_RETRY_AR)) && counter.get() >= 3) ||
+                (seq.equals(OK_RETRY_AR_2) && counter.get() >= 5);
     }
 
     private boolean ifRetrySequenceAfterSecondRetryEvent(TestSequenceAREnum seq, AtomicInteger counter) {
@@ -620,6 +622,57 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     }
                 });
             }
+            case OK_RETRY_AR_2 -> {
+                assertEquals(5, list.size());
+                assertContainsStatus(list, List.of("CON080", "CON020", "RECRN010", "RECRN011", "RECRN006"));
+                assertContainsStatus(listRetry, List.of("CON080", "CON020", "RECRN001A", "RECRN001B", "RECRN001C"));
+                assertSameRegisteredLetter(list, 0, 1, 2);
+                list.forEach(e -> {
+                    if (is(e, "CONO20")) {
+                        assertEquals(1, e.getAttachments().size());
+                        assertProgress(e);
+                    }
+                    if (is(e, "CON080")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                    if (is(e, "RECRN010")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                    if (is(e, "RECRN011")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                    if (is(e, "RECRN006")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                });
+                listRetry.forEach(e -> {
+                    if (is(e, "RECRN001A")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                    if (is(e, "CONO20")) {
+                        assertEquals(1, e.getAttachments().size());
+                        assertProgress(e);
+                    }
+                    if (is(e, "CON080")) {
+                        assertNoAttach(e);
+                        assertProgress(e);
+                    }
+                    if (is(e, "RECRN001B")) {
+                        assertAttach(e, "AR");
+                        assertProgress(e);
+                    }
+                    if (is(e, "RECRN001C")) {
+                        assertNoAttach(e);
+                        assertOk(e);
+                        assertNull(e.getDeliveryFailureCause());
+                    }
+                });
+            }
             case OKNonRendicontabile_AR -> {
                 assertEquals(3, list.size());
                 assertContainsStatus(list, List.of("CON080", "CON020", "RECRN013"));
@@ -693,7 +746,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     private void verifyErrors(List<PaperTrackingsErrors> errs, TestSequenceAREnum seq) {
         switch (seq) {
             case OK_AR, OK_GIACENZA_AR, FAIL_GIACENZA_AR, OKCausaForzaMaggiore_AR,
-                 FAIL_IRREPERIBILE_AR, OK_RETRY_AR,
+                 FAIL_IRREPERIBILE_AR, OK_RETRY_AR, OK_RETRY_AR_2,
                  FAIL_AR, OK_AR_BAD_EVENT, FAIL_CON996_PCRETRY_FURTO_AR,  OKNonRendicontabile_AR, KO_AR_NO_EVENT_B,
                  FAIL_COMPIUTA_GIACENZA_AR -> assertEquals(0, errs.size());
             case OK_AR_NOT_ORDERED ->
@@ -714,7 +767,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyNewPaperTrackings(PaperTrackings ptNew, PaperTrackings ptNew2, PaperTrackings pt, TestSequenceAREnum seq) {
-        if (seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)) {
+        if (seq.equals(OK_RETRY_AR) || seq.equals(OK_RETRY_AR_2) || seq.equals(OKNonRendicontabile_AR)) {
             assertNotNull(ptNew);
             assertEquals(pt.getProductType(), ptNew.getProductType());
             assertEquals(DONE, ptNew.getState());
@@ -748,7 +801,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             case OK_AR, OKCausaForzaMaggiore_AR ->
                     assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
             case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null);
-            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null);
+            case OK_RETRY_AR, OK_RETRY_AR_2, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null);
             case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null);
             case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
             case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
