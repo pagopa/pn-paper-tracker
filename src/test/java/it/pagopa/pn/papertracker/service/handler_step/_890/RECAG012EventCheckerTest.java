@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +70,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenAllAttachmentsPresentAndEventRECAG012Found() {
         //Arrange
-        when(configs.getRequiredDemats()).thenReturn(List.of("23L", "Plico"));
+        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum._23L, DocumentTypeEnum.PLICO));
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
@@ -86,7 +87,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenAttachmentsMissing() {
         //Arrange
-        when(configs.getRequiredDemats()).thenReturn(List.of("ARCAD"));
+        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum.ARCAD));
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
@@ -100,7 +101,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenEventRECAG012NotFound() {
         //Arrange
-        when(configs.getRequiredDemats()).thenReturn(List.of("CAD"));
+        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum.CAD));
         context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG015");
 
         //Act

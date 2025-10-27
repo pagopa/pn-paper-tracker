@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +58,7 @@ public class RECAG012EventChecker implements HandlerStep {
 
     private boolean hasAllRequiredAttachments(HandlerContext context) {
         Set<String> documentTypes = getAttachmentTypes(context);
-        return documentTypes.containsAll(configs.getRequiredDemats());
+        return documentTypes.containsAll(configs.getRequiredDemats890().stream().map(DocumentTypeEnum::getValue).toList());
     }
 
     private Set<String> getAttachmentTypes(HandlerContext context) {

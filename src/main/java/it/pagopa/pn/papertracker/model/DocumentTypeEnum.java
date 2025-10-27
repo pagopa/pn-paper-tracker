@@ -9,7 +9,11 @@ import java.util.Arrays;
 public enum DocumentTypeEnum {
     PLICO("Plico"),
     AR("AR"),
-    INDAGINE("Indagine");
+    INDAGINE("Indagine"),
+    _23L("23L"),
+    ARCAD("ARCAD"),
+    CAD("CAD"),
+    CAN("CAN");
 
     private final String value;
 
