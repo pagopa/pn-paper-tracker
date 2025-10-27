@@ -10,9 +10,13 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedAsyncClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient;
 
+import java.time.Instant;
+
 @Component
 @Slf4j
 public class PaperTrackingsErrorsDAOImpl extends BaseDao<PaperTrackingsErrors> implements PaperTrackingsErrorsDAO {
+
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     public PaperTrackingsErrorsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
@@ -20,9 +24,11 @@ public class PaperTrackingsErrorsDAOImpl extends BaseDao<PaperTrackingsErrors> i
                 cfg.getDao().getPaperTrackingsErrorsTable(),
                 PaperTrackingsErrors.class
         );
+        this.pnPaperTrackerConfigs = cfg;
     }
 
     public Mono<PaperTrackingsErrors> insertError(PaperTrackingsErrors paperTrackingsErrors) {
+        paperTrackingsErrors.setTtl(Instant.now().plus(pnPaperTrackerConfigs.getPaperTrackingsErrorsTtlDuration()).getEpochSecond());
         return putItem(paperTrackingsErrors);
     }
 
