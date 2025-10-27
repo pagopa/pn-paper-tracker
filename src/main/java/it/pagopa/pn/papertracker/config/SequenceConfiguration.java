@@ -60,9 +60,9 @@ public class SequenceConfiguration {
         )),
 
         RECRN006("RECRN006", Set.of(
-                new SequenceElement("RECRN010", null, true, "1"),
-                new SequenceElement("RECRN011", null, true, "1"),
-                new SequenceElement("RECRN006", null, false, "1")
+                new SequenceElement("RECRN010", null, true, null),
+                new SequenceElement("RECRN011", null, true, null),
+                new SequenceElement("RECRN006", null, false, null)
         )),
 
         RECRI005("RECRI005", Set.of(

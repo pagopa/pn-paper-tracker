@@ -6,13 +6,9 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PaperTrackingsMapperTest {
-
-    Duration paperTrackingsTtlDuration = Duration.ofDays(3650);
 
     @Test
     void toPaperTrackingsValidRequest() {
@@ -24,7 +20,7 @@ public class PaperTrackingsMapperTest {
         request.setProductType("RS");
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -32,7 +28,6 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
-        Assertions.assertTrue(paperTrackings.getTtl() > 0);
     }
 
     @Test
@@ -45,7 +40,7 @@ public class PaperTrackingsMapperTest {
         request.setProductType("INVALID_TYPE");
 
         //ACT & ASSERT
-        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration));
+        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request));
     }
 
 }
