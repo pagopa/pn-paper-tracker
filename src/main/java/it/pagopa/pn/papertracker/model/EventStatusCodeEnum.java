@@ -87,6 +87,7 @@ public enum EventStatusCodeEnum {
     RECAG011A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "In giacenza", false),
     RECAG011B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "In giacenza - In Dematerializzazione", true),
     RECAG012(EventTypeEnum.RECAG012_EVENT, ProductType._890, EventStatus.OK, List.of(), "Accettazione 23L", false),
+    RECAG012A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Accettazione 23L - pre-esito", false),
     RECAG005A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - pre-esito", false),
     RECAG005B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - In Dematerializzazione", true),
     RECAG005C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato presso Punti di Giacenza - Fascicolo Chiuso", false),
