@@ -226,6 +226,19 @@ Outputs:
 
   PaperTrackerQueueProxyLambdaName:
     Value: !Sub ${ProjectName}-paper-tracker-QueueProxy
+
+  # Lambda functions
+  NotificationReworkEventsValidationLambdaName:
+    Value: !Sub "${ProjectName}-NotificationReworkEventsValidationLambda"
+
+  # NotificationReworkUpdaterLambdaAlarms DLQ TODO: probabilmente cancellare i due campi sotto
+  NotificationReworkUpdaterLambdaDQLARN:
+    Value: !GetAtt NotificationReworkUpdaterQueue.Outputs.DeadLetterQueueARN
+    Description: pn-delivery-push_to_notification_rework_updater DLQ queue arn
+
+  NotificationReworkUpdaterLambdaDQLAlarmARN:
+    Value: !GetAtt NotificationReworkUpdaterQueue.Outputs.SqsDeadLetterQueueAlarmArn
+    Description: pn-delivery-push_to_notification_rework_updater DLQ alarm ARN
     
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors

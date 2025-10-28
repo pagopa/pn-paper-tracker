@@ -19,6 +19,7 @@
     "PaperTrackerEnabledProductsModes": "AR:DRY",
     "PaperChannelEnabledProducts": "AR,RS,890,RIR,RIS,UNKNOWN",
     "PaperTrackerQueueProxyBatchSize": "10",
-    "PaperTrackerQueueProxyMaximumBatchingWindowInSeconds": "0"
+    "PaperTrackerQueueProxyMaximumBatchingWindowInSeconds": "0",
+    "NotificationReworkInvalidStatusCode": "RECRN006,RECRN013,RECRI005,CON996,RECAG013,RECAG004"
   }
 }

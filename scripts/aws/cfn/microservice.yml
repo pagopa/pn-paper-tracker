@@ -375,6 +375,19 @@ Parameters:
     MaxValue: 900
     Description: Timeout of the PaperTrackerQueueProxy Lambda.
 
+  NotificationReworkEventsValidationLambdaName:
+    Type: String
+    Description: 'Name of the NotificationReworkEventsValidation Lambda.'
+
+  NotificationReworkEventsValidationLambdaDLQARN:
+    Type: String
+    Description: 'ARN of the NotificationReworkEventsValidation Lambda Dead Letter Queue.'
+
+  NotificationReworkEventsValidationLambdaBatchSize:
+    Type: Number
+    Description: "Batch size of the NotificationReworkEventsValidation Lambda."
+    Default: 10
+
   PaperTrackerEnabledProductsModes:
     Type: String
     Default: ""
@@ -389,6 +402,10 @@ Parameters:
     Type: String
     Default: ''
     Description: 'Applicative environment variable file checksum'
+
+  NotificationReworkInvalidStatusCode:
+    Type: String
+    Description: 'Comma separated list of invalid status codes for notification rework events'
 
 Resources:
 
@@ -594,6 +611,106 @@ Resources:
                   - !Ref ExternalChannels2PaperChannelQueueARN
                   - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
                   - !Ref ExternalChannelToPaperTrackerQueueARN
+
+  ##########################################################################
+  ###              NotificationReworkEventsValidationLambda              ###
+  ##########################################################################
+  NotificationReworkEventsValidationLambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub '${NotificationReworkUpdaterLambdaName}-sec-group'
+      VpcId: !Ref VpcId
+
+  # Lambda function
+  NotificationReworkEventsValidationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref NotificationReworkEventsValidationLambdaName
+      Runtime: nodejs22.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/notificationReworkEventsValidation.zip"
+      Role: !GetAtt NotificationReworkEventsValidationLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks"
+          NOTIFICATION_REWORK_EVENTS_ERROR_TABLE: !Ref NotificationReworkEventsErrorTableName
+          INVALID_STATUS_CODE: !Ref NotificationReworkInvalidStatusCode
+          EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueName
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  NotificationReworkEventsValidationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-NotificationReworkEventsValidationLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  NotificationReworkEventsValidationLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-NotificationReworkEventsValidationLambdaPolicy
+      Roles:
+        - !Ref NotificationReworkEventsValidationLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "dynamodb:updateItem"
+              - "dynamodb:putItem"
+              - "dynamodb:getItem"
+              - "dynamodb:query"
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks/*"
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource: !Ref ExternalChannels2PaperChannelQueueARN
+
+  # CDC to  NotificationReworkEventsValidationLambda
+  NotificationReworkEventsValidationLambdaSource:
+    Type: AWS::Lambda::EventSourceMapping
+    DependsOn: NotificationReworkEventsValidationLambdaPolicy
+    Properties:
+      BatchSize: !Sub ${NotificationReworkEventsValidationLambdaBatchSize}
+      EventSourceArn: !Ref NotificationReworkUpdaterQueueARN
+      FunctionName: !Ref NotificationReworkEventsValidationLambda
+      MaximumBatchingWindowInSeconds: 60
+      StartingPosition: TRIM_HORIZON # opzionale, non richiesto per SQS
+      Enabled: true
+      DestinationConfig:
+        OnFailure:
+          Destination: !Ref NotificationReworkUpdaterLambdaDLQARN
+
+  NotificationReworkEventsValidationLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref  NotificationReworkEventsValidationLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
 
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
