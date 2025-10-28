@@ -13,7 +13,6 @@ public class SequenceElement {
 
     private String code;
     private Set<DocumentTypeEnum> requiredDocumentType;
-    private boolean optional;
     private String dateValidationGroup;
 
 }
