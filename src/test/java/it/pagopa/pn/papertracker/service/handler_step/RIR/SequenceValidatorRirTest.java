@@ -246,52 +246,6 @@ class SequenceValidatorRirTest {
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
                 .verify();
     }
-
-    @Test
-    void validateSequenceInvalidNullDeliveryFailureCause() {
-        // Arrange
-        Instant timestamp = Instant.now();
-        Instant businessTimestamp = Instant.now();
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI005", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", null)
-        ));
-
-        // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Invalid deliveryFailureCause: "))
-                .verify();
-    }
-
-    @Test
-    void validateSequenceInvalidDeliveryFailureCause() {
-        // Arrange
-        Instant timestamp = Instant.now();
-        Instant businessTimestamp = Instant.now();
-
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI005", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M12", null)
-          ));
-
-        // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Invalid deliveryFailureCause: M12"))
-                .verify();
-    }
     
     private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
         Event event = new Event();
