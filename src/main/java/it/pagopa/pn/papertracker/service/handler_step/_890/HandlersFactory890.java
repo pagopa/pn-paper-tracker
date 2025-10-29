@@ -18,7 +18,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
     public HandlersFactory890(
             MetadataUpserter metadataUpserter,
             DeliveryPushSender deliveryPushSender,
-            GenericFinalEventBuilder finalEventBuilder,
+            FinalEventBuilder890 finalEventBuilder,
             IntermediateEventsBuilder intermediateEventsBuilder,
             DematValidator dematValidator,
             GenericSequenceValidator sequenceValidator,
