@@ -297,16 +297,19 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setReworkId("reworkId");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         Event event = new Event();
+        event.setId("id1");
         event.setRequestTimestamp(Instant.now());
         event.setStatusCode("IN_PROGRESS");
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
         event.setDryRun(true);
+        event.setReworkId("reworkId");
 
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
@@ -332,6 +335,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertFalse(fisrtResponse.getEvents().isEmpty());
         Assertions.assertEquals(1, fisrtResponse.getEvents().size());
         Assertions.assertEquals(2, fisrtResponse.getEvents().getFirst().getAttachments().size());
+        Assertions.assertEquals("reworkId", fisrtResponse.getEvents().getFirst().getReworkId());
         Assertions.assertNull(fisrtResponse.getEvents().getFirst().getDeliveryFailureCause());
 
         PaperTrackings paperTrackingsToUpdate1 = new PaperTrackings();

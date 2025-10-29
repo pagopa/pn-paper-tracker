@@ -22,7 +22,7 @@ public class PaperProgressStatusEventMapper {
      * @param anonymizedDiscoveredAddressId l'id dell'indirizzo anonimizzato
      * @return PaperTrackings contenente il nuovo evento
      */
-    public static PaperTrackings toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
+    public static PaperTrackings toPaperTrackings(String reworkId, PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
                                                         String eventId, boolean dryRunEnabled,
                                                         boolean isFinalDemat, boolean isP000event) {
@@ -55,6 +55,7 @@ public class PaperProgressStatusEventMapper {
         event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
+        event.setReworkId(reworkId);
         if(StringUtils.hasText(paperProgressStatusEvent.getProductType())) {
             event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
         }

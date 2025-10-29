@@ -68,7 +68,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         //Act
         eventsToSend.forEach(singleStatusUpdate -> {
             String messageId = UUID.randomUUID().toString();
-            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
         });
 
         //Assert

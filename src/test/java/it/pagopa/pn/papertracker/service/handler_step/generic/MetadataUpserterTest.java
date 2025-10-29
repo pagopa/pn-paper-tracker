@@ -57,6 +57,7 @@ class MetadataUpserterTest {
 
         handlerContext = new HandlerContext();
         handlerContext.setPaperProgressStatusEvent(paperProgressStatusEvent);
+        handlerContext.setReworkId("reworkId");
 
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");

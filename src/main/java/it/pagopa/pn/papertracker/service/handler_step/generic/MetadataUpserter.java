@@ -35,6 +35,7 @@ public class MetadataUpserter implements HandlerStep {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
                 .map(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                        context.getReworkId(),
                         context.getPaperProgressStatusEvent(),
                         context.getAnonymizedDiscoveredAddressId(),
                         context.getEventId(),
@@ -46,12 +47,6 @@ public class MetadataUpserter implements HandlerStep {
                         context.getPaperProgressStatusEvent().getRequestId(),
                         paperTrackings
                 ))
-                .flatMap(paperTrackings -> {
-                    if (PaperTrackingsState.AWAITING_REWORK_EVENTS.equals(context.getPaperTrackings().getState())) {
-                        paperTrackings.setReworkId(context.getPaperTrackings().getReworkId());
-                    }
-                    return Mono.just(paperTrackings);
-                })
                 .doOnNext(paperTrackings -> updateContextWithTrackingInfo(context, paperTrackings))
                 .then();
     }
@@ -63,7 +58,6 @@ public class MetadataUpserter implements HandlerStep {
         context.setPaperTrackings(paperTrackings);
         context.setTrackingId(paperTrackings.getTrackingId());
         context.setMessageReceiveCount(eventReceiveCount);
-        //if reworkId settalo
     }
 
     private Mono<HandlerContext> discoveredAddressAnonimization(HandlerContext handlerContext) {
