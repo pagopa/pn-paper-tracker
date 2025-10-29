@@ -222,6 +222,47 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/init-rework/{trackingId}':
+    put:
+      summary: Avvio processo di invalidazione timeline
+      description: Aggiorna lo stato dell'entità di tracking per accettare gli eventi di recapito correttivi
+      tags:
+        - PaperTrackerTracking
+      operationId: initNotificationRework
+      parameters:
+        - name: reworkId
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/trackingId'
+      responses:
+        '204':
+          description: Aggiornamento effettuato
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '409':
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
 components:
   parameters:
     attemptId:
@@ -236,6 +277,17 @@ components:
         pattern: ^[ -~]*$
         maxLength: 1024
       example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
+    trackingId:
+      description: >-
+        Identificativo del tracking
+      name: trackingId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^[ -~]*$
+        maxLength: 1024
+      example: "IUN_LKXM-QMZH-KELD-202507-H-1"
     queryStatusCode:
       in: query
       name: statusCode

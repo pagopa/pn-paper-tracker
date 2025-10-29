@@ -16,4 +16,5 @@ public interface PaperTrackerTrackingService {
 
     Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry);
 
+    Mono<Void> updatePaperTrackingsStatusForRework(String trackingId, String reworkId);
 }
