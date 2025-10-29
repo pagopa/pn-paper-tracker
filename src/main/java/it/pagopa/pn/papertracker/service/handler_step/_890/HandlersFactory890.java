@@ -79,6 +79,11 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
     public Handler buildRecag012EventHandler(HandlerContext context) {
         return new HandlerImpl(
                 List.of(
+                        metadataUpserter,
+                        checkTrackingState,
+                        recag012EventChecker,
+                        recag012AEventBuilder,
+                        deliveryPushSender
                 ));
     }
 }

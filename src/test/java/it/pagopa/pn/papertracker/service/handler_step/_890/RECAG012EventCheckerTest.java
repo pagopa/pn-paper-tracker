@@ -20,8 +20,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -43,6 +42,7 @@ class RECAG012EventCheckerTest {
     void setUp() {
         context = new HandlerContext();
         context.setTrackingId("trackingId");
+        context.setEventId("id_RECAG012");
         PaperTrackings paperTrackings = new PaperTrackings();
         Attachment attachment1 = new Attachment();
         attachment1.setId("id1");
@@ -50,6 +50,7 @@ class RECAG012EventCheckerTest {
         attachment1.setDate(Instant.now());
         attachment1.setUri("uri1");
         Event event1 = new Event();
+        event1.setId("id_RECAG012");
         event1.setStatusCode("RECAG012");
         event1.setAttachments(List.of(attachment1));
         event1.setRequestTimestamp(Instant.now());
@@ -82,6 +83,7 @@ class RECAG012EventCheckerTest {
         assertEquals(1, context.getEventsToSend().size());
         assertEquals(RECAG012.name(), context.getEventsToSend().getFirst().getStatusDetail());
         assertTrue(paperTrackings.getValue().isRefined());
+        assertNotNull(paperTrackings.getValue().getRecag012StatusTimestamp());
     }
 
     @Test

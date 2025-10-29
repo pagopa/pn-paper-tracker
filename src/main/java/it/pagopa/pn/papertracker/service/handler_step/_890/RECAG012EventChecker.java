@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,7 +80,7 @@ public class RECAG012EventChecker implements HandlerStep {
         return SendEventMapper.createSendEventsFromEventEntity(
                         context.getTrackingId(), event, StatusCodeEnum.OK, event.getStatusCode(), OffsetDateTime.now())
                 .doOnNext(context.getEventsToSend()::add)
-                .doOnNext(sendEvent -> paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate()))
+                .doOnNext(sendEvent -> paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate(context, event)))
                 .then();
     }
 
@@ -87,9 +88,11 @@ public class RECAG012EventChecker implements HandlerStep {
         return Mono.fromRunnable(() -> log.info("Event RECAG012 not found in trackingId {}", context.getTrackingId()));
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate() {
+    private PaperTrackings getPaperTrackingsToUpdate(HandlerContext context, Event event) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setRefined(true);
+        if(context.getEventId().equals(event.getId())) //imposto il timestamp solo quando l'evento RECAG012 arriva per la prima volta
+            paperTrackings.setRecag012StatusTimestamp(Instant.now());
         return paperTrackings;
     }
 }
