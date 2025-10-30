@@ -27,7 +27,7 @@ class HandlersFactory890Test {
     private DeliveryPushSender deliveryPushSender;
 
     @Mock
-    private GenericFinalEventBuilder finalEventBuilder;
+    private FinalEventBuilder890 finalEventBuilder;
 
     @Mock
     private IntermediateEventsBuilder intermediateEventsBuilder;
