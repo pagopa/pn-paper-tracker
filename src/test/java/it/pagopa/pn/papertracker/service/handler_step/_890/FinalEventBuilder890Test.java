@@ -50,7 +50,6 @@ class FinalEventBuilder890Test {
         paperTrackings.setProductType(ProductType._890);
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
-        paperTrackings.getPaperStatus().setDeliveryFailureCause("M08");
 
         Event event = new Event();
         event.setStatusTimestamp(now);
@@ -78,7 +77,7 @@ class FinalEventBuilder890Test {
         // Assert
         assertEquals(1, context.getEventsToSend().size());
         assertEquals(RECAG005C.name(), context.getEventsToSend().getFirst().getStatusDetail());
-        assertEquals("M08", context.getEventsToSend().getFirst().getDeliveryFailureCause());
+        assertNull(context.getEventsToSend().getFirst().getDeliveryFailureCause());
         assertNull(context.getEventsToSend().getFirst().getDiscoveredAddress());
         assertEquals(StatusCodeEnum.PROGRESS, context.getEventsToSend().getFirst().getStatusCode());
     }
@@ -104,8 +103,9 @@ class FinalEventBuilder890Test {
     }
 
     @Test
-    void executeWithNonStockStatusButRECAG003C() {
+    void executeWithNonStockStatusButRECAG003C_KO() {
         context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG003C");
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("M08");
 
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
@@ -119,17 +119,33 @@ class FinalEventBuilder890Test {
     }
 
     @Test
-    void executeWithNonStockStatus() {
-        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG001C");
+    void executeWithNonStockStatusButRECAG003C_OK() {
+        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG003C");
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("M05");
 
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 
         // Assert
         assertEquals(1, context.getEventsToSend().size());
-        assertEquals(RECAG001C.name(), context.getEventsToSend().getFirst().getStatusDetail());
-        assertEquals("M08", context.getEventsToSend().getFirst().getDeliveryFailureCause());
+        assertEquals(RECAG003C.name(), context.getEventsToSend().getFirst().getStatusDetail());
+        assertEquals("M05", context.getEventsToSend().getFirst().getDeliveryFailureCause());
         assertNull(context.getEventsToSend().getFirst().getDiscoveredAddress());
         assertEquals(StatusCodeEnum.OK, context.getEventsToSend().getFirst().getStatusCode());
+    }
+
+    @Test
+    void executeWithNonStockStatus() {
+        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG003F");
+
+        StepVerifier.create(finalEventBuilder890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        assertEquals(1, context.getEventsToSend().size());
+        assertEquals(RECAG003F.name(), context.getEventsToSend().getFirst().getStatusDetail());
+        assertNull(context.getEventsToSend().getFirst().getDeliveryFailureCause());
+        assertNull(context.getEventsToSend().getFirst().getDiscoveredAddress());
+        assertEquals(StatusCodeEnum.KO, context.getEventsToSend().getFirst().getStatusCode());
     }
 }
