@@ -59,15 +59,4 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
                 .thenReturn(response);
     }
 
-    @Override
-    public Mono<Void> updatePaperTrackingsStatusForRework(String trackingId, String reworkId) {
-        return paperTrackingsDAO.retrieveEntityByTrackingId(trackingId)
-            .flatMap(paperTrackings -> {
-                paperTrackings.setState(PaperTrackingsState.valueOf("AWAITING_REWORK_EVENTS"));
-                paperTrackings.setReworkRequestTimestamp(Instant.now());
-                paperTrackings.setReworkId(reworkId);
-                return paperTrackingsDAO.updateItem(trackingId, paperTrackings).then();
-            });
-    }
-
 }

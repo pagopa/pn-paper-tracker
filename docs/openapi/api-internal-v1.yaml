@@ -227,7 +227,7 @@ paths:
       summary: Avvio processo di invalidazione timeline
       description: Aggiorna lo stato dell'entità di tracking per accettare gli eventi di recapito correttivi
       tags:
-        - PaperTrackerTracking
+        - NotificationRework
       operationId: initNotificationRework
       parameters:
         - name: reworkId
@@ -247,12 +247,6 @@ paths:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '404':
           description: Not Found
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
-        '409':
-          description: Conflict
           content:
             application/problem+json:
               schema:

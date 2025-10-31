@@ -47,10 +47,4 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
         return paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry)
                 .map(ResponseEntity::ok);
     }
-
-     @Override
-    public Mono<ResponseEntity<Void>> initNotificationRework(String reworkId, String trackingId,  final ServerWebExchange exchange) {
-        return paperTrackerEventService.updatePaperTrackingsStatusForRework(trackingId, reworkId)
-                .thenReturn(ResponseEntity.status(HttpStatus.NO_CONTENT).build());
-     }
 }

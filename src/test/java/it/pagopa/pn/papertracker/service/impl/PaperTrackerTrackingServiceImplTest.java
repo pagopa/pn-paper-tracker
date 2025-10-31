@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRespon
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -255,46 +256,6 @@ class PaperTrackerTrackingServiceImplTest {
                         && "DAO error".equals(throwable.getMessage()))
                 .verify();
         verify(paperTrackingsDAO, times(1)).retrieveEntityByAttemptId(attemptId, pcRetry);
-    }
-
-    @Test
-    void updatePaperTrackingsStatusForRework(){
-
-        String trackingId = "tracking123";
-        String reworkId = "rework123";
-        PaperTrackings existingPaperTracking = new PaperTrackings();
-        existingPaperTracking.setTrackingId(trackingId);
-
-        when(paperTrackingsDAO.retrieveEntityByTrackingId(trackingId))
-                .thenReturn(Mono.just(existingPaperTracking));
-        when(paperTrackingsDAO.updateItem(eq(trackingId), any(PaperTrackings.class)))
-                .thenReturn(Mono.just(existingPaperTracking));
-
-        Mono<Void> response = paperTrackerEventService.updatePaperTrackingsStatusForRework(trackingId, reworkId);
-
-        StepVerifier.create(response)
-                .verifyComplete();
-        verify(paperTrackingsDAO, times(1)).retrieveEntityByTrackingId(trackingId);
-        verify(paperTrackingsDAO, times(1)).updateItem(eq(trackingId), argThat(pt ->
-                pt.getState().name().equals("AWAITING_REWORK_EVENTS") &&
-                        pt.getReworkId().equals(reworkId) &&
-                        pt.getReworkRequestTimestamp() != null
-        ));
-    }
-
-    @Test
-    void updatePaperTrackingsStatusForReworkWhenTrackingNotFound(){
-
-        String trackingId = "tracking123";
-        String reworkId = "rework123";
-
-        when(paperTrackingsDAO.retrieveEntityByTrackingId(trackingId))
-                .thenReturn(Mono.empty());
-        Mono<Void> response = paperTrackerEventService.updatePaperTrackingsStatusForRework(trackingId, reworkId);
-        StepVerifier.create(response)
-                .verifyComplete();
-        verify(paperTrackingsDAO, times(1)).retrieveEntityByTrackingId(trackingId);
-        verify(paperTrackingsDAO, times(0)).updateItem(anyString(), any(PaperTrackings.class));
     }
 
     private TrackingCreationRequest getTrackerCreationRequest() {

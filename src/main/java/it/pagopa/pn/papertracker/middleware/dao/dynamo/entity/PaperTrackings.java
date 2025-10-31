@@ -76,10 +76,10 @@ public class PaperTrackings {
     private Long ttl;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_REQUEST_TIMESTAMP)}))
-    private Instant reworkRequestTimestamp;
+    private Instant notificationReworkRequestTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
-    private String reworkId;
+    private String notificationReworkId;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =

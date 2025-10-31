@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceRespons
 import it.pagopa.pn.papertracker.service.NotificationReworkService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -63,5 +64,37 @@ class NotificationReworkControllerTest {
                 .verify();
 
         verify(notificationReworkService, times(1)).notificationRework(statusCode, deliveryFailureCause);
+    }
+
+    @Test
+    void initReworkReturnsNoContentResponse() {
+        String reworkId = "rework123";
+        String trackingId = "tracking123";
+
+        when(notificationReworkService.updatePaperTrackingsStatusForRework(trackingId, reworkId)).thenReturn(Mono.empty());
+
+        Mono<ResponseEntity<Void>> response = controller.initNotificationRework(reworkId, trackingId, null);
+
+        StepVerifier.create(response)
+                .expectNext(ResponseEntity.status(HttpStatus.NO_CONTENT).build())
+                .verifyComplete();
+        verify(notificationReworkService, times(1)).updatePaperTrackingsStatusForRework(trackingId, reworkId);
+    }
+
+    @Test
+    void initReworkHandlesError() {
+        String reworkId = "rework123";
+        String trackingId = "tracking123";
+
+        when(notificationReworkService.updatePaperTrackingsStatusForRework(trackingId, reworkId))
+                .thenReturn(Mono.error(new RuntimeException("Service error")));
+
+        Mono<ResponseEntity<Void>> response = controller.initNotificationRework(reworkId, trackingId, null);
+
+        StepVerifier.create(response)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && "Service error".equals(throwable.getMessage()))
+                .verify();
+        verify(notificationReworkService, times(1)).updatePaperTrackingsStatusForRework(trackingId, reworkId);
     }
 }
