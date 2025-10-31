@@ -593,4 +593,13 @@ components:
         sequence:
           type: array
           items:
+            $ref: '#/components/schemas/SequenceItem'
+    SequenceItem:
+        type: object
+        properties:
+          statusCode:
             type: string
+          attachments:
+            type: array
+            items:
+              type: string

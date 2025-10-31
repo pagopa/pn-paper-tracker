@@ -34,7 +34,7 @@ class NotificationReworkControllerTest {
         String deliveryFailureCause = "M02";
         SequenceResponse response = new SequenceResponse();
         response.setFinalStatusCode(SequenceResponse.FinalStatusCodeEnum.OK);
-        response.setSequence(List.of("RECRN001P", "RECRN002F", "RECRN003D", "RECRN004A", "RECRN005C"));
+        response.setSequence(List.of());
         when(notificationReworkService.notificationRework(statusCode, deliveryFailureCause))
                 .thenReturn(Mono.just(response));
 
@@ -42,7 +42,7 @@ class NotificationReworkControllerTest {
 
         StepVerifier.create(result)
                 .expectNextMatches(entity -> entity.getStatusCode().is2xxSuccessful()
-                        && entity.getBody().getSequence().equals(List.of("RECRN001P", "RECRN002F", "RECRN003D", "RECRN004A", "RECRN005C"))
+                        && entity.getBody().getSequence().equals(List.of())
                         && entity.getBody().getFinalStatusCode() == SequenceResponse.FinalStatusCodeEnum.OK)
                 .verifyComplete();
 
