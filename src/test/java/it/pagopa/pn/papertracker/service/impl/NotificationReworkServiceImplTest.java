@@ -3,26 +3,40 @@ package it.pagopa.pn.papertracker.service.impl;
 import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerBadRequestException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceResponse;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.SequenceElement;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationReworkServiceImplTest {
 
     @InjectMocks
     private NotificationReworkServiceImpl service;
+
+    @Mock
+    private PaperTrackingsDAO paperTrackingsDAO;
 
     @Test
     void notificationRework_shouldReturnSequenceForValidStatusCode() {
@@ -358,5 +372,26 @@ class NotificationReworkServiceImplTest {
                     return false;
                 })
                 .verify();
+    }
+
+    @Test
+    void updatePaperTrackingsStatusForRework(){
+
+        String trackingId = "tracking123";
+        String reworkId = "rework123";
+        PaperTrackings existingPaperTracking = new PaperTrackings();
+        existingPaperTracking.setTrackingId(trackingId);
+        when(paperTrackingsDAO.updateItem(eq(trackingId), any(PaperTrackings.class)))
+                .thenReturn(Mono.just(existingPaperTracking));
+
+        Mono<Void> response = service.updatePaperTrackingsStatusForRework(trackingId, reworkId);
+
+        StepVerifier.create(response)
+                .verifyComplete();
+        verify(paperTrackingsDAO, times(1)).updateItem(eq(trackingId), argThat(pt ->
+                pt.getState().equals(PaperTrackingsState.AWAITING_REWORK_EVENTS) &&
+                        pt.getNotificationReworkId().equals(reworkId) &&
+                        pt.getNotificationReworkRequestTimestamp() != null
+        ));
     }
 }

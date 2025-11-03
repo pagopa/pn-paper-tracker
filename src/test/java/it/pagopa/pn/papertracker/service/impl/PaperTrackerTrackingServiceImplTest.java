@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRespon
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import org.junit.jupiter.api.BeforeEach;
