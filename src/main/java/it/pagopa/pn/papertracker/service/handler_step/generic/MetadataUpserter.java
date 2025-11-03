@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.mode
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -34,6 +35,7 @@ public class MetadataUpserter implements HandlerStep {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
                 .map(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                        context.getReworkId(),
                         context.getPaperProgressStatusEvent(),
                         context.getAnonymizedDiscoveredAddressId(),
                         context.getEventId(),
