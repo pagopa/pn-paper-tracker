@@ -77,7 +77,13 @@ public class DematValidator implements HandlerStep {
 
     private Mono<Void> sendMessageToOcr(PaperTrackings paperTracking, HandlerContext context) {
         String ocrRequestId = TrackerUtility.buildOcrRequestId(paperTracking.getTrackingId(), context.getEventId());
-        Attachment attachment = retrieveFinalDemat(paperTracking, paperTracking.getPaperStatus().getValidatedEvents(), context);
+        Attachment attachment = retrieveFinalDemat(
+                paperTracking,
+                TrackerUtility.validatedEvents(
+                        paperTracking.getPaperStatus().getValidatedEvents(),
+                        paperTracking.getEvents()
+                ),
+                context);
         if(cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri())))) {
             context.setStopExecution(true);
             return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
