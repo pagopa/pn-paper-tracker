@@ -49,7 +49,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
 
         return Flux.fromIterable(paperTrackings.getEvents())
                 .filter(event -> !event.getId().equalsIgnoreCase(context.getEventId()))
-                .flatMap(event -> isDuplicatedEvent(event, paperProgressStatusEvent, paperTrackings.getReworkId()))
+                .flatMap(event -> isDuplicatedEvent(event, paperProgressStatusEvent, paperTrackings.getNotificationReworkId()))
                 .any(Boolean::booleanValue)
                 .flatMap(isDuplicate -> isDuplicate
                         ? Mono.error(createValidationException(paperTrackings, paperProgressStatusEvent, context))

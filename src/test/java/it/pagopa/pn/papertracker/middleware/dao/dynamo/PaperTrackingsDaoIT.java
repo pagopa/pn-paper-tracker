@@ -297,7 +297,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setReworkId("reworkId");
+        paperTrackings.setNotificationReworkId("reworkId");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
