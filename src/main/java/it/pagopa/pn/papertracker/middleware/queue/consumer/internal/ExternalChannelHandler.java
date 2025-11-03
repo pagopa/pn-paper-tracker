@@ -48,7 +48,7 @@ public class ExternalChannelHandler {
      *
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
-    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled, String messageId) {
+    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled, String reworkId, String messageId) {
         if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
@@ -57,7 +57,7 @@ public class ExternalChannelHandler {
         String processName = "processExternalChannelMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
         log.logStartingProcess(processName);
-        HandlerContext context = initializeContext(payload, dryRunEnabled, messageId);
+        HandlerContext context = initializeContext(payload, dryRunEnabled, reworkId, messageId);
 
         var statusCode = payload.getAnalogMail().getStatusCode();
         var productType = resolveProductType(statusCode, payload.getAnalogMail().getProductType());
@@ -72,12 +72,13 @@ public class ExternalChannelHandler {
                         .block();
     }
 
-    private HandlerContext initializeContext(SingleStatusUpdate payload, boolean dryRunEnabled, String messageId) {
+    private HandlerContext initializeContext(SingleStatusUpdate payload, boolean dryRunEnabled, String reworkId, String messageId) {
         HandlerContext context = new HandlerContext();
         context.setTrackingId(payload.getAnalogMail().getRequestId());
         context.setPaperProgressStatusEvent(payload.getAnalogMail());
         context.setEventId(messageId);
         context.setDryRunEnabled(dryRunEnabled);
+        context.setReworkId(reworkId);
         return context;
     }
 

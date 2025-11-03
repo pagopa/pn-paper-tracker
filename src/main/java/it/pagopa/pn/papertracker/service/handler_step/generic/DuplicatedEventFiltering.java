@@ -49,7 +49,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
 
         return Flux.fromIterable(paperTrackings.getEvents())
                 .filter(event -> !event.getId().equalsIgnoreCase(context.getEventId()))
-                .flatMap(event -> isDuplicatedEvent(event, paperProgressStatusEvent))
+                .flatMap(event -> isDuplicatedEvent(event, paperProgressStatusEvent, paperTrackings.getReworkId()))
                 .any(Boolean::booleanValue)
                 .flatMap(isDuplicate -> isDuplicate
                         ? Mono.error(createValidationException(paperTrackings, paperProgressStatusEvent, context))
@@ -75,7 +75,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
         );
     }
 
-    public Mono<Boolean> isDuplicatedEvent(Event event, PaperProgressStatusEvent paperProgressStatusEvent)  {
+    public Mono<Boolean> isDuplicatedEvent(Event event, PaperProgressStatusEvent paperProgressStatusEvent, String reworkId)  {
         boolean fieldsMatch = Objects.equals(paperProgressStatusEvent.getRegisteredLetterCode(),event.getRegisteredLetterCode())
                 && Objects.equals(paperProgressStatusEvent.getProductType(), event.getProductType().name())
                 && Objects.equals(paperProgressStatusEvent.getIun(), event.getIun())
@@ -83,6 +83,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
                 && Objects.equals(paperProgressStatusEvent.getStatusDescription(), event.getStatusDescription())
                 && paperProgressStatusEvent.getStatusDateTime().truncatedTo(SECONDS).isEqual(event.getStatusTimestamp().truncatedTo(SECONDS).atOffset(ZoneOffset.UTC))
                 && Objects.equals(paperProgressStatusEvent.getDeliveryFailureCause(), event.getDeliveryFailureCause())
+                && Objects.equals(reworkId, event.getReworkId())
                 && isSameAttachments(paperProgressStatusEvent.getAttachments(), event.getAttachments());
 
         if(fieldsMatch){

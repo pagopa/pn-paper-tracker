@@ -30,8 +30,8 @@ public class PaperTrackings {
     public static final String COL_TTL = "ttl";
     public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
-    public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
     public static final String COL_REWORK_ID = "reworkId";
+    public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;

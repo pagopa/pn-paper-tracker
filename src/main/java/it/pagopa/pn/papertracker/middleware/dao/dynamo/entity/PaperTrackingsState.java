@@ -6,5 +6,6 @@ public enum PaperTrackingsState {
     AWAITING_REWORK_EVENTS,
     AWAITING_OCR,
     DONE,
+    AWAITING_REWORK_EVENTS,
     KO
 }
