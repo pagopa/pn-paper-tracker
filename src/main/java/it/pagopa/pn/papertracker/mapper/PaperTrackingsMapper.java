@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
@@ -10,14 +9,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
 
-    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
+    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
@@ -29,25 +27,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         paperTrackings.setValidationFlow(new ValidationFlow());
-        return paperTrackings;
-    }
-
-    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType, String attemptId) {
-        Instant now = Instant.now();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
-        paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
-        paperTrackings.setProductType(productType);
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-        paperTrackings.setAttemptId(attemptId);
-        paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
-        paperTrackings.setCreatedAt(now);
-        PaperStatus paperStatus = new PaperStatus();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         return paperTrackings;
     }
 
@@ -91,7 +71,7 @@ public class PaperTrackingsMapper {
             paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
         }
         if(Objects.nonNull(event.getProductType())) {
-            it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue());
+            paperEvent.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue()));
         }
         return paperEvent;
     }

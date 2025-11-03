@@ -25,7 +25,8 @@ public class PaperProgressStatusEventMapper {
     public static PaperTrackings toPaperTrackings(String reworkId, PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
                                                         String eventId, boolean dryRunEnabled,
-                                                        boolean isFinalDemat, boolean isP000event) {
+                                                        boolean isFinalDemat, boolean isP000event,
+                                                        boolean isInternalEvent) {
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId(eventId);
@@ -52,7 +53,10 @@ public class PaperProgressStatusEventMapper {
 
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
         event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
-        event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
+
+        if(!isInternalEvent)
+            event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
+
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
         event.setReworkId(reworkId);

@@ -26,7 +26,7 @@ public class PnPaperTrackerMiddlewareConfigs {
                 .region(Region.of(this.pnPaperChannelConfigs.getTopics().getQueueOcrInputsRegion()))
                 .build();
         return new OcrMomProducer(sqsClient,
-                null,
+                this.pnPaperChannelConfigs.getTopics().getQueueOcrInputsUrl(),
                 this.pnPaperChannelConfigs.getTopics().getQueueOcrInputsUrl(),
                 objMapper,
                 OcrEvent.class);

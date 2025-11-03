@@ -68,6 +68,7 @@ components:
               description: Product type
               enum:
                 - AR
+                - RIR
               example: "AR"
             documentType:
               type: string

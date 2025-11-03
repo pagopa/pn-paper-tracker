@@ -91,7 +91,8 @@ public class DematValidator implements HandlerStep {
                     .then();
         }
         log.info("Attachment type {} not supported for OCR, skipping OCR request for trackingId={}", attachment.getDocumentType(), paperTracking.getTrackingId());
-        return Mono.empty();
+        return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(true, null, null))
+                .then();
     }
 
     private String retrieveFileType(String uri) {
@@ -103,7 +104,8 @@ public class DematValidator implements HandlerStep {
         ValidationFlow validationFlow = new ValidationFlow();
         if(ocrEnabled){
             validationFlow.setOcrEnabled(true);
-            validationFlow.setOcrRequestTimestamp(Instant.now());
+            if(StringUtils.isNotBlank(ocrRequestId))
+                validationFlow.setOcrRequestTimestamp(Instant.now());
             paperTracking.setOcrRequestId(ocrRequestId);
             paperTracking.setState(state);
         }else{

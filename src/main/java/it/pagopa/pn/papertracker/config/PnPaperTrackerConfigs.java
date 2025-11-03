@@ -27,6 +27,7 @@ public class PnPaperTrackerConfigs {
     private String safeStorageBaseUrl;
     public String safeStorageCxId;
     private Duration paperTrackingsTtlDuration;
+    private Duration paperTrackingsErrorsTtlDuration;
     private Topics topics;
     private int maxPcRetryMock;
 

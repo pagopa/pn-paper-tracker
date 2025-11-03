@@ -23,6 +23,13 @@ public class TrackerUtility {
         return P000.name().equalsIgnoreCase(eventStatusCode);
     }
 
+    public static boolean checkIfIsInternalEvent(String eventStatusCode) {
+        return P000.name().equalsIgnoreCase(eventStatusCode) ||
+                P011.name().equalsIgnoreCase(eventStatusCode) ||
+                P012.name().equalsIgnoreCase(eventStatusCode) ||
+                P013.name().equalsIgnoreCase(eventStatusCode);
+    }
+
     public static String buildOcrRequestId(String trackingId, String eventId) {
         return String.join("#", trackingId, eventId);
     }

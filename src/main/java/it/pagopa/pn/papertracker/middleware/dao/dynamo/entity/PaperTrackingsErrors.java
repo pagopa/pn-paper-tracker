@@ -27,6 +27,7 @@ public class PaperTrackingsErrors {
     public static final String COL_EVENT_ID_THROW = "eventIdThrow";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_TYPE = "type";
+    public static final String COL_TTL = "ttl";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -54,5 +55,8 @@ public class PaperTrackingsErrors {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TYPE)}))
     private ErrorType type;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
+    private Long ttl;
 
 }

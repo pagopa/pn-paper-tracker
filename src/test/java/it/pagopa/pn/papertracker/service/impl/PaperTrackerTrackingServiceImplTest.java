@@ -1,12 +1,10 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
@@ -32,17 +30,11 @@ class PaperTrackerTrackingServiceImplTest {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
-    @Mock
-    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
-
-    @Mock
-    private PnPaperTrackerConfigs pnPaperTrackerConfigs;
-
     private PaperTrackerTrackingServiceImpl paperTrackerEventService;
 
     @BeforeEach
     void setUp() {
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO);
     }
 
     @Test
