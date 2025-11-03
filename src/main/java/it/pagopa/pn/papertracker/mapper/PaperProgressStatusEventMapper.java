@@ -59,7 +59,7 @@ public class PaperProgressStatusEventMapper {
 
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
-        event.setReworkId(reworkId);
+        event.setNotificationReworkId(reworkId);
         if(StringUtils.hasText(paperProgressStatusEvent.getProductType())) {
             event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
         }

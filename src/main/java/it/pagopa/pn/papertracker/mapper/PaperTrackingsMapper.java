@@ -41,6 +41,8 @@ public class PaperTrackingsMapper {
         tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
         tracking.setCreatedAt(paperTrackings.getCreatedAt());
         tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
+        tracking.setNotificationReworkId(paperTrackings.getNotificationReworkId());
+        tracking.setNotificationReworkTimestamp(paperTrackings.getNotificationReworkRequestTimestamp());
         if(Objects.nonNull(paperTrackings.getProductType())){
             tracking.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().getValue()));
         }
@@ -67,6 +69,7 @@ public class PaperTrackingsMapper {
         paperEvent.setDeliveryFailureCause(event.getDeliveryFailureCause());
         paperEvent.setRegisteredLetterCode(event.getRegisteredLetterCode());
         paperEvent.setCreatedAt(event.getCreatedAt());
+        paperEvent.setNotificationReworkId(event.getNotificationReworkId());
         if(!CollectionUtils.isEmpty(event.getAttachments())){
             paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
         }

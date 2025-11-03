@@ -8,8 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.P000;
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN002C;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class TrackerUtility {

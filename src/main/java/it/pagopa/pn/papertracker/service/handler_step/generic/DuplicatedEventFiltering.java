@@ -83,7 +83,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
                 && Objects.equals(paperProgressStatusEvent.getStatusDescription(), event.getStatusDescription())
                 && paperProgressStatusEvent.getStatusDateTime().truncatedTo(SECONDS).isEqual(event.getStatusTimestamp().truncatedTo(SECONDS).atOffset(ZoneOffset.UTC))
                 && Objects.equals(paperProgressStatusEvent.getDeliveryFailureCause(), event.getDeliveryFailureCause())
-                && Objects.equals(reworkId, event.getReworkId())
+                && Objects.equals(reworkId, event.getNotificationReworkId())
                 && isSameAttachments(paperProgressStatusEvent.getAttachments(), event.getAttachments());
 
         if(fieldsMatch){

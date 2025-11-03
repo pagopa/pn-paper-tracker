@@ -3,14 +3,12 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -309,7 +307,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
         event.setDryRun(true);
-        event.setReworkId("reworkId");
+        event.setNotificationReworkId("reworkId");
 
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
@@ -335,7 +333,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertFalse(fisrtResponse.getEvents().isEmpty());
         Assertions.assertEquals(1, fisrtResponse.getEvents().size());
         Assertions.assertEquals(2, fisrtResponse.getEvents().getFirst().getAttachments().size());
-        Assertions.assertEquals("reworkId", fisrtResponse.getEvents().getFirst().getReworkId());
+        Assertions.assertEquals("reworkId", fisrtResponse.getEvents().getFirst().getNotificationReworkId());
         Assertions.assertNull(fisrtResponse.getEvents().getFirst().getDeliveryFailureCause());
 
         PaperTrackings paperTrackingsToUpdate1 = new PaperTrackings();

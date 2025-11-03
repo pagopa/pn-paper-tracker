@@ -70,6 +70,6 @@ public class Event {
     private Instant createdAt;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
-    private String reworkId;
+    private String notificationReworkId;
 
 }
