@@ -192,7 +192,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/v1/sequence':
+  '/paper-tracker-private/v1/notification-rework/sequence':
     get:
       summary: Recupera le sequence e il finalStatus di una richiesta di rework
       description: >-
@@ -222,7 +222,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/v1/init-rework/{trackingId}':
+  '/paper-tracker-private/v1/notification-rework/{trackingId}/init':
     put:
       summary: Avvio processo di invalidazione timeline
       description: Aggiorna lo stato dell'entità di tracking per accettare gli eventi di recapito correttivi
@@ -272,16 +272,11 @@ components:
         maxLength: 1024
       example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
     trackingId:
-      description: >-
-        Identificativo del tracking
       name: trackingId
       in: path
       required: true
       schema:
         type: string
-        pattern: ^[ -~]*$
-        maxLength: 1024
-      example: "IUN_LKXM-QMZH-KELD-202507-H-1"
     queryStatusCode:
       in: query
       name: statusCode
@@ -344,6 +339,11 @@ components:
           type: string
         unifiedDeliveryDriver:
           type: string
+        notificationReworkId:
+          type: string
+        notificationReworkTimestamp:
+          type: string
+          format: date-time
         state:
           type: string
           enum:
@@ -379,6 +379,8 @@ components:
           items:
             $ref: '#/components/schemas/Attachment'
         registeredLetterCode:
+          type: string
+        notificationReworkId:
           type: string
         createdAt:
           type: string
