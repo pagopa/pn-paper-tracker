@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
@@ -86,7 +87,7 @@ public class TestUtils {
         assertEquals(DONE, pt.getState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+        assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
@@ -203,7 +204,7 @@ public class TestUtils {
         assertEquals(DONE, pt.getState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+        assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(eventsWithoutCon.stream().map(Event::getStatusCode).toList()));
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());

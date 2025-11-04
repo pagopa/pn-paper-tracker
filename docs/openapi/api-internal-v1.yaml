@@ -368,7 +368,7 @@ components:
           type: array
           description: Lista di eventi validati
           items:
-            $ref: '#/components/schemas/PaperEvent'
+            type: string
         finalDematFound:
           type: boolean
           description: Presenza evento demat finale

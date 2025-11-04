@@ -3,14 +3,12 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -115,10 +113,10 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        PaperStatus notificationState = new PaperStatus();
-        notificationState.setDeliveryFailureCause("M02");
+        PaperStatus paperStatus1 = new PaperStatus();
+        paperStatus1.setDeliveryFailureCause("M02");
         ValidationFlow validationFlow = new ValidationFlow();
-        paperTrackings.setPaperStatus(notificationState);
+        paperTrackings.setPaperStatus(paperStatus1);
         paperTrackings.setValidationFlow(validationFlow);
         paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
 
@@ -133,21 +131,11 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         validationFlow1.setOcrEnabled(true);
         validationFlow1.setSequencesValidationTimestamp(Instant.now());
         paperTrackingsToUpdate.setValidationFlow(validationFlow1);
-        Attachment attachment = new Attachment();
-        attachment.setId("attachment-id-1");
-        attachment.setDocumentType("DOCUMENT_TYPE");
-        Event event = new Event();
-        event.setRequestTimestamp(Instant.now());
-        event.setStatusCode("RECRN004C");
-        event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
-        event.setDryRun(true);
-        event.setAttachments(List.of(attachment));
-        PaperStatus notificationState1 = new PaperStatus();
-        notificationState1.setFinalStatusCode("RECRN005C");
-        notificationState1.setAnonymizedDiscoveredAddress("address discovered");
-        notificationState1.setValidatedEvents(List.of(event));
-        paperTrackingsToUpdate.setPaperStatus(notificationState1);
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setFinalStatusCode("RECRN005C");
+        paperStatus.setAnonymizedDiscoveredAddress("address discovered");
+        paperStatus.setValidatedEvents(List.of("eventId1"));
+        paperTrackingsToUpdate.setPaperStatus(paperStatus);
 
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate)
                 .doOnNext(paperTrackingsUpdated -> {
@@ -167,13 +155,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
+                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().equals("eventId1");
                 })
                 .block();
 
@@ -196,13 +178,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert retrieved.getPaperStatus().getValidatedEvents() != null;
                     assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
+                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().equals("eventId1");
                 })
                 .blockLast();
 
@@ -230,13 +206,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
+                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().equals("eventId1");
                 })
                 .block();
 
@@ -259,13 +229,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
                     assert retrieved.getPaperStatus().getValidatedEvents() != null;
                     assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
+                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().equals("eventId1");
                 })
                 .blockLast();
     }

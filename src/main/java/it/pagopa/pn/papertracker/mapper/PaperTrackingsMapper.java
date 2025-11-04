@@ -132,7 +132,7 @@ public class PaperTrackingsMapper {
         dto.setPaperDeliveryTimestamp(entity.getPaperDeliveryTimestamp());
         dto.setActualPaperDeliveryTimestamp(entity.getActualPaperDeliveryTimestamp());
         if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){
-            dto.setValidatedEvents(entity.getValidatedEvents().stream().map(PaperTrackingsMapper::toPaperEvent).toList());
+            dto.setValidatedEvents(entity.getValidatedEvents());
         }
         return dto;
     }

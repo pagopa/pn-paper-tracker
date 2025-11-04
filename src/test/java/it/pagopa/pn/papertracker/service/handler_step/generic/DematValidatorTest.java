@@ -61,10 +61,11 @@ class DematValidatorTest {
         dematValidator = new DematValidator(paperTrackingsDAO, cfg, ocrMomProducer, safeStorageClient);
     }
 
-    private Event getEvent(String statusCode, String documentType) {
+    private Event getEvent(String statusCode, String documentType, String eventId) {
         Event event = new Event();
         event.setStatusCode(statusCode);
         event.setProductType(ProductType.AR);
+        event.setId(eventId);
         if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();
             attachment.setUri("uri.pdf");
@@ -81,9 +82,8 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
         // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
@@ -103,9 +103,8 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent2() {
         // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN002F", null), getEvent("RECRN002D", null), getEvent("RECRN002E", "AR")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN002F", null, "eventId1"), getEvent("RECRN002D", null, "eventId2"), getEvent("RECRN002E", "AR", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
@@ -128,9 +127,8 @@ class DematValidatorTest {
         // Arrange
         when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.RIR));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         // Act
         StepVerifier.create(dematValidator.validateDemat(context))
@@ -149,9 +147,8 @@ class DematValidatorTest {
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
 

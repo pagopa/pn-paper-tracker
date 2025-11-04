@@ -355,7 +355,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(now);
         paperTrackingsToUpdate.setValidationFlow(validationFlow);
-        paperTrackingsToUpdate.getPaperStatus().setValidatedEvents(events);
+        paperTrackingsToUpdate.getPaperStatus().setValidatedEvents(events.stream().map(Event::getId).toList());
         paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(now);
         return paperTrackingsToUpdate;
     }

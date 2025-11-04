@@ -12,6 +12,7 @@ import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -62,7 +63,10 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
             return addEventToSend(context, finalEvent, eventStatus);
         }
 
-        List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
+        List<Event> validatedEvents = TrackerUtility.validatedEvents(
+                paperTrackings.getPaperStatus().getValidatedEvents(),
+                paperTrackings.getEvents()
+        );
         EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);

@@ -47,7 +47,7 @@ public class PaperStatus {
     private String validatedAttachmentType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_EVENTS), @DynamoDbIgnoreNulls}))
-    private List<Event> validatedEvents;
+    private List<String> validatedEvents;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_FOUND)}))
     private Boolean finalDematFound;
