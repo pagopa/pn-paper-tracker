@@ -14,7 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
-@Slf4j
+@Slf4j 
 @RequiredArgsConstructor
 public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
 
