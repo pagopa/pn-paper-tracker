@@ -36,7 +36,7 @@ class HandlersFactory890Test {
     private DematValidator dematValidator;
 
     @Mock
-    private GenericSequenceValidator sequenceValidator;
+    private SequenceValidator890 sequenceValidator;
 
     @Mock
     private RetrySender retrySender;
@@ -60,7 +60,10 @@ class HandlersFactory890Test {
     private RECAG012EventChecker recag012EventChecker;
 
     @Mock
-    private RECAG012AEventBuilder recag012AEventBuilder;
+    private RECAG012EventBuilder recag012EventBuilder;
+
+    @Mock
+    private PendingFinalEventTrigger pendingFinalEventTrigger;
 
     private HandlersFactory890 handlersFactory;
 
@@ -80,7 +83,8 @@ class HandlersFactory890Test {
                 checkOcrResponse,
                 retrySenderCON996,
                 recag012EventChecker,
-                recag012AEventBuilder
+                recag012EventBuilder,
+                pendingFinalEventTrigger
         );
     }
 

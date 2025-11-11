@@ -17,11 +17,11 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012A;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RECAG012AEventBuilder implements HandlerStep {
+public class RECAG012EventBuilder implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        log.info("RECAG012AEventBuilder called for trackingId {}", context.getTrackingId());
+        log.info("RECAG012EventBuilder called for trackingId {}", context.getTrackingId());
 
         return context.getPaperTrackings().isRefined() ?
                 logRequestRefined(context) : createAndSendRECAG012AEvent(context);
