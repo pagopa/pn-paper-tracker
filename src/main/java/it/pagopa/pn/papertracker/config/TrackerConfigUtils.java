@@ -1,11 +1,16 @@
 package it.pagopa.pn.papertracker.config;
 
 import it.pagopa.pn.papertracker.exception.AttachmentsConfigNotFound;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
+@Component
 public class TrackerConfigUtils {
 
     private static final String SEPARATOR = ";";
