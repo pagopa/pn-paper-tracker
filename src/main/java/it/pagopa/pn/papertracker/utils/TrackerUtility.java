@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.P000;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class TrackerUtility {
@@ -33,6 +33,13 @@ public class TrackerUtility {
         return events.stream()
                 .filter(event -> eventsIds.contains(event.getId()))
                 .toList();
+    }
+
+    public static boolean isStockStatus890(String status) {
+        return RECAG005C.name().equalsIgnoreCase(status) ||
+                RECAG006C.name().equalsIgnoreCase(status) ||
+                RECAG007C.name().equalsIgnoreCase(status) ||
+                RECAG008C.name().equalsIgnoreCase(status);
     }
 
 }
