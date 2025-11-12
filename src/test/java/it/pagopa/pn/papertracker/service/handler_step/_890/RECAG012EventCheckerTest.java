@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
@@ -32,6 +33,9 @@ class RECAG012EventCheckerTest {
 
     @Mock
     private PnPaperTrackerConfigs configs;
+
+    @Mock
+    private TrackerConfigUtils trackerConfigUtils;
 
     @InjectMocks
     private RECAG012EventChecker recag012EventChecker;
@@ -71,7 +75,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenAllAttachmentsPresentAndEventRECAG012Found() {
         //Arrange
-        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum._23L, DocumentTypeEnum.PLICO));
+        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.CAD.getValue()));
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
@@ -89,7 +93,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenAttachmentsMissing() {
         //Arrange
-        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum.ARCAD));
+        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.ARCAD.getValue()));
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
@@ -103,7 +107,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenEventRECAG012NotFound() {
         //Arrange
-        when(configs.getRequiredDemats890()).thenReturn(List.of(DocumentTypeEnum.CAD));
+        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.CAD.getValue()));
         context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG015");
 
         //Act
