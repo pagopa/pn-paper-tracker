@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +32,7 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 public class RECAG012EventChecker implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final PnPaperTrackerConfigs configs;
+    private final TrackerConfigUtils trackerConfigUtils;
 
     /**
      * Step che effettua i seguenti passaggi:<br>
@@ -59,7 +61,7 @@ public class RECAG012EventChecker implements HandlerStep {
 
     private boolean hasAllRequiredAttachments(HandlerContext context) {
         Set<String> documentTypes = getAttachmentTypes(context);
-        return documentTypes.containsAll(configs.getRequiredDemats890().stream().map(DocumentTypeEnum::getValue).toList());
+        return documentTypes.containsAll(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.now()));
     }
 
     private Set<String> getAttachmentTypes(HandlerContext context) {

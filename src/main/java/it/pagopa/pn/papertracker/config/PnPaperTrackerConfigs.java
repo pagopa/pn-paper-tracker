@@ -34,7 +34,10 @@ public class PnPaperTrackerConfigs {
     private List<ProductType> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
-    private List<DocumentTypeEnum> requiredDemats890 = new ArrayList<>();
+    private List<String> requiredAttachmentsRefinementStock890 = new ArrayList<>();
+    private List<String> sendOcrAttachmentsFinalValidationStock890 = new ArrayList<>();
+    private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
+    private List<String> strictFinalValidationStock890;
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
