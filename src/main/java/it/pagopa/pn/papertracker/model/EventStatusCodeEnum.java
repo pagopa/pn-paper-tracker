@@ -90,16 +90,16 @@ public enum EventStatusCodeEnum {
     RECAG012A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Accettazione 23L - pre-esito", false),
     RECAG005A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - pre-esito", false),
     RECAG005B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - In Dematerializzazione", true),
-    RECAG005C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG005C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - Fascicolo Chiuso", false),
     RECAG006A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - pre-esito", false),
     RECAG006B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - In Dematerializzazione", true),
-    RECAG006C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG006C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegna a persona abilitata presso Punti di Giacenza - Fascicolo Chiuso", false),
     RECAG007A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - pre-esito", false),
     RECAG007B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - In Dematerializzazione", true),
-    RECAG007C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECAG007C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
     RECAG008A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - pre-esito", false),
     RECAG008B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - In Dematerializzazione", true),
-    RECAG008C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false);
+    RECAG008C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false);
 
 
     private final EventTypeEnum codeType;
