@@ -13,7 +13,8 @@ import java.util.function.Function;
 public class HandlersFactory890 extends AbstractHandlersFactory {
 
     private final RECAG012EventChecker recag012EventChecker;
-    private final RECAG012AEventBuilder recag012AEventBuilder;
+    private final RECAG012EventBuilder recag012EventBuilder;
+    private final PendingFinalEventTrigger pendingFinalEventTrigger;
 
     public HandlersFactory890(
             MetadataUpserter metadataUpserter,
@@ -21,7 +22,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
             FinalEventBuilder890 finalEventBuilder,
             IntermediateEventsBuilder intermediateEventsBuilder,
             DematValidator dematValidator,
-            GenericSequenceValidator sequenceValidator,
+            SequenceValidator890 sequenceValidator,
             RetrySender retrySender,
             NotRetryableErrorInserting notRetryableErrorInserting,
             DuplicatedEventFiltering duplicatedEventFiltering,
@@ -29,7 +30,8 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
             CheckOcrResponse checkOcrResponse,
             RetrySenderCON996 retrySenderCON996,
             RECAG012EventChecker recag012EventChecker,
-            RECAG012AEventBuilder recag012AEventBuilder
+            RECAG012EventBuilder recag012EventBuilder,
+            PendingFinalEventTrigger pendingFinalEventTrigger
     ) {
         super(
                 metadataUpserter,
@@ -46,7 +48,8 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                 retrySenderCON996
         );
         this.recag012EventChecker = recag012EventChecker;
-        this.recag012AEventBuilder = recag012AEventBuilder;
+        this.recag012EventBuilder = recag012EventBuilder;
+        this.pendingFinalEventTrigger = pendingFinalEventTrigger;
     }
 
 
@@ -60,6 +63,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
         return switch (eventType) {
             case STOCK_INTERMEDIATE_EVENT -> this::buildStockIntermediateEventHandler;
             case RECAG012_EVENT -> this::buildRecag012EventHandler;
+            case OCR_RESPONSE_EVENT -> this::buildOcrResponseHandler890;
             default -> super.getDispatcher(eventType);
         };
     }
@@ -72,6 +76,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                         duplicatedEventFiltering,
                         recag012EventChecker,
                         intermediateEventsBuilder,
+                        recag012EventBuilder,
                         deliveryPushSender
                 ));
     }
@@ -82,7 +87,22 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                         metadataUpserter,
                         checkTrackingState,
                         recag012EventChecker,
-                        recag012AEventBuilder,
+                        recag012EventBuilder,
+                        deliveryPushSender
+                ));
+    }
+
+    public Handler buildOcrResponseHandler890(HandlerContext context) {
+        return new HandlerImpl(
+                List.of(
+                        checkOcrResponse,
+                        finalEventBuilder,
+                        recag012EventBuilder,
+                        deliveryPushSender,
+                        pendingFinalEventTrigger,
+                        sequenceValidator,
+                        dematValidator,
+                        finalEventBuilder,
                         deliveryPushSender
                 ));
     }

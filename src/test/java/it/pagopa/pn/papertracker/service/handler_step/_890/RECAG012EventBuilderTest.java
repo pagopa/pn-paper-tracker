@@ -16,12 +16,12 @@ import java.time.Instant;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-class RECAG012AEventBuilderTest {
+class RECAG012EventBuilderTest {
 
     private HandlerContext context;
 
     @InjectMocks
-    private RECAG012AEventBuilder recag012AEventBuilder;
+    private RECAG012EventBuilder recag012EventBuilder;
 
     @BeforeEach
     void setUp() {
@@ -49,7 +49,7 @@ class RECAG012AEventBuilderTest {
         context.getPaperTrackings().setRefined(true);
 
         // Act & Assert
-        StepVerifier.create(recag012AEventBuilder.execute(context))
+        StepVerifier.create(recag012EventBuilder.execute(context))
                 .verifyComplete();
 
         Assertions.assertEquals(0, context.getEventsToSend().size());
@@ -61,7 +61,7 @@ class RECAG012AEventBuilderTest {
         context.getPaperTrackings().setRefined(false);
 
         // Act & Assert
-        StepVerifier.create(recag012AEventBuilder.execute(context))
+        StepVerifier.create(recag012EventBuilder.execute(context))
                 .verifyComplete();
 
         Assertions.assertEquals(1, context.getEventsToSend().size());
@@ -77,7 +77,7 @@ class RECAG012AEventBuilderTest {
 
         // Act & Assert
         try {
-            recag012AEventBuilder.execute(context);
+            recag012EventBuilder.execute(context);
         } catch (Exception e) {
             Assertions.assertInstanceOf(RuntimeException.class, e);
         }
