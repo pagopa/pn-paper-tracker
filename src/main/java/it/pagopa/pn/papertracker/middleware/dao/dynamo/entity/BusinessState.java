@@ -1,10 +1,11 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
-public enum PaperTrackingsState {
-
+public enum BusinessState {
     AWAITING_FINAL_STATUS_CODE,
-    AWAITING_REFINEMENT,
+    AWAITING_REFINEMENT_OCR,
     AWAITING_OCR,
     DONE,
     KO
+
 }
+

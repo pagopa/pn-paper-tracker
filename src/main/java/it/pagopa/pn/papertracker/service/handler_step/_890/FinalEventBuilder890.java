@@ -9,6 +9,7 @@ import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -37,7 +38,7 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
 
         Event finalEvent = extractFinalEvent(context);
         String statusCode = finalEvent.getStatusCode();
-        if (isStockStatus(statusCode))
+        if (TrackerUtility.isStockStatus890(statusCode))
             return context.getPaperTrackings().isRefined() ?
                     addEventToSend(context, finalEvent, EventStatus.PROGRESS.name()) :
                     buildError(context, finalEvent);
@@ -62,10 +63,4 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
                 )));
     }
 
-    private boolean isStockStatus(String status) {
-        return RECAG005C.name().equalsIgnoreCase(status) ||
-                RECAG006C.name().equalsIgnoreCase(status) ||
-                RECAG007C.name().equalsIgnoreCase(status) ||
-                RECAG008C.name().equalsIgnoreCase(status);
-    }
 }

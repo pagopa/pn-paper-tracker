@@ -27,6 +27,7 @@ public class PaperTrackings {
     public static final String COL_CREATED_AT = "createdAt";
     public static final String COL_UPDATED_AT = "updatedAt";
     public static final String COL_STATE = "state";
+    public static final String COL_BUSINESS_STATE = "businessState";
     public static final String COL_TTL = "ttl";
     public static final String COL_REFINED = "refined";
     public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
@@ -65,6 +66,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
     private PaperTrackingsState state;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BUSINESS_STATE)}))
+    private BusinessState businessState;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
