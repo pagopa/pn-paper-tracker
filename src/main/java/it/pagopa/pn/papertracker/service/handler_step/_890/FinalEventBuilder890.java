@@ -35,37 +35,6 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
     public Mono<Void> execute(HandlerContext context) {
         log.info("FinalEventBuilder890 execute for trackingId: {}", context.getTrackingId());
 
-        Event finalEvent = extractFinalEvent(context);
-        String statusCode = finalEvent.getStatusCode();
-        if (isStockStatus(statusCode))
-            return context.getPaperTrackings().isRefined() ?
-                    addEventToSend(context, finalEvent, EventStatus.PROGRESS.name()) :
-                    buildError(context, finalEvent);
-
-        String eventStatus = evaluateStatusCodeAndRetrieveStatus(RECAG003C.name(), statusCode, context.getPaperTrackings()).name();
-        return addEventToSend(context, finalEvent, eventStatus);
-    }
-
-    private Mono<Void> buildError(HandlerContext context, Event finalEvent) {
-        log.error("Delivery 890 in stock not completed for trackingId: {}", context.getTrackingId());
-        return Mono.error(new PnPaperTrackerValidationException(
-                "Spedizione 890 non perfezionata in giacenza",
-                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
-                        context.getPaperTrackings(),
-                        finalEvent.getStatusCode(),
-                        ErrorCategory.RENDICONTAZIONE_SCARTATA,
-                        ErrorCause.GIACENZA_RECAG012_ERROR,
-                        "Spedizione 890 non perfezionata in giacenza",
-                        FlowThrow.FINAL_EVENT_BUILDING,
-                        ErrorType.ERROR,
-                        finalEvent.getId()
-                )));
-    }
-
-    private boolean isStockStatus(String status) {
-        return RECAG005C.name().equalsIgnoreCase(status) ||
-                RECAG006C.name().equalsIgnoreCase(status) ||
-                RECAG007C.name().equalsIgnoreCase(status) ||
-                RECAG008C.name().equalsIgnoreCase(status);
+        return Mono.empty();
     }
 }

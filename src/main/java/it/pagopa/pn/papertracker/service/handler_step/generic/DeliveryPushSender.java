@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
@@ -101,6 +102,7 @@ public class DeliveryPushSender implements HandlerStep {
 
     private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setBusinessState(BusinessState.DONE);
         paperTrackings.setState(PaperTrackingsState.DONE);
         if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
             paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());

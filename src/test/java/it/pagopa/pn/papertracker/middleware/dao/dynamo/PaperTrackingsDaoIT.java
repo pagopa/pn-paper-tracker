@@ -26,7 +26,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -39,9 +39,8 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
-                    assert retrieved.getOcrRequestId() == null;
                     assert retrieved.getNextRequestIdPcretry() == null;
-                    assert retrieved.getState() == PaperTrackingsState.AWAITING_FINAL_STATUS_CODE;
+                    assert retrieved.getState() == PaperTrackingsState.AWAITING_REFINEMENT;
                 })
                 .block();
 
@@ -70,7 +69,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings2.setPcRetry("PCRETRY_0");
         paperTrackings2.setProductType(ProductType.AR);
         paperTrackings2.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings2.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings2.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings2).block();
 
@@ -100,7 +99,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals(attemptId + ".PCRETRY_0", response.getFirst().getTrackingId());
         Assertions.assertEquals(attemptId + ".PCRETRY_1", response.get(1).getTrackingId());
         Assertions.assertEquals(attemptId + ".PCRETRY_2", response.getLast().getTrackingId());
-        Assertions.assertEquals(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE, response.getFirst().getState());
+        Assertions.assertEquals(PaperTrackingsState.AWAITING_REFINEMENT, response.getFirst().getState());
         Assertions.assertEquals(PaperTrackingsState.KO, response.get(1).getState());
         Assertions.assertEquals(PaperTrackingsState.DONE, response.getLast().getState());
     }
@@ -118,17 +117,15 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         ValidationFlow validationFlow = new ValidationFlow();
         paperTrackings.setPaperStatus(paperStatus1);
         paperTrackings.setValidationFlow(validationFlow);
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         String ocrRequestId = "test-ocr-request-id";
-        paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
         paperTrackingsToUpdate.setNextRequestIdPcretry("next-request-id-pcretry");
         paperTrackingsToUpdate.setState(PaperTrackingsState.DONE);
         ValidationFlow validationFlow1 = new ValidationFlow();
-        validationFlow1.setOcrEnabled(true);
         validationFlow1.setSequencesValidationTimestamp(Instant.now());
         paperTrackingsToUpdate.setValidationFlow(validationFlow1);
         PaperStatus paperStatus = new PaperStatus();
@@ -140,14 +137,12 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate)
                 .doOnNext(paperTrackingsUpdated -> {
                     assert paperTrackingsUpdated != null;
-                    assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
-                    assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
                     assert paperTrackingsUpdated.getValidationFlow().getSequencesValidationTimestamp() != null;
                     assert paperTrackingsUpdated.getPaperStatus() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
@@ -163,14 +158,12 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrRequestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
-                    assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
-                    assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
                     assert retrieved.getValidationFlow().getSequencesValidationTimestamp() != null;
                     assert retrieved.getPaperStatus() != null;
                     assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
@@ -184,21 +177,19 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         PaperTrackings updateDematValidationTimestamp = new PaperTrackings();
         ValidationFlow validationFlow2 = new ValidationFlow();
-        validationFlow2.setDematValidationTimestamp(Instant.now());
+        validationFlow2.setFinalEventDematValidationTimestamp(Instant.now());
         updateDematValidationTimestamp.setValidationFlow(validationFlow2);
 
         paperTrackingsDAO.updateItem(requestId, updateDematValidationTimestamp)
                 .doOnNext(paperTrackingsUpdated -> {
                     assert paperTrackingsUpdated != null;
-                    assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
                     assert paperTrackingsUpdated.getProductType() == ProductType.AR;
                     assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
                     assert paperTrackingsUpdated.getEvents() == null;
                     assert paperTrackingsUpdated.getValidationFlow() != null;
-                    assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert paperTrackingsUpdated.getValidationFlow().getDematValidationTimestamp() != null;
+                    assert paperTrackingsUpdated.getValidationFlow().getFinalEventDematValidationTimestamp() != null;
                     assert paperTrackingsUpdated.getValidationFlow().getSequencesValidationTimestamp() != null;
                     assert paperTrackingsUpdated.getPaperStatus() != null;
                     assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
@@ -213,15 +204,13 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrRequestId)
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
-                    assert retrieved.getOcrRequestId().equals(ocrRequestId);
                     assert retrieved.getProductType() == ProductType.AR;
                     assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
                     assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
                     assert retrieved.getState() == PaperTrackingsState.DONE;
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() != null;
-                    assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert retrieved.getValidationFlow().getDematValidationTimestamp() != null;
+                    assert retrieved.getValidationFlow().getFinalEventDematValidationTimestamp() != null;
                     assert retrieved.getValidationFlow().getSequencesValidationTimestamp() != null;
                     assert retrieved.getPaperStatus() != null;
                     assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
@@ -245,7 +234,6 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         String ocrRequestId = "test-ocr-request-id";
-        paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
 
         //Assert
         StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))

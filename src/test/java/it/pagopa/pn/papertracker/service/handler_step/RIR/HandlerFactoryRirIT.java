@@ -214,7 +214,6 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyPaperTrackings(PaperTrackings pt, PaperTrackings newPt, TestSequenceRirEnum seq) {
-        assertNull(pt.getOcrRequestId());
         List<String> events = new ArrayList<>(pt.getEvents().stream().map(Event::getStatusCode).toList());
         if (Objects.nonNull(newPt)) {
             events.addAll(newPt.getEvents().stream().map(Event::getStatusCode).toList());

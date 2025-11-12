@@ -11,6 +11,8 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.util.Objects;
 
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -48,16 +50,33 @@ public class PaperTrackerExceptionHandler {
                 .doOnDiscard(PaperTrackingsErrors.class, errors -> log.info("Skipped updating PaperTrackings entity for error with type Warning"))
                 .map(unused -> {
                     PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
-                    paperTrackingsToUpdate.setState(PaperTrackingsState.KO);
-                    if (Objects.nonNull(paperTrackingsErrors.getDetails().getCause()) && paperTrackingsErrors.getDetails().getCause().equals(ErrorCause.OCR_KO)) {
-                        ValidationFlow validationFlow = new ValidationFlow();
-                        validationFlow.setDematValidationTimestamp(Instant.now());
-                        paperTrackingsToUpdate.setValidationFlow(validationFlow);
-                    }
+                    boolean isRECAG012 = RECAG012.name().equalsIgnoreCase(paperTrackingsErrors.getEventThrow());
+                    setNewStatus(paperTrackingsToUpdate, isRECAG012);
+                    setDematValidationTimestampIfNeeded(paperTrackingsErrors, paperTrackingsToUpdate, isRECAG012);
                     return paperTrackingsToUpdate;
                 })
                 .flatMap(paperTrackingsToUpdate -> paperTrackerTrackingService.updatePaperTrackingsStatus(paperTrackingsErrors.getTrackingId(), paperTrackingsToUpdate))
                 .doOnError(throwable -> log.error("Error inserting entity into PaperTrackingsErrors: {}", throwable.getMessage(), throwable));
+    }
+
+    private static void setDematValidationTimestampIfNeeded(PaperTrackingsErrors paperTrackingsErrors, PaperTrackings paperTrackingsToUpdate, boolean isRECAG012) {
+        if (Objects.nonNull(paperTrackingsErrors.getDetails().getCause()) && paperTrackingsErrors.getDetails().getCause().equals(ErrorCause.OCR_KO)) {
+            ValidationFlow validationFlow = new ValidationFlow();
+            if (isRECAG012) {
+                validationFlow.setRefinementDematValidationTimestamp(Instant.now());
+            } else {
+                validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
+            }
+            paperTrackingsToUpdate.setValidationFlow(validationFlow);
+        }
+    }
+
+    private static void setNewStatus(PaperTrackings paperTrackingsToUpdate, boolean isRECAG012) {
+        if(isRECAG012){
+            paperTrackingsToUpdate.setState(PaperTrackingsState.KO);
+        } else{
+            paperTrackingsToUpdate.setBusinessState(BusinessState.KO);
+        }
     }
 
 }

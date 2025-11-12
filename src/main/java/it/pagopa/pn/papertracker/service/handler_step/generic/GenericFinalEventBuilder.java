@@ -14,8 +14,8 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -54,10 +54,12 @@ public class GenericFinalEventBuilder implements HandlerStep {
     }
 
     protected PaperTrackings getPaperTrackingsToUpdate() {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setFinalEventBuilderTimestamp(Instant.now());
-        validationFlow.setDematValidationTimestamp(Instant.now());
+        validationFlow.setFinalEventDematValidationTimestamp(now);
+        validationFlow.setRefinementDematValidationTimestamp(now);
         paperTrackings.setValidationFlow(validationFlow);
         return paperTrackings;
     }
