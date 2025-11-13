@@ -43,35 +43,36 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
 
         PaperTrackingsState state = context.getPaperTrackings().getState();
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
-
+        //TODO: GESTIRE LA NUOVA ENV QUANDO PRESENTE PER STRICT FINAL EVENT VALIDATION PROCESS
         return switch (state) {
             case DONE -> true;
-            case AWAITING_REFINEMENT, AWAITING_FINAL_STATUS_CODE -> throw new PnPaperTrackerValidationException(
-                    "AWAITING_REFINEMENT state reached",
+            case AWAITING_REFINEMENT -> throw new PnPaperTrackerValidationException(
+                    "invalid AWAITING_REFINEMENT state for stock 890",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),
                             context.getPaperProgressStatusEvent().getStatusCode(),
-                            ErrorCategory.STATUS_CODE_ERROR,
-                            ErrorCause.OCR_KO,
-                            "AWAITING_REFINEMENT state reached",
+                            ErrorCategory.INCONSISTENT_STATE,
+                            ErrorCause.STOCK_890_REFINEMENT_MISSING,
+                            "invalid AWAITING_REFINEMENT state for stock 890",
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()
                     )
             );
             case AWAITING_OCR -> {
+                log.info("Awaiting OCR response for refinement, updating business state to AWAITING_REFINEMENT_OCR for trackingId: {}", context.getTrackingId());
                 paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate());
                 context.setStopExecution(true);
                 yield false;
             }
             case KO -> throw new PnPaperTrackerValidationException(
-                    "KO state reached",
+                    "Refinement process reached KO state, cannot proceed with final event validation",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),
                             context.getPaperProgressStatusEvent().getStatusCode(),
-                            ErrorCategory.STATUS_CODE_ERROR,
-                            ErrorCause.OCR_KO,
-                            "KO state reached",
+                            ErrorCategory.INCONSISTENT_STATE,
+                            ErrorCause.STOCK_890_REFINEMENT_ERROR,
+                            "Refinement process reached KO state, cannot proceed with final event validation",
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()

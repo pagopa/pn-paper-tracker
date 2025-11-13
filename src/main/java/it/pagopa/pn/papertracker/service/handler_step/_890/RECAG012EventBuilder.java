@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class RECAG012AEventBuilder implements HandlerStep {
+public class RECAG012EventBuilder implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {

@@ -24,12 +24,13 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.utils.QueueConst.DELIVERY_PUSH_EVENT_TYPE;
 import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.setNewStatus;
 
 @Service
 @Slf4j
@@ -60,7 +61,7 @@ public class DeliveryPushSender implements HandlerStep {
         return Flux.fromIterable(filteredEvent)
                 .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
                 .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
-                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode(), context.getContextStatusCode()))
                 .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
                 .then();
     }
@@ -100,10 +101,9 @@ public class DeliveryPushSender implements HandlerStep {
                 .thenReturn(event);
     }
 
-    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode) {
+    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode, String contextStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setBusinessState(BusinessState.DONE);
-        paperTrackings.setState(PaperTrackingsState.DONE);
+        setNewStatus(paperTrackings, contextStatusCode, BusinessState.DONE, PaperTrackingsState.DONE);
         if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
             paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
         }
