@@ -2,15 +2,18 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class CheckTrackingState implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(ctx -> {
-                    String statusCode = ctx.getPaperProgressStatusEvent().getStatusCode();
+                    String statusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), ctx.getEventId());
                     if (statusCode.startsWith("CON")) {
                         log.info("StatusCode excluded from CheckTrackingState: {}", statusCode);
                         return Mono.empty();
@@ -42,20 +45,10 @@ public class CheckTrackingState implements HandlerStep {
                 });
     }
 
-    private boolean isInvalidState(HandlerContext ctx, String statusCode) {
-        if (statusCode.equalsIgnoreCase(RECAG012.name())) {
-            PaperTrackingsState state = ctx.getPaperTrackings().getState();
-            return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
-        } else {
-            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
-            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
-        }
-    }
-
     private Mono<Void> createValidationError(HandlerContext ctx, String statusCode) {
-        String state = statusCode.equalsIgnoreCase(RECAG012.name())
-                ? ctx.getPaperTrackings().getState().name()
-                : ctx.getPaperTrackings().getBusinessState().name();
+        String state = TrackerUtility.isStockStatus890(statusCode)
+                ? ctx.getPaperTrackings().getBusinessState().name()
+                : ctx.getPaperTrackings().getState().name();
 
         String errorMsg = String.format("Tracking in state %s: %s", state, ctx.getTrackingId());
 

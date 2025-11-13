@@ -233,6 +233,7 @@ components:
         - productType
         - unifiedDeliveryDriver
         - state
+        - businessState
       properties:
         trackingId:
           type: string
@@ -246,17 +247,24 @@ components:
             $ref: '#/components/schemas/PaperEvent'
         validationFlow:
           $ref: '#/components/schemas/ValidationFlow'
+        validationConfig:
+          $ref: '#/components/schemas/ValidationConfig'
         productType:
           $ref: '#/components/schemas/ProductType'
         paperStatus:
           $ref: '#/components/schemas/PaperStatus'
-        ocrRequestId:
-          type: string
         nextRequestIdPcretry:
           type: string
         unifiedDeliveryDriver:
           type: string
         state:
+          type: string
+          enum:
+            - AWAITING_REFINEMENT
+            - AWAITING_OCR
+            - DONE
+            - KO
+        businessState:
           type: string
           enum:
             - AWAITING_FINAL_STATUS_CODE
@@ -269,14 +277,11 @@ components:
         updatedAt:
           type: string
           format: date-time
-        refined:
-          type: boolean
-        recag012StatusTimestamp:
-          type: string
-          format: date-time
     PaperEvent:
       type: object
       properties:
+        id:
+          type: string
         requestTimestamp:
           type: string
           format: date-time
@@ -285,11 +290,15 @@ components:
         statusTimestamp:
           type: string
           format: date-time
+        statusDescription:
+          type: string
+        iun:
+            type: string
         productType:
           $ref: '#/components/schemas/ProductType'
         deliveryFailureCause:
           type: string
-        discoveredAddress:
+        anonymizedDiscoveredAddressId:
           type: string
         attachments:
           type: array
@@ -300,6 +309,8 @@ components:
         createdAt:
           type: string
           format: date-time
+        dryRun:
+          type: boolean
     ProductType:
       type: string
       enum:
@@ -315,28 +326,67 @@ components:
           type: string
         documentType:
           type: string
-        url:
+        uri:
           type: string
         date:
           type: string
           format: date-time
+        sha256:
+          type: string
     ValidationFlow:
       type: object
       properties:
-        ocrEnabled:
-          type: boolean
         sequencesValidationTimestamp:
           type: string
           format: date-time
-        ocrRequestTimestamp:
+        ocrRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/OcrRequest'
+        finalEventDematValidationTimestamp:
           type: string
           format: date-time
-        dematValidationTimestamp:
+        refinementDematValidationTimestamp:
           type: string
           format: date-time
         finalEventBuilderTimestamp:
           type: string
           format: date-time
+        recag012StatusTimestamp:
+          type: string
+          format: date-time
+    OcrRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+        eventId:
+          type: string
+        requestTimestamp:
+          type: string
+          format: date-time
+        responseTimestamp:
+          type: string
+          format: date-time
+    ValidationConfig:
+      type: object
+      properties:
+        requiredAttachmentsRefinementStock890:
+          type: array
+          items:
+            type: string
+        sendOcrAttachmentsFinalValidationStock890:
+          type: array
+          items:
+            type: string
+        sendOcrAttachmentsFinalValidation:
+          type: array
+          items:
+            type: string
+        strictFinalValidationStock890:
+          type: boolean
+        ocrEnabled:
+          type: boolean
     PaperStatus:
       type: object
       properties:
@@ -346,7 +396,7 @@ components:
         deliveryFailureCause:
           type: string
           description: Causa del fallimento della consegna
-        discoveredAddress:
+        anonymizedDiscoveredAddress:
           type: string
           description: Indirizzo scoperto durante la spedizione
         finalStatusCode:
@@ -357,13 +407,10 @@ components:
           type: string
           format: date-time
           description: Timestamp validato delle triplette (data di rendicontazione documento)
-        validatedAttachmentUri:
-          type: string
-          description: URI del documento su safestorage
-          example: "safestorage://PN_EXTERNAL_LEGAL_FACTS-xxx.pdf"
-        validatedAttachmentType:
-          type: string
-          description: Tipo di documento validato
+        validatedAttachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
         validatedEvents:
           type: array
           description: Lista di eventi validati
@@ -376,10 +423,6 @@ components:
           type: string
           format: date-time
           description: Timestamp di affido al consolidatore recuperato dallo statusCode P000
-        actualPaperDeliveryTimestamp:
-          type: string
-          format: date-time
-          description: Timestamp corretto di affido al consolidatore
     TrackingErrorsResponse:
       type: object
       properties:
@@ -405,7 +448,7 @@ components:
         created:
           type: string
           format: date-time
-        category:
+        errorCategory:
           type: string
         details:
           type: object
@@ -425,6 +468,8 @@ components:
             - FINAL_EVENT_BUILDING
             - RETRY_PHASE
         eventThrow:
+          type: string
+        eventIdThrow:
           type: string
         productType:
           $ref: '#/components/schemas/ProductType'
@@ -450,6 +495,8 @@ components:
     PaperTrackerOutput:
       type: object
       properties:
+        created:
+          type: string
         registeredLetterCode:
           type: string
         statusCode:
@@ -466,9 +513,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Attachment'
-        discoveredAddress:
+        anonymizedDiscoveredAddressId:
           type: string
-        clientRequestTimeStamp:
+        clientRequestTimestamp:
           type: string
     TrackingCreationRequest:
       type: object

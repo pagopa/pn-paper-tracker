@@ -2,8 +2,10 @@ package it.pagopa.pn.papertracker.utils;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -54,7 +56,7 @@ public class TrackerUtility {
         }
     }
 
-    public static void setDematValidationTimestamp(PaperTrackingsErrors paperTrackingsErrors, PaperTrackings paperTrackingsToUpdate, String statusCode) {
+    public static void setDematValidationTimestamp(PaperTrackings paperTrackingsToUpdate, String statusCode) {
         ValidationFlow validationFlow = new ValidationFlow();
         if (RECAG012.name().equalsIgnoreCase(statusCode)) {
             validationFlow.setRefinementDematValidationTimestamp(Instant.now());
@@ -65,6 +67,27 @@ public class TrackerUtility {
             validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
         }
         paperTrackingsToUpdate.setValidationFlow(validationFlow);
+    }
+
+    public static boolean isInvalidState(HandlerContext ctx, String statusCode) {
+        if (TrackerUtility.isStockStatus890(statusCode)) {
+            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
+            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
+        } else{
+            PaperTrackingsState state = ctx.getPaperTrackings().getState();
+            return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
+        }
+    }
+
+    public static String getStatusCodeFromEventId(PaperTrackings paperTrackings, String eventId) {
+        if(!CollectionUtils.isEmpty(paperTrackings.getEvents())) {
+            return paperTrackings.getEvents().stream()
+                    .filter(event -> event.getId().equalsIgnoreCase(eventId))
+                    .findFirst()
+                    .map(Event::getStatusCode)
+                    .orElse(null);
+        }
+        return null;
     }
 
 }

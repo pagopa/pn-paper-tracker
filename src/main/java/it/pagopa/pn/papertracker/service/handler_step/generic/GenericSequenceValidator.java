@@ -56,7 +56,8 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings, HandlerContext context) {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
-        context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode());
+        context.setFinalStatusCode(true);
+        String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
         return extractSequenceFromEvents(paperTrackings.getEvents())
                 .filter(events -> !CollectionUtils.isEmpty(events))
@@ -67,13 +68,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .flatMap(events -> validateAttachments(events, paperTrackings, context))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate, context))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, context))
-                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, context))
+                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, statusCode))
                 .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(events, paperTrackingsToUpdate)));
     }
 
-    private Mono<List<Event>> enrichPaperTrackingToUpdateWithAddressAndFailureCause(List<Event> events, PaperTrackings paperTrackingsToUpdate, HandlerContext context) {
+    private Mono<List<Event>> enrichPaperTrackingToUpdateWithAddressAndFailureCause(List<Event> events, PaperTrackings paperTrackingsToUpdate, String statusCode) {
         return Mono.justOrEmpty(events.stream()
-                        .filter(e -> e.getStatusCode().equalsIgnoreCase(preCloseMetaStatusCode(context.getFinalStatusCode())))
+                        .filter(e -> e.getStatusCode().equalsIgnoreCase(preCloseMetaStatusCode(statusCode)))
                         .findFirst())
                 .doOnNext(preCloseEvent -> {
                     if (StringUtils.hasText(preCloseEvent.getAnonymizedDiscoveredAddressId())) {

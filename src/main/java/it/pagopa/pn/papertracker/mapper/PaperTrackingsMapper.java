@@ -1,21 +1,21 @@
 package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperEvent;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.CollectionUtils;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
+
+    public static Tracking toTracking(PaperTrackings paperTrackings) {
+        return SmartMapper.mapToClass(paperTrackings, Tracking.class);
+    }
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
         Instant now = Instant.now();
@@ -51,83 +51,5 @@ public class PaperTrackingsMapper {
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         return paperTrackings;
-    }
-
-    public static Tracking toTracking(PaperTrackings paperTrackings) {
-        Tracking tracking = new Tracking();
-        tracking.setTrackingId(paperTrackings.getTrackingId());
-        tracking.setAttemptId(paperTrackings.getAttemptId());
-        tracking.setPcRetry(paperTrackings.getPcRetry());
-        tracking.setUnifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver());
-        tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
-        tracking.setCreatedAt(paperTrackings.getCreatedAt());
-        tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
-        if(Objects.nonNull(paperTrackings.getProductType())){
-            tracking.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().getValue()));
-        }
-        if(!CollectionUtils.isEmpty(paperTrackings.getEvents())){
-            tracking.setEvents(paperTrackings.getEvents().stream().map(PaperTrackingsMapper::toPaperEvent).collect(java.util.stream.Collectors.toList()));
-        }
-        if(Objects.nonNull(paperTrackings.getValidationFlow())) {
-            tracking.setValidationFlow(toDtoValidationFlow(paperTrackings.getValidationFlow()));
-        }
-        if(Objects.nonNull(paperTrackings.getPaperStatus())){
-            tracking.setPaperStatus(toDtoPaperStatus(paperTrackings.getPaperStatus()));
-        }
-        if(Objects.nonNull(paperTrackings.getState())){
-            tracking.setState(Tracking.StateEnum.valueOf(paperTrackings.getState().name()));
-        }
-        return tracking;
-    }
-
-    private static PaperEvent toPaperEvent(Event event) {
-        PaperEvent paperEvent = new PaperEvent();
-        paperEvent.setRequestTimestamp(event.getRequestTimestamp());
-        paperEvent.setStatusCode(event.getStatusCode());
-        paperEvent.setStatusTimestamp(event.getStatusTimestamp());
-        paperEvent.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        paperEvent.setRegisteredLetterCode(event.getRegisteredLetterCode());
-        paperEvent.setCreatedAt(event.getCreatedAt());
-        if(!CollectionUtils.isEmpty(event.getAttachments())){
-            paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
-        }
-        if(Objects.nonNull(event.getProductType())) {
-            it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue());
-        }
-        return paperEvent;
-    }
-
-    private static Attachment toDtoAttachment(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment entityAttachment) {
-        Attachment dto = new Attachment();
-        dto.setId(entityAttachment.getId());
-        dto.setDocumentType(entityAttachment.getDocumentType());
-        dto.setUrl(entityAttachment.getUri());
-        dto.setDate(entityAttachment.getDate());
-        return dto;
-    }
-
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow toDtoValidationFlow(ValidationFlow entity) {
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow();
-        dto.setSequencesValidationTimestamp(entity.getSequencesValidationTimestamp());
-        dto.setDematValidationTimestamp(entity.getFinalEventDematValidationTimestamp());
-        dto.setFinalEventBuilderTimestamp(entity.getFinalEventBuilderTimestamp());
-        return dto;
-    }
-
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus toDtoPaperStatus(PaperStatus entity) {
-
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus();
-
-        dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
-        dto.setDeliveryFailureCause(entity.getDeliveryFailureCause());
-        dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddress());
-        dto.setFinalStatusCode(entity.getFinalStatusCode());
-        dto.setValidatedSequenceTimestamp(entity.getValidatedSequenceTimestamp());
-        dto.setFinalDematFound(entity.getFinalDematFound());
-        dto.setPaperDeliveryTimestamp(entity.getPaperDeliveryTimestamp());
-        if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){
-            dto.setValidatedEvents(entity.getValidatedEvents());
-        }
-        return dto;
     }
 }

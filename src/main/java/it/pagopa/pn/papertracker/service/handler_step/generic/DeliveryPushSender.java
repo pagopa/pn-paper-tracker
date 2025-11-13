@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -60,8 +61,8 @@ public class DeliveryPushSender implements HandlerStep {
 
         return Flux.fromIterable(filteredEvent)
                 .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
-                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
-                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode(), context.getContextStatusCode()))
+                .filter(sendEvent -> context.isFinalStatusCode() || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.isFinalStatusCode(), context.getEventId()))
                 .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
                 .then();
     }
@@ -101,16 +102,17 @@ public class DeliveryPushSender implements HandlerStep {
                 .thenReturn(event);
     }
 
-    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode, String contextStatusCode) {
+    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, boolean isFinalStatusCode, String eventId) {
         PaperTrackings paperTrackings = new PaperTrackings();
-        setNewStatus(paperTrackings, contextStatusCode, BusinessState.DONE, PaperTrackingsState.DONE);
+        String statusCode = TrackerUtility.getStatusCodeFromEventId(contextPaperTrackings, eventId);
+        setNewStatus(paperTrackings, statusCode, BusinessState.DONE, PaperTrackingsState.DONE);
         if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
             paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
         }
-        if(StringUtils.hasText(finalStatusCode)){
+        if(isFinalStatusCode){
             PaperStatus paperStatus = new PaperStatus();
-            paperStatus.setFinalStatusCode(finalStatusCode);
-            paperTrackings.setPaperStatus(paperStatus );
+            paperStatus.setFinalStatusCode(statusCode);
+            paperTrackings.setPaperStatus(paperStatus);
         }
         return paperTrackings;
     }
