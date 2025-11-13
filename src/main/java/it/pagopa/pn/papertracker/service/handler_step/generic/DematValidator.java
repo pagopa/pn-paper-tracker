@@ -105,16 +105,17 @@ public class DematValidator implements HandlerStep {
     }
 
     private PaperTrackings getPaperTrackingsToUpdate(boolean ocrEnabled, String ocrRequestId, PaperTrackingsState state){
-        PaperTrackings paperTracking = new PaperTrackings();
-        ValidationFlow validationFlow = new ValidationFlow();
+        //TODO: RIFATTORIZZARE DOPO IL REFACTOR DELL'OCR
+      PaperTrackings paperTracking = new PaperTrackings();
+       ValidationFlow validationFlow = new ValidationFlow();
         if(ocrEnabled){
-            validationFlow.setOcrEnabled(true);
-            validationFlow.setOcrRequestTimestamp(Instant.now());
-            paperTracking.setOcrRequestId(ocrRequestId);
+          // validationFlow.setOcrEnabled(true);
+           // validationFlow.setOcrRequestTimestamp(Instant.now());
+          //  paperTracking.setOcrRequestId(ocrRequestId);
             paperTracking.setState(state);
         }else{
-            validationFlow.setOcrEnabled(false);
-            validationFlow.setDematValidationTimestamp(Instant.now());
+           //validationFlow.setOcrEnabled(false);
+           validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
         }
         paperTracking.setValidationFlow(validationFlow);
         return paperTracking;

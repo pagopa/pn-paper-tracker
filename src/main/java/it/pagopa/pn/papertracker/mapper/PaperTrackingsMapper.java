@@ -23,7 +23,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
@@ -40,7 +41,8 @@ public class PaperTrackingsMapper {
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
         paperTrackings.setProductType(productType);
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(attemptId);
         paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
         paperTrackings.setCreatedAt(now);
@@ -57,12 +59,9 @@ public class PaperTrackingsMapper {
         tracking.setAttemptId(paperTrackings.getAttemptId());
         tracking.setPcRetry(paperTrackings.getPcRetry());
         tracking.setUnifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver());
-        tracking.setOcrRequestId(paperTrackings.getOcrRequestId());
         tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
         tracking.setCreatedAt(paperTrackings.getCreatedAt());
         tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
-        tracking.setRefined(paperTrackings.isRefined());
-        tracking.setRecag012StatusTimestamp(paperTrackings.getRecag012StatusTimestamp());
         if(Objects.nonNull(paperTrackings.getProductType())){
             tracking.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().getValue()));
         }
@@ -109,10 +108,8 @@ public class PaperTrackingsMapper {
 
     private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow toDtoValidationFlow(ValidationFlow entity) {
         it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow();
-        dto.setOcrEnabled(entity.getOcrEnabled());
         dto.setSequencesValidationTimestamp(entity.getSequencesValidationTimestamp());
-        dto.setOcrRequestTimestamp(entity.getOcrRequestTimestamp());
-        dto.setDematValidationTimestamp(entity.getDematValidationTimestamp());
+        dto.setDematValidationTimestamp(entity.getFinalEventDematValidationTimestamp());
         dto.setFinalEventBuilderTimestamp(entity.getFinalEventBuilderTimestamp());
         return dto;
     }
@@ -126,11 +123,8 @@ public class PaperTrackingsMapper {
         dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddress());
         dto.setFinalStatusCode(entity.getFinalStatusCode());
         dto.setValidatedSequenceTimestamp(entity.getValidatedSequenceTimestamp());
-        dto.setValidatedAttachmentUri(entity.getValidatedAttachmentUri());
-        dto.setValidatedAttachmentType(entity.getValidatedAttachmentType());
         dto.setFinalDematFound(entity.getFinalDematFound());
         dto.setPaperDeliveryTimestamp(entity.getPaperDeliveryTimestamp());
-        dto.setActualPaperDeliveryTimestamp(entity.getActualPaperDeliveryTimestamp());
         if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){
             dto.setValidatedEvents(entity.getValidatedEvents());
         }

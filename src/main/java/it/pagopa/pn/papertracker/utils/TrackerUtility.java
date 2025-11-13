@@ -1,10 +1,11 @@
 package it.pagopa.pn.papertracker.utils;
 
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
@@ -40,6 +41,30 @@ public class TrackerUtility {
                 RECAG006C.name().equalsIgnoreCase(status) ||
                 RECAG007C.name().equalsIgnoreCase(status) ||
                 RECAG008C.name().equalsIgnoreCase(status);
+    }
+
+    public static void setNewStatus(PaperTrackings paperTrackingsToUpdate, String statusCode, BusinessState businessState, PaperTrackingsState state) {
+        if (RECAG012.name().equalsIgnoreCase(statusCode)) {
+            paperTrackingsToUpdate.setState(state);
+        } else if (TrackerUtility.isStockStatus890(statusCode)) {
+            paperTrackingsToUpdate.setBusinessState(businessState);
+        } else {
+            paperTrackingsToUpdate.setState(state);
+            paperTrackingsToUpdate.setBusinessState(businessState);
+        }
+    }
+
+    public static void setDematValidationTimestamp(PaperTrackingsErrors paperTrackingsErrors, PaperTrackings paperTrackingsToUpdate, String statusCode) {
+        ValidationFlow validationFlow = new ValidationFlow();
+        if (RECAG012.name().equalsIgnoreCase(statusCode)) {
+            validationFlow.setRefinementDematValidationTimestamp(Instant.now());
+        } else if (TrackerUtility.isStockStatus890(statusCode)) {
+            validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
+        } else {
+            validationFlow.setRefinementDematValidationTimestamp(Instant.now());
+            validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
+        }
+        paperTrackingsToUpdate.setValidationFlow(validationFlow);
     }
 
 }

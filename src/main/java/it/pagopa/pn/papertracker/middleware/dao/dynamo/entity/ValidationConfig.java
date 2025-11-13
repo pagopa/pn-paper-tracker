@@ -1,0 +1,34 @@
+package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
+
+import lombok.Data;
+import lombok.Getter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+
+import java.util.List;
+
+@DynamoDbBean
+@Data
+public class ValidationConfig {
+
+    public static final String COL_OCR_ENABLED = "ocrEnabled";
+    public static final String COL_REQUIRED_ATTACHMENTS_REFINEMENT_STOCK_890 = "requiredAttachmentsRefinementStock890";
+    public static final String COL_SEND_OCR_FINAL_VALIDATION_STOCK_890 = "sendOcrAttachmentsFinalValidationStock890";
+    public static final String COL_SEND_OCR_FINAL_VALIDATION = "sendOcrAttachmentsFinalValidation";
+    public static final String COL_STRICT_FINAL_VALIDATION_STOCK_890 = "strictFinalValidationStock890";
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_OCR_ENABLED)}))
+    private Boolean ocrEnabled;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUIRED_ATTACHMENTS_REFINEMENT_STOCK_890)}))
+    private List<String> requiredAttachmentsRefinementStock890;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SEND_OCR_FINAL_VALIDATION_STOCK_890)}))
+    private List<String> sendOcrAttachmentsFinalValidationStock890;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SEND_OCR_FINAL_VALIDATION)}))
+    private List<String> sendOcrAttachmentsFinalValidation;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STRICT_FINAL_VALIDATION_STOCK_890)}))
+    private Boolean strictFinalValidationStock890;
+}

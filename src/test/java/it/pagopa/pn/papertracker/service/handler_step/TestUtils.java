@@ -25,7 +25,8 @@ public class TestUtils {
         pt.setTrackingId(requestId);
         pt.setProductType(ProductType.AR);
         pt.setUnifiedDeliveryDriver("POSTE");
-        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
@@ -39,7 +40,7 @@ public class TestUtils {
         pt.setTrackingId(requestId);
         pt.setProductType(ProductType.AR);
         pt.setUnifiedDeliveryDriver("POSTE");
-        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
@@ -91,11 +92,9 @@ public class TestUtils {
                 .containsAll(expectedValidatedCodes));
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
+        assertNotNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
         assertNotNull(pt.getValidationFlow().getFinalEventBuilderTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
         assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
@@ -208,10 +207,8 @@ public class TestUtils {
                 .containsAll(eventsWithoutCon.stream().map(Event::getStatusCode).toList()));
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
+        assertNotNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
         assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());

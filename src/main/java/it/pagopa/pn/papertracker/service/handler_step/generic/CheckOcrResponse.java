@@ -100,12 +100,14 @@ public class CheckOcrResponse implements HandlerStep {
     }
 
     private Event extractFinalEventFromOcr(PaperTrackings paperTrackings) {
-        String eventId = TrackerUtility.getEventIdFromOcrRequestId(paperTrackings.getOcrRequestId());
+        //TODO: RIFATTORIZZARE DOPO IL REFACTOR DELL'OCR
+        /*String eventId = TrackerUtility.getEventIdFromOcrRequestId(paperTrackings.getOcrRequestId());
         return paperTrackings.getEvents().stream()
                 .filter(event -> eventId.equalsIgnoreCase(event.getId()))
                 .findFirst()
                 .orElseThrow(() -> new PaperTrackerException("Invalid ocr requestId: " + paperTrackings.getOcrRequestId() +
-                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
+                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));*/
+        return null;
     }
 
 }

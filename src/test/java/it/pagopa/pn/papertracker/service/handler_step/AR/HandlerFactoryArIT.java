@@ -732,7 +732,6 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyPaperTrackings(PaperTrackings pt, PaperTrackings newPt, PaperTrackings newPt2, TestSequenceAREnum seq) {
-        assertNull(pt.getOcrRequestId());
         List<String> events = new ArrayList<>(pt.getEvents().stream().map(Event::getStatusCode).toList());
         if (Objects.nonNull(newPt)) {
             events.addAll(newPt.getEvents().stream().map(Event::getStatusCode).toList());
@@ -753,12 +752,12 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
             case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
             case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
             case OK_AR_INVALID_DATETIME -> {
-                assertEquals(KO, pt.getState());
+                assertEquals(BusinessState.KO, pt.getBusinessState());
                 assertEquals(6, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
             case FAIL_COMPIUTA_GIACENZA_AR -> {
-                assertEquals(AWAITING_FINAL_STATUS_CODE, pt.getState());
+                assertEquals(BusinessState.AWAITING_FINAL_STATUS_CODE, pt.getBusinessState());
                 assertEquals(6, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
@@ -766,12 +765,12 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
             case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02");
             case KO_AR_NO_EVENT_B -> {
-                assertEquals(AWAITING_FINAL_STATUS_CODE, pt.getState());
+                assertEquals(BusinessState.AWAITING_FINAL_STATUS_CODE, pt.getBusinessState());
                 assertEquals(5, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
             case FAIL_GIACENZA_AR -> {
-                assertEquals(DONE, pt.getState());
+                assertEquals(BusinessState.DONE, pt.getBusinessState());
                 assertEquals(7, pt.getEvents().size());
                 assertEquals(5, pt.getPaperStatus().getValidatedEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());

@@ -20,6 +20,7 @@ public class PaperTrackings {
     public static final String COL_EVENTS = "events";
     public static final String COL_PAPER_STATUS = "paperStatus";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
+    public static final String COL_VALIDATION_CONFIG = "validationConfig";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_NEXT_REQUEST_ID_PC_RETRY = "nextRequestIdPcretry";
@@ -31,7 +32,6 @@ public class PaperTrackings {
     public static final String COL_TTL = "ttl";
     public static final String COL_REFINED = "refined";
     public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
-    public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
@@ -58,8 +58,8 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = OCR_REQUEST_ID_INDEX), @DynamoDbAttribute(COL_OCR_REQUEST_ID)}))
-    private String ocrRequestId;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_CONFIG), @DynamoDbIgnoreNulls}))
+    private ValidationConfig validationConfig;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NEXT_REQUEST_ID_PC_RETRY)}))
     private String nextRequestIdPcretry;
@@ -78,12 +78,6 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REFINED)}))
-    private boolean refined;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_RECAG012_STATUS_TIMESTAMP)}))
-    private Instant recag012StatusTimestamp;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =

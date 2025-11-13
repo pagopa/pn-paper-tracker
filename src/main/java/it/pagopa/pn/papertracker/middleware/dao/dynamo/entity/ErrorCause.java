@@ -11,7 +11,8 @@ public enum ErrorCause {
     OCR_DUPLICATED_EVENT("Evento di risposta duplicato"),
     OCR_KO( "Errore nella validazione dell'OCR"),
     OCR_UNSUPPORTED_PRODUCT("Prodotto non supportato per la validazione OCR"),
-    GIACENZA_RECAG012_ERROR("Spedizione 890 non perfezionata in giacenza");
+    STOCK_890_REFINEMENT_MISSING("Spedizione 890 non perfezionata"),
+    STOCK_890_REFINEMENT_ERROR("Errore nel perfezionamento della spedizione 890"),;
 
     private final String description;
 
