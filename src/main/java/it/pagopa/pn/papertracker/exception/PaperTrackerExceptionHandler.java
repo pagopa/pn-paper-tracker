@@ -61,7 +61,7 @@ public class PaperTrackerExceptionHandler {
 
     private static void setDematValidationTimestampIfNeeded(PaperTrackingsErrors paperTrackingsErrors, PaperTrackings paperTrackingsToUpdate, String statusCode) {
         if (Objects.nonNull(paperTrackingsErrors.getDetails().getCause()) && paperTrackingsErrors.getDetails().getCause().equals(ErrorCause.OCR_KO)) {
-           setDematValidationTimestamp(paperTrackingsErrors, paperTrackingsToUpdate, statusCode);
+           setDematValidationTimestamp(paperTrackingsToUpdate, statusCode);
         }
     }
 

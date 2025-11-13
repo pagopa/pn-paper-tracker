@@ -19,8 +19,7 @@ public class HandlerContext {
     private List<SendEvent> eventsToSend = new ArrayList<>();
     private boolean stopExecution = false;
     private String eventId;
-    private String contextStatusCode;
-    private String finalStatusCode;
+    private boolean isFinalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
     private OcrDataResultPayload ocrDataResultPayload;

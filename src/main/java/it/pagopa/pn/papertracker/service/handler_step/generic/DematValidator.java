@@ -162,7 +162,7 @@ public class DematValidator implements HandlerStep {
             log.error("Demat events not found for trackingId={}", paperTracking.getTrackingId());
             throw new PnPaperTrackerValidationException("Demat events not found", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                     paperTracking,
-                    context.getPaperProgressStatusEvent().getStatusCode(),
+                    TrackerUtility.getStatusCodeFromEventId(paperTracking, context.getEventId()),
                     ErrorCategory.DEMAT_EMPTY_EVENT,
                     null,
                     "Demat events not found",
@@ -182,7 +182,7 @@ public class DematValidator implements HandlerStep {
             log.error("Invalid number of attachments for demat event found for trackingId={}", paperTracking.getTrackingId());
             throw new PnPaperTrackerValidationException("Invalid number of attachments for demat event", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                     paperTracking,
-                    context.getPaperProgressStatusEvent().getStatusCode(),
+                    TrackerUtility.getStatusCodeFromEventId(paperTracking, context.getEventId()),
                     ErrorCategory.DEMAT_ATTACHMENT_NUMBER_ERROR,
                     null,
                     "Invalid number of attachments for demat event",

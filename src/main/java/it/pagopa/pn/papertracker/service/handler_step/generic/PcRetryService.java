@@ -41,6 +41,7 @@ public class PcRetryService {
     private PaperTrackings getPaperTrackingsPcretry(PcRetryResponse pcRetryResponse) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);
+        paperTrackings.setBusinessState(BusinessState.DONE);
         paperTrackings.setNextRequestIdPcretry(pcRetryResponse.getRequestId());
         return paperTrackings;
     }
