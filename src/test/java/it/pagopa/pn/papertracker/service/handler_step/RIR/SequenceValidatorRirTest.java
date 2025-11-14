@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -27,8 +26,6 @@ class SequenceValidatorRirTest {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
-    private final SequenceConfiguration sequenceConfiguration = new SequenceConfiguration();
-
     private SequenceValidatorRir sequenceValidatorRir;
 
     @InjectMocks
@@ -39,8 +36,17 @@ class SequenceValidatorRirTest {
         MockitoAnnotations.openMocks(this);
         PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
         paperProgressStatusEvent.setStatusCode("RECRI003C");
+        PaperTrackings paperTrackings = getPaperTrackings();
+        context.setPaperTrackings(paperTrackings);
         context.setPaperProgressStatusEvent(paperProgressStatusEvent);
-        sequenceValidatorRir = new SequenceValidatorRir(sequenceConfiguration, paperTrackingsDAO);
+        sequenceValidatorRir = new SequenceValidatorRir(paperTrackingsDAO);
+    }
+
+    private PaperTrackings getPaperTrackings() {
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        return paperTrackings;
     }
 
     @Test
@@ -49,10 +55,7 @@ class SequenceValidatorRirTest {
         //Arrange
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setPaperStatus(new PaperStatus());
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
                 buildEvent("RECRI002", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "", "", null),
                 buildEvent("RECRI001", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "", "", null),
@@ -68,7 +71,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
         // Assert
@@ -80,10 +83,7 @@ class SequenceValidatorRirTest {
         //Arrange
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setPaperStatus(new PaperStatus());
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
@@ -94,7 +94,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
         // Assert
@@ -105,12 +105,10 @@ class SequenceValidatorRirTest {
     @Test
     void validateSequenceValidFlow004() {
         // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setPaperStatus(new PaperStatus());
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
@@ -120,7 +118,7 @@ class SequenceValidatorRirTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
         // Assert
@@ -130,15 +128,12 @@ class SequenceValidatorRirTest {
     @Test
     void validateSequenceValidFlow004MultiDocumentFailure() {
         // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
+
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp, businessTimestamp, "", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "", "", null),
                 buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
@@ -147,9 +142,9 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Attachments are not valid for the sequence"))
+                        throwable.getMessage().contains("Missed required attachments for the sequence validation: [Plico]"))
                 .verify();
     }
 
@@ -157,18 +152,14 @@ class SequenceValidatorRirTest {
     @Test
     void validateSequenceInvalidEventCount() {
         // Arrange
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI003A", Instant.now(), Instant.now(), "REG123", "", null)
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Invalid lastEvent for sequence validation"))
+                        throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
     }
 
@@ -178,12 +169,7 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
@@ -192,7 +178,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid business timestamps"))
                 .verify();
@@ -201,21 +187,19 @@ class SequenceValidatorRirTest {
     @Test
     void validateSequenceInvalidSequenceSize() {
         // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
+
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI003B", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent("RECRI004C", timestamp, businessTimestamp, "REG123", "", null)
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
                 .verify();
@@ -228,11 +212,7 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(new PaperStatus());
-
-        paperTrackings.setEvents(List.of(
+        context.getPaperTrackings().setEvents(List.of(
                 buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
@@ -241,7 +221,7 @@ class SequenceValidatorRirTest {
         ));
 
         // Act & Assert
-        StepVerifier.create(sequenceValidatorRir.validateSequence(paperTrackings, context))
+        StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
                 .verify();

@@ -1,11 +1,14 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.*;
+import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +22,14 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.ARCAD;
+import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.CAD;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public abstract class GenericSequenceValidator implements HandlerStep {
 
-    private final SequenceConfiguration sequenceConfiguration;
     private final PaperTrackingsDAO paperTrackingsDAO;
 
 
@@ -39,12 +44,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
+        SequenceConfig sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
+
+        log.debug("Executing GenericSequenceValidator with sequence config: {}", sequenceConfig);
         return Mono.just(context.getPaperTrackings())
-                .flatMap(paperTrackings -> validateSequence(paperTrackings, context))
-                .flatMap(updatedPaperTracking -> {
-                    context.setPaperTrackings(updatedPaperTracking);
-                    return Mono.empty();
-                });
+                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig))
+                .doOnNext(context::setPaperTrackings)
+                .then();
     }
 
     /**
@@ -53,22 +59,21 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings oggetto contenente gli eventi da validare
      * @return Mono<Void> che completa se la validazione ha successo, altrimenti emette un Mono.error
      */
-    public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings, HandlerContext context) {
+    public Mono<PaperTrackings> validateSequence(PaperTrackings paperTrackings, HandlerContext context, SequenceConfig sequenceConfig) {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
         context.setFinalStatusCode(true);
-        String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
-        return extractSequenceFromEvents(paperTrackings.getEvents())
+        return extractSequenceFromEvents(paperTrackings.getEvents(), sequenceConfig.sequenceStatusCodes())
                 .filter(events -> !CollectionUtils.isEmpty(events))
                 .switchIfEmpty(generateCustomError("Invalid lastEvent for sequence validation", context, paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR))
                 .flatMap(this::getOnlyLatestEvents)
-                .flatMap(events -> validatePresenceOfStatusCodes(events, paperTrackings, context))
-                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context))
-                .flatMap(events -> validateAttachments(events, paperTrackings, context))
+                .flatMap(events -> validatePresenceOfStatusCodes(events, paperTrackings, context, sequenceConfig.requiredStatusCodes()))
+                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context, sequenceConfig))
+                .flatMap(events -> validateAttachments(events, paperTrackings, context, sequenceConfig.validAttachments(), sequenceConfig.requiredAttachments()))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate, context))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, context))
-                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, statusCode))
+                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, context.getPaperProgressStatusEvent().getStatusCode()))
                 .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(events, paperTrackingsToUpdate)));
     }
 
@@ -80,7 +85,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     if (StringUtils.hasText(preCloseEvent.getAnonymizedDiscoveredAddressId())) {
                         paperTrackingsToUpdate.getPaperStatus().setAnonymizedDiscoveredAddress(preCloseEvent.getAnonymizedDiscoveredAddressId());
                     }
-                    if(StringUtils.hasText(preCloseEvent.getDeliveryFailureCause())){
+                    if (StringUtils.hasText(preCloseEvent.getDeliveryFailureCause())) {
                         paperTrackingsToUpdate.getPaperStatus().setDeliveryFailureCause(preCloseEvent.getDeliveryFailureCause());
                     }
                 })
@@ -117,43 +122,74 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings entità di paper tracking
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context) {
-        log.info("Beginning validation for attachents for events : {}", events);
+    private Mono<List<Event>> validateAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context,
+                                                  Map<String, Set<String>> validAttachments, Set<String> requiredAttachments) {
+        log.info("Beginning attachment validation for events: {}", events);
 
-        Set<SequenceElement> sequenceElements = Optional.ofNullable(sequenceConfiguration.sequenceMap().get(events.getFirst().getStatusCode())).orElseGet(Set::of);
-        Map<String, List<String>> statusCodeReceivedAttachments = events.stream()
-                .collect(Collectors.groupingBy(
-                        Event::getStatusCode,
-                        Collectors.flatMapping(
-                                e -> Optional.ofNullable(e.getAttachments()).orElse(List.of()).stream().map(Attachment::getDocumentType),
-                                Collectors.toList()
-                        )
-                ));
+        var eventsWithAttachments = events.stream()
+                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
+                .toList();
 
-        return Flux.fromIterable(sequenceElements)
-                .filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType()))
-                .flatMap(sequenceElement -> {
-                    List<String> documentTypes = statusCodeReceivedAttachments.getOrDefault(sequenceElement.getCode(), List.of());
-                    return checkAttachments(documentTypes, sequenceElement, context, paperTrackings);
-                })
-                .then()
-                .thenReturn(events);
+        var allDocs = eventsWithAttachments.stream()
+                .flatMap(event -> event.getAttachments().stream().map(Attachment::getDocumentType))
+                .collect(Collectors.toSet());
+
+        return verifyRequiredAttachments(events, paperTrackings, context, requiredAttachments, allDocs)
+                .flatMap(events1 -> verifyValidAttachments(events, paperTrackings, context, validAttachments, eventsWithAttachments))
+                .doOnNext(unused -> log.info("Attachments validation completed successfully"));
     }
 
-    private Mono<Void> checkAttachments(List<String> documentTypes, SequenceElement sequenceElement, HandlerContext context, PaperTrackings paperTrackings) {
-        if (new HashSet<>(documentTypes).containsAll(sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue).toList())) {
-            return Mono.empty();
-        } else {
-            return Mono.error(new PnPaperTrackerValidationException("Attachments are not valid for the sequence element: " + sequenceElement, PaperTrackingsErrorsMapper.buildPaperTrackingsError(
-                    paperTrackings,
-                    context.getPaperProgressStatusEvent().getStatusCode(),
-                    ErrorCategory.ATTACHMENTS_ERROR,
-                    null,
-                    "Attachments are not valid for the sequence element: " + sequenceElement,
-                    FlowThrow.SEQUENCE_VALIDATION,
-                    ErrorType.ERROR,
-                    context.getEventId())));
+    private static Mono<List<Event>> verifyRequiredAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Set<String> requiredAttachments, Set<String> allDocs) {
+        var missingDocs = new HashSet<>(requiredAttachments);
+        missingDocs.removeAll(allDocs);
+        if (missingDocs.isEmpty() || isPresentArcadOrCadForStock890(missingDocs)) {
+            return Mono.just(events);
         }
+        return Mono.error(new PnPaperTrackerValidationException(
+                "Missed required attachments for the sequence validation: " + missingDocs,
+                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                        paperTrackings,
+                        context.getPaperProgressStatusEvent().getStatusCode(),
+                        ErrorCategory.ATTACHMENTS_ERROR,
+                        null,
+                        "Missed required attachments for the sequence validation: " + missingDocs,
+                        FlowThrow.SEQUENCE_VALIDATION,
+                        ErrorType.ERROR,
+                        context.getEventId())));
+    }
+
+    private static boolean isPresentArcadOrCadForStock890(HashSet<String> missingDocs) {
+        return missingDocs.size() == 1 && (missingDocs.contains(ARCAD.getValue()) || missingDocs.contains(CAD.getValue()));
+    }
+
+    private static Mono<List<Event>> verifyValidAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Map<String, Set<String>> validAttachments, List<Event> eventsWithAttachments) {
+        for (Event e : eventsWithAttachments) {
+            var allowedDocs = validAttachments.get(e.getStatusCode());
+
+            var eventDocs = e.getAttachments().stream()
+                    .map(Attachment::getDocumentType)
+                    .collect(Collectors.toSet());
+
+            // Se l'evento contiene documenti non ammessi
+            var invalidDocs = eventDocs.stream()
+                    .filter(doc -> CollectionUtils.isEmpty(allowedDocs) || !allowedDocs.contains(doc))
+                    .collect(Collectors.toSet());
+
+            if (!CollectionUtils.isEmpty(invalidDocs)) {
+                return Mono.error(new PnPaperTrackerValidationException(
+                        "Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs,
+                        PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                                paperTrackings,
+                                e.getStatusCode(),
+                                ErrorCategory.ATTACHMENTS_ERROR,
+                                null,
+                                "Invalid attachments for " + e.getStatusCode() + ": " + invalidDocs + ". Valid: " + allowedDocs,
+                                FlowThrow.SEQUENCE_VALIDATION,
+                                ErrorType.ERROR,
+                                context.getEventId())));
+            }
+        }
+        return Mono.just(events);
     }
 
     /**
@@ -269,13 +305,14 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     /**
      * Estrae la sequenza di eventi rilevanti (tripletta ABC/ DEF) dalla lista fornita.
      *
-     * @param events         lista di eventi da cui estrarre la sequenza
+     * @param events lista di eventi da cui estrarre la sequenza
      * @return Mono contenente la lista filtrata di eventi
      */
-    private Mono<List<Event>> extractSequenceFromEvents(List<Event> events) {
+    private Mono<List<Event>> extractSequenceFromEvents(List<Event> events, Set<String> requiredStatusCodes) {
         log.info("Beginning extraction of relevant events from : {}", events);
-        Set<SequenceElement> sequenceElements = Optional.ofNullable(sequenceConfiguration.sequenceMap().get(events.getLast().getStatusCode())).orElseGet(Set::of);
-        return Mono.just(events.stream().filter(event -> sequenceElements.stream().anyMatch(element -> element.getCode().equals(event.getStatusCode()))).toList());
+        return Mono.just(events.stream()
+                .filter(e -> requiredStatusCodes.contains(e.getStatusCode()))
+                .toList());
     }
 
     /**
@@ -285,20 +322,14 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings entità di paper tracking
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validatePresenceOfStatusCodes(List<Event> events, PaperTrackings paperTrackings, HandlerContext context) {
+    private Mono<List<Event>> validatePresenceOfStatusCodes(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Set<String> requiredStatusCodes) {
         log.info("Beginning validation for required status codes for events : {}", events);
 
-        List<String> eventsStatusCodes = events.stream().map(Event::getStatusCode).toList();
-        Set<SequenceElement> sequenceElements = Optional.ofNullable(sequenceConfiguration.sequenceMap().get(events.getFirst().getStatusCode())).orElseGet(Set::of);
-        return Flux.fromIterable(sequenceElements)
-                .map(SequenceElement::getCode)
-                .flatMap(statusCode -> {
-                    if (!eventsStatusCodes.contains(statusCode)) {
-                        return generateCustomError("Necessary status code not found in events", context, paperTrackings, ErrorCategory.STATUS_CODE_ERROR);
-                    }
-                    return Mono.just(statusCode);
-                })
-                .then(Mono.just(events));
+        Set<String> eventStatusCodes = events.stream().map(Event::getStatusCode).collect(Collectors.toSet());
+        if (!eventStatusCodes.containsAll(requiredStatusCodes)) {
+            return generateCustomError("Necessary status code not found in events", context, paperTrackings, ErrorCategory.STATUS_CODE_ERROR);
+        }
+        return Mono.just(events);
     }
 
     /**
@@ -310,33 +341,24 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings entità di tracking
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateBusinessTimestamps(List<Event> events, PaperTrackings paperTrackings, HandlerContext context) {
+    private Mono<List<Event>> validateBusinessTimestamps(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, SequenceConfig sequenceConfig) {
         log.info("Beginning validation for business timestamps for events : {}", events);
+        Set<String> finalGroup = sequenceConfig.dateValidationGroupForFinalEvents();
+        Set<String> stockGroup = sequenceConfig.dateValidationGroupForStockEvents();
 
-        Set<SequenceElement> sequenceElements = Optional.ofNullable(sequenceConfiguration.sequenceMap().get(events.getFirst().getStatusCode())).orElseGet(Set::of);
-        List<String> groupIds = sequenceElements.stream()
-                .map(SequenceElement::getDateValidationGroup)
-                .filter(Objects::nonNull)
-                .distinct()
+        boolean validFinal = allStatusTimestampAreEquals(events, finalGroup);
+        boolean validStock = allStatusTimestampAreEquals(events, stockGroup);
+
+        if (validFinal && validStock) return Mono.just(events);
+        return generateCustomError("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR);
+    }
+
+    private boolean allStatusTimestampAreEquals(List<Event> events, Set<String> group) {
+        List<Instant> timestamps = events.stream()
+                .filter(e -> group.contains(e.getStatusCode()))
+                .map(Event::getStatusTimestamp)
                 .toList();
-
-        return Flux.fromIterable(groupIds)
-                .flatMap(groupId -> Mono.just(events.stream()
-                        .filter(event -> {
-                            SequenceElement seqElem = sequenceElements.stream()
-                                    .filter(seqElement -> seqElement.getCode().equals(event.getStatusCode()))
-                                    .findFirst()
-                                    .orElse(null);
-                            return seqElem != null && Objects.equals(seqElem.getDateValidationGroup(), groupId);
-                        })
-                        .toList()))
-                .flatMap(groupEvents -> {
-                    boolean allStatusTimestampInGroupAreEquals = groupEvents.stream().allMatch(groupEvent -> groupEvent.getStatusTimestamp().equals(groupEvents.getFirst().getStatusTimestamp()));
-                    if (!allStatusTimestampInGroupAreEquals) {
-                        return generateCustomError("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR);
-                    }
-                    return Mono.just(groupEvents);
-                }).then(Mono.just(events));
+        return timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()));
     }
 
     private <T> Mono<T> generateCustomError(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory) {

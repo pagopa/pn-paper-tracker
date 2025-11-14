@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -19,22 +20,21 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public SequenceValidator890(SequenceConfiguration sequenceConfiguration, PaperTrackingsDAO paperTrackingsDAO) {
-        super(sequenceConfiguration, paperTrackingsDAO);
+    public SequenceValidator890(PaperTrackingsDAO paperTrackingsDAO) {
+        super(paperTrackingsDAO);
         this.paperTrackingsDAO = paperTrackingsDAO;
     }
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
+        SequenceConfig sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
 
         return Mono.just(context.getPaperTrackings())
                 .filter(paperTrackings -> checkState(context))
-                .flatMap(paperTrackings -> validateSequence(paperTrackings, context))
-                .flatMap(updatedPaperTracking -> {
-                    context.setPaperTrackings(updatedPaperTracking);
-                    return Mono.empty();
-                });
+                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig))
+                .doOnNext(context::setPaperTrackings)
+                .then();
     }
 
     private boolean checkState(HandlerContext context) {
