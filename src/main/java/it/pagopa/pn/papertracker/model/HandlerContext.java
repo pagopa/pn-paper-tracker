@@ -24,6 +24,5 @@ public class HandlerContext {
     private Long messageReceiveCount;
     private boolean refinementCondition;
     private OcrDataResultPayload ocrDataResultPayload;
-    private boolean refinementCondition;
 
 }
