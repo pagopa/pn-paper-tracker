@@ -23,5 +23,6 @@ public class HandlerContext {
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
     private OcrDataResultPayload ocrDataResultPayload;
+    private boolean refinementCondition;
 
 }

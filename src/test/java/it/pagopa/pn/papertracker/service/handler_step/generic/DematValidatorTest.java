@@ -9,6 +9,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,6 @@ class DematValidatorTest {
     PnPaperTrackerConfigs cfg;
     @Mock
     OcrMomProducer ocrMomProducer;
-
     @Mock
     SafeStorageClient safeStorageClient;
 
@@ -48,6 +48,7 @@ class DematValidatorTest {
     @BeforeEach
     void setUp() {
         context = new HandlerContext();
+        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -58,7 +59,7 @@ class DematValidatorTest {
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         context.setPaperTrackings(paperTrackings);
-        dematValidator = new DematValidator(paperTrackingsDAO, cfg, ocrMomProducer, safeStorageClient);
+        dematValidator = new DematValidator(ocrUtility);
     }
 
     private Event getEvent(String statusCode, String documentType, String eventId) {
