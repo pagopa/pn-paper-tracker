@@ -7,6 +7,8 @@ import java.util.Set;
 @Getter
 public enum OcrDocumentTypeEnum {
 
+    //TODO:RIMUOVERE DOPO REFACTOR OCR
+
     AR(Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.PLICO)),
     RIR(Set.of(DocumentTypeEnum.AR, DocumentTypeEnum.PLICO));
 

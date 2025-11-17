@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -32,7 +31,6 @@ class SequenceValidator890Test {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
-    private final SequenceConfiguration sequenceConfiguration = new SequenceConfiguration();
 
     private SequenceValidator890 sequenceValidator890;
 
@@ -40,7 +38,7 @@ class SequenceValidator890Test {
 
     @BeforeEach
     void setUp() {
-        sequenceValidator890 = new SequenceValidator890(sequenceConfiguration, paperTrackingsDAO);
+        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO);
         context = new HandlerContext();
         context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
     }
@@ -49,7 +47,16 @@ class SequenceValidator890Test {
     void executeWithStockStatusFalse() {
         // Arrange
         PaperTrackings paperTrackings = getPaperTrackings();
-        context.getPaperProgressStatusEvent().setStatusCode("RECAG003C");
+        Attachment attach = new Attachment();
+        attach.setDocumentType("23L");
+        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG002B"))
+                .findFirst()
+                .map(event -> {
+                    event.setAttachments(List.of(attach));
+                    return event;
+                });
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
@@ -66,6 +73,22 @@ class SequenceValidator890Test {
         // Arrange
         PaperTrackings paperTrackings = getPaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);
+        Attachment attach = new Attachment();
+        attach.setDocumentType("23L");
+        Attachment attach2 = new Attachment();
+        attach2.setDocumentType("ARCAD");
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG005B"))
+                .findFirst()
+                .map(event -> {
+                    event.setAttachments(List.of(attach, attach2));
+                    return event;
+                });
+        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
+        tmpList.add(event1);
+        tmpList.add(event2);
+        paperTrackings.setEvents(tmpList);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
@@ -139,9 +162,9 @@ class SequenceValidator890Test {
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECAG001A", timestamp, businessTimestamp, null),
-                buildEvent("RECAG001B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
-                buildEvent("RECAG001C", timestamp, businessTimestamp.plusSeconds(2), null)
+                buildEvent("RECAG005A", timestamp, businessTimestamp, null),
+                buildEvent("RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
+                buildEvent("RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
         ));
         return paperTrackings;
     }
