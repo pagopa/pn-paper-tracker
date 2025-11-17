@@ -47,7 +47,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(extractFinalEvent(context))
+        return Mono.just(TrackerUtility.extractEventFromContext(context))
                 .doOnNext(event -> context.setFinalStatusCode(true))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)

@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.awt.print.Paper;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -166,6 +168,13 @@ class SequenceValidator890Test {
                 buildEvent("RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
                 buildEvent("RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
         ));
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
 

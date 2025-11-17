@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
@@ -37,67 +38,44 @@ public class RECAG012EventBuilder implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = TrackerUtility.getStatusCodeFromEventId(paperTrackings, context.getEventId());
-        String currentStatusCode = Objects.nonNull(context.getPaperProgressStatusEvent())
-                ? context.getPaperProgressStatusEvent().getStatusCode()
-                : null;
-
+        String currentStatusCode = context.getPaperProgressStatusEvent().getStatusCode();
         PaperTrackingsState state = paperTrackings.getState();
         EventStatusCodeEnum eventStatus = EventStatusCodeEnum.fromKey(statusCode);
 
         if (state == PaperTrackingsState.DONE || eventStatus.getCodeType() == EventTypeEnum.FINAL_EVENT) {
-            log.info("Skip RECAG012 for trackingId={} (state={}, statusCode={})", context.getTrackingId(), state, statusCode);
+            log.info("Skip RECAG012 event build for trackingId={} (state={}, statusCode={})", context.getTrackingId(), state, statusCode);
             return Mono.empty();
         }
 
-        ValidationConfig config = paperTrackings.getValidationConfig();
-        boolean ocrEnabled = Objects.nonNull(config) && Boolean.TRUE.equals(config.getOcrEnabled());
-        if (!ocrEnabled) {
+        OcrStatusEnum ocrEnabled = paperTrackings.getValidationConfig().getOcrEnabled();
+        if (OcrStatusEnum.DISABLED.equals(ocrEnabled) || OcrStatusEnum.DRY.equals(ocrEnabled)) {
             return handleWithoutOcr(context, currentStatusCode);
         }
-        return handleWithOcr(context, currentStatusCode);
+        return handleWithOcr(context);
     }
 
     private Mono<Void> handleWithoutOcr(HandlerContext context, String currentStatusCode) {
         boolean refinement = context.isRefinementCondition();
         if (refinement) {
-            return RECAG012.name().equalsIgnoreCase(currentStatusCode) ? buildAndUpdate(context, this::buildRECAG012Event) : buildOkEventFromExisting(context);
+            return RECAG012.name().equalsIgnoreCase(currentStatusCode) ? buildAndUpdate(context, this::buildRECAG012Event)
+                    : buildAndUpdate(context, this::buildOkEventFromExisting);
         }
-        return buildRECAG012AEvent(context)
-                .doOnNext(context.getEventsToSend()::add)
-                .then();
+        return RECAG012.name().equalsIgnoreCase(currentStatusCode) ?
+                buildRECAG012AEvent(context).doOnNext(context.getEventsToSend()::add).then() : Mono.empty();
     }
 
-    private Mono<Void> handleWithOcr(HandlerContext context, String currentStatusCode) {
+    private Mono<Void> handleWithOcr(HandlerContext context) {
         if (!checkOcrStatus(context)) return Mono.empty();
-        if (RECAG012.name().equalsIgnoreCase(currentStatusCode)) {
-            return buildAndUpdate(context, this::buildRECAG012Event);
-        }
-        return buildOkEventFromExisting(context);
+        return buildAndUpdate(context, this::buildRECAG012EventFromEventId);
     }
 
-    private Event findExistingEvent(PaperTrackings paperTrackings) {
+    private Event findExistingRECAG012Event(PaperTrackings paperTrackings) {
         return Objects.nonNull(paperTrackings.getEvents())
                 ? paperTrackings.getEvents().stream()
                 .filter(e -> RECAG012.name().equalsIgnoreCase(e.getStatusCode()))
                 .findFirst()
                 .orElse(null)
                 : null;
-    }
-
-    private Mono<Void> buildOkEventFromExisting(HandlerContext context) {
-        Event recag012Event = findExistingEvent(context.getPaperTrackings());
-        if (Objects.isNull(recag012Event)) return Mono.empty();
-        return SendEventMapper.createSendEventsFromEventEntity(
-                        context.getTrackingId(),
-                        recag012Event,
-                        StatusCodeEnum.OK,
-                        RECAG012.name(),
-                        recag012Event.getStatusTimestamp().atOffset(java.time.ZoneOffset.UTC)
-                )
-                .doOnNext(context.getEventsToSend()::add)
-                .collectList()
-                .flatMap(list -> paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate()))
-                .then();
     }
 
     private Mono<Void> buildAndUpdate(HandlerContext context, Function<HandlerContext, Flux<SendEvent>> builder) {
@@ -120,6 +98,28 @@ public class RECAG012EventBuilder implements HandlerStep {
 
     private Flux<SendEvent> buildRECAG012Event(HandlerContext context) {
         return SendEventMapper.createSendEventsFromPaperProgressStatusEvent(context.getPaperProgressStatusEvent());
+    }
+
+    private Flux<SendEvent> buildRECAG012EventFromEventId(HandlerContext context) {
+        Event recag012Event = TrackerUtility.extractEventFromContext(context);
+        return createEvents(context, recag012Event);
+    }
+
+    private Flux<SendEvent> buildOkEventFromExisting(HandlerContext context) {
+        Event recag012Event = findExistingRECAG012Event(context.getPaperTrackings());
+        if (Objects.isNull(recag012Event)) return Flux.empty();
+        return createEvents(context, recag012Event);
+
+    }
+
+    private Flux<SendEvent> createEvents(HandlerContext context, Event recag012Event) {
+        return SendEventMapper.createSendEventsFromEventEntity(
+                context.getTrackingId(),
+                recag012Event,
+                StatusCodeEnum.OK,
+                RECAG012.name(),
+                recag012Event.getStatusTimestamp().atOffset(java.time.ZoneOffset.UTC)
+        );
     }
 
     private Flux<SendEvent> buildRECAG012AEvent(HandlerContext context) {

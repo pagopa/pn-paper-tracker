@@ -72,7 +72,7 @@ class FinalEventBuilder890Test {
         event.setStatusCode(RECAG005C.name());
         event1.setStatusCode(RECAG005A.name());
         paperTrackings.setEvents(List.of(event, event1));
-
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 
@@ -90,7 +90,7 @@ class FinalEventBuilder890Test {
         event.setStatusCode(RECAG002C.name());
         event1.setStatusCode(RECAG002A.name());
         paperTrackings.setEvents(List.of(event, event1));
-
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 
@@ -117,6 +117,7 @@ class FinalEventBuilder890Test {
         paperTrackings.getPaperStatus().setDeliveryFailureCause("M02");
         paperTrackings.getPaperStatus().setAnonymizedDiscoveredAddress("discAddr");
         paperTrackings.setEvents(List.of(event, event1));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 
@@ -142,6 +143,7 @@ class FinalEventBuilder890Test {
         paperTrackings.getPaperStatus().setDeliveryFailureCause("M06");
         paperTrackings.getPaperStatus().setAnonymizedDiscoveredAddress("discAddr");
         paperTrackings.setEvents(List.of(event, event1));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 
@@ -167,6 +169,7 @@ class FinalEventBuilder890Test {
         paperTrackings.getPaperStatus().setDeliveryFailureCause("M01");
         paperTrackings.getPaperStatus().setAnonymizedDiscoveredAddress("discAddr");
         paperTrackings.setEvents(List.of(event, event1));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(finalEventBuilder890.execute(context))
                 .verifyComplete();
 

@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -17,8 +18,11 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 @Slf4j
 public class FinalEventBuilder890 extends GenericFinalEventBuilder implements HandlerStep {
 
+    private final PaperTrackingsDAO paperTrackingsDAO;
+
     public FinalEventBuilder890(DataVaultClient dataVaultClient, PaperTrackingsDAO paperTrackingsDAO) {
         super(dataVaultClient, paperTrackingsDAO);
+        this.paperTrackingsDAO = paperTrackingsDAO;
     }
 
     /**
@@ -33,12 +37,16 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
     @Override
     public Mono<Void> execute(HandlerContext context) {
         log.info("FinalEventBuilder890 execute for trackingId: {}", context.getTrackingId());
-        Event finalEvent = extractFinalEvent(context);
+        Event finalEvent = TrackerUtility.extractEventFromContext(context);
         if(finalEvent.getStatusCode().equalsIgnoreCase(RECAG012.name())){
             return Mono.empty();
         }
+        context.setFinalStatusCode(true);
         String statusCode = finalEvent.getStatusCode();
         String eventStatus = evaluateStatusCodeAndRetrieveStatus(RECAG003C.name(), statusCode, context.getPaperTrackings()).name();
-        return addEventToSend(context, finalEvent, eventStatus);
+        return addEventToSend(context, finalEvent, eventStatus)
+                .thenReturn(finalEvent)
+                .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .then();
     }
 }

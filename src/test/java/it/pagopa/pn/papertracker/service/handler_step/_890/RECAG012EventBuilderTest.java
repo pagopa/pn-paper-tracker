@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,7 +44,7 @@ class RECAG012EventBuilderTest {
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         ValidationConfig config = new ValidationConfig();
-        config.setOcrEnabled(false);
+        config.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(config);
 
         ValidationFlow flow = new ValidationFlow();
@@ -96,7 +97,7 @@ class RECAG012EventBuilderTest {
         context.setPaperProgressStatusEvent(paperProgressStatusEvent);
         paperTrackings.setEvents(List.of(event));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(false);
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
         context.setRefinementCondition(false);
         context.setEventId("id");
@@ -121,7 +122,7 @@ class RECAG012EventBuilderTest {
         event.setId("id");
         paperTrackings.setEvents(List.of(event));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(false);
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
 
         context.setRefinementCondition(true);
@@ -152,7 +153,7 @@ class RECAG012EventBuilderTest {
         event2.setId("id2");
         paperTrackings.setEvents(List.of(event, event2));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(false);
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
 
         context.setRefinementCondition(true);
@@ -178,7 +179,7 @@ class RECAG012EventBuilderTest {
         event.setId("id");
         paperTrackings.setEvents(List.of(event));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(true);
+        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
         paperTrackings.setValidationConfig(validationConfig);
         ValidationFlow validationFlow = new ValidationFlow();
@@ -210,7 +211,7 @@ class RECAG012EventBuilderTest {
         event.setId("id");
         paperTrackings.setEvents(List.of(event));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(true);
+        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
         paperTrackings.setValidationConfig(validationConfig);
         ValidationFlow validationFlow = new ValidationFlow();
@@ -245,13 +246,13 @@ class RECAG012EventBuilderTest {
         event.setStatusCode("RECAG012");
         event.setStatusTimestamp(Instant.now());
         event.setRequestTimestamp(Instant.now());
-        event.setId("id");
+        event.setId("id2");
         Event event2 = new Event();
         event2.setStatusCode("RECAG011B");
-        event2.setId("id2");
+        event2.setId("id1");
         paperTrackings.setEvents(List.of(event,event2));
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(true);
+        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
         paperTrackings.setValidationConfig(validationConfig);
         ValidationFlow validationFlow = new ValidationFlow();

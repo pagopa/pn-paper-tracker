@@ -6,10 +6,14 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.Handler;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerImpl;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.function.Function;
 
+@Component
+@Slf4j
 public class HandlersFactory890 extends AbstractHandlersFactory {
 
     private final RECAG012EventChecker recag012EventChecker;

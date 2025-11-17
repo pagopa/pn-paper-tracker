@@ -32,6 +32,7 @@ public class PaperTrackings {
     public static final String COL_TTL = "ttl";
     public static final String COL_REFINED = "refined";
     public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
+    public static final String COL_PENDING_FINAL_EVENT_ID = "pendingFinalEventId";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
@@ -69,6 +70,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_BUSINESS_STATE)}))
     private BusinessState businessState;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PENDING_FINAL_EVENT_ID)}))
+    private String pendingFinalEventId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;

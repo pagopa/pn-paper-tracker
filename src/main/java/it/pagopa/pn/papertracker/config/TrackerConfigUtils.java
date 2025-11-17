@@ -1,14 +1,14 @@
 package it.pagopa.pn.papertracker.config;
 
 import it.pagopa.pn.papertracker.exception.AttachmentsConfigNotFound;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class TrackerConfigUtils {
@@ -25,11 +25,14 @@ public class TrackerConfigUtils {
     private final List<AttachmentsConfig> sendOcrAttachmentsFinalValidationConfigs;
     private final List<StrictValidationConfig> strictFinalValidationStock890Config;
 
+    private final PnPaperTrackerConfigs cfg;
+
     public TrackerConfigUtils(PnPaperTrackerConfigs cfg) {
         this.requiredAttachmentsRefinementStock890Configs = buildAttachmentsConfigFromStringList(cfg.getRequiredAttachmentsRefinementStock890());
         this.sendOcrAttachmentsFinalValidationConfigs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidation());
         this.sendOcrAttachmentsFinalValidationStock890Configs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidationStock890());
         this.strictFinalValidationStock890Config = buildStrictFinalValidationStock890Config(cfg.getStrictFinalValidationStock890());
+        this.cfg = cfg;
     }
 
     private  List<StrictValidationConfig> buildStrictFinalValidationStock890Config(List<String> strictFinalValidationStock890) {
@@ -99,5 +102,14 @@ public class TrackerConfigUtils {
                 .findFirst()
                 .map(StrictValidationConfig::enableStrictValidation)
                 .orElse(Boolean.FALSE);
+    }
+
+    public Map<ProductType, OcrStatusEnum> getEnableOcrValidationFor() {
+        return cfg.getEnableOcrValidationFor().stream()
+                .map(config -> {
+                    String[] splittedConfig = config.split(":");
+                    return Map.entry(ProductType.fromValue(splittedConfig[0]), splittedConfig[1]);
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> OcrStatusEnum.valueOf(entry.getValue())));
     }
 }

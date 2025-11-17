@@ -15,6 +15,7 @@ public class OcrRequest {
     public static final String COL_RESPONSE_TIMESTAMP = "responseTimestamp";
     public static final String COL_DOCUMENT_TYPE = "documentType";
     public static final String COL_EVENT_ID = "eventId";
+    public static final String COL_URI = "uri";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_TYPE)}))
     private String documentType;
@@ -27,4 +28,7 @@ public class OcrRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_TIMESTAMP)}))
     private Instant requestTimestamp;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_URI)}))
+    private String uri;
 }

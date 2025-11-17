@@ -41,7 +41,7 @@ public class DematValidator implements HandlerStep {
         String trackingId = paperTrackings.getTrackingId();
         log.info("Starting demat validation for trackingId={}", trackingId);
 
-        Event currentEvent = TrackerUtility.getCurrentEvent(context);
+        Event currentEvent = TrackerUtility.extractEventFromContext(context);
         List<String> requiredAttachments = getRequiredAttachments(currentEvent, paperTrackings);
         return ocrUtility.checkAndSendToOcr(currentEvent, requiredAttachments, context)
                 .doOnNext(unused -> context.setStopExecution(true))

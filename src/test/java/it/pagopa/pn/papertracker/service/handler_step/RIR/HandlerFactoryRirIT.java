@@ -61,7 +61,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.RIR)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
@@ -241,7 +241,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(newRequestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(newRequestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.RIR)).block();
         when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }

@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
@@ -41,7 +42,12 @@ class PaperTrackerTrackingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs);
+        when(pnPaperTrackerConfigs.getRequiredAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
+        when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
+        when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
+        when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs,trackerConfigUtils);
     }
 
     @Test

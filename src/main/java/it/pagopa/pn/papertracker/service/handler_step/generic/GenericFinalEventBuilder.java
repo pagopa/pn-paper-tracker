@@ -40,7 +40,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        Event finalEvent = extractFinalEvent(context);
+        Event finalEvent = TrackerUtility.extractEventFromContext(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
                 .doOnNext(event -> context.setFinalStatusCode(true))
@@ -74,10 +74,6 @@ public class GenericFinalEventBuilder implements HandlerStep {
     private Mono<SendEvent> enrichWithDeliveryFailureCauseAndDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
         sendEvent.setDeliveryFailureCause(context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause());
         return enrichWithDiscoveredAddress(context, sendEvent);
-    }
-
-    protected Event extractFinalEvent(HandlerContext context) {
-        return TrackerUtility.getCurrentEvent(context);
     }
 
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {

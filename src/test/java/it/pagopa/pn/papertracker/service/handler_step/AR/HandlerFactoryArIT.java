@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -60,12 +61,11 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     @ParameterizedTest
     @EnumSource(value = TestSequenceAREnum.class)
     void testARSequence(TestSequenceAREnum seq) throws InterruptedException {
-
         //Arrange
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
 
         PcRetryResponse r1 = buildPcRetryResponse(requestId, iun, 1);
@@ -75,14 +75,14 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 .thenReturn(Mono.just(r1));
 
         if (seq.equals(FAIL_CON996_PCRETRY_FURTO_AR)) {
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r2.getRequestId())).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r2.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
             when(paperChannelClient.getPcRetry(any(), eq(true)))
                     .thenReturn(Mono.just(r1));
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r2));
         }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)){
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r1));
         }

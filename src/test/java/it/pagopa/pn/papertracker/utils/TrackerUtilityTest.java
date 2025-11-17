@@ -41,12 +41,6 @@ public class TrackerUtilityTest {
         Assertions.assertEquals("trackingId123#eventId456#CAD", result);
     }
 
-    @Test
-    void getEventIdFromOcrRequestId() {
-        String ocrRequestId = "trackingId123#eventId456";
-        String result = TrackerUtility.getEventIdFromOcrRequestId(ocrRequestId);
-        Assertions.assertEquals("eventId456", result);
-    }
 
     @Test
     void validatedEventsReturnsMatchingEvents() {

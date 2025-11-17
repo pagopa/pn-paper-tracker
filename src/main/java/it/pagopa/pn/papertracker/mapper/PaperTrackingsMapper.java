@@ -1,14 +1,19 @@
 package it.pagopa.pn.papertracker.mapper;
 
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Optional;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
@@ -17,7 +22,7 @@ public class PaperTrackingsMapper {
         return SmartMapper.mapToClass(paperTrackings, Tracking.class);
     }
 
-    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration) {
+    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration, TrackerConfigUtils trackerConfigUtils) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
@@ -32,7 +37,19 @@ public class PaperTrackingsMapper {
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         paperTrackings.setValidationFlow(new ValidationFlow());
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.valueOf(trackingCreationRequest.getProductType())));
+        validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890Config(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
+    }
+
+    private static OcrStatusEnum evaluateIfOcrIsEnabled(TrackerConfigUtils trackerConfigUtils, ProductType productType) {
+        return Optional.ofNullable(trackerConfigUtils.getEnableOcrValidationFor().get(productType))
+                .orElse(OcrStatusEnum.DISABLED);
     }
 
     public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType, String attemptId) {
