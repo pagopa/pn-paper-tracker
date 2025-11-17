@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.utils;
 
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -24,8 +25,8 @@ public class TrackerUtility {
         return P000.name().equalsIgnoreCase(eventStatusCode);
     }
 
-    public static String buildOcrRequestId(String trackingId, String eventId) {
-        return String.join("#", trackingId, eventId);
+    public static String buildOcrRequestId(String trackingId, String eventId, String documentType) {
+        return String.join("#", trackingId, eventId, documentType);
     }
 
     public static String getEventIdFromOcrRequestId(String ocrRequestId) {
@@ -88,6 +89,13 @@ public class TrackerUtility {
                     .orElse(null);
         }
         return null;
+    }
+
+    public static Event getCurrentEvent(HandlerContext context) {
+        return context.getPaperTrackings().getEvents().stream()
+                .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
+                .findFirst()
+                .orElseThrow(() -> new PaperTrackerException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
     }
 
 }

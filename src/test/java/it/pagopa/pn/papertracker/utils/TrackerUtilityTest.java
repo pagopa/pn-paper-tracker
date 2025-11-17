@@ -36,8 +36,9 @@ public class TrackerUtilityTest {
     void buildOcrRequestIdReturnsCorrectFormat() {
         String trackingId = "trackingId123";
         String eventId = "eventId456";
-        String result = TrackerUtility.buildOcrRequestId(trackingId, eventId);
-        Assertions.assertEquals("trackingId123#eventId456", result);
+        String documentType = "CAD";
+        String result = TrackerUtility.buildOcrRequestId(trackingId, eventId, documentType);
+        Assertions.assertEquals("trackingId123#eventId456#CAD", result);
     }
 
     @Test

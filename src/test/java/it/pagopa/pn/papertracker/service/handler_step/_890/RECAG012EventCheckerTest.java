@@ -1,9 +1,9 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationConfig;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
@@ -25,9 +25,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RECAG012EventCheckerTest {
-
-    @Mock
-    private TrackerConfigUtils trackerConfigUtils;
 
     @Mock
     private OcrUtility ocrUtility;
@@ -64,28 +61,30 @@ class RECAG012EventCheckerTest {
         event3.setStatusCode("RECAG006C");
         event3.setAttachments(List.of(attachment3));
         paperTrackings.setEvents(List.of(event1, event2, event3));
+        ValidationConfig validationConfig = new ValidationConfig();
+        paperTrackings.setValidationConfig(validationConfig);
         context.setPaperTrackings(paperTrackings);
     }
 
     @Test
     void executeCompletesWhenAllAttachmentsPresentAndEventRECAG012Found() {
         //Arrange
-        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.CAD.getValue()));
-        when(ocrUtility.checkAndSendToOcr(context.getPaperTrackings(), context)).thenReturn(Mono.empty());
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.CAD.getValue()));
+        when(ocrUtility.checkAndSendToOcr(context.getPaperTrackings().getEvents().getFirst(), context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890(), context)).thenReturn(Mono.empty());
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
                 .verifyComplete();
 
         //Assert
-        verify(ocrUtility, times(1)).checkAndSendToOcr(context.getPaperTrackings(), context);
+        verify(ocrUtility, times(1)).checkAndSendToOcr(context.getPaperTrackings().getEvents().getFirst(), context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890(), context);
         assertTrue(context.isRefinementCondition());
     }
 
     @Test
     void executeCompletesWhenAttachmentsMissing() {
         //Arrange
-        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.ARCAD.getValue()));
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum.ARCAD.getValue()));
 
         //Act
         StepVerifier.create(recag012EventChecker.execute(context))
@@ -99,7 +98,7 @@ class RECAG012EventCheckerTest {
     @Test
     void executeCompletesWhenEventRECAG012NotFound() {
         //Arrange
-        when(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(any())).thenReturn(List.of(DocumentTypeEnum.CAD.getValue()));
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum.CAD.getValue()));
         context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG015");
 
         //Act

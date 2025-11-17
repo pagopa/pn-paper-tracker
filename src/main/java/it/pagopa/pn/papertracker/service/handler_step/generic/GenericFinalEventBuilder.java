@@ -12,6 +12,7 @@ import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -76,10 +77,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
     }
 
     protected Event extractFinalEvent(HandlerContext context) {
-        return context.getPaperTrackings().getEvents().stream()
-                .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
+        return TrackerUtility.getCurrentEvent(context);
     }
 
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
