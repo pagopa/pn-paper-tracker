@@ -383,10 +383,6 @@ Parameters:
     Type: String
     Description: 'Name of the NotificationReworkEventsValidation Lambda.'
 
-  NotificationReworkEventsValidationLambdaDLQARN:
-    Type: String
-    Description: 'ARN of the NotificationReworkEventsValidation Lambda Dead Letter Queue.'
-
   NotificationReworkEventsValidationLambdaBatchSize:
     Type: Number
     Description: "Batch size of the NotificationReworkEventsValidation Lambda."
