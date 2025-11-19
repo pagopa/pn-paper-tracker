@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
@@ -39,6 +40,9 @@ public class ExternalChannelHandlerTest {
     @Mock
     UninitializedShipmentRunMomProducer uninitializedShipmentRunProducer;
 
+    @Mock
+    PnPaperTrackerConfigs pnPaperTrackerConfigs;
+
     private ExternalChannelHandler externalChannelHandler;
 
     private String eventId;
@@ -49,8 +53,22 @@ public class ExternalChannelHandlerTest {
                                         paperTrackerExceptionHandler,
                                         handleRegistry,
                                         uninitializedShipmentDryRunProducer,
-                                        uninitializedShipmentRunProducer);
+                                        uninitializedShipmentRunProducer,
+                                        pnPaperTrackerConfigs);
         eventId = "eventId";
+    }
+
+    @Test
+    void handleExternalChannelMessage_ignoredStatusCode() {
+        //Arrange
+        SingleStatusUpdate payload = getSingleStatusUpdate("REC090");
+        when(pnPaperTrackerConfigs.getIgnoredStatusCodes()).thenReturn(java.util.List.of("REC090","CON991","CON992"));
+
+        //Act
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null);
+
+        //Assert
+        verify(handleRegistry, times(0)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any());
     }
 
     @Test

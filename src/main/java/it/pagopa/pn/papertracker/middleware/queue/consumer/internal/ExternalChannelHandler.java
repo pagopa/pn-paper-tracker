@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -39,6 +40,7 @@ public class ExternalChannelHandler {
     private final HandlersRegistry handlersRegistry; // contiene HandlersFactoryAr, HandlersFactoryRir, ecc.
     private final UninitializedShipmentDryRunMomProducer uninitializedShipmentDryRunProducer;
     private final UninitializedShipmentRunMomProducer uninitializedShipmentRunProducer;
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     private static final String HANDLING_EVENT_LOG = "Handling {} event for productType: [{}] and event: [{}]";
 
@@ -60,6 +62,11 @@ public class ExternalChannelHandler {
         HandlerContext context = initializeContext(payload, dryRunEnabled, messageId);
 
         var statusCode = payload.getAnalogMail().getStatusCode();
+        if(pnPaperTrackerConfigs.getIgnoredStatusCodes().contains(statusCode)){
+            log.info("Ignoring status code: {} as per configuration", statusCode);
+            log.logEndingProcess(processName);
+            return;
+        }
         var productType = resolveProductType(statusCode, payload.getAnalogMail().getProductType());
         var eventType = Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCode)).map(EventStatusCodeEnum::getCodeType).orElse(null);
 
