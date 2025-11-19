@@ -14,6 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType.WARNING;
+
 @Component
 @Slf4j
 public class SequenceValidator890 extends GenericSequenceValidator implements HandlerStep {
@@ -28,12 +32,24 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
     @Override
     public Mono<Void> execute(HandlerContext context) {
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
-        SequenceConfig sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
-
+        SequenceConfig sequenceConfig;
+        Boolean strictFinalValidationStock890 = context.getPaperTrackings().getValidationConfig().getStrictFinalValidationStock890();
+        if(Objects.nonNull(context.getPaperProgressStatusEvent())){
+            sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
+        }else{
+            String finalEventStatusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), context.getEventId());
+            sequenceConfig = SequenceConfiguration.getConfig(finalEventStatusCode);
+        }
         return Mono.just(context.getPaperTrackings())
                 .filter(paperTrackings -> checkState(context))
-                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig))
+                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, strictFinalValidationStock890))
                 .doOnNext(context::setPaperTrackings)
+                .onErrorResume(PnPaperTrackerValidationException.class, ex -> {
+                    if(WARNING.equals(ex.getError().getType())){
+                        return Mono.empty();
+                    }
+                    return Mono.error(ex);
+                })
                 .then();
     }
 
@@ -43,7 +59,6 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
 
         PaperTrackingsState state = context.getPaperTrackings().getState();
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
-        //TODO: GESTIRE LA NUOVA ENV QUANDO PRESENTE PER STRICT FINAL EVENT VALIDATION PROCESS
         return switch (state) {
             case DONE -> true;
             case AWAITING_REFINEMENT -> throw new PnPaperTrackerValidationException(
@@ -61,7 +76,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
             );
             case AWAITING_OCR -> {
                 log.info("Awaiting OCR response for refinement, updating business state to AWAITING_REFINEMENT_OCR for trackingId: {}", context.getTrackingId());
-                paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate());
+                paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate(context.getEventId()));
                 context.setStopExecution(true);
                 yield false;
             }
@@ -81,9 +96,10 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
         };
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate() {
+    private PaperTrackings getPaperTrackingsToUpdate(String eventId) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setBusinessState(BusinessState.AWAITING_REFINEMENT_OCR);
+        paperTrackings.setPendingFinalEventId(eventId);
         return paperTrackings;
     }
 }

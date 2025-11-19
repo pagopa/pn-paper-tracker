@@ -1,14 +1,18 @@
 package it.pagopa.pn.papertracker.utils;
 
+import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
@@ -24,12 +28,16 @@ public class TrackerUtility {
         return P000.name().equalsIgnoreCase(eventStatusCode);
     }
 
-    public static String buildOcrRequestId(String trackingId, String eventId) {
-        return String.join("#", trackingId, eventId);
+    public static boolean checkIfIsRecag012event(String statusCode) {
+        return RECAG012.name().equalsIgnoreCase(statusCode);
     }
 
-    public static String getEventIdFromOcrRequestId(String ocrRequestId) {
-        return ocrRequestId.split("#")[1];
+    public static String buildOcrRequestId(String trackingId, String eventId, String documentType) {
+        return String.join("#", trackingId, eventId, documentType);
+    }
+
+    public static String[] getParsedOcrCommandId(String ocrCommandId) {
+        return ocrCommandId.split("#");
     }
 
     public static List<Event> validatedEvents(List<String> eventsIds, List<Event> events) {
@@ -70,13 +78,60 @@ public class TrackerUtility {
     }
 
     public static boolean isInvalidState(HandlerContext ctx, String statusCode) {
-        if (TrackerUtility.isStockStatus890(statusCode)) {
-            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
-            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
-        } else{
+        if (RECAG012.name().equalsIgnoreCase(statusCode) || !isStock890SequenceStatusCodes(statusCode)) {
             PaperTrackingsState state = ctx.getPaperTrackings().getState();
             return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
+        } else {
+            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
+            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
         }
+    }
+
+    private static boolean isStock890SequenceStatusCodes(String statusCode) {
+        SequenceConfig config005 = SequenceConfiguration.getConfig(RECAG005C.name());
+        SequenceConfig config006 = SequenceConfiguration.getConfig(RECAG006C.name());
+        SequenceConfig config007 = SequenceConfiguration.getConfig(RECAG007C.name());
+        SequenceConfig config008 = SequenceConfiguration.getConfig(RECAG008C.name());
+        return config005.sequenceStatusCodes().contains(statusCode) ||
+                config006.sequenceStatusCodes().contains(statusCode) ||
+                config007.sequenceStatusCodes().contains(statusCode) ||
+                config008.sequenceStatusCodes().contains(statusCode);
+    }
+
+    public static boolean isInInvalidStateForOcr(PaperTrackings paperTrackings, String statusCode) {
+        if (TrackerUtility.isStockStatus890(statusCode)) {
+            BusinessState businessState = paperTrackings.getBusinessState();
+            return businessState != BusinessState.AWAITING_OCR;
+        } else{
+            PaperTrackingsState state = paperTrackings.getState();
+            return state != PaperTrackingsState.AWAITING_OCR;
+        }
+    }
+
+    public static boolean isOcrResponseCompleted(ValidationFlow validationFlow, ValidationConfig validationConfig, String statusCode) {
+        if(RECAG012.name().equalsIgnoreCase(statusCode)){
+            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            return validationFlow.getOcrRequests().stream()
+                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
+                    .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
+        }else if(TrackerUtility.isStockStatus890(statusCode)){
+            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            return validationFlow.getOcrRequests().stream()
+                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
+                    .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
+        }else{
+            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            return validationFlow.getOcrRequests().stream()
+                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
+                    .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
+        }
+    }
+
+    public static Event extractEventFromContext(HandlerContext context) {
+        return context.getPaperTrackings().getEvents().stream()
+                .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
     }
 
     public static String getStatusCodeFromEventId(PaperTrackings paperTrackings, String eventId) {
@@ -88,6 +143,15 @@ public class TrackerUtility {
                     .orElse(null);
         }
         return null;
+    }
+
+    public static Event extractFinalEventFromOcr(String commandId, PaperTrackings paperTrackings) {
+        String eventId = TrackerUtility.getParsedOcrCommandId(commandId)[1];
+        return paperTrackings.getEvents().stream()
+                .filter(event -> eventId.equalsIgnoreCase(event.getId()))
+                .findFirst()
+                .orElseThrow(() -> new PaperTrackerException("Invalid eventId in ocrCommandId: " + eventId +
+                        ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
     }
 
 }

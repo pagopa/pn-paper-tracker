@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -60,12 +61,11 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
     @ParameterizedTest
     @EnumSource(value = TestSequenceAREnum.class)
     void testARSequence(TestSequenceAREnum seq) throws InterruptedException {
-
         //Arrange
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
 
         PcRetryResponse r1 = buildPcRetryResponse(requestId, iun, 1);
@@ -75,14 +75,14 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 .thenReturn(Mono.just(r1));
 
         if (seq.equals(FAIL_CON996_PCRETRY_FURTO_AR)) {
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r2.getRequestId())).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r2.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
             when(paperChannelClient.getPcRetry(any(), eq(true)))
                     .thenReturn(Mono.just(r1));
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r2));
         }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)){
-            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId())).block();
+            paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r1));
         }
@@ -745,12 +745,12 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
         switch (seq) {
             case OK_AR, OKCausaForzaMaggiore_AR ->
-                    assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null);
-            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null);
-            case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null);
-            case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
-            case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
+                    assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"), DONE,BusinessState.DONE);
+            case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null, DONE,BusinessState.DONE);
+            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null, DONE,BusinessState.DONE);
+            case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null, DONE,BusinessState.DONE);
+            case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
+            case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01",DONE,BusinessState.DONE);
             case OK_AR_INVALID_DATETIME -> {
                 assertEquals(BusinessState.KO, pt.getBusinessState());
                 assertEquals(6, pt.getEvents().size());
@@ -761,9 +761,9 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 assertEquals(6, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
-            case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> assertValidatedDone(pt, 9, 5, null);
+            case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> assertValidatedDone(pt, 9, 5, null,DONE,BusinessState.DONE);
 
-            case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02");
+            case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02",DONE,BusinessState.DONE);
             case KO_AR_NO_EVENT_B -> {
                 assertEquals(BusinessState.AWAITING_FINAL_STATUS_CODE, pt.getBusinessState());
                 assertEquals(5, pt.getEvents().size());
@@ -776,10 +776,10 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 assertNull(pt.getNextRequestIdPcretry());
             }
             case OK_AR_BAD_EVENT ->
-                    assertValidatedDoneSubset(pt, 7, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
+                    assertValidatedDoneSubset(pt, 7, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"), DONE,BusinessState.DONE);
 //            case FAIL_DISCOVERY_AR ->
 //                    assertValidatedDoneSubset(pt, 10, 3, "M01", List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case OK_AR_TIMESTAMP_ERR -> assertValidatedDone(pt, 11, 3, null);
+            case OK_AR_TIMESTAMP_ERR -> assertValidatedDone(pt, 11, 3, null,DONE,BusinessState.DONE);
         }
     }
 

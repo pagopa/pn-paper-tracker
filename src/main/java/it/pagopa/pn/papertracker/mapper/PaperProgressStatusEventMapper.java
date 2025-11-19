@@ -25,7 +25,8 @@ public class PaperProgressStatusEventMapper {
     public static PaperTrackings toPaperTrackings(PaperProgressStatusEvent paperProgressStatusEvent,
                                                         String anonymizedDiscoveredAddressId,
                                                         String eventId, boolean dryRunEnabled,
-                                                        boolean isFinalDemat, boolean isP000event) {
+                                                        boolean isFinalDemat, boolean isP000event, boolean isRecag012event) {
+        Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId(eventId);
@@ -50,18 +51,24 @@ public class PaperProgressStatusEventMapper {
             paperTrackings.setPaperStatus(paperStatus);
         }
 
+        if(isRecag012event){
+            ValidationFlow validationFlow = new ValidationFlow();
+            validationFlow.setRecag012StatusTimestamp(now);
+            paperTrackings.setValidationFlow(validationFlow);
+        }
+
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
         event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
         event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
         if(StringUtils.hasText(paperProgressStatusEvent.getProductType())) {
-            event.setProductType(ProductType.valueOf(paperProgressStatusEvent.getProductType()));
+            event.setProductType(ProductType.fromValue(paperProgressStatusEvent.getProductType()));
         }
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
         event.setDryRun(dryRunEnabled);
         event.setStatusDescription(paperProgressStatusEvent.getStatusDescription());
-        event.setCreatedAt(Instant.now());
+        event.setCreatedAt(now);
 
         paperTrackings.setEvents(List.of(event));
         return paperTrackings;

@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.Data;
 import lombok.Getter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -18,7 +19,7 @@ public class ValidationConfig {
     public static final String COL_STRICT_FINAL_VALIDATION_STOCK_890 = "strictFinalValidationStock890";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_OCR_ENABLED)}))
-    private Boolean ocrEnabled;
+    private OcrStatusEnum ocrEnabled;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUIRED_ATTACHMENTS_REFINEMENT_STOCK_890)}))
     private List<String> requiredAttachmentsRefinementStock890;

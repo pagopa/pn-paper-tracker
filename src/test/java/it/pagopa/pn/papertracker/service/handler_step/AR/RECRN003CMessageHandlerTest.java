@@ -162,7 +162,6 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         assertNotNull(capturedSendEvent.getAllValues());
         SendEvent sendEvent = capturedSendEvent.getValue().getPayload().getSendEvent();
         assertNotNull(sendEvent);
-        //TODO: SU PAPERCHANNEL è PROGRESS, VERIFICARE
         Assertions.assertEquals(StatusCodeEnum.OK, sendEvent.getStatusCode());
         Assertions.assertEquals(STATUS_RECRN003C, sendEvent.getStatusDetail());
 

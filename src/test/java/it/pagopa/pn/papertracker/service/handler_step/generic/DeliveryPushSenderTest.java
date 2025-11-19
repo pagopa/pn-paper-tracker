@@ -125,7 +125,7 @@ class DeliveryPushSenderTest {
         PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
         paperProgressStatusEvent.setStatusCode("RECRN001C");
         context.setPaperProgressStatusEvent(paperProgressStatusEvent);
-        context.setFinalStatusCode(true);
+        context.setFinalStatusCode("RECRN001C");
         PaperTrackings paperTrackings = new PaperTrackings();
         context.setPaperTrackings(paperTrackings);
         context.setEventsToSend(Collections.singletonList(event));

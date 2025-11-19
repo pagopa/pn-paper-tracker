@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import org.springframework.util.CollectionUtils;
 
@@ -20,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestUtils {
 
-    public static PaperTrackings getPaperTrackings(String requestId) {
+    public static PaperTrackings getPaperTrackings(String requestId, ProductType productType) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(ProductType.AR);
+        pt.setProductType(productType);
         pt.setUnifiedDeliveryDriver("POSTE");
         pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
@@ -32,6 +33,13 @@ public class TestUtils {
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        pt.setValidationConfig(validationConfig);
         return pt;
     }
 
@@ -47,6 +55,13 @@ public class TestUtils {
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        pt.setValidationConfig(validationConfig);
         return pt;
     }
 
@@ -84,12 +99,15 @@ public class TestUtils {
         return ev;
     }
 
-    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
-        assertEquals(DONE, pt.getState());
+    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes, PaperTrackingsState state, BusinessState businessState) {
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
+
+        assertFalse(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
@@ -198,9 +216,10 @@ public class TestUtils {
         return list.stream().filter(p).count();
     }
 
-    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
+    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure, PaperTrackingsState state, BusinessState businessState) {
         List<Event> eventsWithoutCon = pt.getEvents().stream().filter(event -> !event.getStatusCode().startsWith("CON")).toList();
-        assertEquals(DONE, pt.getState());
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()

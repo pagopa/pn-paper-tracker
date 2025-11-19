@@ -386,7 +386,11 @@ components:
         strictFinalValidationStock890:
           type: boolean
         ocrEnabled:
-          type: boolean
+          type: string
+          enum:
+            - RUN
+            - DRY
+            - DISABLED
     PaperStatus:
       type: object
       properties:

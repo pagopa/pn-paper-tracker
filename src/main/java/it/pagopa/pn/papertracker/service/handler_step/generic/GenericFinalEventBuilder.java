@@ -12,6 +12,7 @@ import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,10 +40,10 @@ public class GenericFinalEventBuilder implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        Event finalEvent = extractFinalEvent(context);
+        Event finalEvent = TrackerUtility.extractEventFromContext(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
-                .doOnNext(event -> context.setFinalStatusCode(true))
+                .doOnNext(event -> context.setFinalStatusCode(finalEvent.getStatusCode()))
                 .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }
@@ -73,13 +74,6 @@ public class GenericFinalEventBuilder implements HandlerStep {
     private Mono<SendEvent> enrichWithDeliveryFailureCauseAndDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
         sendEvent.setDeliveryFailureCause(context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause());
         return enrichWithDiscoveredAddress(context, sendEvent);
-    }
-
-    protected Event extractFinalEvent(HandlerContext context) {
-        return context.getPaperTrackings().getEvents().stream()
-                .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
     }
 
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {

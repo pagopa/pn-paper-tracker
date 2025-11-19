@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.awt.print.Paper;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,9 +87,12 @@ class SequenceValidator890Test {
                 });
         Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
         Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+
         List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
         tmpList.add(event1);
         tmpList.add(event2);
+        tmpList.add(event3);
         paperTrackings.setEvents(tmpList);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
@@ -166,6 +171,13 @@ class SequenceValidator890Test {
                 buildEvent("RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
                 buildEvent("RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
         ));
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
 
