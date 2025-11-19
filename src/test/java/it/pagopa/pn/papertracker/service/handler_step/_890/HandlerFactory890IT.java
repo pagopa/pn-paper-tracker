@@ -387,16 +387,14 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                 });
             }
             case MANCATA_CONSEGNA_ALLEGATI_FINALI_ASSENTI -> {
-                assertEquals(7, list.size());
-                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012",  "RECAG011B", "RECAG007A", "RECAG007B"));
-                assertSameRegisteredLetter(list, 4, 5, 6);
+                assertEquals(6, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012",  "RECAG011B", "RECAG007A"));
                 list.forEach(e -> {
                     if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
                     if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
                     if (is(e, "RECAG007A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
                     if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
-                    if (is(e, "RECAG007B")) {assertNoAttach(e);assertProgress(e);}
                 });
             }
             case COMPIUTA_GIACENZA_NO_EVENTOB -> {

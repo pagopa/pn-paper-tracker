@@ -40,7 +40,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration,trackerConfigUtils);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request,trackerConfigUtils);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -48,7 +48,6 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
-        Assertions.assertTrue(paperTrackings.getTtl() > 0);
     }
 
     @Test
@@ -63,7 +62,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(new PnPaperTrackerConfigs());
 
         //ACT & ASSERT
-        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, paperTrackingsTtlDuration, trackerConfigUtils));
+        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils));
     }
 
     @Test

@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
@@ -22,13 +21,11 @@ import static it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper.toPaperTrack
 public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingService {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final TrackerConfigUtils trackerConfigUtils;
 
     @Override
     public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
-        Duration paperTrackingsTtlDuration = pnPaperTrackerConfigs.getPaperTrackingsTtlDuration();
-        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, paperTrackingsTtlDuration, trackerConfigUtils)).then();
+        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils)).then();
     }
 
     @Override

@@ -9,7 +9,6 @@ import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -22,7 +21,7 @@ public class PaperTrackingsMapper {
         return SmartMapper.mapToClass(paperTrackings, Tracking.class);
     }
 
-    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, Duration paperTrackingsTtlDuration, TrackerConfigUtils trackerConfigUtils) {
+    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, TrackerConfigUtils trackerConfigUtils) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
@@ -35,7 +34,6 @@ public class PaperTrackingsMapper {
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         paperTrackings.setValidationFlow(new ValidationFlow());
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.valueOf(trackingCreationRequest.getProductType())));
@@ -52,7 +50,7 @@ public class PaperTrackingsMapper {
                 .orElse(OcrStatusEnum.DISABLED);
     }
 
-    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, Duration paperTrackingsTtlDuration, ProductType productType, String attemptId) {
+    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, ProductType productType, String attemptId) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());

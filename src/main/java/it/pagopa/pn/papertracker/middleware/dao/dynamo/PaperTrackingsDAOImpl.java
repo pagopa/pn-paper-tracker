@@ -60,12 +60,6 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         return queryByIndex(key.build(), ATTEMPT_ID_PCRETRY_INDEX);
     }
 
-    //TODO: CANCELLARE DOPO RIFATTORIZZAZIONE HANDLER OCR RESPONSE
-    @Override
-    public Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId) {
-        return Flux.empty();
-    }
-
     @Override
     public Mono<PaperTrackings> putIfAbsent(PaperTrackings entity) {
         String expression = String.format("%s(%s)", ATTRIBUTE_NOT_EXISTS, PaperTrackings.COL_TRACKING_ID);

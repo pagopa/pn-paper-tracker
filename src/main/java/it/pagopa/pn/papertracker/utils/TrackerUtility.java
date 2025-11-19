@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class TrackerUtility {

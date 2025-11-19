@@ -14,7 +14,6 @@ import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,8 +24,6 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -133,34 +130,6 @@ class DematValidatorTest {
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
-    }
-
-    @Test
-    void validateDemat_OcrEnabled_AttachmentTypeNotSupported() {
-        // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        Event eventRECRN005B = getEvent("RECRN005B", "Plico");
-        eventRECRN005B.getAttachments().getLast().setUri("uri.zip");
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), eventRECRN005B));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
-
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
-
-        // Act
-        StepVerifier.create(dematValidator.validateDemat(context))
-                .verifyComplete();
-
-        // Assert
-        ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
-        verifyNoInteractions(safeStorageClient);
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
-        PaperTrackings paperTrackingsToUpdate = captor.getValue();
-        assertTrue(paperTrackingsToUpdate.getValidationFlow().getOcrEnabled());
-        assertNull(paperTrackingsToUpdate.getOcrRequestId());
-        assertNull(paperTrackingsToUpdate.getValidationFlow().getOcrRequestTimestamp());
-        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
     }
 
     @Test

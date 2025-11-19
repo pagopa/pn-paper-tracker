@@ -52,6 +52,10 @@ public class PaperProgressStatusEventMapper {
             paperTrackings.setPaperStatus(paperStatus);
         }
 
+        if (!isInternalEvent){
+            event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
+        }
+
         if(isRecag012event){
             ValidationFlow validationFlow = new ValidationFlow();
             validationFlow.setRecag012StatusTimestamp(now);
@@ -60,9 +64,6 @@ public class PaperProgressStatusEventMapper {
 
         event.setStatusCode(paperProgressStatusEvent.getStatusCode());
         event.setStatusTimestamp(paperProgressStatusEvent.getStatusDateTime().toInstant());
-
-        if(!isInternalEvent)
-            event.setRequestTimestamp(paperProgressStatusEvent.getClientRequestTimeStamp().toInstant());
 
         event.setDeliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause());
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());

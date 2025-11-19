@@ -81,7 +81,7 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                     .thenReturn(Mono.just(r1));
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r2));
-        }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR)){
+        }else if(seq.equals(OK_RETRY_AR) || seq.equals(OKNonRendicontabile_AR) || seq.equals(OK_RETRY_AR_2)){
             paperTrackingsDAO.putIfAbsent(getPaperTrackings(r1.getRequestId(), it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
             when(paperChannelClient.getPcRetry(any(), eq(false)))
                     .thenReturn(Mono.just(r1));
@@ -798,15 +798,9 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
         switch (seq) {
             case OK_AR, OKCausaForzaMaggiore_AR ->
-                    assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null);
-            case OK_RETRY_AR, OK_RETRY_AR_2, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null);
-            case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null);
-            case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
-            case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
                     assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"), DONE,BusinessState.DONE);
             case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null, DONE,BusinessState.DONE);
-            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null, DONE,BusinessState.DONE);
+            case OK_RETRY_AR, OKNonRendicontabile_AR, OK_RETRY_AR_2 -> assertValidatedDone(newPt, 5, 3, null, DONE,BusinessState.DONE);
             case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null, DONE,BusinessState.DONE);
             case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
             case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01",DONE,BusinessState.DONE);

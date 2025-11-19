@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreatio
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
@@ -31,6 +32,12 @@ class PaperTrackerTrackingServiceImplTest {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
+    @Mock
+    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+
+    @Mock
+    private PnPaperTrackerConfigs pnPaperTrackerConfigs;
+
     private PaperTrackerTrackingServiceImpl paperTrackerEventService;
 
     @BeforeEach
@@ -40,7 +47,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, pnPaperTrackerConfigs,trackerConfigUtils);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils);
     }
 
     @Test
