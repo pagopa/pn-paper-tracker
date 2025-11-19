@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.AWAITING_REFINEMENT;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
+import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.assertNoAttach;
 import static it.pagopa.pn.papertracker.service.handler_step._890.TestSequence890Enum.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,7 +62,7 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
 
     @ParameterizedTest
     @EnumSource(value = TestSequence890Enum.class)
-    void test890Sequence(TestSequence890Enum seq) throws InterruptedException {
+    void test890Sequence(TestSequence890Enum seq) {
         //Arrange
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
@@ -290,8 +291,140 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                     }
                 });
             }
+            case MANCATA_CONSEGNA_PRESSO_GIACENZA -> {
+                assertEquals(8, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG007A", "RECAG007B", "RECAG007C"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG007A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG007B")) {assertAttach(e, "Plico");assertProgress(e);}
+                    if (is(e, "RECAG007C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+            case CONSEGNATO_PRESSO_GIACENZA -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010","RECAG011A","RECAG011B","RECAG012","RECAG005A","RECAG005B","RECAG005C"));
+                assertSameRegisteredLetter(list, 4,5,6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) { assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG011B")) {assertAttach(e, "23L");assertProgress(e);}
+                    if (is(e, "RECAG005A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG005B")) {assertAttach(e, "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG005C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+
+            case CONSEGNATO_PRESSO_GIACENZA_5B -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG005A", "RECAG005B", "RECAG005C"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG005A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG005B")) {assertAttachAnyOf(e, "23L", "CAD");assertProgress(e);}
+                    if (is(e, "RECAG005C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+            case CONSEGNATO_PRESSO_GIACENZA_11B -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG005A", "RECAG005C"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG005A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG005C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+            case CONSEGNATO_PRESSO_GIACENZA_PERSONA_ABILITATA -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG006A", "RECAG006B", "RECAG006C"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG006A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttach(e, "23L");assertProgress(e);}
+                    if (is(e, "RECAG006B")) {assertAttach(e, "CAD");assertProgress(e);}
+                    if (is(e, "RECAG006C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+            case COMPIUTA_GIACENZA -> {
+                assertEquals(8, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG008A", "RECAG008B", "RECAG008C"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG008A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG008B")) {assertAttach(e, "Plico");assertProgress(e);}
+                    if (is(e, "RECAG008C")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                });
+            }
+            case MANCATA_CONSEGNA_ALLEGATI_REFINEMENT_ASSENTI -> {
+                assertEquals(6, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG012A", "RECAG011A", "RECAG011B", "RECAG007A", "RECAG007B"));
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG012A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG007A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttach(e, "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG007B")) {assertAttach(e, "Plico");assertProgress(e);}
+                });
+            }
+            case MANCATA_CONSEGNA_ALLEGATI_FINALI_ASSENTI -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012",  "RECAG011B", "RECAG007A", "RECAG007B"));
+                assertSameRegisteredLetter(list, 4, 5, 6);
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG007A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG007B")) {assertNoAttach(e);assertProgress(e);}
+                });
+            }
+            case COMPIUTA_GIACENZA_NO_EVENTOB -> {
+                assertEquals(6, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG008A"));
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG008A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                });
+            }
+            case COMPIUTA_GIACENZA_INVALID_DATETIME -> {
+                assertEquals(7, list.size());
+                assertContainsStatus(list, List.of("RECAG010", "RECAG011A", "RECAG012", "RECAG011B", "RECAG008A", "RECAG008B"));
+                list.forEach(e -> {
+                    if (is(e, "RECAG010")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011A")) {assertNoAttach(e);assertProgress(e);}
+                    if (is(e, "RECAG012")) {assertNoAttach(e);assertOk(e);}
+                    if (is(e, "RECAG008A")) {assertNoAttach(e);assertProgress(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECAG011B")) {assertAttachAnyOf(e, "23L", "ARCAD");assertProgress(e);}
+                    if (is(e, "RECAG008B")) {assertAttach(e, "Plico");assertProgress(e);}
+                });
+            }
         }
     }
+
 
     private void verifyErrors(List<PaperTrackingsErrors> errs, TestSequence890Enum seq) {
         switch (seq) {
