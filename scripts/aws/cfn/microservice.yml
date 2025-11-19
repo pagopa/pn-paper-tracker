@@ -618,7 +618,7 @@ Resources:
   NotificationReworkEventsValidationLambdaSecGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: !Sub '${NotificationReworkUpdaterLambdaName}-sec-group'
+      GroupDescription: !Sub '${NotificationReworkEventsValidationLambdaName}-sec-group'
       VpcId: !Ref VpcId
 
   # Lambda function
