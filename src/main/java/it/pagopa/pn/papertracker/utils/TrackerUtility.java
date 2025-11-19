@@ -2,17 +2,20 @@ package it.pagopa.pn.papertracker.utils;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
@@ -159,6 +162,36 @@ public class TrackerUtility {
                 .findFirst()
                 .orElseThrow(() -> new PaperTrackerException("Invalid eventId in ocrCommandId: " + eventId +
                         ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
+    }
+
+    public static EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String statusCode, PaperTrackings paperTrackings) {
+        String deliveryFailureCause = paperTrackings.getPaperStatus().getDeliveryFailureCause();
+        if (statusCodeToEvaluate.equalsIgnoreCase(statusCode)) {
+            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
+                return EventStatus.OK;
+            }
+            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
+                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
+                return EventStatus.KO;
+            }
+        }
+        return EventStatusCodeEnum.fromKey(statusCode).getStatus();
+    }
+
+
+    public static EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String deliveryFailureCause) {
+        if (statusCodeToEvaluate.equalsIgnoreCase(RECAG003C.name()) || statusCodeToEvaluate.equalsIgnoreCase(RECRN002C.name())) {
+            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
+                return EventStatus.OK;
+            }
+            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
+                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
+                return EventStatus.KO;
+            }
+        }
+        return Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCodeToEvaluate))
+                .map(EventStatusCodeEnum::getStatus)
+                .orElse(null);
     }
 
 }

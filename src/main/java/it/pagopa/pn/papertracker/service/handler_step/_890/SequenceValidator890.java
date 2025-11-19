@@ -61,7 +61,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
         return switch (state) {
             case DONE -> true;
-            case AWAITING_REFINEMENT -> throw new PnPaperTrackerValidationException(
+            case AWAITING_REFINEMENT, AWAITING_REWORK_EVENTS -> throw new PnPaperTrackerValidationException(
                     "invalid AWAITING_REFINEMENT state for stock 890",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),

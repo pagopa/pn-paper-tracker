@@ -87,18 +87,4 @@ public class GenericFinalEventBuilder implements HandlerStep {
                 .thenReturn(sendEvent);
     }
 
-    protected EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String statusCode, PaperTrackings paperTrackings) {
-        String deliveryFailureCause = paperTrackings.getPaperStatus().getDeliveryFailureCause();
-        if (statusCodeToEvaluate.equalsIgnoreCase(statusCode)) {
-            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
-                return EventStatus.OK;
-            }
-            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
-                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
-                return EventStatus.KO;
-            }
-        }
-        return EventStatusCodeEnum.fromKey(statusCode).getStatus();
-    }
-
 }

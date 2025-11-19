@@ -59,7 +59,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            String eventStatus = evaluateStatusCodeAndRetrieveStatus(RECRN002C.name(), statusCode, context.getPaperTrackings()).name();
+            String eventStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRN002C.name(), statusCode, context.getPaperTrackings()).name();
             return addEventToSend(context, finalEvent, eventStatus);
         }
 

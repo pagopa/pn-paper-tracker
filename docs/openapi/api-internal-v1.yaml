@@ -349,6 +349,7 @@ components:
           type: string
           enum:
             - AWAITING_REFINEMENT
+            - AWAITING_REWORK_EVENTS
             - AWAITING_OCR
             - DONE
             - KO
@@ -357,6 +358,7 @@ components:
           enum:
             - AWAITING_FINAL_STATUS_CODE
             - AWAITING_OCR
+            - AWAITING_REWORK_EVENTS
             - DONE
             - KO
         createdAt:
@@ -401,6 +403,7 @@ components:
           format: date-time
         dryRun:
           type: boolean
+
     ProductType:
       type: string
       enum:

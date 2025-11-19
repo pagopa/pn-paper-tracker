@@ -1,13 +1,11 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerBadRequestException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.SequenceElement;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,16 +16,9 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.List;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationReworkServiceImplTest {
@@ -39,29 +30,21 @@ class NotificationReworkServiceImplTest {
     private PaperTrackingsDAO paperTrackingsDAO;
 
     @Test
-    void notificationRework_shouldReturnSequenceForValidStatusCode() {
+    void retrieveSequenceAndEventStatus_shouldReturnSequenceForValidStatusCode() {
         String statusCode = "RECRN005C";
         String deliveryFailureCause = "M02";
 
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            list.size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
-                    );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
                     );
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
                     response.getSequence().forEach(item -> {
@@ -73,28 +56,21 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldReturnSequenceForKOStatusCode() {
+    void retrieveSequenceAndEventStatus_shouldReturnSequenceForKOStatusCode() {
         String statusCode = "RECRN002F";
         String deliveryFailureCause = "M02";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
                 })
@@ -102,32 +78,21 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldReturnOKForRECRN002CWithM02() {
+    void retrieveSequenceAndEventStatus_shouldReturnOKForRECRN002CWithM02() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M02";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
-                    );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
                 })
@@ -135,62 +100,46 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldReturnOKForRECRN002CWithM05() {
+    void retrieveSequenceAndEventStatus_shouldReturnOKForRECRN002CWithM05() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M05";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
-                    );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
+                    });
+                    response.getSequence().forEach(item -> {
+                        assertTrue(StringUtils.hasText(item.getStatusCode()));
                     });
                 })
                 .verifyComplete();
     }
 
     @Test
-    void notificationRework_shouldReturnKOForRECRN002CWithM06() {
+    void retrieveSequenceAndEventStatus_shouldReturnKOForRECRN002CWithM06() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M06";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
-                    );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
                     );
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
                     response.getSequence().forEach(item -> {
@@ -201,111 +150,87 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldReturnKOForRECRN002CWithM07() {
+    void retrieveSequenceAndEventStatus_shouldReturnKOForRECRN002CWithM07() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M07";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
-                    );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
+                    });
+                    response.getSequence().forEach(item -> {
+                        assertTrue(StringUtils.hasText(item.getStatusCode()));
                     });
                 })
                 .verifyComplete();
     }
 
     @Test
-    void notificationRework_shouldReturnKOForRECRN002CWithM08() {
+    void retrieveSequenceAndEventStatus_shouldReturnKOForRECRN002CWithM08() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M08";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
-                    );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
+                    });
+                    response.getSequence().forEach(item -> {
+                        assertTrue(StringUtils.hasText(item.getStatusCode()));
                     });
                 })
                 .verifyComplete();
     }
 
     @Test
-    void notificationRework_shouldReturnKOForRECRN002CWithM09() {
+    void retrieveSequenceAndEventStatus_shouldReturnKOForRECRN002CWithM09() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M09";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
                     assertFalse(response.getSequence().isEmpty());
                     assertEquals(
-                            SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence().size(),
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
                     );
-                    assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
-                    );
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
+                    });
+                    response.getSequence().forEach(item -> {
+                        assertTrue(StringUtils.hasText(item.getStatusCode()));
                     });
                 })
                 .verifyComplete();
     }
 
     @Test
-    void notificationRework_shouldThrowExceptionForProgressStatusCode() {
+    void retrieveSequenceAndEventStatus_shouldThrowExceptionForProgressStatusCode() {
         String progressStatusCode = "RECRN010";
         String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.notificationRework(progressStatusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(progressStatusCode, deliveryFailureCause))
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
                         return ex.getProblem().getDetail().contains("statusCode RECRN010 is PROGRESS");
@@ -316,28 +241,23 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldVerifySequenceContent() {
+    void retrieveSequenceAndEventStatus_shouldVerifySequenceContent() {
         String statusCode = "RECRN005C";
         String deliveryFailureCause = "M02";
-        Set<SequenceElement> list = SequenceConfiguration.SequenceDefinition.fromKey(statusCode).getSequence();
 
-        StepVerifier.create(service.notificationRework(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
                 .assertNext(response -> {
                     assertNotNull(response.getSequence());
                     response.getSequence().forEach(item -> {
                         assertTrue(StringUtils.hasText(item.getStatusCode()));
                     });
                     assertEquals(
-                            list.stream().filter(sequenceElement -> !CollectionUtils.isEmpty(sequenceElement.getRequiredDocumentType())).toList().size(),
-                            response.getSequence().stream().filter(sequenceItem -> !CollectionUtils.isEmpty(sequenceItem.getAttachments())).toList().size()
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
+                            response.getSequence().size()
                     );
-                    assertEquals(list.size(), response.getSequence().size());
                     response.getSequence().forEach(sequenceItem -> {
                         if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
-                            assertTrue(sequenceItem.getAttachments().containsAll(list.stream()
-                                    .filter(sequenceElement -> sequenceElement.getCode().equalsIgnoreCase(sequenceItem.getStatusCode()))
-                                    .flatMap(sequenceElement -> sequenceElement.getRequiredDocumentType().stream().map(DocumentTypeEnum::getValue))
-                                    .toList()));
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
                 })
@@ -345,29 +265,14 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
-    void notificationRework_shouldThrowExceptionForInvalidStatusCode() {
+    void retrieveSequenceAndEventStatus_shouldThrowExceptionForInvalidStatusCode() {
         String invalidStatusCode = "INVALID";
         String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.notificationRework(invalidStatusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(invalidStatusCode, deliveryFailureCause))
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
                         return ex.getProblem().getDetail().contains("statusCode INVALID is invalid");
-                    }
-                    return false;
-                })
-                .verify();
-    }
-
-    @Test
-    void notificationRework_shouldThrowExceptionForEmptyStatusCode() {
-        String emptyStatusCode = "";
-        String deliveryFailureCause = "M02";
-
-        StepVerifier.create(service.notificationRework(emptyStatusCode, deliveryFailureCause))
-                .expectErrorMatches(throwable -> {
-                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
-                        return ex.getProblem().getDetail().contains("is invalid");
                     }
                     return false;
                 })
