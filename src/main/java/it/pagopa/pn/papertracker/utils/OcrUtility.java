@@ -5,9 +5,6 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
@@ -22,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -141,6 +137,9 @@ public class OcrUtility {
         DetailsDTO.DeliveryFailureCause deliveryFailureCause = StringUtils.isNotBlank(paperTracking.getPaperStatus().getDeliveryFailureCause()) ?
                 DetailsDTO.DeliveryFailureCause.valueOf(paperTracking.getPaperStatus().getDeliveryFailureCause()) : null;
 
+        DataDTO.UnifiedDeliveryDriver unifiedDeliveryDriver = StringUtils.isNotBlank(paperTracking.getUnifiedDeliveryDriver()) ?
+                DataDTO.UnifiedDeliveryDriver.valueOf(paperTracking.getUnifiedDeliveryDriver().toUpperCase()) : null;
+
         OcrDataPayloadDTO ocrDataPayload = OcrDataPayloadDTO.builder()
                 .version("v1")
                 .commandType(OcrDataPayloadDTO.CommandType.POSTAL)
@@ -148,7 +147,7 @@ public class OcrUtility {
                 .data(DataDTO.builder()
                         .documentType(DataDTO.DocumentType.valueOf(documentType.name()))
                         .productType(getProductType(paperTracking))
-                        .unifiedDeliveryDriver(DataDTO.UnifiedDeliveryDriver.valueOf(Optional.ofNullable(paperTracking.getUnifiedDeliveryDriver()).orElse(StringUtils.EMPTY).toUpperCase()))
+                        .unifiedDeliveryDriver(unifiedDeliveryDriver)
                         .details(
                                 DetailsDTO.builder()
                                         .attachment(presignedUrl)

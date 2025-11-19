@@ -51,6 +51,7 @@ public class RECAG012EventChecker implements HandlerStep {
         }
 
         List<Attachment> attachments = context.getPaperTrackings().getEvents().stream()
+                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
                 .flatMap(event -> event.getAttachments().stream())
                 .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
                 .toList();
