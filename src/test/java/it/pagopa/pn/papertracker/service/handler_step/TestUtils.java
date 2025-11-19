@@ -99,12 +99,15 @@ public class TestUtils {
         return ev;
     }
 
-    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
-        assertEquals(DONE, pt.getState());
+    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes, PaperTrackingsState state, BusinessState businessState) {
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
+
+        assertFalse(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
@@ -213,9 +216,10 @@ public class TestUtils {
         return list.stream().filter(p).count();
     }
 
-    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
+    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure, PaperTrackingsState state, BusinessState businessState) {
         List<Event> eventsWithoutCon = pt.getEvents().stream().filter(event -> !event.getStatusCode().startsWith("CON")).toList();
-        assertEquals(DONE, pt.getState());
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()

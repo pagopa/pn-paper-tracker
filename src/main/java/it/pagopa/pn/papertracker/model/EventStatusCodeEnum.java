@@ -77,7 +77,7 @@ public enum EventStatusCodeEnum {
     RECAG001B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
     RECAG003E(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Irreperibilità Assoluta - In Dematerializzazione", true),
     RECAG002C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato a persona abilitata - Fascicolo Chiuso", false),
-    RECAG003C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(M02, M05, M06, M07, M08, M09), "Mancata consegna - Fascicolo Chiuso", false),
+    RECAG003C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Mancata consegna - Fascicolo Chiuso", false),
     RECAG001C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
     RECAG003F(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.KO, List.of(), "Irreperibilità Assoluta - Fascicolo Chiuso", false),
     RECAG010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Inesito", false),

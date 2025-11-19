@@ -8,6 +8,7 @@ import it.pagopa.pn.papertracker.utils.OcrUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -49,14 +50,20 @@ public class RECAG012EventChecker implements HandlerStep {
             return Mono.empty();
         }
 
+        List<Attachment> attachments = context.getPaperTrackings().getEvents().stream()
+                .flatMap(event -> event.getAttachments().stream())
+                .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
+                .toList();
+
         context.setRefinementCondition(true);
-        return ocrUtility.checkAndSendToOcr(recag012Event.get(), requiredAttachments, context);
+        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context);
     }
 
     private boolean hasRequiredAttachments(HandlerContext context, List<String> requiredAttachments) {
         Set<String> documentTypes = context.getPaperTrackings().getEvents().stream()
-                .flatMap(event -> event.getAttachments().stream())
-                .map(Attachment::getDocumentType)
+                .map(Event::getAttachments)
+                .filter(attachments -> !CollectionUtils.isEmpty(attachments))
+                .flatMap(attachmentList -> attachmentList.stream().map(Attachment::getDocumentType))
                 .collect(Collectors.toSet());
         return documentTypes.containsAll(requiredAttachments);
     }

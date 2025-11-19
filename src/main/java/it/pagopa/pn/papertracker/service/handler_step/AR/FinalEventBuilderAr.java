@@ -48,7 +48,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
     @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(TrackerUtility.extractEventFromContext(context))
-                .doOnNext(event -> context.setFinalStatusCode(true))
+                .doOnNext(event -> context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
                 .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))

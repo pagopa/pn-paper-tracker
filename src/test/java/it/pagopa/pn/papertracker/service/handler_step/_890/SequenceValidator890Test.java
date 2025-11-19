@@ -87,9 +87,12 @@ class SequenceValidator890Test {
                 });
         Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
         Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+
         List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
         tmpList.add(event1);
         tmpList.add(event2);
+        tmpList.add(event3);
         paperTrackings.setEvents(tmpList);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);

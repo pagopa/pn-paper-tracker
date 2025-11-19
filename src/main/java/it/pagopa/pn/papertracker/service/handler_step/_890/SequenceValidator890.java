@@ -41,7 +41,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
             sequenceConfig = SequenceConfiguration.getConfig(finalEventStatusCode);
         }
         return Mono.just(context.getPaperTrackings())
-                .filter(paperTrackings -> checkState(context, strictFinalValidationStock890))
+                .filter(paperTrackings -> checkState(context))
                 .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, strictFinalValidationStock890))
                 .doOnNext(context::setPaperTrackings)
                 .onErrorResume(PnPaperTrackerValidationException.class, ex -> {
@@ -53,13 +53,12 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                 .then();
     }
 
-    private boolean checkState(HandlerContext context, Boolean strictFinalValidationStock890) {
+    private boolean checkState(HandlerContext context) {
         if (!TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode()))
             return true;
 
         PaperTrackingsState state = context.getPaperTrackings().getState();
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
-        final ErrorType errorType = Boolean.TRUE.equals(strictFinalValidationStock890) ? ErrorType.ERROR : WARNING;
         return switch (state) {
             case DONE -> true;
             case AWAITING_REFINEMENT -> throw new PnPaperTrackerValidationException(
@@ -71,7 +70,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCause.STOCK_890_REFINEMENT_MISSING,
                             "invalid AWAITING_REFINEMENT state for stock 890",
                             FlowThrow.SEQUENCE_VALIDATION,
-                            errorType,
+                            ErrorType.ERROR,
                             context.getEventId()
                     )
             );
@@ -90,7 +89,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCause.STOCK_890_REFINEMENT_ERROR,
                             "Refinement process reached KO state, cannot proceed with final event validation",
                             FlowThrow.SEQUENCE_VALIDATION,
-                            errorType,
+                            ErrorType.ERROR,
                             context.getEventId()
                     )
             );

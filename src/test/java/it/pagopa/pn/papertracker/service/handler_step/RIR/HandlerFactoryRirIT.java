@@ -28,6 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.service.handler_step.RIR.TestSequenceRirEnum.OK_RETRY_RIR;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static org.awaitility.Awaitility.await;
@@ -224,9 +225,9 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
 
         switch (seq) {
             case OK_RIR ->
-                    assertValidatedDoneSubset(pt, 7, 5, null, List.of("RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"));
-            case OK_RETRY_RIR -> assertValidatedDone(newPt, 7, 5, null);
-            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, null);
+                    assertValidatedDoneSubset(pt, 7, 5, null, List.of("RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"),  DONE,BusinessState.DONE);
+            case OK_RETRY_RIR -> assertValidatedDone(newPt, 7, 5, null, DONE,BusinessState.DONE);
+            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
         }
     }
 

@@ -41,7 +41,7 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
         if(finalEvent.getStatusCode().equalsIgnoreCase(RECAG012.name())){
             return Mono.empty();
         }
-        context.setFinalStatusCode(true);
+        context.setFinalStatusCode(finalEvent.getStatusCode());
         String statusCode = finalEvent.getStatusCode();
         String eventStatus = evaluateStatusCodeAndRetrieveStatus(RECAG003C.name(), statusCode, context.getPaperTrackings()).name();
         return addEventToSend(context, finalEvent, eventStatus)

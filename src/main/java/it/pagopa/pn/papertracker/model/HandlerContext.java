@@ -19,7 +19,7 @@ public class HandlerContext {
     private List<SendEvent> eventsToSend = new ArrayList<>();
     private boolean stopExecution = false;
     private String eventId;
-    private boolean isFinalStatusCode;
+    private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
     private boolean refinementCondition;

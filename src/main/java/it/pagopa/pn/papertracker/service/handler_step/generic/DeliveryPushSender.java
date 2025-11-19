@@ -61,8 +61,8 @@ public class DeliveryPushSender implements HandlerStep {
 
         return Flux.fromIterable(filteredEvent)
                 .flatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
-                .filter(sendEvent -> context.isFinalStatusCode() || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
-                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.isFinalStatusCode(), context.getEventId()))
+                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode(), context.getEventId()))
                 .doOnNext(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
                 .then();
     }
@@ -102,14 +102,14 @@ public class DeliveryPushSender implements HandlerStep {
                 .thenReturn(event);
     }
 
-    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, boolean isFinalStatusCode, String eventId) {
+    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode, String eventId) {
         PaperTrackings paperTrackings = new PaperTrackings();
         String statusCode = TrackerUtility.getStatusCodeFromEventId(contextPaperTrackings, eventId);
         setNewStatus(paperTrackings, statusCode, BusinessState.DONE, PaperTrackingsState.DONE);
         if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
             paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
         }
-        if(isFinalStatusCode){
+        if(StringUtils.hasText(finalStatusCode)){
             PaperStatus paperStatus = new PaperStatus();
             paperStatus.setFinalStatusCode(statusCode);
             paperTrackings.setPaperStatus(paperStatus);

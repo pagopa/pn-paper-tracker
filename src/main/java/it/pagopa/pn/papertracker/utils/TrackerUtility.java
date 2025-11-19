@@ -4,6 +4,8 @@ import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
@@ -76,13 +78,24 @@ public class TrackerUtility {
     }
 
     public static boolean isInvalidState(HandlerContext ctx, String statusCode) {
-        if (TrackerUtility.isStockStatus890(statusCode)) {
-            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
-            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
-        } else{
+        if (RECAG012.name().equalsIgnoreCase(statusCode) || !isStock890SequenceStatusCodes(statusCode)) {
             PaperTrackingsState state = ctx.getPaperTrackings().getState();
             return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
+        } else {
+            BusinessState businessState = ctx.getPaperTrackings().getBusinessState();
+            return businessState == BusinessState.DONE || businessState == BusinessState.AWAITING_OCR;
         }
+    }
+
+    private static boolean isStock890SequenceStatusCodes(String statusCode) {
+        SequenceConfig config005 = SequenceConfiguration.getConfig(RECAG005C.name());
+        SequenceConfig config006 = SequenceConfiguration.getConfig(RECAG006C.name());
+        SequenceConfig config007 = SequenceConfiguration.getConfig(RECAG007C.name());
+        SequenceConfig config008 = SequenceConfiguration.getConfig(RECAG008C.name());
+        return config005.sequenceStatusCodes().contains(statusCode) ||
+                config006.sequenceStatusCodes().contains(statusCode) ||
+                config007.sequenceStatusCodes().contains(statusCode) ||
+                config008.sequenceStatusCodes().contains(statusCode);
     }
 
     public static boolean isInInvalidStateForOcr(PaperTrackings paperTrackings, String statusCode) {

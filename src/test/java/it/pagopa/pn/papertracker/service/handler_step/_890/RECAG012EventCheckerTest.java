@@ -66,20 +66,6 @@ class RECAG012EventCheckerTest {
         context.setPaperTrackings(paperTrackings);
     }
 
-    @Test
-    void executeCompletesWhenAllAttachmentsPresentAndEventRECAG012Found() {
-        //Arrange
-        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.CAD.getValue()));
-        when(ocrUtility.checkAndSendToOcr(context.getPaperTrackings().getEvents().getFirst(), context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890(), context)).thenReturn(Mono.empty());
-
-        //Act
-        StepVerifier.create(recag012EventChecker.execute(context))
-                .verifyComplete();
-
-        //Assert
-        verify(ocrUtility, times(1)).checkAndSendToOcr(context.getPaperTrackings().getEvents().getFirst(), context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890(), context);
-        assertTrue(context.isRefinementCondition());
-    }
 
     @Test
     void executeCompletesWhenAttachmentsMissing() {

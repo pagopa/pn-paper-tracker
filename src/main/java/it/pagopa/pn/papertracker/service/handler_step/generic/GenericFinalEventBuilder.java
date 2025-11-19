@@ -43,7 +43,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
         Event finalEvent = TrackerUtility.extractEventFromContext(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
-                .doOnNext(event -> context.setFinalStatusCode(true))
+                .doOnNext(event -> context.setFinalStatusCode(finalEvent.getStatusCode()))
                 .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }

@@ -43,15 +43,12 @@ public class OcrUtility {
     private final SafeStorageClient safeStorageClient;
     private final PnPaperTrackerConfigs cfg;
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final TrackerConfigUtils trackerConfigUtils;
 
-    public Mono<Void> checkAndSendToOcr(Event event, List<String> requiredAttachments, HandlerContext context) {
+    public Mono<Void> checkAndSendToOcr(Event event, List<Attachment> attachmentList, HandlerContext context) {
         PaperTrackings paperTracking = context.getPaperTrackings();
-        OcrStatusEnum ocrStatusEnum = trackerConfigUtils.getEnableOcrValidationFor().get(paperTracking.getProductType());
-        List<Event> validatedEvent = TrackerUtility.validatedEvents(paperTracking.getPaperStatus().getValidatedEvents(), paperTracking.getEvents());
-        List<Attachment> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
+        OcrStatusEnum ocrStatusEnum = context.getPaperTrackings().getValidationConfig().getOcrEnabled();
 
-        if (Objects.nonNull(ocrStatusEnum)) {
+        if (Objects.nonNull(ocrStatusEnum) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             log.info("OCR validation enabled for trackingId={}", paperTracking.getTrackingId());
             return sendMessageToOcr(event, attachmentList, paperTracking, ocrStatusEnum);
         } else {
@@ -114,19 +111,19 @@ public class OcrUtility {
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(ocrStatusEnum);
 
-        ValidationFlow validationFlow = new ValidationFlow();
 
         if (ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             validationConfig.setOcrEnabled(ocrStatusEnum);
-            validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
             PaperStatus paperStatus = new PaperStatus();
             paperStatus.setValidatedAttachments(validatedAttachments);
             paperTracking.setPaperStatus(paperStatus);
+            TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
         } else {
+            ValidationFlow validationFlow = new ValidationFlow();
             validationFlow.setOcrRequests(ocrRequests);
             TrackerUtility.setNewStatus(paperTracking, event.getStatusCode(), BusinessState.AWAITING_OCR, PaperTrackingsState.AWAITING_OCR);
+            paperTracking.setValidationFlow(validationFlow);
         }
-        paperTracking.setValidationFlow(validationFlow);
         paperTracking.setValidationConfig(validationConfig);
 
         return paperTracking;
@@ -165,19 +162,6 @@ public class OcrUtility {
                 .build();
 
         return new OcrEvent(ocrHeader, ocrDataPayload);
-    }
-
-    private List<Attachment> retrieveFinalDemat(List<Event> validatedEvents, List<String> requiredAttachments) {
-        Map<String, Attachment> attachments = new HashMap<>();
-
-        for (Event event : validatedEvents) {
-            Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
-                    .stream()
-                    .filter(att -> requiredAttachments.contains(att.getDocumentType()))
-                    .forEach(attachment -> attachments.putIfAbsent(attachment.getDocumentType(), attachment));
-        }
-
-        return attachments.values().stream().toList();
     }
 
     private DataDTO.ProductType getProductType(PaperTrackings paperTracking) {

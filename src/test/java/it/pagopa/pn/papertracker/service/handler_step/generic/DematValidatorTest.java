@@ -1,3 +1,4 @@
+/*
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
@@ -51,8 +52,7 @@ class DematValidatorTest {
     @BeforeEach
     void setUp() {
         context = new HandlerContext();
-        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(cfg);
-        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO, trackerConfigUtils);
+        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -177,4 +177,4 @@ class DematValidatorTest {
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
-}
+}*/

@@ -745,12 +745,12 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
         switch (seq) {
             case OK_AR, OKCausaForzaMaggiore_AR ->
-                    assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null);
-            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null);
-            case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null);
-            case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null);
-            case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01");
+                    assertValidatedDoneSubset(pt, 6, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"), DONE,BusinessState.DONE);
+            case FAIL_CON996_PCRETRY_FURTO_AR -> assertValidatedDone(newPt2, 6, 3, null, DONE,BusinessState.DONE);
+            case OK_RETRY_AR, OKNonRendicontabile_AR -> assertValidatedDone(newPt, 5, 3, null, DONE,BusinessState.DONE);
+            case OK_AR_NOT_ORDERED -> assertValidatedDone(pt, 7, 3, null, DONE,BusinessState.DONE);
+            case OK_GIACENZA_AR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
+            case FAIL_IRREPERIBILE_AR -> assertValidatedDone(pt, 5, 3, "M01",DONE,BusinessState.DONE);
             case OK_AR_INVALID_DATETIME -> {
                 assertEquals(BusinessState.KO, pt.getBusinessState());
                 assertEquals(6, pt.getEvents().size());
@@ -761,9 +761,9 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 assertEquals(6, pt.getEvents().size());
                 assertNull(pt.getNextRequestIdPcretry());
             }
-            case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> assertValidatedDone(pt, 9, 5, null);
+            case OK_GIACENZA_AR_2, OK_GIACENZA_AR_3 -> assertValidatedDone(pt, 9, 5, null,DONE,BusinessState.DONE);
 
-            case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02");
+            case FAIL_AR -> assertValidatedDone(pt, 5, 3, "M02",DONE,BusinessState.DONE);
             case KO_AR_NO_EVENT_B -> {
                 assertEquals(BusinessState.AWAITING_FINAL_STATUS_CODE, pt.getBusinessState());
                 assertEquals(5, pt.getEvents().size());
@@ -776,10 +776,10 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                 assertNull(pt.getNextRequestIdPcretry());
             }
             case OK_AR_BAD_EVENT ->
-                    assertValidatedDoneSubset(pt, 7, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"));
+                    assertValidatedDoneSubset(pt, 7, 3, null, List.of("RECRN001A", "RECRN001B", "RECRN001C"), DONE,BusinessState.DONE);
 //            case FAIL_DISCOVERY_AR ->
 //                    assertValidatedDoneSubset(pt, 10, 3, "M01", List.of("RECRN001A", "RECRN001B", "RECRN001C"));
-            case OK_AR_TIMESTAMP_ERR -> assertValidatedDone(pt, 11, 3, null);
+            case OK_AR_TIMESTAMP_ERR -> assertValidatedDone(pt, 11, 3, null,DONE,BusinessState.DONE);
         }
     }
 

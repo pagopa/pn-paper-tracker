@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -43,9 +44,24 @@ public class DematValidator implements HandlerStep {
 
         Event currentEvent = TrackerUtility.extractEventFromContext(context);
         List<String> requiredAttachments = getRequiredAttachments(currentEvent, paperTrackings);
-        return ocrUtility.checkAndSendToOcr(currentEvent, requiredAttachments, context)
+        List<Event> validatedEvent = TrackerUtility.validatedEvents(paperTrackings.getPaperStatus().getValidatedEvents(), paperTrackings.getEvents());
+        List<Attachment> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
+        return ocrUtility.checkAndSendToOcr(currentEvent, attachmentList, context)
                 .doOnNext(unused -> context.setStopExecution(true))
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)));
+    }
+
+    private List<Attachment> retrieveFinalDemat(List<Event> validatedEvents, List<String> requiredAttachments) {
+        Map<String, Attachment> attachments = new HashMap<>();
+
+        for (Event event : validatedEvents) {
+            Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
+                    .stream()
+                    .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                    .forEach(attachment -> attachments.putIfAbsent(attachment.getDocumentType(), attachment));
+        }
+
+        return attachments.values().stream().toList();
     }
 
     private List<String> getRequiredAttachments(Event event, PaperTrackings paperTrackings) {
