@@ -22,7 +22,7 @@ public class HandlerContext {
     private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
-    private String reworkId;
+    private boolean refinementCondition;
     private OcrDataResultPayload ocrDataResultPayload;
 
 }

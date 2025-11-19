@@ -40,6 +40,7 @@ public class PcRetryService {
     private void updateContext(HandlerContext context, PcRetryResponse pcRetryResponse) {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);
+        paperTrackings.setBusinessState(BusinessState.DONE);
         paperTrackings.setNextRequestIdPcretry(pcRetryResponse.getRequestId());
     }
 

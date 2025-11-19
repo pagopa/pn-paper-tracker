@@ -18,8 +18,7 @@ public class PaperStatus {
     public static final String COL_ANONYMIZED_DISCOVERED_ADDRESS = "anonymizedDiscoveredAddress";
     public static final String COL_FINAL_STATUS_CODE = "finalStatusCode";
     public static final String COL_VALIDATED_SEQUENCE_TIMESTAMP = "validatedSequenceTimestamp";
-    public static final String COL_VALIDATED_ATTACHMENT_URI = "validatedAttachmentUri";
-    public static final String COL_VALIDATED_ATTACHMENT_TYPE = "validatedAttachmentType";
+    public static final String COL_VALIDATED_ATTACHMENTS= "validatedAttachments";
     public static final String COL_VALIDATED_EVENTS = "validatedEvents";
     public static final String COL_FINAL_DEMAT_FOUND = "finalDematFound";
     public static final String COL_PAPER_DELIVERY_TIMESTAMP = "paperDeliveryTimestamp";
@@ -40,21 +39,15 @@ public class PaperStatus {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_SEQUENCE_TIMESTAMP)}))
     private Instant validatedSequenceTimestamp;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_URI)}))
-    private String validatedAttachmentUri;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_TYPE)}))
-    private String validatedAttachmentType;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENTS)}))
+    private List<Attachment> validatedAttachments;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_EVENTS), @DynamoDbIgnoreNulls}))
-    private List<Event> validatedEvents;
+    private List<String> validatedEvents;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_FOUND)}))
     private Boolean finalDematFound;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAPER_DELIVERY_TIMESTAMP)}))
     private Instant paperDeliveryTimestamp;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP)}))
-    private Instant actualPaperDeliveryTimestamp;
 }

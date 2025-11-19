@@ -8,13 +8,15 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
+import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,7 +40,7 @@ public class GenericFinalEventBuilder implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        Event finalEvent = extractFinalEvent(context);
+        Event finalEvent = TrackerUtility.extractEventFromContext(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
                 .doOnNext(event -> context.setFinalStatusCode(finalEvent.getStatusCode()))
@@ -56,7 +58,6 @@ public class GenericFinalEventBuilder implements HandlerStep {
         PaperTrackings paperTrackings = new PaperTrackings();
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setFinalEventBuilderTimestamp(Instant.now());
-        validationFlow.setDematValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         return paperTrackings;
     }
@@ -75,15 +76,8 @@ public class GenericFinalEventBuilder implements HandlerStep {
         return enrichWithDiscoveredAddress(context, sendEvent);
     }
 
-    protected Event extractFinalEvent(HandlerContext context) {
-        return context.getPaperTrackings().getEvents().stream()
-                .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
-    }
-
     protected Mono<SendEvent> enrichWithDiscoveredAddress(HandlerContext context, SendEvent sendEvent) {
-        if (!StringUtils.hasText(context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress())) {
+        if (StringUtils.isBlank(context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress())) {
             return Mono.just(sendEvent);
         }
         context.setAnonymizedDiscoveredAddressId(context.getPaperTrackings().getPaperStatus().getAnonymizedDiscoveredAddress());
@@ -91,6 +85,20 @@ public class GenericFinalEventBuilder implements HandlerStep {
                 .map(SendEventMapper::toAnalogAddress)
                 .doOnNext(sendEvent::setDiscoveredAddress)
                 .thenReturn(sendEvent);
+    }
+
+    protected EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String statusCode, PaperTrackings paperTrackings) {
+        String deliveryFailureCause = paperTrackings.getPaperStatus().getDeliveryFailureCause();
+        if (statusCodeToEvaluate.equalsIgnoreCase(statusCode)) {
+            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
+                return EventStatus.OK;
+            }
+            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
+                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
+                return EventStatus.KO;
+            }
+        }
+        return EventStatusCodeEnum.fromKey(statusCode).getStatus();
     }
 
 }

@@ -10,8 +10,9 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -19,10 +20,8 @@ import reactor.core.publisher.Mono;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
-import static it.pagopa.pn.papertracker.utils.TrackerUtility.evaluateStatusCodeAndRetrieveStatus;
 
 @Component
 @Slf4j
@@ -48,8 +47,8 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(extractFinalEvent(context))
-                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
+        return Mono.just(TrackerUtility.extractEventFromContext(context))
+                .doOnNext(event -> context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
                 .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
@@ -60,12 +59,14 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            var eventStatusEnum = evaluateStatusCodeAndRetrieveStatus(statusCode, context.getPaperTrackings().getPaperStatus().getDeliveryFailureCause());
-            String eventStatus = Objects.nonNull(eventStatusEnum) ? eventStatusEnum.name() : null;
+            String eventStatus = evaluateStatusCodeAndRetrieveStatus(RECRN002C.name(), statusCode, context.getPaperTrackings()).name();
             return addEventToSend(context, finalEvent, eventStatus);
         }
 
-        List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
+        List<Event> validatedEvents = TrackerUtility.validatedEvents(
+                paperTrackings.getPaperStatus().getValidatedEvents(),
+                paperTrackings.getEvents()
+        );
         EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
@@ -75,7 +76,6 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 ? prepareFinalEventAndPNRN012toSend(context, finalEvent, eventRECRN010)
                 : handleNoDifferenceGreater(context, paperTrackings, statusCode, finalEvent, eventRECRN00XA, eventRECRN010);
     }
-
 
     private Mono<Void> handleNoDifferenceGreater(HandlerContext context,
                                                  PaperTrackings paperTrackings,

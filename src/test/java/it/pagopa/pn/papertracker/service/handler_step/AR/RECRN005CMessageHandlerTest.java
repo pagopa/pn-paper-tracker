@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
@@ -58,8 +58,6 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
 
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
-    @Autowired
-    private SequenceConfiguration sequenceConfiguration;
     @Autowired
     private PaperTrackingsDAO paperTrackingsDAO;
     @Autowired

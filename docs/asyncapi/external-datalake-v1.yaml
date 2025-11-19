@@ -66,16 +66,20 @@ components:
             productType:
               type: string
               description: Product type
-              enum:
+              enum: # DA AGGIORNARE??
                 - AR
                 - RIR
+                - 890
               example: "AR"
             documentType:
               type: string
               description: Document type
-              enum:
+              enum: # DA AGGIORNARE??
                 - AR
                 - Plico
+                - 23L
+                - ARCAD
+                - CAD
               example: "AR"
             unifiedDeliveryDriver:
               type: string

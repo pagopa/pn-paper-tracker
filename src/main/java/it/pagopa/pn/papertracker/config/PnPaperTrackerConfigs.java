@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.config;
 
 import it.pagopa.pn.commons.conf.SharedAutoConfiguration;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.FileType;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
@@ -31,9 +30,13 @@ public class PnPaperTrackerConfigs {
     private Topics topics;
     private int maxPcRetryMock;
 
-    private List<ProductType> enableOcrValidationFor = new ArrayList<>();
+    private List<String> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
+    private List<String> requiredAttachmentsRefinementStock890 = new ArrayList<>();
+    private List<String> sendOcrAttachmentsFinalValidationStock890 = new ArrayList<>();
+    private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
+    private List<String> strictFinalValidationStock890;
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;

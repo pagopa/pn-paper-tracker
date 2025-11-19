@@ -41,7 +41,8 @@ public class MetadataUpserter implements HandlerStep {
                         context.isDryRunEnabled(),
                         TrackerUtility.checkIfIsFinalDemat(context.getPaperProgressStatusEvent().getStatusCode()),
                         TrackerUtility.checkIfIsP000event(context.getPaperProgressStatusEvent().getStatusCode()),
-                        TrackerUtility.checkIfIsInternalEvent(context.getPaperProgressStatusEvent().getStatusCode())
+                        TrackerUtility.checkIfIsInternalEvent(context.getPaperProgressStatusEvent().getStatusCode()),
+                        TrackerUtility.checkIfIsRecag012event(context.getPaperProgressStatusEvent().getStatusCode())
                 ))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(
                         context.getPaperProgressStatusEvent().getRequestId(),

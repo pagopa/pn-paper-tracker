@@ -1,120 +1,69 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperEvent;
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.CollectionUtils;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment;
 
 import java.time.Instant;
-import java.util.Objects;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Optional;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
 
-    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
+    public static Tracking toTracking(PaperTrackings paperTrackings) {
+        return SmartMapper.mapToClass(paperTrackings, Tracking.class);
+    }
+
+    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, TrackerConfigUtils trackerConfigUtils) {
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
         paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setValidationFlow(new ValidationFlow());
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.valueOf(trackingCreationRequest.getProductType())));
+        validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890Config(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
 
-    public static Tracking toTracking(PaperTrackings paperTrackings) {
-        Tracking tracking = new Tracking();
-        tracking.setTrackingId(paperTrackings.getTrackingId());
-        tracking.setAttemptId(paperTrackings.getAttemptId());
-        tracking.setPcRetry(paperTrackings.getPcRetry());
-        tracking.setUnifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver());
-        tracking.setOcrRequestId(paperTrackings.getOcrRequestId());
-        tracking.setNextRequestIdPcretry(paperTrackings.getNextRequestIdPcretry());
-        tracking.setCreatedAt(paperTrackings.getCreatedAt());
-        tracking.setUpdatedAt(paperTrackings.getUpdatedAt());
-        tracking.setNotificationReworkId(paperTrackings.getNotificationReworkId());
-        tracking.setNotificationReworkTimestamp(paperTrackings.getNotificationReworkRequestTimestamp());
-        if(Objects.nonNull(paperTrackings.getProductType())){
-            tracking.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(paperTrackings.getProductType().getValue()));
-        }
-        if(!CollectionUtils.isEmpty(paperTrackings.getEvents())){
-            tracking.setEvents(paperTrackings.getEvents().stream().map(PaperTrackingsMapper::toPaperEvent).collect(java.util.stream.Collectors.toList()));
-        }
-        if(Objects.nonNull(paperTrackings.getValidationFlow())) {
-            tracking.setValidationFlow(toDtoValidationFlow(paperTrackings.getValidationFlow()));
-        }
-        if(Objects.nonNull(paperTrackings.getPaperStatus())){
-            tracking.setPaperStatus(toDtoPaperStatus(paperTrackings.getPaperStatus()));
-        }
-        if(Objects.nonNull(paperTrackings.getState())){
-            tracking.setState(Tracking.StateEnum.valueOf(paperTrackings.getState().name()));
-        }
-        return tracking;
+    private static OcrStatusEnum evaluateIfOcrIsEnabled(TrackerConfigUtils trackerConfigUtils, ProductType productType) {
+        return Optional.ofNullable(trackerConfigUtils.getEnableOcrValidationFor().get(productType))
+                .orElse(OcrStatusEnum.DISABLED);
     }
 
-    private static PaperEvent toPaperEvent(Event event) {
-        PaperEvent paperEvent = new PaperEvent();
-        paperEvent.setRequestTimestamp(event.getRequestTimestamp());
-        paperEvent.setStatusCode(event.getStatusCode());
-        paperEvent.setStatusTimestamp(event.getStatusTimestamp());
-        paperEvent.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        paperEvent.setRegisteredLetterCode(event.getRegisteredLetterCode());
-        paperEvent.setCreatedAt(event.getCreatedAt());
-        paperEvent.setNotificationReworkId(event.getNotificationReworkId());
-        if(!CollectionUtils.isEmpty(event.getAttachments())){
-            paperEvent.setAttachments(event.getAttachments().stream().map(PaperTrackingsMapper::toDtoAttachment).toList());
-        }
-        if(Objects.nonNull(event.getProductType())) {
-            paperEvent.setProductType(it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ProductType.valueOf(event.getProductType().getValue()));
-        }
-        return paperEvent;
-    }
-
-    private static Attachment toDtoAttachment(it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment entityAttachment) {
-        Attachment dto = new Attachment();
-        dto.setId(entityAttachment.getId());
-        dto.setDocumentType(entityAttachment.getDocumentType());
-        dto.setUrl(entityAttachment.getUri());
-        dto.setDate(entityAttachment.getDate());
-        return dto;
-    }
-
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow toDtoValidationFlow(ValidationFlow entity) {
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.ValidationFlow();
-        dto.setOcrEnabled(entity.getOcrEnabled());
-        dto.setSequencesValidationTimestamp(entity.getSequencesValidationTimestamp());
-        dto.setOcrRequestTimestamp(entity.getOcrRequestTimestamp());
-        dto.setDematValidationTimestamp(entity.getDematValidationTimestamp());
-        dto.setFinalEventBuilderTimestamp(entity.getFinalEventBuilderTimestamp());
-        return dto;
-    }
-
-    private static it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus toDtoPaperStatus(PaperStatus entity) {
-
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus dto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperStatus();
-
-        dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
-        dto.setDeliveryFailureCause(entity.getDeliveryFailureCause());
-        dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddress());
-        dto.setFinalStatusCode(entity.getFinalStatusCode());
-        dto.setValidatedSequenceTimestamp(entity.getValidatedSequenceTimestamp());
-        dto.setValidatedAttachmentUri(entity.getValidatedAttachmentUri());
-        dto.setValidatedAttachmentType(entity.getValidatedAttachmentType());
-        dto.setFinalDematFound(entity.getFinalDematFound());
-        dto.setPaperDeliveryTimestamp(entity.getPaperDeliveryTimestamp());
-        dto.setActualPaperDeliveryTimestamp(entity.getActualPaperDeliveryTimestamp());
-        if(!CollectionUtils.isEmpty(entity.getValidatedEvents())){
-            dto.setValidatedEvents(entity.getValidatedEvents().stream().map(PaperTrackingsMapper::toPaperEvent).toList());
-        }
-        return dto;
+    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, ProductType productType, String attemptId) {
+        Instant now = Instant.now();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
+        paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
+        paperTrackings.setProductType(productType);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setAttemptId(attemptId);
+        paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
+        paperTrackings.setCreatedAt(now);
+        PaperStatus paperStatus = new PaperStatus();
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setPaperStatus(paperStatus);
+        return paperTrackings;
     }
 }

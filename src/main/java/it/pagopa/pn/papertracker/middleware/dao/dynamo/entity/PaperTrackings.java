@@ -20,6 +20,7 @@ public class PaperTrackings {
     public static final String COL_EVENTS = "events";
     public static final String COL_PAPER_STATUS = "paperStatus";
     public static final String COL_VALIDATION_FLOW = "validationFlow";
+    public static final String COL_VALIDATION_CONFIG = "validationConfig";
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_NEXT_REQUEST_ID_PC_RETRY = "nextRequestIdPcretry";
@@ -27,8 +28,11 @@ public class PaperTrackings {
     public static final String COL_CREATED_AT = "createdAt";
     public static final String COL_UPDATED_AT = "updatedAt";
     public static final String COL_STATE = "state";
+    public static final String COL_BUSINESS_STATE = "businessState";
     public static final String COL_TTL = "ttl";
-    public static final String OCR_REQUEST_ID_INDEX = "ocrRequestId-index";
+    public static final String COL_REFINED = "refined";
+    public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
+    public static final String COL_PENDING_FINAL_EVENT_ID = "pendingFinalEventId";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
     public static final String COL_REWORK_ID = "reworkId";
     public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
@@ -57,14 +61,20 @@ public class PaperTrackings {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_FLOW), @DynamoDbIgnoreNulls}))
     private ValidationFlow validationFlow;
 
-    @Getter(onMethod = @__({@DynamoDbSecondaryPartitionKey(indexNames = OCR_REQUEST_ID_INDEX), @DynamoDbAttribute(COL_OCR_REQUEST_ID)}))
-    private String ocrRequestId;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATION_CONFIG), @DynamoDbIgnoreNulls}))
+    private ValidationConfig validationConfig;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_NEXT_REQUEST_ID_PC_RETRY)}))
     private String nextRequestIdPcretry;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_STATE)}))
     private PaperTrackingsState state;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_BUSINESS_STATE)}))
+    private BusinessState businessState;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PENDING_FINAL_EVENT_ID)}))
+    private String pendingFinalEventId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;

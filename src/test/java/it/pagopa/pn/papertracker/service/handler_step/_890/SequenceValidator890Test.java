@@ -1,0 +1,203 @@
+package it.pagopa.pn.papertracker.service.handler_step._890;
+
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.CollectionUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.awt.print.Paper;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class SequenceValidator890Test {
+
+    @Mock
+    private PaperTrackingsDAO paperTrackingsDAO;
+
+
+    private SequenceValidator890 sequenceValidator890;
+
+    private HandlerContext context;
+
+    @BeforeEach
+    void setUp() {
+        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO);
+        context = new HandlerContext();
+        context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
+    }
+
+    @Test
+    void executeWithStockStatusFalse() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        Attachment attach = new Attachment();
+        attach.setDocumentType("23L");
+        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG002B"))
+                .findFirst()
+                .map(event -> {
+                    event.setAttachments(List.of(attach));
+                    return event;
+                });
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void executeWithStockStatusTrueAndStateDONE() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.DONE);
+        Attachment attach = new Attachment();
+        attach.setDocumentType("23L");
+        Attachment attach2 = new Attachment();
+        attach2.setDocumentType("ARCAD");
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG005B"))
+                .findFirst()
+                .map(event -> {
+                    event.setAttachments(List.of(attach, attach2));
+                    return event;
+                });
+        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+
+        List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
+        tmpList.add(event1);
+        tmpList.add(event2);
+        tmpList.add(event3);
+        paperTrackings.setEvents(tmpList);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void executeWithStockStatusTrueAndStateAWAITING_REFINEMENT() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException)
+                .verify();
+
+        // Assert
+        verify(paperTrackingsDAO, never()).updateItem(any(), any());
+    }
+
+    @Test
+    void executeWithStockStatusTrueAndStateAWAITING_OCR() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
+        assertEquals(BusinessState.AWAITING_REFINEMENT_OCR, captor.getValue().getBusinessState());
+        assertTrue(context.isStopExecution());
+    }
+
+    @Test
+    void executeWithStockStatusTrueAndStateKO() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.KO);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException)
+                .verify();
+
+        // Assert
+        verify(paperTrackingsDAO, never()).updateItem(any(), any());
+    }
+
+    private PaperTrackings getPaperTrackings() {
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setPaperStatus(new PaperStatus());
+        paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setEvents(List.of(
+                buildEvent("RECAG005A", timestamp, businessTimestamp, null),
+                buildEvent("RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
+                buildEvent("RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
+        ));
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        paperTrackings.setValidationConfig(validationConfig);
+        return paperTrackings;
+    }
+
+    private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, List<String> attachmentTypes) {
+        Event event = new Event();
+        event.setAttachments(new ArrayList<>());
+        event.setStatusCode(statusCode);
+        event.setRegisteredLetterCode("REG123");
+        event.setStatusTimestamp(statusTimestamp);
+        event.setRequestTimestamp(requestTimestamp);
+        event.setDeliveryFailureCause("");
+
+        if (!CollectionUtils.isEmpty(attachmentTypes)) {
+            for (String type : attachmentTypes) {
+                Attachment attachment = new Attachment();
+                attachment.setDocumentType(type);
+                event.getAttachments().add(attachment);
+            }
+        }
+
+        return event;
+    }
+}
