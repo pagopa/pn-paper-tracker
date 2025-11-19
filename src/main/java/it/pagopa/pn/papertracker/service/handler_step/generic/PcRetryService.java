@@ -29,8 +29,7 @@ public class PcRetryService {
      */
     public Mono<Void> handlePcRetryResponse(PcRetryResponse pcRetryResponse, Boolean isCON996, HandlerContext context) {
         if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-            PaperTrackings paperTrackingsToUpdate = getPaperTrackingsPcretry(pcRetryResponse);
-            context.setPaperTrackings(paperTrackingsToUpdate);
+            updateContext(context, pcRetryResponse);
             return Mono.empty();
         } else {
             PaperTrackingsErrors paperTrackingsErrors = Boolean.TRUE.equals(isCON996) ? buildErrorForCON996(context) : buildErrorForGeneric(context);
@@ -38,12 +37,11 @@ public class PcRetryService {
         }
     }
 
-    private PaperTrackings getPaperTrackingsPcretry(PcRetryResponse pcRetryResponse) {
-        PaperTrackings paperTrackings = new PaperTrackings();
+    private void updateContext(HandlerContext context, PcRetryResponse pcRetryResponse) {
+        PaperTrackings paperTrackings = context.getPaperTrackings();
         paperTrackings.setState(PaperTrackingsState.DONE);
         paperTrackings.setBusinessState(BusinessState.DONE);
         paperTrackings.setNextRequestIdPcretry(pcRetryResponse.getRequestId());
-        return paperTrackings;
     }
 
 

@@ -33,6 +33,14 @@ public class TrackerUtilityTest {
     }
 
     @Test
+    void checkIfIsInternalEventReturnsTrueForInternalEventStatusCodes() {
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P000"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P011"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P012"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P013"));
+    }
+
+    @Test
     void buildOcrRequestIdReturnsCorrectFormat() {
         String trackingId = "trackingId123";
         String eventId = "eventId456";

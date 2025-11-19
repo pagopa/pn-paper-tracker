@@ -66,7 +66,6 @@ public class PaperTrackingsMapper {
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setTtl(now.plus(paperTrackingsTtlDuration).getEpochSecond());
         return paperTrackings;
     }
 }

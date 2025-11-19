@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class TrackerUtility {
@@ -26,6 +27,13 @@ public class TrackerUtility {
 
     public static boolean checkIfIsP000event(String eventStatusCode) {
         return P000.name().equalsIgnoreCase(eventStatusCode);
+    }
+
+    public static boolean checkIfIsInternalEvent(String eventStatusCode) {
+        return P000.name().equalsIgnoreCase(eventStatusCode) ||
+                P011.name().equalsIgnoreCase(eventStatusCode) ||
+                P012.name().equalsIgnoreCase(eventStatusCode) ||
+                P013.name().equalsIgnoreCase(eventStatusCode);
     }
 
     public static boolean checkIfIsRecag012event(String statusCode) {

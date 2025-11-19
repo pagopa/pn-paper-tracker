@@ -5,16 +5,14 @@ import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
+import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
 
 import static it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper.toPaperTrackings;
 
@@ -39,6 +37,7 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
                 .map(PaperTrackingsMapper::toTracking)
                 .collectList()
+                .doOnNext(trackings -> log.info("Retrieved {} trackings for request {}", trackings.size(), trackingsRequest))
                 .doOnNext(response::setTrackings)
                 .thenReturn(response);
     }

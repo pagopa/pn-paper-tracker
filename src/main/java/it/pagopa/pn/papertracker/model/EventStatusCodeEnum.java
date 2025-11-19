@@ -66,6 +66,10 @@ public enum EventStatusCodeEnum {
     //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
 
     P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false),
+    P011(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore di sintassi", false),
+    P012(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore semantico", false),
+    P013(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Errore di trasformazione", false);
+    P000(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Affidato al consolidatore", false),
 
     // 890
     RECAG001A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
