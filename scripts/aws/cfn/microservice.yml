@@ -334,10 +334,6 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where external channel rework validation events are sent'
 
-  ExternalChannelToReworkEventValidationDLQARN:
-    Type: String
-    Description: 'ARN of the Dead Letter Queue for ExternalChannel to Rework Event Validation Queue'
-
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxyLambdaName:
     Type: String
@@ -700,9 +696,6 @@ Resources:
       MaximumBatchingWindowInSeconds: 60
       StartingPosition: TRIM_HORIZON # opzionale, non richiesto per SQS
       Enabled: true
-      DestinationConfig:
-        OnFailure:
-          Destination: !Ref ExternalChannelToReworkEventValidationDLQARN
 
   NotificationReworkEventsValidationLambdaAlarms:
     Type: AWS::CloudFormation::Stack

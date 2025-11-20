@@ -284,8 +284,6 @@ Outputs:
     Value: !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueName
   ExternalChannelToReworkEventValidationQueueARN:
     Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueARN
-  ExternalChannelToReworkEventValidationDLQARN:
-    Value: !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.DeadLetterQueueARN
 
   UninitializedShipmentDryRunQueueName:
     Value: !GetAtt UninitializedShipmentDryRunQueue.Outputs.QueueName
