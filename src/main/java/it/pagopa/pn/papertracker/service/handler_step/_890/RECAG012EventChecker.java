@@ -45,8 +45,14 @@ public class RECAG012EventChecker implements HandlerStep {
         Optional<Event> recag012Event = findRECAG012Event(context);
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
 
-        if (!hasRequiredAttachments(context, requiredAttachments) || recag012Event.isEmpty()) {
-            log.info("Missing required attachments or RECAG012 event not found for trackingId {}", context.getTrackingId());
+        if(recag012Event.isEmpty()){
+            log.info("RECAG012 event not found for trackingId {}", context.getTrackingId());
+            return Mono.empty();
+        }
+
+        if (!hasRequiredAttachments(context, requiredAttachments)) {
+            log.info("Missing required attachments for trackingId {}", context.getTrackingId());
+            context.setNeedToSendRECAG012A(true);
             return Mono.empty();
         }
 
@@ -56,7 +62,6 @@ public class RECAG012EventChecker implements HandlerStep {
                 .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
                 .toList();
 
-        context.setRefinementCondition(true);
         return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context);
     }
 

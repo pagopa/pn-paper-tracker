@@ -107,7 +107,7 @@ class RECAG012EventCheckerTest {
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
 
-        assertTrue(context.isRefinementCondition());
+        assertFalse(context.isNeedToSendRECAG012A());
     }
 
     @Test
@@ -139,7 +139,7 @@ class RECAG012EventCheckerTest {
         assertEquals("23L", updatedPaperTracking.getPaperStatus().getValidatedAttachments().getFirst().getDocumentType());
         assertEquals("uri.pdf", updatedPaperTracking.getPaperStatus().getValidatedAttachments().getFirst().getUri());
 
-        assertTrue(context.isRefinementCondition());
+        assertFalse(context.isNeedToSendRECAG012A());
     }
 
     @Test
@@ -160,7 +160,7 @@ class RECAG012EventCheckerTest {
         verifyNoInteractions(ocrMomProducer);
         verifyNoInteractions(paperTrackingsDAO);
 
-        assertFalse(context.isRefinementCondition());
+        assertTrue(context.isNeedToSendRECAG012A());
     }
 
     @Test
@@ -181,7 +181,7 @@ class RECAG012EventCheckerTest {
         verifyNoInteractions(ocrMomProducer);
         verifyNoInteractions(paperTrackingsDAO);
 
-        assertFalse(context.isRefinementCondition());
+        assertFalse(context.isNeedToSendRECAG012A());
     }
 
     @Test
@@ -228,7 +228,7 @@ class RECAG012EventCheckerTest {
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
 
-        assertTrue(context.isRefinementCondition());
+        assertFalse(context.isNeedToSendRECAG012A());
     }
 
     @Test
@@ -286,7 +286,7 @@ class RECAG012EventCheckerTest {
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getRequestTimestamp());
 
-        assertTrue(context.isRefinementCondition());
+        assertFalse(context.isNeedToSendRECAG012A());
     }
 
     private Event getEvent(String statusCode, String documentType, String eventId) {
