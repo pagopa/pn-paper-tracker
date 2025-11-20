@@ -694,7 +694,6 @@ Resources:
       EventSourceArn: !Ref ExternalChannelToReworkEventValidationQueueARN
       FunctionName: !Ref NotificationReworkEventsValidationLambda
       MaximumBatchingWindowInSeconds: 60
-      StartingPosition: TRIM_HORIZON # opzionale, non richiesto per SQS
       Enabled: true
 
   NotificationReworkEventsValidationLambdaAlarms:
