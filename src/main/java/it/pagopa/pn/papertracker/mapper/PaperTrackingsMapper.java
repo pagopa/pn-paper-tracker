@@ -26,7 +26,7 @@ public class PaperTrackingsMapper {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
-        paperTrackings.setProductType(ProductType.valueOf(trackingCreationRequest.getProductType()));
+        paperTrackings.setProductType(ProductType.fromValue(trackingCreationRequest.getProductType()));
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
@@ -36,7 +36,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setValidationFlow(new ValidationFlow());
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.valueOf(trackingCreationRequest.getProductType())));
+        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.fromValue(trackingCreationRequest.getProductType())));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
