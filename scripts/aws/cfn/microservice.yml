@@ -684,6 +684,14 @@ Resources:
               - sqs:GetQueueUrl
               - sqs:SendMessage
             Resource: !Ref ExternalChannels2PaperChannelQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+            Resource: !Ref ExternalChannelToReworkEventValidationQueueARN
 
   # CDC to  NotificationReworkEventsValidationLambda
   NotificationReworkEventsValidationLambdaSource:
