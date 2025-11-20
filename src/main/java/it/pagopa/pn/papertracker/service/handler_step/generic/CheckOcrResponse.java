@@ -109,28 +109,25 @@ public class CheckOcrResponse implements HandlerStep {
         String trackingId = parsedOcrCommandId[0];
 
         PaperTrackings paperTrackingsToUpdate = preparePaperTrackingsUpdate(tracking, context.getEventId(), docType);
-        boolean completed = TrackerUtility.isOcrResponseCompleted(paperTrackingsToUpdate.getValidationFlow(), tracking.getValidationConfig(), event.getStatusCode());
-
-        if (completed) {
-            log.info("All OCR validations completed for trackingId: {}", context.getTrackingId());
-            return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate(paperTrackingsToUpdate, true, event.getStatusCode()))
-                    .doOnNext(context::setPaperTrackings)
-                    .then();
-        }
-
-        log.info("OCR validation pending for other requests, trackingId: {}", context.getTrackingId());
-        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate(paperTrackingsToUpdate, false, event.getStatusCode()))
-                .doOnNext(updated -> {
+        return paperTrackingsDAO.updateItem(trackingId, paperTrackingsToUpdate)
+                .doOnNext(context::setPaperTrackings)
+                .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(paperTrackings.getValidationFlow(), paperTrackings.getValidationConfig(), event.getStatusCode()))
+                .flatMap(ocrResponseCompleted -> {
+                    if(ocrResponseCompleted){
+                        log.info("All OCR validations completed for trackingId: {}", context.getTrackingId());
+                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate( event.getStatusCode()))
+                                .doOnNext(context::setPaperTrackings)
+                                .then();
+                    }
+                    log.info("OCR validation pending for other requests, trackingId: {}", context.getTrackingId());
                     context.setStopExecution(true);
-                    context.setPaperTrackings(updated);
-                })
-                .then();
+                    return Mono.empty();
+                });
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate(PaperTrackings paperTrackings, boolean ocrResponseCompleted, String statusCode) {
-        if(ocrResponseCompleted) {
-            TrackerUtility.setDematValidationTimestamp(paperTrackings, statusCode);
-        }
+    private PaperTrackings getPaperTrackingsToUpdate(String statusCode) {
+        PaperTrackings paperTrackings = new PaperTrackings();
+        TrackerUtility.setDematValidationTimestamp(paperTrackings, statusCode);
         return paperTrackings;
     }
 
