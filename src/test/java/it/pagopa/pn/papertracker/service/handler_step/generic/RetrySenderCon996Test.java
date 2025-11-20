@@ -94,7 +94,7 @@ public class RetrySenderCon996Test {
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(new PaperTrackings());
         context.getPaperTrackings().setTrackingId("requestId");
-        context.getPaperTrackings().setProductType(ProductType.AR);
+        context.getPaperTrackings().setProductType(ProductType.AR.getValue());
         context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
         context.getPaperProgressStatusEvent().setRequestId("requestId");
         context.getPaperProgressStatusEvent().setStatusCode("statusCode");

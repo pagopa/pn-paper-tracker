@@ -47,7 +47,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("request123", paperTrackings.getAttemptId());
         Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
-        Assertions.assertEquals(ProductType.RS, paperTrackings.getProductType());
+        Assertions.assertEquals(ProductType.RS.getValue(), paperTrackings.getProductType());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class PaperTrackingsMapperTest {
         paperTrackings.setTrackingId("tracking123");
         paperTrackings.setAttemptId("attempt123");
         paperTrackings.setPcRetry("PCRETRY_1");
-        paperTrackings.setProductType(ProductType._890);
+        paperTrackings.setProductType(ProductType._890.getValue());
         paperTrackings.setUnifiedDeliveryDriver("driver789");
 
         Attachment attachment = new Attachment();
@@ -88,7 +88,7 @@ public class PaperTrackingsMapperTest {
         event.setStatusCode("RECAG001A");
         event.setStatusDescription("description");
         event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType._890);
+        event.setProductType(ProductType._890.getValue());
         event.setDeliveryFailureCause("M06");
         event.setAnonymizedDiscoveredAddressId("ADDR");
         event.setAttachments(List.of(attachment));
@@ -144,7 +144,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(paperTrackings.getTrackingId(), tracking.getTrackingId());
         Assertions.assertEquals(paperTrackings.getAttemptId(), tracking.getAttemptId());
         Assertions.assertEquals(paperTrackings.getPcRetry(), tracking.getPcRetry());
-        Assertions.assertEquals(paperTrackings.getProductType().name(), tracking.getProductType().name());
+        Assertions.assertEquals(paperTrackings.getProductType(), tracking.getProductType());
         Assertions.assertEquals(paperTrackings.getUnifiedDeliveryDriver(), tracking.getUnifiedDeliveryDriver());
         Assertions.assertEquals(paperTrackings.getEvents().size(), tracking.getEvents().size());
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getId(), tracking.getEvents().getFirst().getId());
@@ -154,7 +154,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getIun(), tracking.getEvents().getFirst().getIun());
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getRegisteredLetterCode(), tracking.getEvents().getFirst().getRegisteredLetterCode());
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getRequestTimestamp(), tracking.getEvents().getFirst().getRequestTimestamp());
-        Assertions.assertEquals(paperTrackings.getEvents().getFirst().getProductType().name(), Objects.requireNonNull(tracking.getEvents().getFirst().getProductType()).name());
+        Assertions.assertEquals(paperTrackings.getEvents().getFirst().getProductType(), Objects.requireNonNull(tracking.getEvents().getFirst().getProductType()));
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getDeliveryFailureCause(), tracking.getEvents().getFirst().getDeliveryFailureCause());
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getAnonymizedDiscoveredAddressId(), tracking.getEvents().getFirst().getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(paperTrackings.getEvents().getFirst().getDryRun(), tracking.getEvents().getFirst().getDryRun());

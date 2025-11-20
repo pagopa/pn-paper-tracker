@@ -57,7 +57,7 @@ class FinalEventBuilderArTest {
         finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
@@ -161,7 +161,7 @@ class FinalEventBuilderArTest {
                     Assertions.assertNotNull(ex.getError());
                     Assertions.assertEquals(paperTrackings.getTrackingId(), ex.getError().getTrackingId());
                     Assertions.assertEquals(finalEvent.getStatusCode(), ex.getError().getEventThrow());
-                    Assertions.assertEquals(ProductType.valueOf(finalEvent.getProductType()), ex.getError().getProductType());
+                    Assertions.assertEquals(finalEvent.getProductType(), ex.getError().getProductType());
                     Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, ex.getError().getDetails().getCause());
                 })
                 .verify();

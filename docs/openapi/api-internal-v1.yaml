@@ -313,12 +313,6 @@ components:
           type: boolean
     ProductType:
       type: string
-      enum:
-        - RS
-        - AR
-        - 890
-        - RIR
-        - RIS
     Attachment:
       type: object
       properties:

@@ -24,7 +24,7 @@ public class TestUtils {
     public static PaperTrackings getPaperTrackings(String requestId, ProductType productType) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(productType);
+        pt.setProductType(productType.getValue());
         pt.setUnifiedDeliveryDriver("POSTE");
         pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
@@ -46,7 +46,7 @@ public class TestUtils {
     public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(ProductType.AR);
+        pt.setProductType(ProductType.AR.getValue());
         pt.setUnifiedDeliveryDriver("POSTE");
         pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setCreatedAt(Instant.now());

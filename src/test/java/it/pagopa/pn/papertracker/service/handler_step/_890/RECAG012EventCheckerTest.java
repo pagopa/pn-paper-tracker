@@ -55,7 +55,7 @@ class RECAG012EventCheckerTest {
         context.setTrackingId("trackingId");
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("trackingId");
-        paperTrackings.setProductType(ProductType._890);
+        paperTrackings.setProductType(ProductType._890.getValue());
         paperTrackings.setValidationConfig(new ValidationConfig());
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setRegisteredLetterCode("RL123");
@@ -292,7 +292,7 @@ class RECAG012EventCheckerTest {
     private Event getEvent(String statusCode, String documentType, String eventId) {
         Event event = new Event();
         event.setStatusCode(statusCode);
-        event.setProductType(ProductType._890);
+        event.setProductType(ProductType._890.getValue());
         event.setId(eventId);
         event.setStatusTimestamp(Instant.now());
         if (StringUtils.hasText(documentType)) {

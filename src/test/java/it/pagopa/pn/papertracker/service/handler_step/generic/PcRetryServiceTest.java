@@ -104,7 +104,7 @@ public class PcRetryServiceTest {
         paperProgressStatusEvent.setStatusCode(statusCode);
         context.setPaperProgressStatusEvent(paperProgressStatusEvent);
         PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setAttemptId("requestId");
         context.setPaperTrackings(paperTrackings);
         return context;

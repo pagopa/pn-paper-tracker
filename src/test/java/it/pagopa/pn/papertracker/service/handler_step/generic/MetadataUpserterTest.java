@@ -60,7 +60,7 @@ class MetadataUpserterTest {
 
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setAnonymizedDiscoveredAddress("anonymized_addr_uuid");
         paperTrackings.setPaperStatus(paperStatus);

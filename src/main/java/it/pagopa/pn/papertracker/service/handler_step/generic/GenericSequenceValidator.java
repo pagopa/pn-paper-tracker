@@ -68,7 +68,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .switchIfEmpty(generateCustomError("Invalid lastEvent for sequence validation", context, paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR,strictFinalEventValidation))
                 .flatMap(this::getOnlyLatestEvents)
                 .flatMap(events -> validatePresenceOfStatusCodes(events, paperTrackings, context, sequenceConfig.requiredStatusCodes(),strictFinalEventValidation))
-                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context, sequenceConfig,strictFinalEventValidation))
+                .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context, sequenceConfig,strictFinalEventValidation, paperTrackingsToUpdate))
                 .flatMap(events -> validateAttachments(events, paperTrackings, context, sequenceConfig.validAttachments(), sequenceConfig.requiredAttachments(),strictFinalEventValidation))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate, context,strictFinalEventValidation))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, context,strictFinalEventValidation))
@@ -320,19 +320,33 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param paperTrackings entità di tracking
      * @return Mono contenente la lista di eventi dati in input, altrimenti se la validazione non è andata a buona fine Mono.error()
      */
-    private Mono<List<Event>> validateBusinessTimestamps(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, SequenceConfig sequenceConfig, Boolean strictFinalEventValidation) {
+    private Mono<List<Event>> validateBusinessTimestamps(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, SequenceConfig sequenceConfig, Boolean strictFinalEventValidation, PaperTrackings paperTrackingsToUpdate) {
         log.info("Beginning validation for business timestamps for events : {}", events);
         Set<String> finalGroup = sequenceConfig.dateValidationGroupForFinalEvents();
         Set<String> stockGroup = sequenceConfig.dateValidationGroupForStockEvents();
 
-        boolean validFinal = allStatusTimestampAreEquals(events, finalGroup);
-        boolean validStock = allStatusTimestampAreEquals(events, stockGroup);
+        Instant validFinal = allStatusTimestampAreEquals(events, finalGroup);
+        boolean validStock = allStockStatusTimestampAreEquals(events, stockGroup);
 
-        if (validFinal && validStock) return Mono.just(events);
+        if (Objects.nonNull(validFinal) && validStock){
+            paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(validFinal);
+            return Mono.just(events);
+        }
         return generateCustomError("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, strictFinalEventValidation);
     }
 
-    private boolean allStatusTimestampAreEquals(List<Event> events, Set<String> group) {
+    private Instant allStatusTimestampAreEquals(List<Event> events, Set<String> group) {
+        List<Instant> timestamps = events.stream()
+                .filter(e -> group.contains(e.getStatusCode()))
+                .map(Event::getStatusTimestamp)
+                .toList();
+        if(timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()))){
+            return timestamps.getFirst();
+        }
+        return null;
+    }
+
+    private boolean allStockStatusTimestampAreEquals(List<Event> events, Set<String> group) {
         List<Instant> timestamps = events.stream()
                 .filter(e -> group.contains(e.getStatusCode()))
                 .map(Event::getStatusTimestamp)
@@ -353,12 +367,10 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     }
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {
-        Instant now = Instant.now();
         ValidationFlow validationFlow = new ValidationFlow();
-        validationFlow.setSequencesValidationTimestamp(now);
+        validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackingsToUpdate.setValidationFlow(validationFlow);
         paperTrackingsToUpdate.getPaperStatus().setValidatedEvents(events.stream().map(Event::getId).toList());
-        paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(now);
         return paperTrackingsToUpdate;
     }
 

@@ -24,7 +24,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String requestId = "test-request-id-1";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
@@ -35,7 +35,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
                     assert retrieved.getTrackingId().equals(requestId);
-                    assert retrieved.getProductType() == ProductType.AR;
+                    assert retrieved.getProductType().equalsIgnoreCase(ProductType.AR.getValue());
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
@@ -57,7 +57,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(attemptId + ".PCRETRY_1");
         paperTrackings.setAttemptId(attemptId);
         paperTrackings.setPcRetry("PCRETRY_1");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.KO);
 
@@ -67,7 +67,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings2.setTrackingId(attemptId + ".PCRETRY_0");
         paperTrackings2.setAttemptId(attemptId);
         paperTrackings2.setPcRetry("PCRETRY_0");
-        paperTrackings2.setProductType(ProductType.AR);
+        paperTrackings2.setProductType(ProductType.AR.getValue());
         paperTrackings2.setUnifiedDeliveryDriver("POSTE");
         paperTrackings2.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
@@ -77,7 +77,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings3.setTrackingId(attemptId + ".PCRETRY_2");
         paperTrackings3.setAttemptId(attemptId);
         paperTrackings3.setPcRetry("PCRETRY_2");
-        paperTrackings3.setProductType(ProductType.AR);
+        paperTrackings3.setProductType(ProductType.AR.getValue());
         paperTrackings3.setUnifiedDeliveryDriver("POSTE");
         paperTrackings3.setState(PaperTrackingsState.DONE);
 
@@ -91,7 +91,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(3, response.size());
         Assertions.assertTrue(response.stream().allMatch(track -> track.getAttemptId().equalsIgnoreCase(attemptId)
-                && track.getProductType().equals(ProductType.AR) && track.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE")));
+                && track.getProductType().equals(ProductType.AR.getValue()) && track.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE")));
 
         Assertions.assertEquals("PCRETRY_0", response.getFirst().getPcRetry());
         Assertions.assertEquals("PCRETRY_1", response.get(1).getPcRetry());
@@ -128,7 +128,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String requestId = "test-request-id-3";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
@@ -138,7 +138,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setRequestTimestamp(Instant.now());
         event.setStatusCode("IN_PROGRESS");
         event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
+        event.setProductType(ProductType.AR.getValue());
         event.setDryRun(true);
 
         Attachment attachment = new Attachment();

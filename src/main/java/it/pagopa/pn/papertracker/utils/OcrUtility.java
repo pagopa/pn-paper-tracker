@@ -164,7 +164,7 @@ public class OcrUtility {
     }
 
     private DataDTO.ProductType getProductType(PaperTrackings paperTracking) {
-        return Arrays.stream(DataDTO.ProductType.values()).filter(ocrProductType -> ocrProductType.getValue().equals(paperTracking.getProductType().getValue()))
+        return Arrays.stream(DataDTO.ProductType.values()).filter(ocrProductType -> ocrProductType.getValue().equals(paperTracking.getProductType()))
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("invalid ProductType for trackingId={}: {}", paperTracking.getTrackingId(), paperTracking.getProductType());

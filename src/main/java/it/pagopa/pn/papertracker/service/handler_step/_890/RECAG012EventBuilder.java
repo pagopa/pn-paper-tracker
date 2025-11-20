@@ -65,7 +65,7 @@ public class RECAG012EventBuilder implements HandlerStep {
     }
 
     private Mono<Void> handleWithOcr(HandlerContext context) {
-        if (!checkOcrStatus(context)) return Mono.empty();
+        if (!checkAllOcrResponse(context)) return Mono.empty();
         return buildAndUpdate(context, this::buildRECAG012EventFromEventId);
     }
 
@@ -131,7 +131,7 @@ public class RECAG012EventBuilder implements HandlerStep {
                 });
     }
 
-    private boolean checkOcrStatus(HandlerContext context) {
+    private boolean checkAllOcrResponse(HandlerContext context) {
         ValidationConfig config = context.getPaperTrackings().getValidationConfig();
         List<String> requiredDocs = config.getRequiredAttachmentsRefinementStock890();
         List<OcrRequest> ocrRequests = context.getPaperTrackings().getValidationFlow().getOcrRequests();

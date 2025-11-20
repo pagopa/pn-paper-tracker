@@ -19,7 +19,7 @@ public class PaperTrackingsErrorsMapperTest {
         paperTrackingsErrors.setFlowThrow(FlowThrow.DEMAT_VALIDATION);
         paperTrackingsErrors.setEventThrow("eventThrow");
         paperTrackingsErrors.setEventIdThrow("eventIdThrow");
-        paperTrackingsErrors.setProductType(ProductType._890);
+        paperTrackingsErrors.setProductType(ProductType._890.getValue());
         paperTrackingsErrors.setType(ErrorType.ERROR);
 
         TrackingError trackingError = PaperTrackingsErrorsMapper.toTrackingError(paperTrackingsErrors);
@@ -35,7 +35,7 @@ public class PaperTrackingsErrorsMapperTest {
         Assertions.assertEquals("eventThrow", trackingError.getEventThrow());
         Assertions.assertEquals("eventIdThrow", trackingError.getEventIdThrow());
         Assertions.assertNotNull(trackingError.getProductType());
-        Assertions.assertEquals(ProductType._890.name(), trackingError.getProductType().name());
+        Assertions.assertEquals(ProductType._890.getValue(), trackingError.getProductType());
         Assertions.assertNotNull(trackingError.getType());
         Assertions.assertEquals(ErrorType.ERROR.name(), trackingError.getType().name());
 
