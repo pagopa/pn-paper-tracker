@@ -13,9 +13,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,26 +48,25 @@ public class DematValidator implements HandlerStep {
         Event currentEvent = TrackerUtility.extractEventFromContext(context);
         List<String> requiredAttachments = getRequiredAttachments(currentEvent, paperTrackings);
         List<Event> validatedEvent = TrackerUtility.validatedEvents(paperTrackings.getPaperStatus().getValidatedEvents(), paperTrackings.getEvents());
-        List<Attachment> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
+        Map<String, List<Attachment>> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
         return ocrUtility.checkAndSendToOcr(currentEvent, attachmentList, context)
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)))
                 .filter(ocrStatusEnum -> ocrStatusEnum.equals(OcrStatusEnum.RUN))
                 .doOnNext(unused -> context.setStopExecution(true))
                 .then();
-
     }
 
-    private List<Attachment> retrieveFinalDemat(List<Event> validatedEvents, List<String> requiredAttachments) {
-        Map<String, Attachment> attachments = new HashMap<>();
-
-        for (Event event : validatedEvents) {
-            Optional.ofNullable(event.getAttachments()).orElse(new ArrayList<>())
-                    .stream()
-                    .filter(att -> requiredAttachments.contains(att.getDocumentType()))
-                    .forEach(attachment -> attachments.putIfAbsent(attachment.getDocumentType(), attachment));
-        }
-
-        return attachments.values().stream().toList();
+    private Map<String, List<Attachment>> retrieveFinalDemat(List<Event> validatedEvents, List<String> requiredAttachments) {
+        return validatedEvents.stream()
+                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
+                .map(event -> Map.entry(
+                        event.getId(),
+                        event.getAttachments().stream()
+                                .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                                .toList()
+                ))
+                .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private List<String> getRequiredAttachments(Event event, PaperTrackings paperTrackings) {

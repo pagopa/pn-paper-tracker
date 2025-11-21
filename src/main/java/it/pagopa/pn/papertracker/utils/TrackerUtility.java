@@ -169,7 +169,7 @@ public class TrackerUtility {
             return null;
         }
         return IntStream.range(0, tracking.getValidationFlow().getOcrRequests().size())
-                        .filter(index -> ocrRequests.get(index).getEventId().equalsIgnoreCase(eventId) && ocrRequests.get(index).getDocumentType().equalsIgnoreCase(docType))
+                        .filter(index -> ocrRequests.get(index).getFinalEventId().equalsIgnoreCase(eventId) && ocrRequests.get(index).getDocumentType().equalsIgnoreCase(docType))
                         .findFirst()
                         .orElse(-1);
     }
@@ -180,7 +180,7 @@ public class TrackerUtility {
             return null;
         }
         return tracking.getValidationFlow().getOcrRequests().stream()
-                .filter(req -> req.getEventId().equalsIgnoreCase(eventId) && req.getDocumentType().equalsIgnoreCase(docType))
+                .filter(req -> req.getFinalEventId().equalsIgnoreCase(eventId) && req.getDocumentType().equalsIgnoreCase(docType))
                 .findFirst()
                 .map(ocrRequest -> {
                     Attachment attachment = new Attachment();

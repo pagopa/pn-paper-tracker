@@ -12,11 +12,11 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
 
 @Component
@@ -57,11 +57,16 @@ public class RECAG012EventChecker implements HandlerStep {
             return Mono.empty();
         }
 
-        List<Attachment> attachments = context.getPaperTrackings().getEvents().stream()
+        Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
-                .flatMap(event -> event.getAttachments().stream())
-                .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
-                .toList();
+                .map(event -> Map.entry(
+                        event.getId(),
+                        event.getAttachments().stream()
+                                .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                                .toList()
+                ))
+                .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context).then();
     }

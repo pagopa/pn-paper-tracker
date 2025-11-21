@@ -354,7 +354,9 @@ components:
       properties:
         documentType:
           type: string
-        eventId:
+        finalEventId:
+          type: string
+        attachmentEventId:
           type: string
         requestTimestamp:
           type: string

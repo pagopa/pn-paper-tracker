@@ -109,7 +109,7 @@ public class TestUtils {
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
 
-        assertFalse(pt.getPaperStatus().getValidatedAttachments().isEmpty());
+        assertTrue(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());

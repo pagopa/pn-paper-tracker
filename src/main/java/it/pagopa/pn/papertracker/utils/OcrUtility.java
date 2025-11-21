@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.utils.QueueConst.OCR_REQUEST_EVENT_TYPE;
 import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
@@ -40,7 +41,7 @@ public class OcrUtility {
     private final PnPaperTrackerConfigs cfg;
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public Mono<OcrStatusEnum> checkAndSendToOcr(Event event, List<Attachment> attachmentList, HandlerContext context) {
+    public Mono<OcrStatusEnum> checkAndSendToOcr(Event event, Map<String, List<Attachment>> attachmentList, HandlerContext context) {
         PaperTrackings paperTracking = context.getPaperTrackings();
         OcrStatusEnum ocrStatusEnum = context.getPaperTrackings().getValidationConfig().getOcrEnabled();
 
@@ -50,37 +51,46 @@ public class OcrUtility {
                     .thenReturn(ocrStatusEnum);
         } else {
             log.info("OCR validation disabled for trackingId={}", paperTracking.getTrackingId());
-            return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(OcrStatusEnum.DISABLED, event, null, attachmentList))
+            return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(OcrStatusEnum.DISABLED, event, null))
                     .doOnNext(v -> log.debug("Updated PaperTrackings entity with OCR flag disabled for trackingId={}", paperTracking.getTrackingId()))
                     .thenReturn(ocrStatusEnum);
         }
     }
 
-    private Mono<Void> sendMessageToOcr(Event event, List<Attachment> attachmentList, PaperTrackings paperTracking, OcrStatusEnum ocrStatusEnum) {
+    private Mono<Void> sendMessageToOcr(Event event, Map<String, List<Attachment>> attachmentList, PaperTrackings paperTracking, OcrStatusEnum ocrStatusEnum) {
         Instant now = Instant.now();
-        List<Attachment> validAttachmentList = attachmentList.stream()
-                .filter(attachment -> cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(retrieveFileType(attachment.getUri()))))
-                .toList();
+        Map<String, List<Attachment>> validAttachmentList = attachmentList.entrySet().stream()
+                .filter(entry -> entry.getValue().stream()
+                        .map(Attachment::getUri)
+                        .map(this::retrieveFileType)
+                        .anyMatch(ext -> cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(ext))))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
 
         if (validAttachmentList.isEmpty()) {
             log.info("No attachment type supported found for OCR, skipping OCR request for trackingId={}", paperTracking.getTrackingId());
-            return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(ocrStatusEnum, event, null, attachmentList))
+            return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(ocrStatusEnum, event, null))
                     .then();
         }
 
         List<OcrRequest> ocrRequests = new ArrayList<>();
-        return Flux.fromIterable(validAttachmentList)
-                .flatMap(attachment -> processAttachmentForOcr(paperTracking, attachment, event, ocrRequests, now))
+        return Flux.fromIterable(validAttachmentList.entrySet())
+                .flatMap(attachmentEntry ->  processAttachments(attachmentEntry, paperTracking, event, ocrRequests, now))
                 .collectList()
-                .flatMap(unused -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(ocrStatusEnum, event, ocrRequests, null)))
+                .flatMap(unused -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(ocrStatusEnum, event, ocrRequests)))
                 .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
-    private Mono<String> processAttachmentForOcr(PaperTrackings paperTracking, Attachment attachment, Event event, List<OcrRequest> ocrRequests, Instant now) {
+    private Flux<String> processAttachments(Map.Entry<String, List<Attachment>> attachmentEntry, PaperTrackings paperTracking, Event event, List<OcrRequest> ocrRequests, Instant now) {
+        return Flux.fromIterable(attachmentEntry.getValue())
+                .flatMap(attachment -> processAttachmentForOcr(paperTracking, attachment, attachmentEntry.getKey(), event, ocrRequests, now));
+    }
+
+    private Mono<String> processAttachmentForOcr(PaperTrackings paperTracking, Attachment attachment, String attachmentEventId, Event event, List<OcrRequest> ocrRequests, Instant now) {
         String documentType = attachment.getDocumentType();
         String ocrRequestId = TrackerUtility.buildOcrRequestId(paperTracking.getTrackingId(), event.getId(), documentType);
-        ocrRequests.add(getOcrRequest(documentType, event.getId(), attachment.getUri(), now));
+        ocrRequests.add(getOcrRequest(documentType, event.getId(), attachmentEventId, attachment.getUri(), now));
 
         return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
                 .doOnNext(presignedUrl -> {
@@ -89,10 +99,11 @@ public class OcrUtility {
                 });
     }
 
-    private OcrRequest getOcrRequest(String documentType, String eventId, String uri, Instant now) {
+    private OcrRequest getOcrRequest(String documentType, String finalEventId, String attachmentEventId, String uri, Instant now) {
         OcrRequest ocrRequest = new OcrRequest();
         ocrRequest.setDocumentType(documentType);
-        ocrRequest.setEventId(eventId);
+        ocrRequest.setFinalEventId(finalEventId);
+        ocrRequest.setAttachmentEventId(attachmentEventId);
         ocrRequest.setRequestTimestamp(now);
         ocrRequest.setUri(uri);
         return ocrRequest;
@@ -102,7 +113,7 @@ public class OcrUtility {
         return FilenameUtils.getExtension(uri);
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate(OcrStatusEnum ocrStatusEnum, Event event, List<OcrRequest> ocrRequests, List<Attachment> validatedAttachments) {
+    private PaperTrackings getPaperTrackingsToUpdate(OcrStatusEnum ocrStatusEnum, Event event, List<OcrRequest> ocrRequests) {
         PaperTrackings paperTracking = new PaperTrackings();
 
         ValidationConfig validationConfig = new ValidationConfig();
@@ -112,7 +123,6 @@ public class OcrUtility {
         if (ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             validationConfig.setOcrEnabled(ocrStatusEnum);
             PaperStatus paperStatus = new PaperStatus();
-            paperStatus.setValidatedAttachments(validatedAttachments);
             paperTracking.setPaperStatus(paperStatus);
             TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
         } else {

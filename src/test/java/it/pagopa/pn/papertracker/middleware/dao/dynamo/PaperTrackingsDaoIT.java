@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
@@ -9,11 +8,9 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
@@ -209,11 +206,11 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         ValidationFlow validationFlow = new ValidationFlow();
         OcrRequest req1 = new OcrRequest();
         req1.setDocumentType("Plico");
-        req1.setEventId("eventId1");
+        req1.setFinalEventId("eventId1");
         req1.setRequestTimestamp(Instant.now());
         OcrRequest req2 = new OcrRequest();
         req2.setDocumentType("AR");
-        req2.setEventId("eventId2");
+        req2.setFinalEventId("eventId2");
         req2.setRequestTimestamp(Instant.now());
         validationFlow.setOcrRequests(List.of(req1, req2));
         paperTrackings.setValidationFlow(validationFlow);

@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -102,7 +103,8 @@ class RECAG012EventCheckerTest {
         assertEquals(OcrStatusEnum.RUN, updatedPaperTracking.getValidationConfig().getOcrEnabled());
         assertEquals(PaperTrackingsState.AWAITING_OCR, updatedPaperTracking.getState());
         assertEquals(1, updatedPaperTracking.getValidationFlow().getOcrRequests().size());
-        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getEventId());
+        assertEquals("eventIdRECAG005B", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getUri());
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
@@ -116,6 +118,7 @@ class RECAG012EventCheckerTest {
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
+        context.getPaperTrackings().getPaperStatus().setValidatedAttachments(List.of());
         context.getPaperTrackings().setEvents(List.of(
                 getEvent("RECAG005B", DocumentTypeEnum._23L.getValue(), "eventIdRECAG005B"),
                 getEvent("RECAG012", null, "eventIdRECAG012")
@@ -135,9 +138,7 @@ class RECAG012EventCheckerTest {
         assertEquals(OcrStatusEnum.DISABLED, updatedPaperTracking.getValidationConfig().getOcrEnabled());
         assertNull(updatedPaperTracking.getValidationFlow().getOcrRequests());
         assertNotNull(updatedPaperTracking.getValidationFlow().getRefinementDematValidationTimestamp());
-        assertEquals(1, updatedPaperTracking.getPaperStatus().getValidatedAttachments().size());
-        assertEquals("23L", updatedPaperTracking.getPaperStatus().getValidatedAttachments().getFirst().getDocumentType());
-        assertEquals("uri.pdf", updatedPaperTracking.getPaperStatus().getValidatedAttachments().getFirst().getUri());
+        assertTrue(CollectionUtils.isNullOrEmpty(updatedPaperTracking.getPaperStatus().getValidatedAttachments()));
 
         assertFalse(context.isNeedToSendRECAG012A());
     }
@@ -223,7 +224,8 @@ class RECAG012EventCheckerTest {
         assertEquals(OcrStatusEnum.RUN, updatedPaperTracking.getValidationConfig().getOcrEnabled());
         assertEquals(PaperTrackingsState.AWAITING_OCR, updatedPaperTracking.getState());
         assertEquals(1, updatedPaperTracking.getValidationFlow().getOcrRequests().size());
-        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getEventId());
+        assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getUri());
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
@@ -276,12 +278,14 @@ class RECAG012EventCheckerTest {
         assertEquals(OcrStatusEnum.RUN, updatedPaperTracking.getValidationConfig().getOcrEnabled());
         assertEquals(PaperTrackingsState.AWAITING_OCR, updatedPaperTracking.getState());
         assertEquals(2, updatedPaperTracking.getValidationFlow().getOcrRequests().size());
-        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getEventId());
+        assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getUri());
         assertEquals("CAD", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
 
-        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getEventId());
+        assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getUri());
         assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getRequestTimestamp());
