@@ -13,6 +13,8 @@ import org.springframework.util.CollectionUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.IntStream;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
@@ -122,12 +124,12 @@ public class TrackerUtility {
                     .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }else if(TrackerUtility.isStockStatus890(statusCode)){
-            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsFinalValidationStock890();
             return validationFlow.getOcrRequests().stream()
                     .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }else{
-            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsFinalValidation();
             return validationFlow.getOcrRequests().stream()
                     .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
@@ -161,4 +163,37 @@ public class TrackerUtility {
                         ". The event with id " + eventId + " does not exist in the paperTrackings events list."));
     }
 
+    public static Integer getOcrRequestIndexByEventIdAndDocType(PaperTrackings tracking, String eventId, String docType) {
+        List<OcrRequest> ocrRequests = tracking.getValidationFlow().getOcrRequests();
+        if(CollectionUtils.isEmpty(ocrRequests)){
+            return null;
+        }
+        return IntStream.range(0, tracking.getValidationFlow().getOcrRequests().size())
+                        .filter(index -> ocrRequests.get(index).getEventId().equalsIgnoreCase(eventId) && ocrRequests.get(index).getDocumentType().equalsIgnoreCase(docType))
+                        .findFirst()
+                        .orElse(-1);
+    }
+
+    public static Attachment getAttachmentFromEventIdAndDocType(PaperTrackings tracking, String eventId, String docType) {
+        List<OcrRequest> ocrRequests = tracking.getValidationFlow().getOcrRequests();
+        if(CollectionUtils.isEmpty(ocrRequests)){
+            return null;
+        }
+        return tracking.getValidationFlow().getOcrRequests().stream()
+                .filter(req -> req.getEventId().equalsIgnoreCase(eventId) && req.getDocumentType().equalsIgnoreCase(docType))
+                .findFirst()
+                .map(ocrRequest -> {
+                    Attachment attachment = new Attachment();
+                    attachment.setDocumentType(docType);
+                    attachment.setUri(ocrRequest.getUri());
+                    return attachment;
+                })
+                .orElse(null);
+    }
+
+    public static Optional<Event> findRECAG012Event(PaperTrackings paperTrackings) {
+        return paperTrackings.getEvents().stream()
+                .filter(event -> RECAG012.name().equalsIgnoreCase(event.getStatusCode()))
+                .findFirst();
+    }
 }

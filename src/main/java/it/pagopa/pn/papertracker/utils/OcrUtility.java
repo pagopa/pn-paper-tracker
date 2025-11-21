@@ -40,18 +40,19 @@ public class OcrUtility {
     private final PnPaperTrackerConfigs cfg;
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public Mono<Void> checkAndSendToOcr(Event event, List<Attachment> attachmentList, HandlerContext context) {
+    public Mono<OcrStatusEnum> checkAndSendToOcr(Event event, List<Attachment> attachmentList, HandlerContext context) {
         PaperTrackings paperTracking = context.getPaperTrackings();
         OcrStatusEnum ocrStatusEnum = context.getPaperTrackings().getValidationConfig().getOcrEnabled();
 
         if (Objects.nonNull(ocrStatusEnum) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             log.info("OCR validation enabled for trackingId={}", paperTracking.getTrackingId());
-            return sendMessageToOcr(event, attachmentList, paperTracking, ocrStatusEnum);
+            return sendMessageToOcr(event, attachmentList, paperTracking, ocrStatusEnum)
+                    .thenReturn(ocrStatusEnum);
         } else {
             log.info("OCR validation disabled for trackingId={}", paperTracking.getTrackingId());
             return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(OcrStatusEnum.DISABLED, event, null, attachmentList))
                     .doOnNext(v -> log.debug("Updated PaperTrackings entity with OCR flag disabled for trackingId={}", paperTracking.getTrackingId()))
-                    .then();
+                    .thenReturn(ocrStatusEnum);
         }
     }
 

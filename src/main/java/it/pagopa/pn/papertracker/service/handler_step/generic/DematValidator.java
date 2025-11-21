@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
@@ -48,7 +49,7 @@ public class DematValidator implements HandlerStep {
         List<Attachment> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
         return ocrUtility.checkAndSendToOcr(currentEvent, attachmentList, context)
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)))
-                .thenReturn(context)
+                .filter(ocrStatusEnum -> ocrStatusEnum.equals(OcrStatusEnum.RUN))
                 .doOnNext(unused -> context.setStopExecution(true))
                 .then();
 

@@ -10,6 +10,7 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.ARCAD;
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.CAD;
+import static it.pagopa.pn.papertracker.model.PredictedRefinementType.PRE10;
 
 @Service
 @RequiredArgsConstructor
@@ -328,11 +330,20 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         Instant validFinal = allStatusTimestampAreEquals(events, finalGroup);
         boolean validStock = allStockStatusTimestampAreEquals(events, stockGroup);
 
-        if (Objects.nonNull(validFinal) && validStock){
+        if (Objects.nonNull(validFinal) && validStock && checkPredictedRefinementTypeIfStock890(paperTrackings, validFinal)){
             paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(validFinal);
             return Mono.just(events);
         }
         return generateCustomError("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, strictFinalEventValidation);
+    }
+
+    private boolean checkPredictedRefinementTypeIfStock890(PaperTrackings paperTrackings, Instant validFinal) {
+        if(StringUtils.hasText(paperTrackings.getPaperStatus().getPredictedRefinementType())
+            && paperTrackings.getPaperStatus().getPredictedRefinementType().equalsIgnoreCase(PRE10.name())){
+            Optional<Event> RECAG012Event = TrackerUtility.findRECAG012Event(paperTrackings);
+            return RECAG012Event.map(event -> event.getStatusTimestamp().equals(validFinal)).orElse(true);
+        }
+        return true;
     }
 
     private Instant allStatusTimestampAreEquals(List<Event> events, Set<String> group) {

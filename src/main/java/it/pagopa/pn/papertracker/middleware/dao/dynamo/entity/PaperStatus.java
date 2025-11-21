@@ -23,6 +23,7 @@ public class PaperStatus {
     public static final String COL_FINAL_DEMAT_FOUND = "finalDematFound";
     public static final String COL_PAPER_DELIVERY_TIMESTAMP = "paperDeliveryTimestamp";
     public static final String COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP = "actualPaperDeliveryTimestamp";
+    public static final String COL_PREDICTED_REFINEMENT_TYPE = "predictedRefinementType";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
@@ -50,4 +51,8 @@ public class PaperStatus {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAPER_DELIVERY_TIMESTAMP)}))
     private Instant paperDeliveryTimestamp;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PREDICTED_REFINEMENT_TYPE)}))
+    private String predictedRefinementType;
+
 }

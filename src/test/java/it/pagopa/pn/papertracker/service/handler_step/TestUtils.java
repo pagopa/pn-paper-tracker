@@ -31,6 +31,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         ValidationConfig validationConfig = new ValidationConfig();
@@ -52,6 +53,7 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);

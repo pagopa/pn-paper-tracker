@@ -13,10 +13,12 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -108,14 +110,16 @@ public class CheckOcrResponse implements HandlerStep {
         String docType = parsedOcrCommandId[2];
         String trackingId = parsedOcrCommandId[0];
 
-        PaperTrackings paperTrackingsToUpdate = preparePaperTrackingsUpdate(tracking, context.getEventId(), docType);
-        return paperTrackingsDAO.updateItem(trackingId, paperTrackingsToUpdate)
+        Integer index = TrackerUtility.getOcrRequestIndexByEventIdAndDocType(tracking, context.getEventId(), docType);
+        Attachment attachment = TrackerUtility.getAttachmentFromEventIdAndDocType(tracking, context.getEventId(), docType);
+
+        return paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(index, Objects.nonNull(attachment) ? List.of(attachment) : List.of(), trackingId)
                 .doOnNext(context::setPaperTrackings)
                 .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(paperTrackings.getValidationFlow(), paperTrackings.getValidationConfig(), event.getStatusCode()))
                 .flatMap(ocrResponseCompleted -> {
                     if(ocrResponseCompleted){
                         log.info("All OCR validations completed for trackingId: {}", context.getTrackingId());
-                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate( event.getStatusCode()))
+                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate( event.getStatusCode(), payload))
                                 .doOnNext(context::setPaperTrackings)
                                 .then();
                     }
@@ -125,29 +129,11 @@ public class CheckOcrResponse implements HandlerStep {
                 });
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate(String statusCode) {
+    private PaperTrackings getPaperTrackingsToUpdate(String statusCode, OcrDataResultPayload payload) {
         PaperTrackings paperTrackings = new PaperTrackings();
         TrackerUtility.setDematValidationTimestamp(paperTrackings, statusCode);
-        return paperTrackings;
-    }
-
-    private PaperTrackings preparePaperTrackingsUpdate(PaperTrackings oldPaperTrackings, String eventId, String docType) {
-        PaperTrackings paperTrackings = new PaperTrackings();
-        ValidationFlow validationFlow = new ValidationFlow();
         PaperStatus paperStatus = new PaperStatus();
-        paperTrackings.setPaperStatus(paperStatus);
-        validationFlow.setOcrRequests(oldPaperTrackings.getValidationFlow().getOcrRequests());
-        paperTrackings.setValidationFlow(validationFlow);
-        validationFlow.getOcrRequests().stream()
-                .filter(req -> req.getEventId().equalsIgnoreCase(eventId)
-                        && req.getDocumentType().equalsIgnoreCase(docType))
-                .forEach(req -> {
-                    req.setResponseTimestamp(Instant.now());
-                    Attachment attachment = new Attachment();
-                    attachment.setDocumentType(req.getDocumentType());
-                    attachment.setUri(req.getUri());
-                    paperTrackings.getPaperStatus().setValidatedAttachments(List.of(attachment));
-                });
+        paperStatus.setPredictedRefinementType(payload.getData().getPredictedRefinementType().getValue());
         return paperTrackings;
     }
 

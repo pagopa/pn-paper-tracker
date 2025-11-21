@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
 
 @Component
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class RECAG012EventChecker implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         log.info("Starting RECAG012EventChecker for trackingId {}", context.getTrackingId());
 
-        Optional<Event> recag012Event = findRECAG012Event(context);
+        Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
 
         if(recag012Event.isEmpty()){
@@ -62,7 +63,7 @@ public class RECAG012EventChecker implements HandlerStep {
                 .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
                 .toList();
 
-        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context);
+        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context).then();
     }
 
     private boolean hasRequiredAttachments(HandlerContext context, List<String> requiredAttachments) {
@@ -74,10 +75,6 @@ public class RECAG012EventChecker implements HandlerStep {
         return documentTypes.containsAll(requiredAttachments);
     }
 
-    private Optional<Event> findRECAG012Event(HandlerContext context) {
-        return context.getPaperTrackings().getEvents().stream()
-                .filter(event -> RECAG012.name().equalsIgnoreCase(event.getStatusCode()))
-                .findFirst();
-    }
+
 
 }

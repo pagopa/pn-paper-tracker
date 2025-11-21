@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
@@ -8,9 +9,11 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
@@ -194,6 +197,52 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals(2, secondeResponse.getEvents().size());
         Assertions.assertEquals(2, secondeResponse.getEvents().getFirst().getAttachments().size());
         Assertions.assertEquals(1, secondeResponse.getEvents().getLast().getAttachments().size());
+    }
+
+    @Test
+    void addValidatedAttachmentAndOcrRequests() {
+        //Arrange
+        String requestId = "test-request-id-4";
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setTrackingId(requestId);
+        paperTrackings.setProductType(ProductType.AR.getValue());
+        ValidationFlow validationFlow = new ValidationFlow();
+        OcrRequest req1 = new OcrRequest();
+        req1.setDocumentType("Plico");
+        req1.setEventId("eventId1");
+        req1.setRequestTimestamp(Instant.now());
+        OcrRequest req2 = new OcrRequest();
+        req2.setDocumentType("AR");
+        req2.setEventId("eventId2");
+        req2.setRequestTimestamp(Instant.now());
+        validationFlow.setOcrRequests(List.of(req1, req2));
+        paperTrackings.setValidationFlow(validationFlow);
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
+        paperTrackings.setPaperStatus(paperStatus);
+
+        paperTrackingsDAO.putIfAbsent(paperTrackings).block();
+
+        Attachment attachment2 = new Attachment();
+        attachment2.setId("attachment-id-1");
+        attachment2.setDocumentType("DOCUMENT_TYPE");
+        attachment2.setUri("http://example.com/document.pdf");
+
+
+        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(0, List.of(attachment2), requestId).block();
+
+        //Assert
+        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
+        Assertions.assertNotNull(fisrtResponse);
+        Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
+
+        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(1, List.of(attachment2), requestId).block();
+
+        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
+        Assertions.assertNotNull(secondeResponse);
+        Assertions.assertNotNull(secondeResponse.getUpdatedAt());
+        Assertions.assertNotEquals(fisrtResponse.getUpdatedAt(), secondeResponse.getUpdatedAt());
     }
 
 }
