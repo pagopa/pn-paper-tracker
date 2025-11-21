@@ -271,6 +271,14 @@ Parameters:
     Type: String
     Description: 'DynamoDB table ARN for PaperTrackerDryRunOutputs'
 
+  NotificationReworkEventsErrorTableName:
+    Type: String
+    Description: 'DynamoDB table name for NotificationReworkEventsError'
+
+  NotificationReworkEventsErrorTableArn:
+    Type:  String
+    Description: 'DynamoDB table ARN for NotificationReworkEventsError'
+
   ExternalChannelsOutputsQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel outputs are sent'
@@ -319,6 +327,14 @@ Parameters:
     Type: String
     Description: 'DataVault BaseUrl'
 
+  ExternalChannelToReworkEventValidationQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where external channel rework validation events are sent'
+
+  ExternalChannelToReworkEventValidationQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where external channel rework validation events are sent'
+
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxyLambdaName:
     Type: String
@@ -360,6 +376,15 @@ Parameters:
     MaxValue: 900
     Description: Timeout of the PaperTrackerQueueProxy Lambda.
 
+  NotificationReworkEventsValidationLambdaName:
+    Type: String
+    Description: 'Name of the NotificationReworkEventsValidation Lambda.'
+
+  NotificationReworkEventsValidationLambdaBatchSize:
+    Type: Number
+    Description: "Batch size of the NotificationReworkEventsValidation Lambda."
+    Default: 10
+
   PaperTrackerEnabledProductsModes:
     Type: String
     Default: ""
@@ -374,6 +399,10 @@ Parameters:
     Type: String
     Default: ''
     Description: 'Applicative environment variable file checksum'
+
+  NotificationReworkInvalidStatusCode:
+    Type: String
+    Description: 'Comma separated list of invalid status codes for notification rework events'
 
 Resources:
 
@@ -580,6 +609,110 @@ Resources:
                   - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
                   - !Ref ExternalChannelToPaperTrackerQueueARN
 
+  ##########################################################################
+  ###              NotificationReworkEventsValidationLambda              ###
+  ##########################################################################
+  NotificationReworkEventsValidationLambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub '${NotificationReworkEventsValidationLambdaName}-sec-group'
+      VpcId: !Ref VpcId
+
+  # Lambda function
+  NotificationReworkEventsValidationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref NotificationReworkEventsValidationLambdaName
+      Runtime: nodejs22.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/notificationReworkEventsValidation.zip"
+      Role: !GetAtt NotificationReworkEventsValidationLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks"
+          NOTIFICATION_REWORK_EVENTS_ERROR_TABLE: !Ref NotificationReworkEventsErrorTableName
+          INVALID_STATUS_CODE: !Ref NotificationReworkInvalidStatusCode
+          EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueName
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  NotificationReworkEventsValidationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-NotificationReworkEventsValidationLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  NotificationReworkEventsValidationLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-NotificationReworkEventsValidationLambdaPolicy
+      Roles:
+        - !Ref NotificationReworkEventsValidationLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "dynamodb:updateItem"
+              - "dynamodb:putItem"
+              - "dynamodb:getItem"
+              - "dynamodb:query"
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks/*"
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource: !Ref ExternalChannels2PaperChannelQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+            Resource: !Ref ExternalChannelToReworkEventValidationQueueARN
+
+  # CDC to  NotificationReworkEventsValidationLambda
+  NotificationReworkEventsValidationLambdaSource:
+    Type: AWS::Lambda::EventSourceMapping
+    DependsOn: NotificationReworkEventsValidationLambdaPolicy
+    Properties:
+      BatchSize: !Sub ${NotificationReworkEventsValidationLambdaBatchSize}
+      EventSourceArn: !Ref ExternalChannelToReworkEventValidationQueueARN
+      FunctionName: !Ref NotificationReworkEventsValidationLambda
+      MaximumBatchingWindowInSeconds: 60
+      Enabled: true
+
+  NotificationReworkEventsValidationLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref  NotificationReworkEventsValidationLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
   #### Alarm for custom metric Autoscaling
   AlarmCustomAutoscaling:
     Type: "AWS::CloudWatch::Alarm"
@@ -652,3 +785,60 @@ Resources:
         - !GetAtt PaperTrackerMicroservice.Outputs.ScaleUpPolicy
       OKActions:
         - !GetAtt PaperTrackerMicroservice.Outputs.ScaleDownPolicy
+
+  # Send ExternalChannel Response to reworkValidation queue
+  # pn-external-channel
+  PnCoreEventBusToPaperChannelQueue:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Route ExternalChannel Events to pn-paper-channel
+      RoleArn: !GetAtt "EventBusEnqueueRole.Arn"
+      EventBusName: !Sub '${ProjectName}-CoreEventBus'
+      EventPattern:
+        detail-type: [ "ExternalChannelReworkOutcomeEvent" ]
+      Targets:
+        - Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:PnCoreEventBusMatchedEventLogger
+          Id: !Sub ${ProjectName}-Logger-ExtCh2PaperChannel
+          InputTransformer:
+            InputPathsMap:
+              "timestamp": "$.time"
+            InputTemplate: |
+              {
+                  "timestamp": <timestamp>,
+                  "ruleArn": <aws.events.rule-arn>,
+                  "ruleName": <aws.events.rule-name>,
+                  "ingestionTime": <aws.events.event.ingestion-time>,
+                  "originalEvent": <aws.events.event.json>
+              }
+        - Id: !Sub '${ProjectName}-CoreEventBus-ExtCh2PaperChannel'
+          Arn: !Ref ExternalChannelToReworkEventValidationQueueARN
+          InputPath: $.detail
+          DeadLetterConfig:
+            Arn: !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:pn-CoreEventBus-DLQ
+
+  EventBusEnqueueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+        Version: "2012-10-17"
+      Policies:
+        - PolicyName: !Sub ${ProjectName}-paper-tracker-eventBusRuleQueuePolicy
+          PolicyDocument:
+            Statement:
+              - Sid: putEvents
+                Action:
+                  - sqs:ChangeMessageVisibility
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Effect: Allow
+                Resource:
+                  - !Ref ExternalChannelToReworkEventValidationQueueARN

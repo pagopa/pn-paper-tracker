@@ -26,6 +26,7 @@ tags:
   - name: PaperTrackerAttempt
   - name: PaperTrackerError
   - name: PaperTrackerOutput
+  - name: NotificationRework
 paths:
   /status:
     get:
@@ -191,6 +192,71 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/notification-rework/sequence':
+    get:
+      summary: Recupera le sequence e il finalStatus di una richiesta di rework
+      description: >-
+        Permette la verifica della possibilità di rework di una notifica
+      tags:
+        - NotificationRework
+      operationId: retrieveSequenceAndFinalStatus
+      parameters:
+        - $ref: '#/components/parameters/queryStatusCode'
+        - $ref: '#/components/parameters/deliveryFailureCause'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SequenceResponse"
+        '400':
+          description: Bad request - Invalid status code
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/notification-rework/{trackingId}/init':
+    put:
+      summary: Avvio processo di invalidazione timeline
+      description: Aggiorna lo stato dell'entità di tracking per accettare gli eventi di recapito correttivi
+      tags:
+        - NotificationRework
+      operationId: initNotificationRework
+      parameters:
+        - name: reworkId
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/trackingId'
+      responses:
+        '204':
+          description: Aggiornamento effettuato
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
 components:
   parameters:
     attemptId:
@@ -205,7 +271,24 @@ components:
         pattern: ^[ -~]*$
         maxLength: 1024
       example: "PREPARE_ANALOG_DOMICILE.IUN_LKXM-QMZH-KELD-202507-H-1.RECINDEX_0.ATTEMPT_0"
-
+    trackingId:
+      name: trackingId
+      in: path
+      required: true
+      schema:
+        type: string
+    queryStatusCode:
+      in: query
+      name: statusCode
+      required: true
+      schema:
+        type: string
+    deliveryFailureCause:
+      in: query
+      name: deliveryFailureCause
+      required: false
+      schema:
+        type: string
   schemas:
     TrackingsRequest:
       type: object
@@ -233,6 +316,7 @@ components:
         - productType
         - unifiedDeliveryDriver
         - state
+        - businessState
       properties:
         trackingId:
           type: string
@@ -246,21 +330,35 @@ components:
             $ref: '#/components/schemas/PaperEvent'
         validationFlow:
           $ref: '#/components/schemas/ValidationFlow'
+        validationConfig:
+          $ref: '#/components/schemas/ValidationConfig'
         productType:
           $ref: '#/components/schemas/ProductType'
         paperStatus:
           $ref: '#/components/schemas/PaperStatus'
-        ocrRequestId:
-          type: string
         nextRequestIdPcretry:
           type: string
         unifiedDeliveryDriver:
           type: string
+        notificationReworkId:
+          type: string
+        notificationReworkTimestamp:
+          type: string
+          format: date-time
         state:
+          type: string
+          enum:
+            - AWAITING_REFINEMENT
+            - AWAITING_REWORK_EVENTS
+            - AWAITING_OCR
+            - DONE
+            - KO
+        businessState:
           type: string
           enum:
             - AWAITING_FINAL_STATUS_CODE
             - AWAITING_OCR
+            - AWAITING_REWORK_EVENTS
             - DONE
             - KO
         createdAt:
@@ -272,6 +370,8 @@ components:
     PaperEvent:
       type: object
       properties:
+        id:
+          type: string
         requestTimestamp:
           type: string
           format: date-time
@@ -280,11 +380,15 @@ components:
         statusTimestamp:
           type: string
           format: date-time
+        statusDescription:
+          type: string
+        iun:
+            type: string
         productType:
           $ref: '#/components/schemas/ProductType'
         deliveryFailureCause:
           type: string
-        discoveredAddress:
+        anonymizedDiscoveredAddressId:
           type: string
         attachments:
           type: array
@@ -292,9 +396,14 @@ components:
             $ref: '#/components/schemas/Attachment'
         registeredLetterCode:
           type: string
+        notificationReworkId:
+          type: string
         createdAt:
           type: string
           format: date-time
+        dryRun:
+          type: boolean
+
     ProductType:
       type: string
       enum:
@@ -310,28 +419,71 @@ components:
           type: string
         documentType:
           type: string
-        url:
+        uri:
           type: string
         date:
           type: string
           format: date-time
+        sha256:
+          type: string
     ValidationFlow:
       type: object
       properties:
-        ocrEnabled:
-          type: boolean
         sequencesValidationTimestamp:
           type: string
           format: date-time
-        ocrRequestTimestamp:
+        ocrRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/OcrRequest'
+        finalEventDematValidationTimestamp:
           type: string
           format: date-time
-        dematValidationTimestamp:
+        refinementDematValidationTimestamp:
           type: string
           format: date-time
         finalEventBuilderTimestamp:
           type: string
           format: date-time
+        recag012StatusTimestamp:
+          type: string
+          format: date-time
+    OcrRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+        eventId:
+          type: string
+        requestTimestamp:
+          type: string
+          format: date-time
+        responseTimestamp:
+          type: string
+          format: date-time
+    ValidationConfig:
+      type: object
+      properties:
+        requiredAttachmentsRefinementStock890:
+          type: array
+          items:
+            type: string
+        sendOcrAttachmentsFinalValidationStock890:
+          type: array
+          items:
+            type: string
+        sendOcrAttachmentsFinalValidation:
+          type: array
+          items:
+            type: string
+        strictFinalValidationStock890:
+          type: boolean
+        ocrEnabled:
+          type: string
+          enum:
+            - RUN
+            - DRY
+            - DISABLED
     PaperStatus:
       type: object
       properties:
@@ -341,7 +493,7 @@ components:
         deliveryFailureCause:
           type: string
           description: Causa del fallimento della consegna
-        discoveredAddress:
+        anonymizedDiscoveredAddress:
           type: string
           description: Indirizzo scoperto durante la spedizione
         finalStatusCode:
@@ -352,18 +504,15 @@ components:
           type: string
           format: date-time
           description: Timestamp validato delle triplette (data di rendicontazione documento)
-        validatedAttachmentUri:
-          type: string
-          description: URI del documento su safestorage
-          example: "safestorage://PN_EXTERNAL_LEGAL_FACTS-xxx.pdf"
-        validatedAttachmentType:
-          type: string
-          description: Tipo di documento validato
+        validatedAttachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
         validatedEvents:
           type: array
           description: Lista di eventi validati
           items:
-            $ref: '#/components/schemas/PaperEvent'
+            type: string
         finalDematFound:
           type: boolean
           description: Presenza evento demat finale
@@ -371,10 +520,6 @@ components:
           type: string
           format: date-time
           description: Timestamp di affido al consolidatore recuperato dallo statusCode P000
-        actualPaperDeliveryTimestamp:
-          type: string
-          format: date-time
-          description: Timestamp corretto di affido al consolidatore
     TrackingErrorsResponse:
       type: object
       properties:
@@ -400,7 +545,7 @@ components:
         created:
           type: string
           format: date-time
-        category:
+        errorCategory:
           type: string
         details:
           type: object
@@ -420,6 +565,8 @@ components:
             - FINAL_EVENT_BUILDING
             - RETRY_PHASE
         eventThrow:
+          type: string
+        eventIdThrow:
           type: string
         productType:
           $ref: '#/components/schemas/ProductType'
@@ -445,6 +592,8 @@ components:
     PaperTrackerOutput:
       type: object
       properties:
+        created:
+          type: string
         registeredLetterCode:
           type: string
         statusCode:
@@ -461,9 +610,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Attachment'
-        discoveredAddress:
+        anonymizedDiscoveredAddressId:
           type: string
-        clientRequestTimeStamp:
+        clientRequestTimestamp:
           type: string
     TrackingCreationRequest:
       type: object
@@ -488,3 +637,24 @@ components:
         - unifiedDeliveryDriver
         - attemptId
         - pcRetry
+    SequenceResponse:
+      type: object
+      properties:
+        finalStatusCode:
+          type: string
+          enum:
+            - OK
+            - KO
+        sequence:
+          type: array
+          items:
+            $ref: '#/components/schemas/SequenceItem'
+    SequenceItem:
+        type: object
+        properties:
+          statusCode:
+            type: string
+          attachments:
+            type: array
+            items:
+              type: string

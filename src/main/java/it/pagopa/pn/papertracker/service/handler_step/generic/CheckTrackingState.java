@@ -5,13 +5,15 @@ import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
 @RequiredArgsConstructor
@@ -28,36 +30,40 @@ public class CheckTrackingState implements HandlerStep {
      * @param context Contesto contenente le informazioni necessarie per l'elaborazione dell'evento.
      * @return Mono(Void)
      */
-    @Override
     public Mono<Void> execute(HandlerContext context) {
         return Mono.just(context)
                 .flatMap(ctx -> {
-                    String statusCode = ctx.getPaperProgressStatusEvent().getStatusCode();
-                    PaperTrackingsState state = ctx.getPaperTrackings().getState();
-
+                    String statusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), ctx.getEventId());
                     if (statusCode.startsWith("CON")) {
                         log.info("StatusCode excluded from CheckTrackingState: {}", statusCode);
                         return Mono.empty();
                     }
 
-                    if (state.equals(PaperTrackingsState.DONE) || state.equals(PaperTrackingsState.AWAITING_OCR)) {
-                        String errorMsg = String.format("Tracking in state %s: %s", state, ctx.getTrackingId());
-                        return Mono.error(new PnPaperTrackerValidationException(
-                                errorMsg,
-                                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
-                                        ctx.getPaperTrackings(),
-                                        statusCode,
-                                        ErrorCategory.INCONSISTENT_STATE,
-                                        null,
-                                        errorMsg,
-                                        FlowThrow.CHECK_TRACKING_STATE,
-                                        ErrorType.WARNING,
-                                        ctx.getEventId()
-                                )
-                        ));
-                    }
-
-                    return Mono.empty();
+                    return isInvalidState(ctx, statusCode)
+                            ? createValidationError(ctx, statusCode)
+                            : Mono.empty();
                 });
+    }
+
+    private Mono<Void> createValidationError(HandlerContext ctx, String statusCode) {
+        String state = TrackerUtility.isStockStatus890(statusCode)
+                ? ctx.getPaperTrackings().getBusinessState().name()
+                : ctx.getPaperTrackings().getState().name();
+
+        String errorMsg = String.format("Tracking in state %s: %s", state, ctx.getTrackingId());
+
+        return Mono.error(new PnPaperTrackerValidationException(
+                errorMsg,
+                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                        ctx.getPaperTrackings(),
+                        statusCode,
+                        ErrorCategory.INCONSISTENT_STATE,
+                        null,
+                        errorMsg,
+                        FlowThrow.CHECK_TRACKING_STATE,
+                        ErrorType.WARNING,
+                        ctx.getEventId()
+                )
+        ));
     }
 }

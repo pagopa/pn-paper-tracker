@@ -24,13 +24,14 @@ public class PnEventInboundService {
     public void externalChannelConsumer(
             @Payload Message<SingleStatusUpdate> message,
             @Header(name = "dryRun", required = false) Boolean dryRun,
+            @Header(name = "reworkId", required = false) String reworkId,
             @Header(name = "id") String messageId
     ) {
         try {
             log.info("Handle message from pn-external_channel_to_paper_tracker with message {}, dryRun {} and messageId {}", message, dryRun, messageId);
             boolean dryRunEnabled = Boolean.TRUE.equals(dryRun);
             log.info(message.getHeaders().toString());
-            externalChannelHandler.handleExternalChannelMessage(message.getPayload(), dryRunEnabled, messageId);
+            externalChannelHandler.handleExternalChannelMessage(message.getPayload(), dryRunEnabled, reworkId, messageId);
 
         } catch (Exception ex) {
             log.error("Error processing external channel result message: {}", ex.getMessage(), ex);

@@ -3,14 +3,12 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.test.StepVerifier;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,7 +26,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
@@ -41,9 +39,8 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
-                    assert retrieved.getOcrRequestId() == null;
                     assert retrieved.getNextRequestIdPcretry() == null;
-                    assert retrieved.getState() == PaperTrackingsState.AWAITING_FINAL_STATUS_CODE;
+                    assert retrieved.getState() == PaperTrackingsState.AWAITING_REFINEMENT;
                 })
                 .block();
 
@@ -72,7 +69,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings2.setPcRetry("PCRETRY_0");
         paperTrackings2.setProductType(ProductType.AR);
         paperTrackings2.setUnifiedDeliveryDriver("POSTE");
-        paperTrackings2.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        paperTrackings2.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings2).block();
 
@@ -102,172 +99,9 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals(attemptId + ".PCRETRY_0", response.getFirst().getTrackingId());
         Assertions.assertEquals(attemptId + ".PCRETRY_1", response.get(1).getTrackingId());
         Assertions.assertEquals(attemptId + ".PCRETRY_2", response.getLast().getTrackingId());
-        Assertions.assertEquals(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE, response.getFirst().getState());
+        Assertions.assertEquals(PaperTrackingsState.AWAITING_REFINEMENT, response.getFirst().getState());
         Assertions.assertEquals(PaperTrackingsState.KO, response.get(1).getState());
         Assertions.assertEquals(PaperTrackingsState.DONE, response.getLast().getState());
-    }
-
-    @Test
-    void updateItemAndRetrieveByOcrRequestId() {
-        //Arrange
-        String requestId = "test-request-id-2";
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
-        paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        PaperStatus notificationState = new PaperStatus();
-        notificationState.setDeliveryFailureCause("M02");
-        ValidationFlow validationFlow = new ValidationFlow();
-        paperTrackings.setPaperStatus(notificationState);
-        paperTrackings.setValidationFlow(validationFlow);
-        paperTrackings.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
-
-        paperTrackingsDAO.putIfAbsent(paperTrackings).block();
-
-        PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
-        String ocrRequestId = "test-ocr-request-id";
-        paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
-        paperTrackingsToUpdate.setNextRequestIdPcretry("next-request-id-pcretry");
-        paperTrackingsToUpdate.setState(PaperTrackingsState.DONE);
-        ValidationFlow validationFlow1 = new ValidationFlow();
-        validationFlow1.setOcrEnabled(true);
-        validationFlow1.setSequencesValidationTimestamp(Instant.now());
-        paperTrackingsToUpdate.setValidationFlow(validationFlow1);
-        Attachment attachment = new Attachment();
-        attachment.setId("attachment-id-1");
-        attachment.setDocumentType("DOCUMENT_TYPE");
-        Event event = new Event();
-        event.setRequestTimestamp(Instant.now());
-        event.setStatusCode("RECRN004C");
-        event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
-        event.setDryRun(true);
-        event.setAttachments(List.of(attachment));
-        PaperStatus notificationState1 = new PaperStatus();
-        notificationState1.setFinalStatusCode("RECRN005C");
-        notificationState1.setAnonymizedDiscoveredAddress("address discovered");
-        notificationState1.setValidatedEvents(List.of(event));
-        paperTrackingsToUpdate.setPaperStatus(notificationState1);
-
-        paperTrackingsDAO.updateItem(requestId, paperTrackingsToUpdate)
-                .doOnNext(paperTrackingsUpdated -> {
-                    assert paperTrackingsUpdated != null;
-                    assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
-                    assert paperTrackingsUpdated.getProductType() == ProductType.AR;
-                    assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
-                    assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
-                    assert paperTrackingsUpdated.getEvents() == null;
-                    assert paperTrackingsUpdated.getValidationFlow() != null;
-                    assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert paperTrackingsUpdated.getValidationFlow().getSequencesValidationTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
-                    assert paperTrackingsUpdated.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
-                })
-                .block();
-
-        //Assert
-        paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrRequestId)
-                .doOnNext(retrieved -> {
-                    assert retrieved != null;
-                    assert retrieved.getOcrRequestId().equals(ocrRequestId);
-                    assert retrieved.getProductType() == ProductType.AR;
-                    assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
-                    assert retrieved.getState() == PaperTrackingsState.DONE;
-                    assert retrieved.getEvents() == null;
-                    assert retrieved.getValidationFlow() != null;
-                    assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert retrieved.getValidationFlow().getSequencesValidationTimestamp() != null;
-                    assert retrieved.getPaperStatus() != null;
-                    assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
-                    assert retrieved.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
-                    assert retrieved.getPaperStatus().getValidatedEvents() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
-                })
-                .blockLast();
-
-        PaperTrackings updateDematValidationTimestamp = new PaperTrackings();
-        ValidationFlow validationFlow2 = new ValidationFlow();
-        validationFlow2.setDematValidationTimestamp(Instant.now());
-        updateDematValidationTimestamp.setValidationFlow(validationFlow2);
-
-        paperTrackingsDAO.updateItem(requestId, updateDematValidationTimestamp)
-                .doOnNext(paperTrackingsUpdated -> {
-                    assert paperTrackingsUpdated != null;
-                    assert paperTrackingsUpdated.getOcrRequestId().equals(ocrRequestId);
-                    assert paperTrackingsUpdated.getProductType() == ProductType.AR;
-                    assert paperTrackingsUpdated.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert paperTrackingsUpdated.getNextRequestIdPcretry().equals("next-request-id-pcretry");
-                    assert paperTrackingsUpdated.getState() == PaperTrackingsState.DONE;
-                    assert paperTrackingsUpdated.getEvents() == null;
-                    assert paperTrackingsUpdated.getValidationFlow() != null;
-                    assert paperTrackingsUpdated.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert paperTrackingsUpdated.getValidationFlow().getDematValidationTimestamp() != null;
-                    assert paperTrackingsUpdated.getValidationFlow().getSequencesValidationTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
-                    assert paperTrackingsUpdated.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert paperTrackingsUpdated.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert paperTrackingsUpdated.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
-                })
-                .block();
-
-        paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrRequestId)
-                .doOnNext(retrieved -> {
-                    assert retrieved != null;
-                    assert retrieved.getOcrRequestId().equals(ocrRequestId);
-                    assert retrieved.getProductType() == ProductType.AR;
-                    assert retrieved.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE");
-                    assert retrieved.getNextRequestIdPcretry().equals("next-request-id-pcretry");
-                    assert retrieved.getState() == PaperTrackingsState.DONE;
-                    assert retrieved.getEvents() == null;
-                    assert retrieved.getValidationFlow() != null;
-                    assert retrieved.getValidationFlow().getOcrEnabled().equals(Boolean.TRUE);
-                    assert retrieved.getValidationFlow().getDematValidationTimestamp() != null;
-                    assert retrieved.getValidationFlow().getSequencesValidationTimestamp() != null;
-                    assert retrieved.getPaperStatus() != null;
-                    assert retrieved.getPaperStatus().getFinalStatusCode().equals("RECRN005C");
-                    assert retrieved.getPaperStatus().getDeliveryFailureCause().equals("M02");
-                    assert retrieved.getPaperStatus().getAnonymizedDiscoveredAddress().equals("address discovered");
-                    assert retrieved.getPaperStatus().getValidatedEvents() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusCode().equals("RECRN004C");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getStatusTimestamp() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getProductType().equals(ProductType.AR);
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments() != null;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().size() == 1;
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getId().equals("attachment-id-1");
-                    assert retrieved.getPaperStatus().getValidatedEvents().getFirst().getAttachments().getFirst().getDocumentType().equals("DOCUMENT_TYPE");
-                })
-                .blockLast();
     }
 
     @Test
@@ -281,7 +115,6 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         String ocrRequestId = "test-ocr-request-id";
-        paperTrackingsToUpdate.setOcrRequestId(ocrRequestId);
 
         //Assert
         StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))
@@ -297,16 +130,19 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(requestId);
         paperTrackings.setProductType(ProductType.AR);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        paperTrackings.setNotificationReworkId("reworkId");
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         Event event = new Event();
+        event.setId("id1");
         event.setRequestTimestamp(Instant.now());
         event.setStatusCode("IN_PROGRESS");
         event.setStatusTimestamp(Instant.now());
         event.setProductType(ProductType.AR);
         event.setDryRun(true);
+        event.setNotificationReworkId("reworkId");
 
         Attachment attachment = new Attachment();
         attachment.setId("attachment-id-1");
@@ -332,6 +168,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertFalse(fisrtResponse.getEvents().isEmpty());
         Assertions.assertEquals(1, fisrtResponse.getEvents().size());
         Assertions.assertEquals(2, fisrtResponse.getEvents().getFirst().getAttachments().size());
+        Assertions.assertEquals("reworkId", fisrtResponse.getEvents().getFirst().getNotificationReworkId());
         Assertions.assertNull(fisrtResponse.getEvents().getFirst().getDeliveryFailureCause());
 
         PaperTrackings paperTrackingsToUpdate1 = new PaperTrackings();

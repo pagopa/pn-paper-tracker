@@ -60,7 +60,7 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null, eventId);
 
         //Assert
         verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any());
@@ -73,7 +73,7 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
 
         //Assert
         verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any());
@@ -86,7 +86,7 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
 
         //Assert
         verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any());
@@ -99,7 +99,7 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.UNKNOWN),eq(null), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(), eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
 
         //Assert
         verify(handleRegistry, times(1)).handleEvent(eq(ProductType.UNKNOWN),eq(null), any());
@@ -113,7 +113,7 @@ public class ExternalChannelHandlerTest {
                 .thenReturn(Mono.error(new PnPaperTrackerNotFoundException("ERROR", "Tracking not found")));
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(payload, true, eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, true, null, eventId);
 
         // Assert
         ArgumentCaptor<ExternalChannelEvent> captor =
@@ -136,7 +136,7 @@ public class ExternalChannelHandlerTest {
                 .thenReturn(Mono.error(new PnPaperTrackerNotFoundException("ERROR", "Tracking not found")));
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(payload, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, false,null, eventId);
 
         // Assert
         ArgumentCaptor<it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent> captor =
@@ -164,10 +164,10 @@ public class ExternalChannelHandlerTest {
                 .thenReturn(Mono.error(new PnPaperTrackerNotFoundException("ERROR", "Tracking not found")));
 
         // Act - primo messaggio con dry-run
-        externalChannelHandler.handleExternalChannelMessage(payload1, true, "event-1");
+        externalChannelHandler.handleExternalChannelMessage(payload1, true, null, "event-1");
 
         // Act - secondo messaggio senza dry-run
-        externalChannelHandler.handleExternalChannelMessage(payload2, false, "event-2");
+        externalChannelHandler.handleExternalChannelMessage(payload2, false, null, "event-2");
 
         // Assert
         ArgumentCaptor<it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent> dryRunCaptor =
@@ -199,7 +199,7 @@ public class ExternalChannelHandlerTest {
                 .thenReturn(Mono.empty());
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(payload, true, eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, true, "reworkId", eventId);
 
         // Assert
         verify(handleRegistry, times(1))

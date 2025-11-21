@@ -25,8 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.ATTEMPT_ID_PCRETRY_INDEX;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
-import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo;
 
 @Component
 @Slf4j
@@ -60,11 +58,6 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         }
 
         return queryByIndex(key.build(), ATTEMPT_ID_PCRETRY_INDEX);
-    }
-
-    @Override
-    public Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId) {
-        return retrieveFromIndex(OCR_REQUEST_ID_INDEX, keyEqualTo(Key.builder().partitionValue(ocrRequestId).build()));
     }
 
     @Override

@@ -1,0 +1,74 @@
+package it.pagopa.pn.papertracker.service.impl;
+
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerBadRequestException;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceItem;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceResponse;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
+import it.pagopa.pn.papertracker.model.EventStatus;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
+import it.pagopa.pn.papertracker.service.NotificationReworkService;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class NotificationReworkServiceImpl implements NotificationReworkService {
+
+    private PaperTrackingsDAO paperTrackingsDAO;
+
+    private static final String ERROR_CODE_PAPER_TRACKER_BAD_REQUEST = "PN_PAPER_TRACKER_BAD_REQUEST";
+
+    @Override
+    public Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause) {
+        SequenceResponse sequenceResponse = new SequenceResponse();
+
+        return Mono.justOrEmpty(TrackerUtility.evaluateStatusCodeAndRetrieveStatus(statusCode, deliveryFailureCause))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is invalid", statusCode))))
+                .filter(eventStatus -> !EventStatus.PROGRESS.equals(eventStatus))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is PROGRESS", statusCode))))
+                .doOnNext(eventStatus -> sequenceResponse.setFinalStatusCode(SequenceResponse.FinalStatusCodeEnum.fromValue(eventStatus.name())))
+                .map(eventStatus -> retrieveSequence(statusCode))
+                .map(sequenceList -> {
+                    sequenceResponse.setSequence(sequenceList);
+                    log.info("Successfully retrieved sequence for statusCode {} with {} elements", statusCode, sequenceList.size());
+                    return sequenceResponse;
+                });
+    }
+
+    @Override
+    public Mono<Void> updatePaperTrackingsStatusForRework(String trackingId, String reworkId) {
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.AWAITING_REWORK_EVENTS);
+        paperTrackings.setBusinessState(BusinessState.AWAITING_REWORK_EVENTS);
+        paperTrackings.setNotificationReworkRequestTimestamp(Instant.now());
+        paperTrackings.setNotificationReworkId(reworkId);
+        return paperTrackingsDAO.updateItem(trackingId, paperTrackings).then();
+    }
+
+    private List<SequenceItem> retrieveSequence(String statusCode) {
+        SequenceConfig sequenceConfig = SequenceConfiguration.getConfig(statusCode);
+        return sequenceConfig.sequenceStatusCodes().stream()
+                .map(code -> {
+                    SequenceItem item = new SequenceItem();
+                    item.setStatusCode(code);
+                    item.setAttachments(Optional.ofNullable(sequenceConfig.validAttachments().get(code)).orElse(Set.of()).stream().toList());
+                    return item;
+                }).toList();
+    }
+}
+
+

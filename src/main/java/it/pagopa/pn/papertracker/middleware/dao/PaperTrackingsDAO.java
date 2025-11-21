@@ -16,7 +16,5 @@ public interface PaperTrackingsDAO {
 
     Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings);
 
-    Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId);
-
     Flux<PaperTrackings> retrieveAllByTrackingIds(List<String> trackingIds);
 }

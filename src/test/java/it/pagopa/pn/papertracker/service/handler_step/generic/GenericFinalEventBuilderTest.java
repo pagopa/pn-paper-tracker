@@ -83,7 +83,7 @@ class GenericFinalEventBuilderTest {
         event3.setId(EVENT_ID);
 
         paperTrackings.setEvents(List.of(event, event1, event2, event3));
-        paperTrackings.getPaperStatus().setValidatedEvents(List.of(event, event1, event2, event3));
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(EVENT_ID + "1", EVENT_ID + "2", EVENT_ID));
         handlerContext.setPaperTrackings(paperTrackings);
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));

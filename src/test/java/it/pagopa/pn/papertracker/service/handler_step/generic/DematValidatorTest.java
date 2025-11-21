@@ -9,10 +9,11 @@ import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,8 +24,6 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -37,7 +36,6 @@ class DematValidatorTest {
     PnPaperTrackerConfigs cfg;
     @Mock
     OcrMomProducer ocrMomProducer;
-
     @Mock
     SafeStorageClient safeStorageClient;
 
@@ -51,6 +49,7 @@ class DematValidatorTest {
     @BeforeEach
     void setUp() {
         context = new HandlerContext();
+        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR);
@@ -61,13 +60,23 @@ class DematValidatorTest {
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         context.setPaperTrackings(paperTrackings);
-        dematValidator = new DematValidator(paperTrackingsDAO, cfg, ocrMomProducer, safeStorageClient);
+        context.setEventId("eventId1");
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD", "CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico", "AR", "23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        paperTrackings.setValidationConfig(validationConfig);
+        dematValidator = new DematValidator(ocrUtility);
     }
 
-    private Event getEvent(String statusCode, String documentType) {
+    private Event getEvent(String statusCode, String documentType, String eventId) {
         Event event = new Event();
         event.setStatusCode(statusCode);
         event.setProductType(ProductType.AR);
+        event.setId(eventId);
+        event.setStatusTimestamp(Instant.now());
         if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();
             attachment.setUri("uri.pdf");
@@ -84,11 +93,10 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent() {
         // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
@@ -106,13 +114,11 @@ class DematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent2() {
         // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN002F", null), getEvent("RECRN002D", null), getEvent("RECRN002E", "AR")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN002F", null, "eventId1"), getEvent("RECRN002D", null, "eventId2"), getEvent("RECRN002E", "AR", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
 
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
-
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -127,41 +133,12 @@ class DematValidatorTest {
     }
 
     @Test
-    void validateDemat_OcrEnabled_AttachmentTypeNotSupported() {
-        // Arrange
-        PaperStatus paperStatus = new PaperStatus();
-        Event eventRECRN005B = getEvent("RECRN005B", "Plico");
-        eventRECRN005B.getAttachments().getLast().setUri("uri.zip");
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), eventRECRN005B));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
-
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
-
-        // Act
-        StepVerifier.create(dematValidator.validateDemat(context))
-                .verifyComplete();
-
-        // Assert
-        ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
-        verifyNoInteractions(safeStorageClient);
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
-        PaperTrackings paperTrackingsToUpdate = captor.getValue();
-        assertTrue(paperTrackingsToUpdate.getValidationFlow().getOcrEnabled());
-        assertNull(paperTrackingsToUpdate.getOcrRequestId());
-        assertNull(paperTrackingsToUpdate.getValidationFlow().getOcrRequestTimestamp());
-        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
-    }
-
-    @Test
     void validateDemat_OcrDisabled_UpdatesItemAndDoesNotPushEvent() {
         // Arrange
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.RIR));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         // Act
         StepVerifier.create(dematValidator.validateDemat(context))
@@ -176,13 +153,12 @@ class DematValidatorTest {
     @Test
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
         // Arrange
-        when(cfg.getEnableOcrValidationFor()).thenReturn(List.of(ProductType.AR));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedEvents(List.of(getEvent("RECRN005C", null), getEvent("RECRN005A", null), getEvent("RECRN005B", "Plico")));
-        context.getPaperTrackings().setPaperStatus(paperStatus);
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.error(new RuntimeException("DB error")));
 

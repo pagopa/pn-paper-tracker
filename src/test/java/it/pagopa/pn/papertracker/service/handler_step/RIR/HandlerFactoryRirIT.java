@@ -28,6 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.service.handler_step.RIR.TestSequenceRirEnum.OK_RETRY_RIR;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static org.awaitility.Awaitility.await;
@@ -61,14 +62,14 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.RIR)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
         PcRetryResponse pcRetryResponse = wireRetryIfNeeded(seq.getStatusCodes(), requestId, iun);
 
         //Act
         eventsToSend.forEach(singleStatusUpdate -> {
             String messageId = UUID.randomUUID().toString();
-            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, messageId);
+            externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
         });
 
         //Assert
@@ -214,7 +215,6 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
     }
 
     private void verifyPaperTrackings(PaperTrackings pt, PaperTrackings newPt, TestSequenceRirEnum seq) {
-        assertNull(pt.getOcrRequestId());
         List<String> events = new ArrayList<>(pt.getEvents().stream().map(Event::getStatusCode).toList());
         if (Objects.nonNull(newPt)) {
             events.addAll(newPt.getEvents().stream().map(Event::getStatusCode).toList());
@@ -225,9 +225,9 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
 
         switch (seq) {
             case OK_RIR ->
-                    assertValidatedDoneSubset(pt, 7, 5, null, List.of("RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"));
-            case OK_RETRY_RIR -> assertValidatedDone(newPt, 7, 5, null);
-            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, null);
+                    assertValidatedDoneSubset(pt, 7, 5, null, List.of("RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"),  DONE,BusinessState.DONE);
+            case OK_RETRY_RIR -> assertValidatedDone(newPt, 7, 5, null, DONE,BusinessState.DONE);
+            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
         }
     }
 
@@ -242,7 +242,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
         resp.setDeliveryDriverId("POSTE");
         resp.setPcRetry("PCRETRY_1");
 
-        paperTrackingsDAO.putIfAbsent(getPaperTrackings(newRequestId)).block();
+        paperTrackingsDAO.putIfAbsent(getPaperTrackings(newRequestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.RIR)).block();
         when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(resp));
         return resp;
     }

@@ -22,6 +22,8 @@ public class HandlerContext {
     private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
+    private boolean refinementCondition;
+    private String reworkId;
     private OcrDataResultPayload ocrDataResultPayload;
 
 }

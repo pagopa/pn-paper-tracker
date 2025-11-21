@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -58,8 +58,6 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
     @Autowired
-    private SequenceConfiguration sequenceConfiguration;
-    @Autowired
     private PaperTrackingsDAO paperTrackingsDAO;
     @Autowired
     private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
@@ -113,7 +111,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -156,7 +154,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());
@@ -164,7 +162,6 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
         assertNotNull(capturedSendEvent.getAllValues());
         SendEvent sendEvent = capturedSendEvent.getValue().getPayload().getSendEvent();
         assertNotNull(sendEvent);
-        //TODO: SU PAPERCHANNEL è PROGRESS, VERIFICARE
         Assertions.assertEquals(StatusCodeEnum.OK, sendEvent.getStatusCode());
         Assertions.assertEquals(STATUS_RECRN003C, sendEvent.getStatusDetail());
 
