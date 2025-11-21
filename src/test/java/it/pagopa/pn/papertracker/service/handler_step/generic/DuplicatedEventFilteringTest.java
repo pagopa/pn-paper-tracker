@@ -53,7 +53,7 @@ class DuplicatedEventFilteringTest {
         event.setRequestTimestamp(Instant.now());
         event.setStatusCode("RECRN003C");
         event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
+        event.setProductType(ProductType.AR.getValue());
         event.setAttachments(new ArrayList<>());
         event.setAnonymizedDiscoveredAddressId("anonymized_addr_377a1b51-d241-4ce3-b1c8-0802650e48f4");
         Event event1 = new Event();
@@ -61,7 +61,7 @@ class DuplicatedEventFilteringTest {
         event1.setRequestTimestamp(Instant.now());
         event1.setStatusCode("RECRN004C");
         event1.setStatusTimestamp(Instant.now());
-        event1.setProductType(ProductType.AR);
+        event1.setProductType(ProductType.AR.getValue());
         event1.setAttachments(List.of(attachment1));
         event1.setAnonymizedDiscoveredAddressId("anonymized_addr_377a1b51-d241-4ce3-b1c8-0802650e48f4");
         Attachment attachment2 = new Attachment();
@@ -73,7 +73,7 @@ class DuplicatedEventFilteringTest {
         event2.setRequestTimestamp(Instant.now());
         event2.setStatusCode("RECRN001B");
         event2.setStatusTimestamp(Instant.now());
-        event2.setProductType(ProductType.AR);
+        event2.setProductType(ProductType.AR.getValue());
         event2.setAttachments(List.of(attachment2));
         Attachment attachment3 = new Attachment();
         attachment3.setId("attachment-id-3");
@@ -84,7 +84,7 @@ class DuplicatedEventFilteringTest {
         event3.setRequestTimestamp(Instant.now());
         event3.setStatusCode("RECRN002A");
         event3.setStatusTimestamp(Instant.now());
-        event3.setProductType(ProductType.AR);
+        event3.setProductType(ProductType.AR.getValue());
         event3.setAttachments(List.of(attachment3));
         paperTrackings.setEvents(List.of(event, event1, event2, event3));
         context.setPaperTrackings(paperTrackings);

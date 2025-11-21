@@ -132,12 +132,6 @@ Resources:
         - AttributeName: "trackingId"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
-        - IndexName: "ocrRequestId-index"
-          KeySchema:
-            - AttributeName: "ocrRequestId"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
         - IndexName: "attemptId-pcRetry-index"
           KeySchema:
             - AttributeName: "attemptId"

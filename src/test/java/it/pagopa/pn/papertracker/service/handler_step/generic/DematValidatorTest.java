@@ -52,7 +52,7 @@ class DematValidatorTest {
         OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
@@ -74,7 +74,7 @@ class DematValidatorTest {
     private Event getEvent(String statusCode, String documentType, String eventId) {
         Event event = new Event();
         event.setStatusCode(statusCode);
-        event.setProductType(ProductType.AR);
+        event.setProductType(ProductType.AR.getValue());
         event.setId(eventId);
         event.setStatusTimestamp(Instant.now());
         if (StringUtils.hasText(documentType)) {

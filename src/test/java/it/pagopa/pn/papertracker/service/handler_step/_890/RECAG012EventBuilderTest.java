@@ -99,7 +99,7 @@ class RECAG012EventBuilderTest {
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
-        context.setRefinementCondition(false);
+        context.setNeedToSendRECAG012A(true);
         context.setEventId("id");
 
         StepVerifier.create(recag012EventBuilder.execute(context))
@@ -125,7 +125,7 @@ class RECAG012EventBuilderTest {
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
 
-        context.setRefinementCondition(true);
+        context.setNeedToSendRECAG012A(false);
         context.setEventId("id");
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
@@ -156,7 +156,7 @@ class RECAG012EventBuilderTest {
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
 
-        context.setRefinementCondition(true);
+        context.setNeedToSendRECAG012A(false);
         context.setEventId("id2");
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));

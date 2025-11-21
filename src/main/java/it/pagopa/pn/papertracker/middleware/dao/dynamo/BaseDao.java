@@ -10,10 +10,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -142,16 +139,32 @@ public class BaseDao<T> {
         } else if (isInnerObjectAttributeType(value)) {
             value.m().forEach((innerKey, innerVal) -> {
                 int idx = counter.getAndIncrement();
-                names.put("#k" + idx, key);
-                names.put("#k" + idx + "_inner", innerKey);
-                values.put(":v" + idx, innerVal);
-                expressions.add("#k" + idx + "." + "#k" + idx + "_inner" + " = " + ":v" + idx);
+                if(key.equalsIgnoreCase("paperStatus")){
+                    names.put("#paperStatus", key);
+                    names.put("#paperStatus_" + idx + "_inner", innerKey);
+                    values.put(":v" + idx, innerVal);
+                    expressions.add("#paperStatus.#paperStatus_" + idx + "_inner" + " = " + ":v" + idx);
+                }
+                else if(key.equalsIgnoreCase("validationFlow")){
+                    names.put("#validationFlow" , key);
+                    names.put("#validationFlow_" + idx + "_inner", innerKey);
+                    values.put(":v" + idx, innerVal);
+                    expressions.add("#validationFlow.#validationFlow_" + idx + "_inner" + " = " + ":v" + idx);
+                }
+                else {
+                    names.put("#k" + idx, key);
+                    names.put("#k" + idx + "_inner", innerKey);
+                    values.put(":v" + idx, innerVal);
+                    expressions.add("#k" + idx + "." + "#k" + idx + "_inner" + " = " + ":v" + idx);
+                }
             });
         } else {
-            int idx = counter.getAndIncrement();
-            names.put("#k" + idx, key);
-            values.put(":v" + idx, value);
-            expressions.add("#k" + idx + " = " + ":v" + idx);
+            if(!key.equalsIgnoreCase("paperStatus") && !key.equalsIgnoreCase("validationFlow")){
+                int idx = counter.getAndIncrement();
+                names.put("#k" + idx, key);
+                values.put(":v" + idx, value);
+                expressions.add("#k" + idx + " = " + ":v" + idx);
+            }
         }
         return expressions;
     }
@@ -160,7 +173,7 @@ public class BaseDao<T> {
         return value.m() != null && !value.m().isEmpty();
     }
 
-    private static boolean isListAttributeType(AttributeValue value) {
+    private boolean isListAttributeType(AttributeValue value) {
         return value.l() != null && !value.l().isEmpty();
     }
 

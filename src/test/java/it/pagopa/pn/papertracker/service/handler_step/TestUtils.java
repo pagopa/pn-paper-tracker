@@ -24,13 +24,14 @@ public class TestUtils {
     public static PaperTrackings getPaperTrackings(String requestId, ProductType productType) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(productType);
+        pt.setProductType(productType.getValue());
         pt.setUnifiedDeliveryDriver("POSTE");
         pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         ValidationConfig validationConfig = new ValidationConfig();
@@ -46,12 +47,13 @@ public class TestUtils {
     public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(ProductType.AR);
+        pt.setProductType(ProductType.AR.getValue());
         pt.setUnifiedDeliveryDriver("POSTE");
         pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
@@ -107,7 +109,7 @@ public class TestUtils {
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
 
-        assertFalse(pt.getPaperStatus().getValidatedAttachments().isEmpty());
+        assertTrue(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());

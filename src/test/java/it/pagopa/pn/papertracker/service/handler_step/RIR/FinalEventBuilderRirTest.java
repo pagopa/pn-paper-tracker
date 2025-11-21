@@ -54,7 +54,7 @@ class FinalEventBuilderRirTest {
         finalEventBuilder = new FinalEventBuilderRir(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");

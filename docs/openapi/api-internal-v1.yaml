@@ -406,12 +406,6 @@ components:
 
     ProductType:
       type: string
-      enum:
-        - RS
-        - AR
-        - 890
-        - RIR
-        - RIS
     Attachment:
       type: object
       properties:
@@ -453,7 +447,9 @@ components:
       properties:
         documentType:
           type: string
-        eventId:
+        finalEventId:
+          type: string
+        attachmentEventId:
           type: string
         requestTimestamp:
           type: string

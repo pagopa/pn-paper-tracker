@@ -12,11 +12,12 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
 
 @Component
 @RequiredArgsConstructor
@@ -42,22 +43,32 @@ public class RECAG012EventChecker implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         log.info("Starting RECAG012EventChecker for trackingId {}", context.getTrackingId());
 
-        Optional<Event> recag012Event = findRECAG012Event(context);
+        Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
 
-        if (!hasRequiredAttachments(context, requiredAttachments) || recag012Event.isEmpty()) {
-            log.info("Missing required attachments or RECAG012 event not found for trackingId {}", context.getTrackingId());
+        if(recag012Event.isEmpty()){
+            log.info("RECAG012 event not found for trackingId {}", context.getTrackingId());
             return Mono.empty();
         }
 
-        List<Attachment> attachments = context.getPaperTrackings().getEvents().stream()
-                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
-                .flatMap(event -> event.getAttachments().stream())
-                .filter(attachment -> requiredAttachments.contains(attachment.getDocumentType()))
-                .toList();
+        if (!hasRequiredAttachments(context, requiredAttachments)) {
+            log.info("Missing required attachments for trackingId {}", context.getTrackingId());
+            context.setNeedToSendRECAG012A(true);
+            return Mono.empty();
+        }
 
-        context.setRefinementCondition(true);
-        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context);
+        Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
+                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
+                .map(event -> Map.entry(
+                        event.getId(),
+                        event.getAttachments().stream()
+                                .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                                .toList()
+                ))
+                .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context).then();
     }
 
     private boolean hasRequiredAttachments(HandlerContext context, List<String> requiredAttachments) {
@@ -69,10 +80,6 @@ public class RECAG012EventChecker implements HandlerStep {
         return documentTypes.containsAll(requiredAttachments);
     }
 
-    private Optional<Event> findRECAG012Event(HandlerContext context) {
-        return context.getPaperTrackings().getEvents().stream()
-                .filter(event -> RECAG012.name().equalsIgnoreCase(event.getStatusCode()))
-                .findFirst();
-    }
+
 
 }

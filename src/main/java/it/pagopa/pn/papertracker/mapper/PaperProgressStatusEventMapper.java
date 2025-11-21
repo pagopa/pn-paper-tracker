@@ -69,7 +69,7 @@ public class PaperProgressStatusEventMapper {
         event.setRegisteredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode());
         event.setNotificationReworkId(reworkId);
         if(StringUtils.hasText(paperProgressStatusEvent.getProductType())) {
-            event.setProductType(ProductType.fromValue(paperProgressStatusEvent.getProductType()));
+            event.setProductType(paperProgressStatusEvent.getProductType());
         }
         event.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
         event.setDryRun(dryRunEnabled);

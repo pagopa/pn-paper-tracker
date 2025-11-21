@@ -363,8 +363,8 @@ class RECRN00XCAbstractMessageHandlerTest {
     void getDuration_when_truncateEnabled_returns30Days() {
         // Arrange
         when(pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
-        Instant i1 = Instant.parse("2025-05-03T09:57:04Z");
-        Instant i2 = Instant.parse("2025-04-03T09:55:52Z");
+        Instant i2 = Instant.parse("2025-05-03T09:57:04Z");
+        Instant i1 = Instant.parse("2025-04-03T09:55:52Z");
 
         // Act
         Duration result = ReflectionTestUtils.invokeMethod(
@@ -382,8 +382,8 @@ class RECRN00XCAbstractMessageHandlerTest {
     void getDuration_when_truncateEnabled_returns29Days() {
         // Arrange
         when(pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
-        Instant i1 = Instant.parse("2025-05-03T09:57:04Z");
-        Instant i2 = Instant.parse("2025-04-04T09:55:52Z");
+        Instant i2 = Instant.parse("2025-05-03T09:57:04Z");
+        Instant i1 = Instant.parse("2025-04-04T09:55:52Z");
 
         // Act
         Duration result = ReflectionTestUtils.invokeMethod(

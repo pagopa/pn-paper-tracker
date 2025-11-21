@@ -22,7 +22,6 @@ public class PaperTrackings {
     public static final String COL_VALIDATION_FLOW = "validationFlow";
     public static final String COL_VALIDATION_CONFIG = "validationConfig";
     public static final String COL_PRODUCT_TYPE = "productType";
-    public static final String COL_OCR_REQUEST_ID = "ocrRequestId";
     public static final String COL_NEXT_REQUEST_ID_PC_RETRY = "nextRequestIdPcretry";
     public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
     public static final String COL_CREATED_AT = "createdAt";
@@ -47,7 +46,7 @@ public class PaperTrackings {
     private String pcRetry;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
     private String unifiedDeliveryDriver;

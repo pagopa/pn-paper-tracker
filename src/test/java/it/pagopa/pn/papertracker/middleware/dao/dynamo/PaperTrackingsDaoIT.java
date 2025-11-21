@@ -24,7 +24,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String requestId = "test-request-id-1";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
@@ -35,7 +35,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
                 .doOnNext(retrieved -> {
                     assert retrieved != null;
                     assert retrieved.getTrackingId().equals(requestId);
-                    assert retrieved.getProductType() == ProductType.AR;
+                    assert retrieved.getProductType().equalsIgnoreCase(ProductType.AR.getValue());
                     assert "POSTE".equalsIgnoreCase(retrieved.getUnifiedDeliveryDriver());
                     assert retrieved.getEvents() == null;
                     assert retrieved.getValidationFlow() == null;
@@ -57,7 +57,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings.setTrackingId(attemptId + ".PCRETRY_1");
         paperTrackings.setAttemptId(attemptId);
         paperTrackings.setPcRetry("PCRETRY_1");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setState(PaperTrackingsState.KO);
 
@@ -67,7 +67,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings2.setTrackingId(attemptId + ".PCRETRY_0");
         paperTrackings2.setAttemptId(attemptId);
         paperTrackings2.setPcRetry("PCRETRY_0");
-        paperTrackings2.setProductType(ProductType.AR);
+        paperTrackings2.setProductType(ProductType.AR.getValue());
         paperTrackings2.setUnifiedDeliveryDriver("POSTE");
         paperTrackings2.setState(PaperTrackingsState.AWAITING_REFINEMENT);
 
@@ -77,7 +77,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackings3.setTrackingId(attemptId + ".PCRETRY_2");
         paperTrackings3.setAttemptId(attemptId);
         paperTrackings3.setPcRetry("PCRETRY_2");
-        paperTrackings3.setProductType(ProductType.AR);
+        paperTrackings3.setProductType(ProductType.AR.getValue());
         paperTrackings3.setUnifiedDeliveryDriver("POSTE");
         paperTrackings3.setState(PaperTrackingsState.DONE);
 
@@ -91,7 +91,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(3, response.size());
         Assertions.assertTrue(response.stream().allMatch(track -> track.getAttemptId().equalsIgnoreCase(attemptId)
-                && track.getProductType().equals(ProductType.AR) && track.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE")));
+                && track.getProductType().equals(ProductType.AR.getValue()) && track.getUnifiedDeliveryDriver().equalsIgnoreCase("POSTE")));
 
         Assertions.assertEquals("PCRETRY_0", response.getFirst().getPcRetry());
         Assertions.assertEquals("PCRETRY_1", response.get(1).getPcRetry());
@@ -128,7 +128,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         String requestId = "test-request-id-3";
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(requestId);
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setNotificationReworkId("reworkId");
 
@@ -140,7 +140,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         event.setRequestTimestamp(Instant.now());
         event.setStatusCode("IN_PROGRESS");
         event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
+        event.setProductType(ProductType.AR.getValue());
         event.setDryRun(true);
         event.setNotificationReworkId("reworkId");
 
@@ -198,6 +198,52 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertEquals(2, secondeResponse.getEvents().size());
         Assertions.assertEquals(2, secondeResponse.getEvents().getFirst().getAttachments().size());
         Assertions.assertEquals(1, secondeResponse.getEvents().getLast().getAttachments().size());
+    }
+
+    @Test
+    void addValidatedAttachmentAndOcrRequests() {
+        //Arrange
+        String requestId = "test-request-id-4";
+        PaperTrackings paperTrackings = new PaperTrackings();
+        paperTrackings.setTrackingId(requestId);
+        paperTrackings.setProductType(ProductType.AR.getValue());
+        ValidationFlow validationFlow = new ValidationFlow();
+        OcrRequest req1 = new OcrRequest();
+        req1.setDocumentType("Plico");
+        req1.setFinalEventId("eventId1");
+        req1.setRequestTimestamp(Instant.now());
+        OcrRequest req2 = new OcrRequest();
+        req2.setDocumentType("AR");
+        req2.setFinalEventId("eventId2");
+        req2.setRequestTimestamp(Instant.now());
+        validationFlow.setOcrRequests(List.of(req1, req2));
+        paperTrackings.setValidationFlow(validationFlow);
+        paperTrackings.setUnifiedDeliveryDriver("POSTE");
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
+        paperTrackings.setPaperStatus(paperStatus);
+
+        paperTrackingsDAO.putIfAbsent(paperTrackings).block();
+
+        Attachment attachment2 = new Attachment();
+        attachment2.setId("attachment-id-1");
+        attachment2.setDocumentType("DOCUMENT_TYPE");
+        attachment2.setUri("http://example.com/document.pdf");
+
+
+        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(0, List.of(attachment2), requestId).block();
+
+        //Assert
+        PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
+        Assertions.assertNotNull(fisrtResponse);
+        Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
+
+        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(1, List.of(attachment2), requestId).block();
+
+        PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
+        Assertions.assertNotNull(secondeResponse);
+        Assertions.assertNotNull(secondeResponse.getUpdatedAt());
+        Assertions.assertNotEquals(fisrtResponse.getUpdatedAt(), secondeResponse.getUpdatedAt());
     }
 
 }

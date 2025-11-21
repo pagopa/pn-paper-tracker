@@ -161,10 +161,13 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      * @see it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()
      */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(
-                Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+        LocalDate romeDate1 = toRomeDate(instant1);
+        LocalDate romeDate2 = toRomeDate(instant2);
+        Duration result = pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.ofDays(ChronoUnit.DAYS.between(romeDate1, romeDate2))
                 : Duration.between(instant1, instant2);
+        log.info("Duration between dates i1={} i2={} result={}",instant1, instant2, result);
+        return result;
     }
 
     /**

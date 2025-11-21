@@ -49,7 +49,7 @@ public class Event {
     private Instant statusTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;

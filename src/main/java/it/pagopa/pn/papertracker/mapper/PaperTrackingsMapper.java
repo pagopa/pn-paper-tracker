@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -26,15 +28,18 @@ public class PaperTrackingsMapper {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
-        paperTrackings.setProductType(ProductType.fromValue(trackingCreationRequest.getProductType()));
+        paperTrackings.setProductType(trackingCreationRequest.getProductType());
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setValidatedAttachments(List.of());
         paperTrackings.setPaperStatus(paperStatus);
-        paperTrackings.setValidationFlow(new ValidationFlow());
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setOcrRequests(List.of());
+        paperTrackings.setValidationFlow(validationFlow);
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.fromValue(trackingCreationRequest.getProductType())));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
@@ -55,7 +60,9 @@ public class PaperTrackingsMapper {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
         paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
-        paperTrackings.setProductType(productType);
+        if(Objects.nonNull(productType)) {
+            paperTrackings.setProductType(productType.getValue());
+        }
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         paperTrackings.setAttemptId(attemptId);

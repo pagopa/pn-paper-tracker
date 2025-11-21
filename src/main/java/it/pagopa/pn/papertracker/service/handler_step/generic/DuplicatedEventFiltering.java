@@ -77,7 +77,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
 
     public Mono<Boolean> isDuplicatedEvent(Event event, PaperProgressStatusEvent paperProgressStatusEvent, String reworkId)  {
         boolean fieldsMatch = Objects.equals(paperProgressStatusEvent.getRegisteredLetterCode(),event.getRegisteredLetterCode())
-                && Objects.equals(paperProgressStatusEvent.getProductType(), event.getProductType().name())
+                && Objects.equals(paperProgressStatusEvent.getProductType(), event.getProductType())
                 && Objects.equals(paperProgressStatusEvent.getIun(), event.getIun())
                 && Objects.equals(paperProgressStatusEvent.getStatusCode(), event.getStatusCode())
                 && Objects.equals(paperProgressStatusEvent.getStatusDescription(), event.getStatusDescription())

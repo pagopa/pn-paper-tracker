@@ -59,7 +59,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS
+                        pt.getProductType() == ProductType.RS.getValue()
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
@@ -71,7 +71,7 @@ class PaperTrackerTrackingServiceImplTest {
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS
+                        pt.getProductType() == ProductType.RS.getValue()
         ));
     }
 
@@ -83,7 +83,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS
+                        pt.getProductType() == ProductType.RS.getValue()
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
 
         //ACT
@@ -96,7 +96,7 @@ class PaperTrackerTrackingServiceImplTest {
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS
+                        pt.getProductType() == ProductType.RS.getValue()
         ));
     }
 

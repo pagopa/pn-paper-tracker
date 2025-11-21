@@ -51,7 +51,7 @@ class FinalEventBuilder890Test {
         finalEventBuilder890 = new FinalEventBuilder890(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType._890);
+        paperTrackings.setProductType(ProductType._890.getValue());
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
 
