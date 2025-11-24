@@ -122,8 +122,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "trackingId"
           AttributeType: "S"
-        - AttributeName: "ocrRequestId"
-          AttributeType: "S"
         - AttributeName: "attemptId"
           AttributeType: "S"
         - AttributeName: "pcRetry"
