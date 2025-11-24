@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 public interface NotificationReworkService {
 
-    Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause);
+    Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause, String productType);
 
     Mono<Void> updatePaperTrackingsStatusForRework(String trackingId, String reworkId);
 

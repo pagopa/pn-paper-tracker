@@ -36,10 +36,10 @@ class NotificationReworkControllerTest {
         SequenceResponse response = new SequenceResponse();
         response.setFinalStatusCode(SequenceResponse.FinalStatusCodeEnum.OK);
         response.setSequence(List.of());
-        when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, "AR"))
                 .thenReturn(Mono.just(response));
 
-        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause, exchange);
+        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause, "AR", exchange);
 
         StepVerifier.create(result)
                 .expectNextMatches(entity -> entity.getStatusCode().is2xxSuccessful()
@@ -47,23 +47,23 @@ class NotificationReworkControllerTest {
                         && entity.getBody().getFinalStatusCode() == SequenceResponse.FinalStatusCodeEnum.OK)
                 .verifyComplete();
 
-        verify(notificationReworkService, times(1)).retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause);
+        verify(notificationReworkService, times(1)).retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, "AR");
     }
 
     @Test
     void notificationRework_shouldPropagateError() {
         String statusCode = "INVALID";
         String deliveryFailureCause = "M02";
-        when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, "AR"))
                 .thenReturn(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is invalid", statusCode))));
 
-        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause, exchange);
+        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause,"AR", exchange);
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerBadRequestException )
                 .verify();
 
-        verify(notificationReworkService, times(1)).retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause);
+        verify(notificationReworkService, times(1)).retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR");
     }
 
     @Test

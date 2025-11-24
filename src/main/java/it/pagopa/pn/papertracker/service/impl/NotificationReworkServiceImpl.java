@@ -8,13 +8,16 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.model.EventStatus;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.service.NotificationReworkService;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
@@ -33,15 +36,16 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
     private static final String ERROR_CODE_PAPER_TRACKER_BAD_REQUEST = "PN_PAPER_TRACKER_BAD_REQUEST";
 
     @Override
-    public Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause) {
+    public Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause, String productType) {
         SequenceResponse sequenceResponse = new SequenceResponse();
 
-        return Mono.justOrEmpty(TrackerUtility.evaluateStatusCodeAndRetrieveStatus(statusCode, deliveryFailureCause))
+        return Mono.justOrEmpty(TrackerUtility.evaluateStatusCodeAndRetrieveStatus(statusCode, deliveryFailureCause, productType))
                 .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is invalid", statusCode))))
                 .filter(eventStatus -> !EventStatus.PROGRESS.equals(eventStatus))
                 .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is PROGRESS", statusCode))))
                 .doOnNext(eventStatus -> sequenceResponse.setFinalStatusCode(SequenceResponse.FinalStatusCodeEnum.fromValue(eventStatus.name())))
-                .map(eventStatus -> retrieveSequence(statusCode))
+                .flatMap(eventStatus -> Mono.justOrEmpty(retrieveSequence(statusCode, deliveryFailureCause)))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("deliveryFailureCause %s is invalid", deliveryFailureCause))))
                 .map(sequenceList -> {
                     sequenceResponse.setSequence(sequenceList);
                     log.info("Successfully retrieved sequence for statusCode {} with {} elements", statusCode, sequenceList.size());
@@ -59,8 +63,18 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
         return paperTrackingsDAO.updateItem(trackingId, paperTrackings).then();
     }
 
-    private List<SequenceItem> retrieveSequence(String statusCode) {
+    private List<SequenceItem> retrieveSequence(String statusCode, String deliveryFailureCause) {
         SequenceConfig sequenceConfig = SequenceConfiguration.getConfig(statusCode);
+        List<String> deliveryFailureCauses = sequenceConfig.sequenceStatusCodes().stream()
+                .map(EventStatusCodeEnum::fromKey)
+                .flatMap(eventStatusCodeEnum -> eventStatusCodeEnum.getDeliveryFailureCauseList().stream().map(Enum::name))
+                .toList();
+
+        boolean hasFailureCause = StringUtils.isNotBlank(deliveryFailureCause);
+
+        if (CollectionUtils.isEmpty(deliveryFailureCauses) ? hasFailureCause : !deliveryFailureCauses.contains(deliveryFailureCause)) {
+            return null;
+        }
         return sequenceConfig.sequenceStatusCodes().stream()
                 .map(code -> {
                     SequenceItem item = new SequenceItem();

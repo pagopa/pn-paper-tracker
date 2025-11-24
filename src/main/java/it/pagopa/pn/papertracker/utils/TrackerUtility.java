@@ -213,19 +213,25 @@ public class TrackerUtility {
     }
 
 
-    public static EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String deliveryFailureCause) {
-        if (statusCodeToEvaluate.equalsIgnoreCase(RECAG003C.name()) || statusCodeToEvaluate.equalsIgnoreCase(RECRN002C.name())) {
-            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
-                return EventStatus.OK;
-            }
-            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
-                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
-                return EventStatus.KO;
-            }
-        }
-        return Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCodeToEvaluate))
-                .map(EventStatusCodeEnum::getStatus)
-                .orElse(null);
-    }
+    public static EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String deliveryFailureCause, String productType) {
 
+        EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(statusCodeToEvaluate);
+        if (Objects.isNull(statusCodeEnum)) {
+            return null;
+        }
+
+        if (!statusCodeEnum.getProductType().getValue().equalsIgnoreCase(productType) && statusCodeEnum.getProductType() != ProductType.RIR) {
+            return null;
+        }
+
+        if (StringUtils.isNotBlank(deliveryFailureCause) && (statusCodeEnum.equals(EventStatusCodeEnum.RECAG003C) || statusCodeEnum.equals(EventStatusCodeEnum.RECRN002C))) {
+            return switch (deliveryFailureCause) {
+                case "M02", "M05" -> EventStatus.OK;
+                case "M06", "M07", "M08", "M09" -> EventStatus.KO;
+                default -> statusCodeEnum.getStatus();
+            };
+        }
+
+        return statusCodeEnum.getStatus();
+    }
 }

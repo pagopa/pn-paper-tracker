@@ -203,6 +203,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/queryStatusCode'
         - $ref: '#/components/parameters/deliveryFailureCause'
+        - $ref: '#/components/parameters/queryProductType'
       responses:
         '200':
           description: Success
@@ -283,6 +284,12 @@ components:
       required: true
       schema:
         type: string
+    queryProductType:
+      in: query
+      name: productType
+      required: true
+      schema:
+          type: string
     deliveryFailureCause:
       in: query
       name: deliveryFailureCause

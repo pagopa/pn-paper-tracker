@@ -30,11 +30,38 @@ class NotificationReworkServiceImplTest {
     private PaperTrackingsDAO paperTrackingsDAO;
 
     @Test
+    void retrieveSequenceAndEventStatus_InvalidProductType() {
+        String statusCode = "RECRN005C";
+
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"890"))
+                .expectErrorMatches(throwable -> {
+                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        assertNotNull(ex.getProblem().getDetail());
+                        return ex.getProblem().getDetail().contains("statusCode RECRN005C is invalid");
+                    }
+                    return false;
+                });
+    }
+
+    @Test
+    void retrieveSequenceAndEventStatus_InvalidRIR() {
+        String statusCode = "RECRI003C";
+
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"AR"))
+                .expectErrorMatches(throwable -> {
+                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        assertNotNull(ex.getProblem().getDetail());
+                        return ex.getProblem().getDetail().contains("statusCode RECRN005C is invalid");
+                    }
+                    return false;
+                });
+    }
+
+    @Test
     void retrieveSequenceAndEventStatus_shouldReturnSequenceForValidStatusCode() {
         String statusCode = "RECRN005C";
-        String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -47,10 +74,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -58,9 +82,9 @@ class NotificationReworkServiceImplTest {
     @Test
     void retrieveSequenceAndEventStatus_shouldReturnSequenceForKOStatusCode() {
         String statusCode = "RECRN002F";
-        String deliveryFailureCause = "M02";
+        String deliveryFailureCause = "M01";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -78,11 +102,26 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
+    void retrieveSequenceAndEventStatus_shouldReturnSequenceForKOStatusCodeWithoutDeliveryFailureCause() {
+        String statusCode = "RECRN002F";
+
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"AR"))
+                .expectErrorMatches(throwable -> {
+                    if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        assertNotNull(ex.getProblem().getDetail());
+                        return ex.getProblem().getDetail().contains("deliveryFailureCause null is invalid");
+                    }
+                    return false;
+                })
+                .verify();
+    }
+
+    @Test
     void retrieveSequenceAndEventStatus_shouldReturnOKForRECRN002CWithM02() {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -104,7 +143,7 @@ class NotificationReworkServiceImplTest {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M05";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -117,9 +156,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -129,7 +166,7 @@ class NotificationReworkServiceImplTest {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M06";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -142,9 +179,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -154,7 +189,7 @@ class NotificationReworkServiceImplTest {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M07";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -167,9 +202,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -179,7 +212,7 @@ class NotificationReworkServiceImplTest {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M08";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -192,9 +225,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -204,7 +235,7 @@ class NotificationReworkServiceImplTest {
         String statusCode = "RECRN002C";
         String deliveryFailureCause = "M09";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause,"AR"))
                 .assertNext(response -> {
                     assertEquals(SequenceResponse.FinalStatusCodeEnum.KO, response.getFinalStatusCode());
                     assertNotNull(response.getSequence());
@@ -218,9 +249,7 @@ class NotificationReworkServiceImplTest {
                             assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
                         }
                     });
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                 })
                 .verifyComplete();
     }
@@ -228,11 +257,11 @@ class NotificationReworkServiceImplTest {
     @Test
     void retrieveSequenceAndEventStatus_shouldThrowExceptionForProgressStatusCode() {
         String progressStatusCode = "RECRN010";
-        String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(progressStatusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(progressStatusCode, null,"AR"))
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        assertNotNull(ex.getProblem().getDetail());
                         return ex.getProblem().getDetail().contains("statusCode RECRN010 is PROGRESS");
                     }
                     return false;
@@ -243,14 +272,11 @@ class NotificationReworkServiceImplTest {
     @Test
     void retrieveSequenceAndEventStatus_shouldVerifySequenceContent() {
         String statusCode = "RECRN005C";
-        String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"AR"))
                 .assertNext(response -> {
                     assertNotNull(response.getSequence());
-                    response.getSequence().forEach(item -> {
-                        assertTrue(StringUtils.hasText(item.getStatusCode()));
-                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
                     assertEquals(
                             SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
                             response.getSequence().size()
@@ -269,9 +295,10 @@ class NotificationReworkServiceImplTest {
         String invalidStatusCode = "INVALID";
         String deliveryFailureCause = "M02";
 
-        StepVerifier.create(service.retrieveSequenceAndEventStatus(invalidStatusCode, deliveryFailureCause))
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(invalidStatusCode, deliveryFailureCause,"AR"))
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
+                        assertNotNull(ex.getProblem().getDetail());
                         return ex.getProblem().getDetail().contains("statusCode INVALID is invalid");
                     }
                     return false;
