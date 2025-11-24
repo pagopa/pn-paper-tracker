@@ -31,7 +31,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class NotificationReworkServiceImpl implements NotificationReworkService {
 
-    private PaperTrackingsDAO paperTrackingsDAO;
+    private final PaperTrackingsDAO paperTrackingsDAO;
 
     private static final String ERROR_CODE_PAPER_TRACKER_BAD_REQUEST = "PN_PAPER_TRACKER_BAD_REQUEST";
 

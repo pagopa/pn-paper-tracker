@@ -115,25 +115,31 @@ public class OcrUtility {
 
     private PaperTrackings getPaperTrackingsToUpdate(OcrStatusEnum ocrStatusEnum, Event event, List<OcrRequest> ocrRequests) {
         PaperTrackings paperTracking = new PaperTrackings();
-
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(ocrStatusEnum);
-
-
-        if (ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
-            validationConfig.setOcrEnabled(ocrStatusEnum);
-            PaperStatus paperStatus = new PaperStatus();
-            paperTracking.setPaperStatus(paperStatus);
-            TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
-        } else {
-            ValidationFlow validationFlow = new ValidationFlow();
-            validationFlow.setOcrRequests(ocrRequests);
-            TrackerUtility.setNewStatus(paperTracking, event.getStatusCode(), BusinessState.AWAITING_OCR, PaperTrackingsState.AWAITING_OCR);
-            paperTracking.setValidationFlow(validationFlow);
-        }
         paperTracking.setValidationConfig(validationConfig);
 
+        switch (ocrStatusEnum) {
+            case DISABLED:
+                TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
+                break;
+            case DRY:
+                paperTracking.setValidationFlow(createValidationFlow(ocrRequests));
+                TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
+                break;
+            case RUN:
+                paperTracking.setValidationFlow(createValidationFlow(ocrRequests));
+                TrackerUtility.setNewStatus(paperTracking, event.getStatusCode(), BusinessState.AWAITING_OCR, PaperTrackingsState.AWAITING_OCR);
+                break;
+        }
+
         return paperTracking;
+    }
+
+    private ValidationFlow createValidationFlow(List<OcrRequest> ocrRequests) {
+        ValidationFlow validationFlow = new ValidationFlow();
+        validationFlow.setOcrRequests(ocrRequests);
+        return validationFlow;
     }
 
     private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId, String presignedUrl, DocumentTypeEnum documentType, Event event) {

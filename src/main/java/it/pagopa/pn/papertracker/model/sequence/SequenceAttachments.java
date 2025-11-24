@@ -23,7 +23,7 @@ public enum SequenceAttachments {
     RECAG001B(Set.of("23L")),
     RECAG002B(Set.of("23L","?CAN")),
     RECAG003B(Set.of("Plico")),
-    RECAG003E(Set.of("Plico")),
+    RECAG003E(Set.of("Plico","Indagine")),
     RECAG011B(Set.of("23L","ARCAD","CAD")),
     RECAG005B(Set.of("23L","ARCAD","CAD")),
     RECAG006B(Set.of("23L","ARCAD","CAD")),

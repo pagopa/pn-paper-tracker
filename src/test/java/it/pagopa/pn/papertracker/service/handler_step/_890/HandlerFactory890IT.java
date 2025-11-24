@@ -224,14 +224,14 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                     });
             }
             case IRREPERIBILITA_ASSOLUTA -> {
-                    assertEquals(5, list.size());
-                    assertContainsStatus(list, List.of("CON080", "CON020", "RECAG003D", "RECAG003E", "RECAG003F"));
+                    assertEquals(6, list.size());
+                    assertContainsStatus(list, List.of("CON080", "CON020", "RECAG003D", "RECAG003E","RECAG003E","RECAG003F"));
                     assertSameRegisteredLetter(list, 2, 3, 4);
                     list.forEach(e -> {
                         if (is(e, "RECAG003D")) { assertNoAttach(e);assertProgress(e);assertNotNull(e.getDeliveryFailureCause());}
                         if (is(e, "CONO20")) {assertEquals(1, e.getAttachments().size());assertProgress(e);}
                         if (is(e, "CON080")) {assertNoAttach(e);assertProgress(e);}
-                        if (is(e, "RECAG003E")) {assertAttach(e, "Plico");assertProgress(e);}
+                        if (is(e, "RECAG003E")) {assertAttachAnyOf(e, "Plico", "Indagine");assertProgress(e);}
                         if (is(e, "RECAG003F")) {assertNoAttach(e);assertKo(e);assertNotNull(e.getDeliveryFailureCause());}
                     });
             }
