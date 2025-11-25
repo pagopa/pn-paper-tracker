@@ -307,8 +307,16 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         log.info("Beginning validation for required status codes for events : {}", events);
 
         Set<String> eventStatusCodes = events.stream().map(Event::getStatusCode).collect(Collectors.toSet());
-        if (!eventStatusCodes.containsAll(requiredStatusCodes)) {
-            return generateCustomError("Necessary status code not found in events", context, paperTrackings, ErrorCategory.STATUS_CODE_ERROR, strictFinalEventValidation);
+        Set<String> missingStatusCodes = new HashSet<>(requiredStatusCodes);
+        missingStatusCodes.removeAll(eventStatusCodes);
+        if (!missingStatusCodes.isEmpty()) {
+            return generateCustomError(
+                    "Necessary status code not found in events: " + missingStatusCodes,
+                    context,
+                    paperTrackings,
+                    ErrorCategory.STATUS_CODE_ERROR,
+                    strictFinalEventValidation
+            );
         }
         return Mono.just(events);
     }

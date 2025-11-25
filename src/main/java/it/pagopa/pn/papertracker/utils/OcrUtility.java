@@ -78,7 +78,7 @@ public class OcrUtility {
                 .flatMap(attachmentEntry ->  processAttachments(attachmentEntry, paperTracking, event, ocrRequests, now))
                 .collectList()
                 .flatMap(unused -> paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(ocrStatusEnum, event, ocrRequests)))
-                .doOnNext(unused -> log.info("Demat validation completed for trackingId={}", paperTracking.getTrackingId()))
+                .doOnNext(unused -> log.info("OCR validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .then();
     }
 
@@ -124,8 +124,8 @@ public class OcrUtility {
                 TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
                 break;
             case DRY:
-                paperTracking.setValidationFlow(createValidationFlow(ocrRequests));
                 TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());
+                paperTracking.getValidationFlow().setOcrRequests(ocrRequests);
                 break;
             case RUN:
                 paperTracking.setValidationFlow(createValidationFlow(ocrRequests));
