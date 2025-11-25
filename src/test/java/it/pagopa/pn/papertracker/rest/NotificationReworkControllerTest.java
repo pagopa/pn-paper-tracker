@@ -39,7 +39,7 @@ class NotificationReworkControllerTest {
         when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, "AR"))
                 .thenReturn(Mono.just(response));
 
-        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause, "AR", exchange);
+        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, "AR", deliveryFailureCause, exchange);
 
         StepVerifier.create(result)
                 .expectNextMatches(entity -> entity.getStatusCode().is2xxSuccessful()
@@ -57,7 +57,7 @@ class NotificationReworkControllerTest {
         when(notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, "AR"))
                 .thenReturn(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is invalid", statusCode))));
 
-        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, deliveryFailureCause,"AR", exchange);
+        Mono<ResponseEntity<SequenceResponse>> result = controller.retrieveSequenceAndFinalStatus(statusCode, "AR", deliveryFailureCause, exchange);
 
         StepVerifier.create(result)
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerBadRequestException )

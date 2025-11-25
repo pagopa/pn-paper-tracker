@@ -18,7 +18,7 @@ public class NotificationReworkController implements NotificationReworkApi {
     private final NotificationReworkService notificationReworkService;
 
     @Override
-    public Mono<ResponseEntity<SequenceResponse>> retrieveSequenceAndFinalStatus(String statusCode, String deliveryFailureCause, String productType, final ServerWebExchange exchange) {
+    public Mono<ResponseEntity<SequenceResponse>> retrieveSequenceAndFinalStatus(String statusCode, String productType, String deliveryFailureCause, final ServerWebExchange exchange) {
         return notificationReworkService.retrieveSequenceAndEventStatus(statusCode, deliveryFailureCause, productType)
                 .map(ResponseEntity::ok);
     }
