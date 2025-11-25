@@ -832,9 +832,11 @@ Resources:
               - Sid: putEvents
                 Action:
                   - sqs:ChangeMessageVisibility
+                  - sqs:ChangeMessageVisibilityBatch
                   - sqs:GetQueueAttributes
                   - sqs:GetQueueUrl
                   - sqs:SendMessage
+                  - sqs:SendMessageBatch
                 Effect: Allow
                 Resource:
                   - !Ref ExternalChannelToReworkEventValidationQueueARN
