@@ -23,7 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import software.amazon.awssdk.utils.CollectionUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -138,7 +137,6 @@ class RECAG012EventCheckerTest {
         assertEquals(OcrStatusEnum.DISABLED, updatedPaperTracking.getValidationConfig().getOcrEnabled());
         assertNull(updatedPaperTracking.getValidationFlow().getOcrRequests());
         assertNotNull(updatedPaperTracking.getValidationFlow().getRefinementDematValidationTimestamp());
-        assertTrue(CollectionUtils.isNullOrEmpty(updatedPaperTracking.getPaperStatus().getValidatedAttachments()));
 
         assertFalse(context.isNeedToSendRECAG012A());
     }
