@@ -635,7 +635,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
-          NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks"
+          NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks
           NOTIFICATION_REWORK_EVENTS_ERROR_TABLE: !Ref NotificationReworkEventsErrorTableName
           INVALID_STATUS_CODE: !Ref NotificationReworkInvalidStatusCode
           EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueName
