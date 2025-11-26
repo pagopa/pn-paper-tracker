@@ -22,7 +22,7 @@ function checkExpected(reworkEntry, statusCode, attachments, deliveryFailureCaus
         return reworkEntry.deliveryFailureCause && reworkEntry.deliveryFailureCause === deliveryFailureCause;
      }
 
-     return false;
+     return true;
    });
 }
 

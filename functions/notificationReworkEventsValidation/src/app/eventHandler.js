@@ -69,7 +69,7 @@ const processRecord = async (record) => {
     const reworkId = reworkEntry?.reworkId;
     let continueProcessing = await checkStatusCode(messageId, reworkEntry, analogMail, statusCode, statusDateTime, attachments, deliveryFailureCause);
     if(continueProcessing){
-        const attributes = createMessageAttributes(record.messageAttributes, reworkId);
+        const attributes = await createMessageAttributes(record.messageAttributes, reworkId);
         await sendToQueue(body, attributes);
         const receivedStatusCodeEntry = buildReceivedStatusCodeEntry(statusCode, attachments, statusDateTime);
         await appendReceivedStatusCode(iun, reworkId, receivedStatusCodeEntry, analogMail);
