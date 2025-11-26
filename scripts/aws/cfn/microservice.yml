@@ -226,6 +226,10 @@ Parameters:
     Type: String
     Description: 'Pull external-channel messages from this Queue'
 
+  ExternalChannels2PaperChannelQueueURL:
+    Type: String
+    Description: 'Pull external-channel messages from this Queue'
+
   ExternalChannelsToPaperChannelDryrunQueueName:
     Type: String
     Description: 'Write paper-channel messages to this Queue'
@@ -638,7 +642,7 @@ Resources:
           NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks
           NOTIFICATION_REWORK_EVENTS_ERROR_TABLE: !Ref NotificationReworkEventsErrorTableName
           INVALID_STATUS_CODE: !Ref NotificationReworkInvalidStatusCode
-          EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueName
+          EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueURL
       TracingConfig:
         Mode: Active
       Layers:
@@ -681,6 +685,8 @@ Resources:
             Resource:
               - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks/*"
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworkEventsError
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworkEventsError/*"
           - Effect: Allow
             Action:
               - sqs:ChangeMessageVisibility
