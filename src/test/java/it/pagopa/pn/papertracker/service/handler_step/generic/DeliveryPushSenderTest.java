@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
@@ -121,6 +122,9 @@ class DeliveryPushSenderTest {
         // Arrange
         SendEvent event = getSendEvent();
         HandlerContext context = new HandlerContext();
+        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
+        paperProgressStatusEvent.setStatusCode("RECRN001C");
+        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
         context.setFinalStatusCode("RECRN001C");
         PaperTrackings paperTrackings = new PaperTrackings();
         context.setPaperTrackings(paperTrackings);

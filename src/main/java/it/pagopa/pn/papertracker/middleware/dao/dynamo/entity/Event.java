@@ -27,6 +27,7 @@ public class Event {
     public static final String COL_DRY_RUN = "dryRun";
     public static final String COL_IUN = "iun";
     public static final String COL_CREATED_AT = "createdAt";
+    public static final String COL_REWORK_ID = "reworkId";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
@@ -48,7 +49,7 @@ public class Event {
     private Instant statusTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;
@@ -67,5 +68,8 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
     private Instant createdAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
+    private String notificationReworkId;
 
 }

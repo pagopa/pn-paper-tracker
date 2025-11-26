@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -21,19 +21,13 @@ import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutput
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -60,8 +54,6 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
 
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
-    @Autowired
-    private SequenceConfiguration sequenceConfiguration;
     @Autowired
     private PaperTrackingsDAO paperTrackingsDAO;
     @Autowired
@@ -118,7 +110,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -161,7 +153,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());

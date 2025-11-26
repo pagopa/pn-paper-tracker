@@ -1,5 +1,7 @@
 package it.pagopa.pn.papertracker.middleware.dao;
 
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.OcrRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,7 +18,7 @@ public interface PaperTrackingsDAO {
 
     Mono<PaperTrackings> updateItem(String requestId, PaperTrackings paperTrackings);
 
-    Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId);
+    Mono<PaperTrackings> updateOcrRequestsAndValidatedAttachments(Integer ocrRequestIndex, List<Attachment> validatedAttachments, String trackingId);
 
     Flux<PaperTrackings> retrieveAllByTrackingIds(List<String> trackingIds);
 }

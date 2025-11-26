@@ -6,9 +6,11 @@ import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -35,8 +37,7 @@ public class OcrEventHandler {
         String processName = "processOcrResponseMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, ocrResultMessage.getCommandId());
         log.logStartingProcess(processName);
-
-        MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByOcrRequestId(ocrResultMessage.getCommandId())
+        MDCUtils.addMDCToContextAndExecute(paperTrackingsDAO.retrieveEntityByTrackingId(TrackerUtility.getParsedOcrCommandId(ocrResultMessage.getCommandId())[0])
                         .flatMap(paperTrackings -> callOcrResponseHandler(paperTrackings, ocrResultMessage))
                         .onErrorResume(PnPaperTrackerValidationException.class, e -> paperTrackerExceptionHandler.handleInternalException(e, null))
                         .then())
@@ -45,7 +46,7 @@ public class OcrEventHandler {
 
     private Mono<Void> callOcrResponseHandler(PaperTrackings paperTrackings, OcrDataResultPayload ocrResultMessage) {
         HandlerContext context = buildContext(paperTrackings, ocrResultMessage);
-        return handlersRegistry.handleEvent(paperTrackings.getProductType(), EventTypeEnum.OCR_RESPONSE_EVENT, context);
+        return handlersRegistry.handleEvent(ProductType.fromValue(paperTrackings.getProductType()), EventTypeEnum.OCR_RESPONSE_EVENT, context);
     }
 
     private HandlerContext buildContext(PaperTrackings paperTrackings,

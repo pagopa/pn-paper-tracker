@@ -58,6 +58,17 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogGroupPrefix: /aws/lambda
 
+  NotificationReworkEventsValidationLambdaLogGroup:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
+      Parameters:
+        LogGroupName: !Sub ${ProjectName}-NotificationReworkEventsValidationLambda
+        LogGroupRetention: !Ref LogRetention
+        LogGroupPrefix: /aws/lambda
+
   PaperTrackingsErrorsTable:
     Type: AWS::DynamoDB::Table
     UpdateReplacePolicy: Retain
@@ -111,8 +122,6 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "trackingId"
           AttributeType: "S"
-        - AttributeName: "ocrRequestId"
-          AttributeType: "S"
         - AttributeName: "attemptId"
           AttributeType: "S"
         - AttributeName: "pcRetry"
@@ -121,12 +130,6 @@ Resources:
         - AttributeName: "trackingId"
           KeyType: "HASH"
       GlobalSecondaryIndexes:
-        - IndexName: "ocrRequestId-index"
-          KeySchema:
-            - AttributeName: "ocrRequestId"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
         - IndexName: "attemptId-pcRetry-index"
           KeySchema:
             - AttributeName: "attemptId"
@@ -145,6 +148,26 @@ Resources:
         StreamViewType: NEW_IMAGE
       KinesisStreamSpecification:
         StreamArn: !Ref CdcKinesisSourceStreamArn
+
+  NotificationReworkEventsErrorTable:
+    Type: AWS::DynamoDB::Table
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TableName: !Sub '${ProjectName}-NotificationReworkEventsError'
+      AttributeDefinitions:
+        - AttributeName: "iun"
+          AttributeType: "S"
+        - AttributeName: "reworkId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "iun"
+          KeyType: "HASH"
+        - AttributeName: "reworkId"
+          KeyType: "RANGE"
+      BillingMode: "PAY_PER_REQUEST"
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
 
   PnOcrOutputsQueue:
     Type: AWS::CloudFormation::Stack
@@ -196,12 +219,28 @@ Resources:
         VisibilityTimeout: 60
         DelaySeconds: 1
 
+  ExternalChannelToReworkEventValidationQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-external_channel_to_rework_event_validation'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 1800
+        DelaySeconds: 1
+
 Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
 
   PaperTrackerQueueProxyLambdaName:
     Value: !Sub ${ProjectName}-paper-tracker-QueueProxy
+
+  # Lambda functions
+  NotificationReworkEventsValidationLambdaName:
+    Value: !Sub ${ProjectName}-NotificationReworkEventsValidationLambda
     
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors
@@ -224,6 +263,14 @@ Outputs:
     Description: ARN of dynamodb table containing trackings
     Value: !Sub '${PaperTrackingsTable.Arn}'
 
+  NotificationReworkEventsErrorTableName:
+    Description: Name of dynamodb table containing rework events errors
+    Value: !Ref NotificationReworkEventsErrorTable
+
+  NotificationReworkEventsErrorTableArn:
+    Description: ARN of dynamodb table containing rework events errors
+    Value: !Sub '${NotificationReworkEventsErrorTable.Arn}'
+
   PnOcrOutputsQueueName:
     Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
   PnOcrOutputsQueueARN:
@@ -235,6 +282,11 @@ Outputs:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
   ExternalChannelToPaperTrackerQueueARN:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueARN
+
+  ExternalChannelToReworkEventValidationQueueName:
+    Value: !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueName
+  ExternalChannelToReworkEventValidationQueueARN:
+    Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueARN
 
   UninitializedShipmentDryRunQueueName:
     Value: !GetAtt UninitializedShipmentDryRunQueue.Outputs.QueueName

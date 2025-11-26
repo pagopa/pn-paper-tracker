@@ -8,13 +8,12 @@ import it.pagopa.pn.papertracker.mapper.SendEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
-import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -48,8 +47,8 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(extractFinalEvent(context))
-                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
+        return Mono.just(TrackerUtility.extractEventFromContext(context))
+                .doOnNext(event -> context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
                 .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
@@ -60,11 +59,14 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            String eventStatus = evaluateStatusCodeAndRetrieveStatus(statusCode, context.getPaperTrackings()).name();
+            String eventStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRN002C.name(), statusCode, context.getPaperTrackings()).name();
             return addEventToSend(context, finalEvent, eventStatus);
         }
 
-        List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
+        List<Event> validatedEvents = TrackerUtility.validatedEvents(
+                paperTrackings.getPaperStatus().getValidatedEvents(),
+                paperTrackings.getEvents()
+        );
         EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
@@ -73,20 +75,6 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         return differenceGreater
                 ? prepareFinalEventAndPNRN012toSend(context, finalEvent, eventRECRN010)
                 : handleNoDifferenceGreater(context, paperTrackings, statusCode, finalEvent, eventRECRN00XA, eventRECRN010);
-    }
-
-    private EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCode, PaperTrackings paperTrackings) {
-        String deliveryFailureCause = paperTrackings.getPaperStatus().getDeliveryFailureCause();
-        if(RECRN002C.name().equalsIgnoreCase(statusCode)) {
-            if (StringUtils.equals("M02", deliveryFailureCause) || StringUtils.equals("M05", deliveryFailureCause)) {
-                return EventStatus.OK;
-            }
-            if (StringUtils.equals("M06", deliveryFailureCause) || StringUtils.equals("M07", deliveryFailureCause) ||
-                    StringUtils.equals("M08", deliveryFailureCause) || StringUtils.equals("M09", deliveryFailureCause)) {
-               return EventStatus.KO;
-            }
-        }
-        return EventStatusCodeEnum.fromKey(statusCode).getStatus();
     }
 
     private Mono<Void> handleNoDifferenceGreater(HandlerContext context,
@@ -173,10 +161,13 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      * @see it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()
      */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(
-                Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+        LocalDate romeDate1 = toRomeDate(instant1);
+        LocalDate romeDate2 = toRomeDate(instant2);
+        Duration result = pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.ofDays(ChronoUnit.DAYS.between(romeDate1, romeDate2))
                 : Duration.between(instant1, instant2);
+        log.info("Duration between dates i1={} i2={} result={}",instant1, instant2, result);
+        return result;
     }
 
     /**

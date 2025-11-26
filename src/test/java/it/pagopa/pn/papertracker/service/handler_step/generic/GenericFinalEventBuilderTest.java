@@ -50,7 +50,7 @@ class GenericFinalEventBuilderTest {
         genericFinalEventBuilder = new GenericFinalEventBuilder(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
@@ -83,7 +83,7 @@ class GenericFinalEventBuilderTest {
         event3.setId(EVENT_ID);
 
         paperTrackings.setEvents(List.of(event, event1, event2, event3));
-        paperTrackings.getPaperStatus().setValidatedEvents(List.of(event, event1, event2, event3));
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(EVENT_ID + "1", EVENT_ID + "2", EVENT_ID));
         handlerContext.setPaperTrackings(paperTrackings);
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));

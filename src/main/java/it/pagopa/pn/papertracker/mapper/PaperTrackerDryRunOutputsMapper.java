@@ -48,40 +48,6 @@ public class PaperTrackerDryRunOutputsMapper {
         return dryRunOutput;
     }
 
-    public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
-
-        PaperTrackerOutput dto = new PaperTrackerOutput();
-
-        dto.setRegisteredLetterCode(entity.getRegisteredLetterCode());
-        dto.setStatusCode(entity.getStatusCode());
-        dto.setStatusDetail(entity.getStatusDetail());
-        dto.setStatusDescription(entity.getStatusDescription());
-        dto.setStatusDateTime(entity.getStatusDateTime());
-        dto.setDeliveryFailureCause(entity.getDeliveryFailureCause());
-        dto.setDiscoveredAddress(entity.getAnonymizedDiscoveredAddressId());
-        dto.setClientRequestTimeStamp(entity.getClientRequestTimestamp());
-
-        if (entity.getAttachments() != null) {
-            List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> attachmentsDto = getAttachments(entity);
-            dto.setAttachments(attachmentsDto);
-        }
-
-        return dto;
-    }
-
-    private static List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> getAttachments(PaperTrackerDryRunOutputs entity) {
-        List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> attachmentsDto = new ArrayList<>();
-        for (it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment att : entity.getAttachments()) {
-            it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment attDto = new it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment();
-            attDto.setId(att.getId());
-            attDto.setDocumentType(att.getDocumentType());
-            attDto.setUrl(att.getUri());
-            attDto.setDate(att.getDate());
-            attachmentsDto.add(attDto);
-        }
-        return attachmentsDto;
-    }
-
     private static Attachment buildAttachmentForExternalChannelOutputEvent(AttachmentDetails attachment) {
         Attachment attachmentEntity = new Attachment();
         attachmentEntity.setId(attachment.getId());
@@ -89,5 +55,9 @@ public class PaperTrackerDryRunOutputsMapper {
         attachmentEntity.setDocumentType(attachment.getDocumentType());
         attachmentEntity.setUri(attachment.getUrl());
         return attachmentEntity;
+    }
+
+    public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
+        return SmartMapper.mapToClass(entity, PaperTrackerOutput.class);
     }
 }

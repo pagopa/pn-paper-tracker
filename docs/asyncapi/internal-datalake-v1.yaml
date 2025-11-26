@@ -81,3 +81,8 @@ components:
               type: string
               description: Description of the validation status
               example: "The document has been validated"
+            predictedRefinementType:
+                type: string
+                enum:
+                  - PRE10
+                  - POST10

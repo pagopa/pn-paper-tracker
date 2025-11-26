@@ -34,13 +34,15 @@ public class MetadataUpserter implements HandlerStep {
         return Mono.just(context)
                 .flatMap(this::discoveredAddressAnonimization)
                 .map(handlerContext -> PaperProgressStatusEventMapper.toPaperTrackings(
+                        context.getReworkId(),
                         context.getPaperProgressStatusEvent(),
                         context.getAnonymizedDiscoveredAddressId(),
                         context.getEventId(),
                         context.isDryRunEnabled(),
                         TrackerUtility.checkIfIsFinalDemat(context.getPaperProgressStatusEvent().getStatusCode()),
                         TrackerUtility.checkIfIsP000event(context.getPaperProgressStatusEvent().getStatusCode()),
-                        TrackerUtility.checkIfIsInternalEvent(context.getPaperProgressStatusEvent().getStatusCode())
+                        TrackerUtility.checkIfIsInternalEvent(context.getPaperProgressStatusEvent().getStatusCode()),
+                        TrackerUtility.checkIfIsRecag012event(context.getPaperProgressStatusEvent().getStatusCode())
                 ))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(
                         context.getPaperProgressStatusEvent().getRequestId(),

@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.config.SequenceConfiguration;
+import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
@@ -59,8 +59,6 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
     @Autowired
     private ExternalChannelHandler externalChannelHandler;
     @Autowired
-    private SequenceConfiguration sequenceConfiguration;
-    @Autowired
     private PaperTrackingsDAO paperTrackingsDAO;
     @Autowired
     private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
@@ -113,7 +111,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
@@ -152,7 +150,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
@@ -192,7 +190,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -236,7 +234,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
 
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, eventId);
 
         // Assert
         verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));

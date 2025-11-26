@@ -57,7 +57,7 @@ class FinalEventBuilderArTest {
         finalEventBuilder = new FinalEventBuilderAr(cfg, dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
@@ -66,9 +66,8 @@ class FinalEventBuilderArTest {
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         Event event = new Event();
-        event.setStatusCode("RECRN005A");
-        event.setStatusTimestamp(now);
         event.setRequestTimestamp(now);
+        event.setStatusTimestamp(Instant.now());
         event.setId(EVENT_ID + "1");
 
         Event event1 = new Event();
@@ -83,37 +82,35 @@ class FinalEventBuilderArTest {
         event2.setRequestTimestamp(now);
         event2.setId(EVENT_ID);
 
-        Event event5 = new Event();
-        event5.setStatusCode("RECRN004C");
-        event5.setStatusTimestamp(now);
-        event5.setRequestTimestamp(now);
-        event5.setId(EVENT_ID + "5");
-
-        Event event6 = new Event();
-        event6.setStatusCode("RECRN003C");
-        event6.setStatusTimestamp(now);
-        event6.setRequestTimestamp(now);
-        event6.setId(EVENT_ID + "6");
-
         Event event3 = new Event();
-        event3.setStatusCode("RECRN010");
-        event3.setStatusTimestamp(Instant.now());
-        event3.setRequestTimestamp(Instant.now());
-        event3.setId(EVENT_ID + "3");
-
-        Event event7 = new Event();
-        event7.setStatusCode("RECRN002D");
-        event7.setStatusTimestamp(Instant.now());
-        event7.setDeliveryFailureCause("M02");
-        event7.setRequestTimestamp(Instant.now());
-        event7.setId(EVENT_ID + "4");
+        event3.setStatusCode("RECRN004C");
+        event3.setStatusTimestamp(now);
+        event3.setRequestTimestamp(now);
+        event3.setId(EVENT_ID + "5");
 
         Event event4 = new Event();
-        event4.setStatusCode("RECRN002F");
-        event4.setStatusTimestamp(Instant.now());
-        event4.setRequestTimestamp(Instant.now());
-        event4.setId(EVENT_ID + "4");
+        event4.setStatusCode("RECRN003C");
+        event4.setStatusTimestamp(now);
+        event4.setRequestTimestamp(now);
+        event4.setId(EVENT_ID + "6");
 
+        Event event5 = new Event();
+        event5.setStatusCode("RECRN002D");
+        event5.setStatusTimestamp(Instant.now());
+        event5.setDeliveryFailureCause("M02");
+        event5.setRequestTimestamp(Instant.now());
+        event5.setId(EVENT_ID + "7");
+
+        Event event6 = new Event();
+        event6.setStatusCode("RECRN002F");
+        event6.setStatusTimestamp(Instant.now());
+        event6.setRequestTimestamp(Instant.now());
+        event6.setId(EVENT_ID + "4");
+
+        Event event7 = new Event();
+        event7.setStatusCode("RECRN010");
+        event7.setRequestTimestamp(Instant.now());
+        event7.setId(EVENT_ID + "3");
 
         paperTrackings.setEvents(List.of(event, event1, event2, event3, event4, event5, event6, event7));
         handlerContext.setPaperTrackings(paperTrackings);
@@ -122,7 +119,9 @@ class FinalEventBuilderArTest {
     @Test
     void buildFinalEvent_stockStatus_differenceGreater_RECRN005C() {
         // Arrange
-        setValidatedEvents(RECRN005A.name(), Instant.now().minus(40, ChronoUnit.DAYS));
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN005A.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now().minus(40, ChronoUnit.DAYS));
+        setValidatedEvents(EVENT_ID + "1");
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN005C.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID);
@@ -145,7 +144,9 @@ class FinalEventBuilderArTest {
     @Test
     void buildFinalEvent_stockStatus_differenceMinor_RECRN005C() {
         // Arrange
-        setValidatedEvents(RECRN005A.name(), Instant.now().minus(25, ChronoUnit.DAYS));
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN005A.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now().minus(25, ChronoUnit.DAYS));
+        setValidatedEvents(EVENT_ID + "1");
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN005C.name());
         handlerContext.setEventId(EVENT_ID);
         handlerContext.setPaperProgressStatusEvent(finalEvent);
@@ -160,7 +161,7 @@ class FinalEventBuilderArTest {
                     Assertions.assertNotNull(ex.getError());
                     Assertions.assertEquals(paperTrackings.getTrackingId(), ex.getError().getTrackingId());
                     Assertions.assertEquals(finalEvent.getStatusCode(), ex.getError().getEventThrow());
-                    Assertions.assertEquals(ProductType.valueOf(finalEvent.getProductType()), ex.getError().getProductType());
+                    Assertions.assertEquals(finalEvent.getProductType(), ex.getError().getProductType());
                     Assertions.assertEquals(ErrorCause.GIACENZA_DATE_ERROR, ex.getError().getDetails().getCause());
                 })
                 .verify();
@@ -172,13 +173,14 @@ class FinalEventBuilderArTest {
     @Test
     void buildFinalEvent_stockStatus_differenceMinor_RECRN003C() {
         // Arrange
-        setValidatedEvents(RECRN003A.name(), Instant.now().minus(5, ChronoUnit.DAYS));
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN003A.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now().minus(5, ChronoUnit.DAYS));
+        setValidatedEvents(EVENT_ID + "1");
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN003C.name());
         handlerContext.setEventId(EVENT_ID + "6");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
-
 
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
@@ -193,13 +195,13 @@ class FinalEventBuilderArTest {
     @Test
     void buildFinalEvent_stockStatus_differenceGreater_enableTruncatedDate_RECRN004C() {
         // Arrange
-        Instant statusTimestamp = Instant.now().minus(13, ChronoUnit.DAYS);
-        setValidatedEvents(RECRN004A.name(), statusTimestamp);
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN004A.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now().minus(13, ChronoUnit.DAYS));
+        setValidatedEvents(EVENT_ID + "1");
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN004C.name());
         handlerContext.setEventId(EVENT_ID + "5");
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
-
 
         when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
         when(cfg.isEnableTruncatedDateForRefinementCheck()).thenReturn(true);
@@ -219,7 +221,9 @@ class FinalEventBuilderArTest {
     @Test
     void buildFinalEvent_stockStatusFalse() {
         // Arrange
-        setValidatedEvents(RECRN002D.name(), Instant.now());
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN002D.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now());
+        setValidatedEvents(EVENT_ID + "1");
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN002F.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID + "4");
@@ -235,25 +239,8 @@ class FinalEventBuilderArTest {
         Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
-    private void setValidatedEvents(String statusCode, Instant statusTimestamp) {
-        Event event = new Event();
-        event.setRequestTimestamp(Instant.now());
-        event.setStatusCode(statusCode);
-        event.setStatusTimestamp(Instant.now());
-        event.setProductType(ProductType.AR);
-        event.setDeliveryFailureCause("M02");
-        Attachment attachment = new Attachment();
-        attachment.setId("attachment-id-1");
-        attachment.setDocumentType("DOCUMENT_TYPE");
-        attachment.setUri("http://example.com/document.pdf");
-        attachment.setDate(Instant.now());
-        event.setAttachments(List.of(attachment));
-        Event event2 = new Event();
-        event2.setRequestTimestamp(Instant.now());
-        event2.setStatusCode(RECRN010.name());
-        event2.setStatusTimestamp(statusTimestamp);
-        List<Event> validatedEvents = List.of(event, event2);
-        paperTrackings.getPaperStatus().setValidatedEvents(validatedEvents);
+    private void setValidatedEvents(String eventId) {
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(eventId, EVENT_ID + 3));
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {

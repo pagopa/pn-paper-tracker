@@ -51,7 +51,7 @@ public class PaperTrackingsErrors {
     private String eventIdThrow;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TYPE)}))
     private ErrorType type;
