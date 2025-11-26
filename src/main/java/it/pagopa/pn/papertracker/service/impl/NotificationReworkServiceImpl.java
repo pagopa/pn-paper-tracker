@@ -50,7 +50,8 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
                     sequenceResponse.setSequence(sequenceList);
                     log.info("Successfully retrieved sequence for statusCode {} with {} elements", statusCode, sequenceList.size());
                     return sequenceResponse;
-                });
+                })
+                .doOnError(throwable -> log.error("Error retrieving sequence for statusCode {}: {}", statusCode, throwable.getMessage()));
     }
 
     @Override

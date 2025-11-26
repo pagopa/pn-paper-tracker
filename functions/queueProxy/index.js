@@ -92,9 +92,16 @@ export const createMessageAttributes = (originalAttributes = {}, addDryRun = fal
   const attributes = {};
 
   // Copia attributi originali
-  for (const [key, attr] of Object.entries(originalAttributes)) {
-    attributes[key] = { ...attr };
-  }
+    // Copia attributi originali
+    for (const [key, attr] of Object.entries(originalAttributes)) {
+      // Saltiamo reworkId qui perché verrà sovrascritto esplicitamente dopo
+      if (key === 'dryRun') continue;
+
+      attributes[key] = {
+        DataType: attr.dataType || attr.DataType || 'String', // Gestisce sia input camelCase che PascalCase
+        StringValue: attr.stringValue || attr.StringValue
+      };
+    }
 
   // Aggiunge dryRun se richiesto
   if (addDryRun) {
