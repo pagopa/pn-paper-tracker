@@ -334,6 +334,10 @@ Parameters:
     Type: String
     Description: 'ARN of the SQS queue where external channel rework validation events are sent'
 
+  ExternalChannelToReworkEventValidationQueueURL:
+    Type: String
+    Description: 'URL of the SQS queue where external channel rework validation events are sent'
+
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxyLambdaName:
     Type: String
@@ -840,3 +844,20 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Ref ExternalChannelToReworkEventValidationQueueARN
+
+  ExternalChannelToReworkPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref ExternalChannelToReworkEventValidationQueueURL
+      PolicyDocument:
+        Statement:
+          - Sid: "SendEventsToDLQ"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "events.amazonaws.com"
+            Action:
+              - "SQS:SendMessage"
+            Resource:
+              - !Ref ExternalChannelToReworkEventValidationQueueARN
