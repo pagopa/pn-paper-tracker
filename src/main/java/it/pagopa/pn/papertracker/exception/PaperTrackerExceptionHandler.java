@@ -39,7 +39,7 @@ public class PaperTrackerExceptionHandler {
             return Mono.error(ex);
         }else if(ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory())){
             log.error("Max retries reached for status code error, inserting error and updating PaperTrackings state to KO for trackingId: {}", paperTrackingsErrors.getTrackingId());
-            return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors).then(Mono.error(ex));
+            return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors);
         }
         return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors);
     }

@@ -62,7 +62,7 @@ class PaperTrackerExceptionHandlerTest {
         Mono<Void> response = exceptionHandler.handleInternalException(exception, 1L);
         // ASSERT
         StepVerifier.create(response)
-                .verifyError(PnPaperTrackerValidationException.class);;
+                .verifyError(PnPaperTrackerValidationException.class);
         verify(paperTrackerErrorService, times(0)).insertPaperTrackingsErrors(exception.getError());
 
     }
@@ -87,7 +87,7 @@ class PaperTrackerExceptionHandlerTest {
         Mono<Void> response = exceptionHandler.handleInternalException(exception, 5L);
         // ASSERT
         StepVerifier.create(response)
-                .verifyError(PnPaperTrackerValidationException.class);
+                .verifyComplete();
         verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(exception.getError());
     }
 
