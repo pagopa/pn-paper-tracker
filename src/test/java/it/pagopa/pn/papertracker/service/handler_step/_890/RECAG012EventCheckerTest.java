@@ -296,6 +296,7 @@ class RECAG012EventCheckerTest {
         event.setStatusCode(statusCode);
         event.setProductType(ProductType._890.getValue());
         event.setId(eventId);
+        event.setRegisteredLetterCode("RL123");
         event.setStatusTimestamp(Instant.now());
         if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();
