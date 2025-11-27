@@ -95,6 +95,7 @@ class RECAG012EventCheckerTest {
         assertNotNull(pushedEventPayload.getData().getDetails().getNotificationDate());
         assertNull(pushedEventPayload.getData().getDetails().getDeliveryFailureCause());
         assertEquals("RECAG012", pushedEventPayload.getData().getDetails().getDeliveryDetailCode());
+        assertNull(pushedEventPayload.getData().getDetails().getDeliveryAttemptDate());
 
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
@@ -215,6 +216,7 @@ class RECAG012EventCheckerTest {
         assertNotNull(pushedEventPayload.getData().getDetails().getNotificationDate());
         assertNull(pushedEventPayload.getData().getDetails().getDeliveryFailureCause());
         assertEquals("RECAG012", pushedEventPayload.getData().getDetails().getDeliveryDetailCode());
+        assertNull(pushedEventPayload.getData().getDetails().getDeliveryAttemptDate());
 
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
@@ -262,6 +264,7 @@ class RECAG012EventCheckerTest {
         assertNotNull(firstPushedEventPayload.getData().getDetails().getNotificationDate());
         assertNull(firstPushedEventPayload.getData().getDetails().getDeliveryFailureCause());
         assertEquals("RECAG012", firstPushedEventPayload.getData().getDetails().getDeliveryDetailCode());
+        assertNull(firstPushedEventPayload.getData().getDetails().getDeliveryAttemptDate());
 
         assertEquals("trackingId#eventIdRECAG012#23L", secondPushedEventPayload.getCommandId());
         assertEquals("presigned-url-1", secondPushedEventPayload.getData().getDetails().getAttachment());
@@ -269,6 +272,7 @@ class RECAG012EventCheckerTest {
         assertNotNull(secondPushedEventPayload.getData().getDetails().getNotificationDate());
         assertNull(secondPushedEventPayload.getData().getDetails().getDeliveryFailureCause());
         assertEquals("RECAG012", secondPushedEventPayload.getData().getDetails().getDeliveryDetailCode());
+        assertNull(secondPushedEventPayload.getData().getDetails().getDeliveryAttemptDate());
 
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
