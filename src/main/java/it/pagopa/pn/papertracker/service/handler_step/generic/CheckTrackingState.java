@@ -50,7 +50,7 @@ public class CheckTrackingState implements HandlerStep {
                 ? ctx.getPaperTrackings().getBusinessState().name()
                 : ctx.getPaperTrackings().getState().name();
 
-        String errorMsg = String.format("Tracking in state %s: %s", state, ctx.getTrackingId());
+        String errorMsg = String.format("Tracking in state %s, statusCode %s: %s", state, statusCode, ctx.getTrackingId());
 
         return Mono.error(new PnPaperTrackerValidationException(
                 errorMsg,

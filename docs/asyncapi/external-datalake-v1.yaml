@@ -79,7 +79,6 @@ components:
                 - Plico
                 - 23L
                 - ARCAD
-                - CAD
               example: "AR"
             unifiedDeliveryDriver:
               type: string
