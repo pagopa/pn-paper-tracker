@@ -52,10 +52,11 @@ async function appendReceivedStatusCode(iun, reworkId, receivedStatusCodesEntry,
 
 async function insertEventsError(iun, reworkId, analogMail, errorMessage) {
   const now = new Date().toISOString();
+  const uniqueReworkId = reworkId ? `${reworkId}~${crypto.randomUUID()}` : crypto.randomUUID();
 
   const item = {
     iun,
-    reworkId: reworkId || "N/A",
+    reworkId: uniqueReworkId,
     requestId: analogMail.requestId,
     statusCode: analogMail.statusCode,
     statusDateTime: analogMail.statusDateTime,

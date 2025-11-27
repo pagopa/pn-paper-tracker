@@ -16,6 +16,8 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -109,7 +111,7 @@ class NotificationReworkServiceImplTest {
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
                         assertNotNull(ex.getProblem().getDetail());
-                        return ex.getProblem().getDetail().contains("deliveryFailureCause null is invalid");
+                        return Objects.requireNonNull(ex.getProblem().getErrors().getFirst().getDetail()).equalsIgnoreCase("deliveryFailureCause null is invalid");
                     }
                     return false;
                 })
@@ -262,7 +264,7 @@ class NotificationReworkServiceImplTest {
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
                         assertNotNull(ex.getProblem().getDetail());
-                        return ex.getProblem().getDetail().contains("statusCode RECRN010 is PROGRESS");
+                        return Objects.requireNonNull(ex.getProblem().getErrors().getFirst().getDetail()).equalsIgnoreCase("statusCode RECRN010 is PROGRESS");
                     }
                     return false;
                 })
@@ -299,7 +301,7 @@ class NotificationReworkServiceImplTest {
                 .expectErrorMatches(throwable -> {
                     if (throwable instanceof PnPaperTrackerBadRequestException ex) {
                         assertNotNull(ex.getProblem().getDetail());
-                        return ex.getProblem().getDetail().contains("statusCode INVALID is invalid");
+                        return Objects.requireNonNull(ex.getProblem().getErrors().getFirst().getDetail()).equalsIgnoreCase("statusCode INVALID is invalid");
                     }
                     return false;
                 })

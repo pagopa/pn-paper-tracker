@@ -103,7 +103,7 @@ async function checkStatusCode(messageId, reworkEntry, analogMail, statusCode, s
     const alreadyReceived = checkAlreadyReceived(reworkEntry, statusCode, attachments, statusDateTime);
 
     if(alreadyReceived){
-        logOperation("ERROR", record.messageId, {  message: "Evento duplicato"});
+        logOperation("ERROR", messageId, {  message: "Evento duplicato"});
         await insertEventsError(iun, reworkId, analogMail, "Evento duplicato");
         return false;
     }

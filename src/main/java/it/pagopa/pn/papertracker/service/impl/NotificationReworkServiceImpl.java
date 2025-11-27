@@ -33,19 +33,21 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    private static final String ERROR_CODE_PAPER_TRACKER_BAD_REQUEST = "PN_PAPER_TRACKER_BAD_REQUEST";
+    private static final String ERROR_CODE_INVALID_STATUS_CODE = "PN_PAPER_TRACKER_INVALID_STATUS_CODE";
+    private static final String ERROR_CODE_INVALID_DELIVERY_FAILURE_CAUSE = "PN_PAPER_TRACKER_INVALID_STATUS_CODE";
+
 
     @Override
     public Mono<SequenceResponse> retrieveSequenceAndEventStatus(String statusCode, String deliveryFailureCause, String productType) {
         SequenceResponse sequenceResponse = new SequenceResponse();
 
         return Mono.justOrEmpty(TrackerUtility.evaluateStatusCodeAndRetrieveStatus(statusCode, deliveryFailureCause, productType))
-                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is invalid", statusCode))))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_INVALID_STATUS_CODE, String.format("statusCode %s is invalid", statusCode))))
                 .filter(eventStatus -> !EventStatus.PROGRESS.equals(eventStatus))
-                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("statusCode %s is PROGRESS", statusCode))))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_INVALID_STATUS_CODE, String.format("statusCode %s is PROGRESS", statusCode))))
                 .doOnNext(eventStatus -> sequenceResponse.setFinalStatusCode(SequenceResponse.FinalStatusCodeEnum.fromValue(eventStatus.name())))
                 .flatMap(eventStatus -> Mono.justOrEmpty(retrieveSequence(statusCode, deliveryFailureCause)))
-                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_PAPER_TRACKER_BAD_REQUEST, String.format("deliveryFailureCause %s is invalid", deliveryFailureCause))))
+                .switchIfEmpty(Mono.error(new PnPaperTrackerBadRequestException(ERROR_CODE_INVALID_DELIVERY_FAILURE_CAUSE, String.format("deliveryFailureCause %s is invalid", deliveryFailureCause))))
                 .map(sequenceList -> {
                     sequenceResponse.setSequence(sequenceList);
                     log.info("Successfully retrieved sequence for statusCode {} with {} elements", statusCode, sequenceList.size());
