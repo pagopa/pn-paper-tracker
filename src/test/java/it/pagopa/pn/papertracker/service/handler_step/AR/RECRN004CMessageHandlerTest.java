@@ -101,7 +101,6 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
                 .productType("AR")
-                .deliveryFailureCause("M02")
                 .statusCode(STATUS_RECRN004C);
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
@@ -146,7 +145,6 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
                 .productType("AR")
-                .deliveryFailureCause("M02")
                 .statusCode(STATUS_RECRN004C);
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
