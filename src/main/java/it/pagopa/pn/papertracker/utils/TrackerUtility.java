@@ -34,6 +34,7 @@ public class TrackerUtility {
 
     public static boolean checkIfIsInternalEvent(String eventStatusCode) {
         return P000.name().equalsIgnoreCase(eventStatusCode) ||
+                P001.name().equalsIgnoreCase(eventStatusCode) ||
                 P011.name().equalsIgnoreCase(eventStatusCode) ||
                 P012.name().equalsIgnoreCase(eventStatusCode) ||
                 P013.name().equalsIgnoreCase(eventStatusCode);
