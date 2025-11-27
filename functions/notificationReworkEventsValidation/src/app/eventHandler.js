@@ -1,7 +1,7 @@
 const { getLatestReworkRequestByIun, appendReceivedStatusCode, insertEventsError } = require("./dynamo");
 const { sendToQueue, createMessageAttributes } = require("./sqs");
 const { logOperation } = require("./log");
-const {checkRejectedStatusCode, checkAlreadyReceived, checkExpected, buildReceivedStatusCodeEntry} = require("./utils");
+const {checkRejectedStatusCode, checkAlreadyReceived, checkExpected, checkAttachments, checkDeliveryFailureCause, buildReceivedStatusCodeEntry} = require("./utils");
 
 async function handleEvent(event){
   const batchItemFailures = [];
@@ -88,7 +88,7 @@ async function checkStatusCode(messageId, reworkEntry, analogMail, statusCode, s
         return false;
     }
 
-    const expected = checkExpected(reworkEntry, statusCode, attachments, deliveryFailureCause);
+    const expected = checkExpected(reworkEntry, statusCode);
 
     if(!expected){
         const message = "Evento non atteso. Gli eventi accettati sono: " + JSON.stringify(reworkEntry.expectedStatusCodes);
@@ -99,6 +99,30 @@ async function checkStatusCode(messageId, reworkEntry, analogMail, statusCode, s
         await insertEventsError(iun, reworkId, analogMail, message);
         return false;
     }
+
+    const attachment = checkAttachments(reworkEntry, statusCode, attachments);
+    if(!attachment){
+        const message = "Allegati non validi. Gli eventi accettati sono: " + JSON.stringify(reworkEntry.expectedStatusCodes);
+        logOperation("ERROR", messageId, {
+            message: message,
+            expectedStatusCodes: JSON.stringify(reworkEntry.expectedStatusCode)
+        });
+        await insertEventsError(iun, reworkId, analogMail, message);
+        return false;
+    }
+
+    if(statusCode.endsWith("A")){
+      const deliveryFailureCauseValidation = checkDeliveryFailureCause(reworkEntry, deliveryFailureCause);
+      if(!deliveryFailureCauseValidation){
+        const message = "DeliveryFailureCause non valida.";
+        logOperation("ERROR", messageId, {
+            message: message
+        });
+        await insertEventsError(iun, reworkId, analogMail, message);
+        return false;
+      }
+    }
+
 
     const alreadyReceived = checkAlreadyReceived(reworkEntry, statusCode, attachments, statusDateTime);
 

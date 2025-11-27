@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { checkExpected, checkAlreadyReceived, checkRejectedStatusCode, buildReceivedStatusCodeEntry } = require('../app/utils');
+const { checkExpected, checkAlreadyReceived, checkAttachments, checkDeliveryFailureCause, checkRejectedStatusCode, buildReceivedStatusCodeEntry } = require('../app/utils');
 
 describe("checkExpected", () => {
   it("returns false if reworkEntry has no expectedStatusCodes", () => {
@@ -13,7 +13,7 @@ describe("checkExpected", () => {
            { statusCode: "RECRN001B", attachments: ["a", "b"] }
          ]
        };
-       const result = checkExpected(reworkEntry, "RECRN001B", ["a"], null);
+       const result = checkAttachments(reworkEntry, "RECRN001B", ["a"]);
        assert.strictEqual(result, true);
   });
 
@@ -23,7 +23,18 @@ describe("checkExpected", () => {
           { statusCode: "RECRN001B", attachments: [] }
         ]
       };
-      const result = checkExpected(reworkEntry, "RECRN001B", ["c"], null);
+      const result = checkAttachments(reworkEntry, "RECRN001B", ["c"]);
+      assert.strictEqual(result, false);
+    });
+
+    it("returns false if statusCode matches but attachments is not present in entity and there is another expected status code", () => {
+      const reworkEntry = {
+        expectedStatusCodes: [
+          { statusCode: "RECRN001B", attachments: ["Plico"] },
+          { statusCode: "RECRN001A", attachments: [] }
+        ]
+      };
+      const result = checkAttachments(reworkEntry, "RECRN001B", []);
       assert.strictEqual(result, false);
     });
 
@@ -33,7 +44,7 @@ describe("checkExpected", () => {
         { statusCode: "RECRN001B", attachments: ["a", "b"] }
       ]
     };
-    const result = checkExpected(reworkEntry, "RECRN001B", ["c"], null);
+    const result = checkAttachments(reworkEntry, "RECRN001B", ["c"]);
     assert.strictEqual(result, false);
   });
 
@@ -43,7 +54,7 @@ describe("checkExpected", () => {
           { statusCode: "RECRN001B", attachments: ["a", "b"] }
         ]
       };
-      const result = checkExpected(reworkEntry, "RECRN001B", ["a", "b", "c"], null);
+      const result = checkAttachments(reworkEntry, "RECRN001B", ["a", "b", "c"]);
       assert.strictEqual(result, false);
     });
 
@@ -52,16 +63,16 @@ describe("checkExpected", () => {
       expectedStatusCodes: [{ statusCode: "RECRN002A" }],
       deliveryFailureCause: "M02"
     };
-    const result = checkExpected(reworkEntry, "RECRN002A", [], "M02");
+    const result = checkDeliveryFailureCause(reworkEntry, "M02");
     assert.strictEqual(result, true);
   });
 
-  it("returns true if deliveryFailureCause not matches", () => {
+  it("returns false if deliveryFailureCause not matches", () => {
       const reworkEntry = {
         expectedStatusCodes: [{ statusCode: "RECRN002A" }],
         deliveryFailureCause: "M05"
       };
-      const result = checkExpected(reworkEntry, "RECRN002A", [], "M02");
+      const result = checkDeliveryFailureCause(reworkEntry, "M02");
       assert.strictEqual(result, false);
     });
 });
