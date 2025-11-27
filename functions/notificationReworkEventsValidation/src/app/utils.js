@@ -1,29 +1,37 @@
-function checkExpected(reworkEntry, statusCode, attachments, deliveryFailureCause){
+function checkExpected(reworkEntry, statusCode){
    if (!reworkEntry?.expectedStatusCodes || !Array.isArray(reworkEntry.expectedStatusCodes)) {
         return false;
    }
    return reworkEntry.expectedStatusCodes.some(item => {
      if (item.statusCode !== statusCode) return false;
+     return true;
+   });
+}
 
-     const hasInputAttachments = attachments && attachments.length > 0;
-     const hasItemAttachments = item.attachments && item.attachments.length > 0;
+function checkAttachments(reworkEntry, statusCode, attachments){
+    return reworkEntry.expectedStatusCodes
+    .some(item => {
+         const hasInputAttachments = attachments && attachments.length > 0;
+         const hasItemAttachments = item.attachments && item.attachments.length > 0;
 
-     if (hasInputAttachments && !hasItemAttachments) return false;
+         if (!hasInputAttachments && hasItemAttachments) return false;
 
-     // Caso: item ha allegati → controlla corrispondenza parziale (input ⊆ item)
-     if (hasItemAttachments) {
-       const isSubset = attachments.every(att => item.attachments.includes(att));
-       const sameLength = item.attachments.length === attachments.length;
-       // true solo se uguali o se input ⊂ item (come [a] vs [a,b])
-       return isSubset && (sameLength || item.attachments.length > attachments.length);
-     }
+         // Caso: item ha allegati → controlla corrispondenza parziale (input ⊆ item)
+         if (hasItemAttachments) {
+           const isSubset = attachments.every(att => item.attachments.includes(att));
+           const sameLength = item.attachments.length === attachments.length;
 
+           // true solo se uguali o se input ⊂ item (come [a] vs [a,b])
+           return isSubset && (sameLength || item.attachments.length > attachments.length);
+         }
+     });
+}
+
+function checkDeliveryFailureCause(reworkEntry, deliveryFailureCause){
      if(deliveryFailureCause){
         return reworkEntry.deliveryFailureCause && reworkEntry.deliveryFailureCause === deliveryFailureCause;
      }
-
-     return true;
-   });
+     return false;
 }
 
 function checkAlreadyReceived(reworkEntry, statusCode, attachments, statusDateTime){
@@ -68,6 +76,8 @@ function buildReceivedStatusCodeEntry(statusCode, attachments, statusDateTime){
 
 module.exports = {
     checkExpected,
+    checkAttachments,
+    checkDeliveryFailureCause,
     checkAlreadyReceived,
     checkRejectedStatusCode,
     buildReceivedStatusCodeEntry
