@@ -35,12 +35,17 @@ public class PaperTrackerExceptionHandler {
     }
 
     public Mono<Void> handleError(PaperTrackingsErrors paperTrackingsErrors, Long messageReceiveCount, PnPaperTrackerValidationException ex) {
-        if(ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory()) && messageReceiveCount < 5){
-            return Mono.error(ex);
-        }else if(ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory())){
+        boolean isStatusCodeError = ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory());
+
+        if (isStatusCodeError) {
+            if (messageReceiveCount < 5) {
+                // Retry SQS
+                return Mono.error(ex);
+            }
             log.error("Max retries reached for status code error, inserting error and updating PaperTrackings state to KO for trackingId: {}", paperTrackingsErrors.getTrackingId());
-            return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors).then(Mono.error(ex));
         }
+
+        // Salva l'errore
         return insertErrorAndUpdateTrackingsEntity(paperTrackingsErrors);
     }
 
