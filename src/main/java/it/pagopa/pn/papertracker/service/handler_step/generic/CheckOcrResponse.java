@@ -13,10 +13,8 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -133,7 +131,8 @@ public class CheckOcrResponse implements HandlerStep {
         PaperTrackings paperTrackings = new PaperTrackings();
         TrackerUtility.setDematValidationTimestamp(paperTrackings, statusCode);
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setPredictedRefinementType(payload.getData().getPredictedRefinementType().getValue());
+        paperStatus.setPredictedRefinementType(Objects.nonNull(payload.getData().getPredictedRefinementType()) ?
+                payload.getData().getPredictedRefinementType().getValue() : null);
         return paperTrackings;
     }
 
