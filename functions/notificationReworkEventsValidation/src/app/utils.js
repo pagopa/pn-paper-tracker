@@ -10,11 +10,12 @@ function checkExpected(reworkEntry, statusCode){
 
 function checkAttachments(reworkEntry, statusCode, attachments){
     return reworkEntry.expectedStatusCodes
+    .filter(item => item.statusCode == statusCode)
     .some(item => {
          const hasInputAttachments = attachments && attachments.length > 0;
          const hasItemAttachments = item.attachments && item.attachments.length > 0;
 
-         if (!hasInputAttachments && hasItemAttachments) return false;
+         if ((hasItemAttachments && !hasInputAttachments) || (!hasItemAttachments && hasInputAttachments)) return false;
 
          // Caso: item ha allegati → controlla corrispondenza parziale (input ⊆ item)
          if (hasItemAttachments) {
@@ -24,14 +25,24 @@ function checkAttachments(reworkEntry, statusCode, attachments){
            // true solo se uguali o se input ⊂ item (come [a] vs [a,b])
            return isSubset && (sameLength || item.attachments.length > attachments.length);
          }
+         return true;
      });
 }
 
 function checkDeliveryFailureCause(reworkEntry, deliveryFailureCause){
-     if(deliveryFailureCause){
-        return reworkEntry.deliveryFailureCause && reworkEntry.deliveryFailureCause === deliveryFailureCause;
-     }
-     return false;
+  if(reworkEntry.expectedDeliveryFailureCause && !deliveryFailureCause){
+    return false;
+  }
+
+  if(!reworkEntry.expectedDeliveryFailureCause && deliveryFailureCause){
+    return false;
+  }
+
+  if(reworkEntry.expectedDeliveryFailureCause && deliveryFailureCause){
+    return reworkEntry.expectedDeliveryFailureCause == deliveryFailureCause;
+  }
+
+  return true;
 }
 
 function checkAlreadyReceived(reworkEntry, statusCode, attachments, statusDateTime){

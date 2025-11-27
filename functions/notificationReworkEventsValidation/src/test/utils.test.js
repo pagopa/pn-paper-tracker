@@ -61,7 +61,7 @@ describe("checkExpected", () => {
   it("returns true if deliveryFailureCause matches", () => {
     const reworkEntry = {
       expectedStatusCodes: [{ statusCode: "RECRN002A" }],
-      deliveryFailureCause: "M02"
+      expectedDeliveryFailureCause: "M02"
     };
     const result = checkDeliveryFailureCause(reworkEntry, "M02");
     assert.strictEqual(result, true);
@@ -70,7 +70,7 @@ describe("checkExpected", () => {
   it("returns false if deliveryFailureCause not matches", () => {
       const reworkEntry = {
         expectedStatusCodes: [{ statusCode: "RECRN002A" }],
-        deliveryFailureCause: "M05"
+        expectedDeliveryFailureCause: "M05"
       };
       const result = checkDeliveryFailureCause(reworkEntry, "M02");
       assert.strictEqual(result, false);
