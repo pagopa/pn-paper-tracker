@@ -252,7 +252,8 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .flatMap(event -> {
                     String deliveryFailureCause = event.getDeliveryFailureCause();
                     EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
-                    if (!CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && !statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) {
+                    if ((!CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && !statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) ||
+                            (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && StringUtils.hasText(deliveryFailureCause))) {
                         return generateCustomError("Invalid deliveryFailureCause: " + deliveryFailureCause, context, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR, strictFinalEventValidation);
                     }
                     return Mono.just(event);

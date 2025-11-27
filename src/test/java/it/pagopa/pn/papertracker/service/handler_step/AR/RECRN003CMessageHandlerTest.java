@@ -102,8 +102,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .statusDateTime(now.atOffset(ZoneOffset.UTC))
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
-                .productType("AR")
-                .deliveryFailureCause("M02");
+                .productType("AR");
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
         singleStatusUpdate.setAnalogMail(paperRequest);
@@ -145,8 +144,7 @@ class RECRN003CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .statusDateTime(now.atOffset(ZoneOffset.UTC))
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
-                .productType("AR")
-                .deliveryFailureCause("M02");
+                .productType("AR");
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
         singleStatusUpdate.setAnalogMail(paperRequest);

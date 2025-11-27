@@ -112,7 +112,7 @@ class SequenceValidatorRirTest {
                 buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "F01", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
                 buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());

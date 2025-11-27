@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
@@ -102,7 +101,6 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
                 .productType("AR")
-                .deliveryFailureCause("M02")
                 .statusCode(STATUS_RECRN005C);
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
@@ -181,7 +179,6 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
                 .productType("AR")
-                .deliveryFailureCause("M02")
                 .statusCode(STATUS_RECRN005C);
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
@@ -226,7 +223,6 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
                 .clientRequestTimeStamp(OffsetDateTime.now())
                 .registeredLetterCode("registeredLetterCode")
                 .productType("AR")
-                .deliveryFailureCause("M02")
                 .statusCode(STATUS_RECRN005C);
 
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
