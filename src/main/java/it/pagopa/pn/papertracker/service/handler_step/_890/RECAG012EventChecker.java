@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,6 +46,7 @@ public class RECAG012EventChecker implements HandlerStep {
 
         Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
+        List<String> ocrAttachments = context.getPaperTrackings().getValidationConfig().getSendOcrAttachmentsRefinementStock890();
 
         if(recag012Event.isEmpty()){
             log.info("RECAG012 event not found for trackingId {}", context.getTrackingId());
@@ -62,7 +64,7 @@ public class RECAG012EventChecker implements HandlerStep {
                 .map(event -> Map.entry(
                         event.getId(),
                         event.getAttachments().stream()
-                                .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                                .filter(att -> ocrAttachments.contains(att.getDocumentType()))
                                 .toList()
                 ))
                 .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
@@ -77,7 +79,7 @@ public class RECAG012EventChecker implements HandlerStep {
                 .filter(attachments -> !CollectionUtils.isEmpty(attachments))
                 .flatMap(attachmentList -> attachmentList.stream().map(Attachment::getDocumentType))
                 .collect(Collectors.toSet());
-        return documentTypes.containsAll(requiredAttachments);
+        return TrackerUtility.hasRequiredAttachmentsRefinementStock890(requiredAttachments, documentTypes);
     }
 
 

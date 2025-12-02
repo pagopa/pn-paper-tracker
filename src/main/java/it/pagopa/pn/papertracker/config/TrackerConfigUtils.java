@@ -21,6 +21,7 @@ public class TrackerConfigUtils {
     public record StrictValidationConfig(LocalDate startConfigurationTime, Boolean enableStrictValidation) { }
 
     private final List<AttachmentsConfig> requiredAttachmentsRefinementStock890Configs;
+    private final List<AttachmentsConfig> sendOcrAttachmentsRefinementStock890Configs;
     private final List<AttachmentsConfig> sendOcrAttachmentsFinalValidationStock890Configs;
     private final List<AttachmentsConfig> sendOcrAttachmentsFinalValidationConfigs;
     private final List<StrictValidationConfig> strictFinalValidationStock890Config;
@@ -29,6 +30,7 @@ public class TrackerConfigUtils {
 
     public TrackerConfigUtils(PnPaperTrackerConfigs cfg) {
         this.requiredAttachmentsRefinementStock890Configs = buildAttachmentsConfigFromStringList(cfg.getRequiredAttachmentsRefinementStock890());
+        this.sendOcrAttachmentsRefinementStock890Configs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsRefinementStock890());
         this.sendOcrAttachmentsFinalValidationConfigs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidation());
         this.sendOcrAttachmentsFinalValidationStock890Configs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidationStock890());
         this.strictFinalValidationStock890Config = buildStrictFinalValidationStock890Config(cfg.getStrictFinalValidationStock890());
@@ -78,6 +80,14 @@ public class TrackerConfigUtils {
                 .findFirst()
                 .map(AttachmentsConfig::documentTypes)
                 .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"RequiredAttachmentsRefinementStock890 not found for date: " + startDate));
+    }
+
+    public List<String> getActualSendOcrAttachmentsRefinementStock890(LocalDate startDate) {
+        return sendOcrAttachmentsRefinementStock890Configs.stream()
+                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .findFirst()
+                .map(AttachmentsConfig::documentTypes)
+                .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"SendOcrAttachmentsRefinementStock890 not found for date: " + startDate));
     }
 
     public List<String> getActualSendOcrAttachmentsFinalValidationStock890(LocalDate startDate) {

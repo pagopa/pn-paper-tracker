@@ -32,6 +32,7 @@ public class PaperTrackingsMapperTest {
         PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD;CAD"));
         pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
         pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));

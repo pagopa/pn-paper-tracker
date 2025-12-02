@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.utils;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.EventStatus;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -13,9 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
@@ -122,7 +121,7 @@ public class TrackerUtility {
 
     public static boolean isOcrResponseCompleted(ValidationFlow validationFlow, ValidationConfig validationConfig, String statusCode) {
         if(RECAG012.name().equalsIgnoreCase(statusCode)){
-            List<String> requiredAttachments = validationConfig.getRequiredAttachmentsRefinementStock890();
+            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsRefinementStock890();
             return validationFlow.getOcrRequests().stream()
                     .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
@@ -235,4 +234,18 @@ public class TrackerUtility {
 
         return statusCodeEnum.getStatus();
     }
+
+    public static boolean hasRequiredAttachmentsRefinementStock890(List<String> requiredAttachments, Set<String> documentTypes) {
+        boolean hasArcad = requiredAttachments.contains(DocumentTypeEnum.ARCAD.getValue());
+        boolean hasCad = requiredAttachments.contains(DocumentTypeEnum.CAD.getValue());
+
+        if (hasArcad && hasCad) {
+            List<String> mutableRequiredAttachments = new ArrayList<>(requiredAttachments);
+            mutableRequiredAttachments.removeAll(Arrays.asList(DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
+            return documentTypes.containsAll(mutableRequiredAttachments) &&
+                    (documentTypes.contains(DocumentTypeEnum.ARCAD.getValue()) || documentTypes.contains(DocumentTypeEnum.CAD.getValue()));
+        }
+        return documentTypes.containsAll(requiredAttachments);
+    }
+
 }
