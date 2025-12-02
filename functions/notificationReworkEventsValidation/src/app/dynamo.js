@@ -13,19 +13,27 @@ const docClient = DynamoDBDocumentClient.from(client);
 const NOTIFICATION_REWORK_TABLE = process.env.NOTIFICATION_REWORK_TABLE;
 const EVENTS_ERROR_TABLE = process.env.NOTIFICATION_REWORK_EVENTS_ERROR_TABLE;
 
-async function getLatestReworkRequestByIun(iun) {
+async function getLatestReworkRequestByIun(iun, requestId) {
     const params = {
         TableName: NOTIFICATION_REWORK_TABLE,
         KeyConditionExpression: "iun = :iun",
         ExpressionAttributeValues: {
           ":iun": iun
         },
-        ScanIndexForward: false,
-        Limit: 1
+        ScanIndexForward: false
     };
 
     const result = await docClient.send(new QueryCommand(params));
-    return result.Items && result.Items.length > 0 ? result.Items[0] : null;
+    const recIndex = getRecIndexFromRequestId(requestId);
+    return result.Items && result.Items.length > 0
+      ? result.Items.find(item => item.recIndex === recIndex) || null
+      : null;
+}
+
+function getRecIndexFromRequestId(requestId){
+  if (!requestId) return null;
+  const match = requestId.match(/(RECINDEX_\d+)/);
+  return match ? match[1] : null;
 }
 
 async function appendReceivedStatusCode(iun, reworkId, receivedStatusCodesEntry, analogMail) {
