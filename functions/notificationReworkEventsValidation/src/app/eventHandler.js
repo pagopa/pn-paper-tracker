@@ -51,8 +51,9 @@ const processRecord = async (record) => {
     const attachments = analogMail.attachments?.map(att => att.documentType) || [];
     const deliveryFailureCause = analogMail.deliveryFailureCause;
     const iun = analogMail.iun;
+    const requestId = analogMail.requestId;
 
-    const reworkEntry = await getLatestReworkRequestByIun(iun);
+    const reworkEntry = await getLatestReworkRequestByIun(iun, requestId);
     if (!reworkEntry) {
         logOperation("FATAL", messageId, { message: "No notification rework request found for IUN", iun });
         await insertEventsError(iun, null, analogMail, "Richiesta di rework non presente");
