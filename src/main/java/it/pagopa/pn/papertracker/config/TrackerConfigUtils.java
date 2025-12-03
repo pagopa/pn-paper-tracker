@@ -68,15 +68,15 @@ public class TrackerConfigUtils {
     }
 
     private AttachmentsConfig toAttachmentsConfig(String attachmentsConfigStr) {
-        String[] printCapacitySplit = attachmentsConfigStr.split(SEPARATOR);
-        LocalDate startDate = LocalDate.parse(printCapacitySplit[START_DATE_INDEX]);
-        List<String> documentTypesArray = Arrays.asList(Arrays.copyOfRange(printCapacitySplit, 1, printCapacitySplit.length));
+        String[] attachmentsConfigSplit = attachmentsConfigStr.split(SEPARATOR);
+        LocalDate startDate = LocalDate.parse(attachmentsConfigSplit[START_DATE_INDEX]);
+        List<String> documentTypesArray = Arrays.asList(Arrays.copyOfRange(attachmentsConfigSplit, 1, attachmentsConfigSplit.length));
         return new AttachmentsConfig(startDate, documentTypesArray);
     }
 
     public List<String> getActualRequiredAttachmentsRefinementStock890(LocalDate startDate) {
         return requiredAttachmentsRefinementStock890Configs.stream()
-                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .filter(attachmentsConfig -> startDate.isAfter(attachmentsConfig.startConfigurationTime()))
                 .findFirst()
                 .map(AttachmentsConfig::documentTypes)
                 .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"RequiredAttachmentsRefinementStock890 not found for date: " + startDate));
@@ -84,7 +84,7 @@ public class TrackerConfigUtils {
 
     public List<String> getActualSendOcrAttachmentsRefinementStock890(LocalDate startDate) {
         return sendOcrAttachmentsRefinementStock890Configs.stream()
-                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .filter(attachmentsConfig -> startDate.isAfter(attachmentsConfig.startConfigurationTime()))
                 .findFirst()
                 .map(AttachmentsConfig::documentTypes)
                 .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"SendOcrAttachmentsRefinementStock890 not found for date: " + startDate));
@@ -92,7 +92,7 @@ public class TrackerConfigUtils {
 
     public List<String> getActualSendOcrAttachmentsFinalValidationStock890(LocalDate startDate) {
         return sendOcrAttachmentsFinalValidationStock890Configs.stream()
-                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .filter(attachmentsConfig -> startDate.isAfter(attachmentsConfig.startConfigurationTime()))
                 .findFirst()
                 .map(AttachmentsConfig::documentTypes)
                 .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"SendOcrAttachmentsFinalValidationStock890 not found for date: " + startDate));
@@ -100,7 +100,7 @@ public class TrackerConfigUtils {
 
     public List<String> getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate startDate) {
         return sendOcrAttachmentsFinalValidationConfigs.stream()
-                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .filter(attachmentsConfig -> startDate.isAfter(attachmentsConfig.startConfigurationTime()))
                 .findFirst()
                 .map(AttachmentsConfig::documentTypes)
                 .orElseThrow(() -> new AttachmentsConfigNotFound(CONFIG_ERROR_CODE,"SendOcrAttachmentsFinalValidation not found for date: " + startDate));
@@ -108,7 +108,7 @@ public class TrackerConfigUtils {
 
     public Boolean getActualStrictFinalValidationStock890Config(LocalDate startDate) {
         return strictFinalValidationStock890Config.stream()
-                .filter(printCapacity -> startDate.isAfter(printCapacity.startConfigurationTime()))
+                .filter(attachmentsConfig -> startDate.isAfter(attachmentsConfig.startConfigurationTime()))
                 .findFirst()
                 .map(StrictValidationConfig::enableStrictValidation)
                 .orElse(Boolean.FALSE);

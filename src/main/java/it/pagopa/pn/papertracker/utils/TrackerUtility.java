@@ -235,16 +235,42 @@ public class TrackerUtility {
         return statusCodeEnum.getStatus();
     }
 
-    public static boolean hasRequiredAttachmentsRefinementStock890(List<String> requiredAttachments, Set<String> documentTypes) {
-        boolean hasArcad = requiredAttachments.contains(DocumentTypeEnum.ARCAD.getValue());
-        boolean hasCad = requiredAttachments.contains(DocumentTypeEnum.CAD.getValue());
+    /**
+     * Verifica se i tipi di documento forniti contengono tutti gli allegati richiesti
+     * nel caso del perfezionamento della giacenza 890".
+     * Se nella lista degli allegati obbligatori sono presenti sia "ARCAD" che "CAD",
+     * verifica se almeno uno tra ARCAD e CAD è presente nei tipi di documento forniti
+     *
+     * @param requiredAttachments Una lista di stringhe che rappresentano gli allegati obbligatori richiesti.
+     * @param documentTypes Un insieme di stringhe che rappresentano i tipi di documento disponibili.
+     * @return {@code true} se i tipi di documento forniti soddisfano i requisiti degli allegati richiesti,
+     *         {@code false} altrimenti.
+     */
+    public static boolean hasRequiredAttachmentsRefinementStock890(
+            List<String> requiredAttachments,
+            Set<String> documentTypes) {
 
+        String arcad = DocumentTypeEnum.ARCAD.getValue();
+        String cad = DocumentTypeEnum.CAD.getValue();
+
+        boolean hasArcad = requiredAttachments.contains(arcad);
+        boolean hasCad = requiredAttachments.contains(cad);
+
+        // Caso ARCAD o CAD
         if (hasArcad && hasCad) {
-            List<String> mutableRequiredAttachments = new ArrayList<>(requiredAttachments);
-            mutableRequiredAttachments.removeAll(Arrays.asList(DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
-            return documentTypes.containsAll(mutableRequiredAttachments) &&
-                    (documentTypes.contains(DocumentTypeEnum.ARCAD.getValue()) || documentTypes.contains(DocumentTypeEnum.CAD.getValue()));
+
+            // Rimuove ARCAD e CAD dalla lista degli allegati obbligatori
+            List<String> remaining = requiredAttachments.stream()
+                    .filter(r -> !r.equals(arcad) && !r.equals(cad))
+                    .toList();
+
+            boolean hasRemaining = documentTypes.containsAll(remaining);
+            boolean hasAtLeastOne = documentTypes.contains(arcad) || documentTypes.contains(cad);
+
+            return hasRemaining && hasAtLeastOne;
         }
+
+        // Caso standard
         return documentTypes.containsAll(requiredAttachments);
     }
 
