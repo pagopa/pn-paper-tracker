@@ -14,6 +14,7 @@ public class ValidationConfig {
 
     public static final String COL_OCR_ENABLED = "ocrEnabled";
     public static final String COL_REQUIRED_ATTACHMENTS_REFINEMENT_STOCK_890 = "requiredAttachmentsRefinementStock890";
+    public static final String COL_SEND_OCR_REFINEMENT_STOCK_890 = "sendOcrAttachmentsRefinementStock890";
     public static final String COL_SEND_OCR_FINAL_VALIDATION_STOCK_890 = "sendOcrAttachmentsFinalValidationStock890";
     public static final String COL_SEND_OCR_FINAL_VALIDATION = "sendOcrAttachmentsFinalValidation";
     public static final String COL_STRICT_FINAL_VALIDATION_STOCK_890 = "strictFinalValidationStock890";
@@ -23,6 +24,9 @@ public class ValidationConfig {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUIRED_ATTACHMENTS_REFINEMENT_STOCK_890)}))
     private List<String> requiredAttachmentsRefinementStock890;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_SEND_OCR_REFINEMENT_STOCK_890)}))
+    private List<String> sendOcrAttachmentsRefinementStock890;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_SEND_OCR_FINAL_VALIDATION_STOCK_890)}))
     private List<String> sendOcrAttachmentsFinalValidationStock890;

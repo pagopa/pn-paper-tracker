@@ -34,6 +34,7 @@ public class PnPaperTrackerConfigs {
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
     private List<String> requiredAttachmentsRefinementStock890 = new ArrayList<>();
+    private List<String> sendOcrAttachmentsRefinementStock890 = new ArrayList<>();
     private List<String> sendOcrAttachmentsFinalValidationStock890 = new ArrayList<>();
     private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
     private List<String> strictFinalValidationStock890;
