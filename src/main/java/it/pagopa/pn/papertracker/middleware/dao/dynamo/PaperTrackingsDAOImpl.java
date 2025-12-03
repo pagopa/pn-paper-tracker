@@ -70,34 +70,21 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
-    @Override
-    public Mono<PaperTrackings> updateOcrRequestsAndValidatedAttachments(Integer ocrRequestIndex, List<Attachment> validatedAttachments, String trackingId){
-        log.debug("updateOcrRequestsAndValidatedAttachments for item with trackingId: {}", trackingId);
+    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId){
+        log.debug("updateOcrRequests for item with trackingId: {}", trackingId);
         Instant now = Instant.now();
         Map<String, String> expressionAttributeNames = new HashMap<>();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(validatedAttachments);
-        paperTrackings.setPaperStatus(paperStatus);
 
         expressionAttributeNames.put("#updatedAt", PaperTrackings.COL_UPDATED_AT);
         expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
         expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
         expressionAttributeNames.put("#response", OcrRequest.COL_RESPONSE_TIMESTAMP);
-        expressionAttributeNames.put("#attachments", PaperStatus.COL_VALIDATED_ATTACHMENTS);
-        expressionAttributeNames.put("#paperStatus", PaperTrackings.COL_PAPER_STATUS);
 
         expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(now.toString()).build());
         expressionAttributeValues.put(":responseTimestamp", AttributeValue.builder().s(now.toString()).build());
-        expressionAttributeValues.put(":validatedAttachments", AttributeValue.builder()
-                .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("paperStatus").m().get("validatedAttachments").l()).build());
 
         String updateExpr = "SET #updatedAt = :updatedAt";
-
-        if(!CollectionUtils.isEmpty(validatedAttachments)){
-            updateExpr += ", #paperStatus.#attachments = list_append(#paperStatus.#attachments, :validatedAttachments)";
-        }
 
         if(Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0){
             updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#response = :responseTimestamp";
@@ -132,22 +119,9 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         String updateExpr = "SET ";
 
-        List<Attachment> validatedAttachments = Optional.ofNullable(paperTrackings.getPaperStatus())
-                .map(PaperStatus::getValidatedAttachments)
-                .orElse(List.of());
-
         List<OcrRequest> ocrRequests =  Optional.ofNullable(paperTrackings.getValidationFlow())
                 .map(ValidationFlow::getOcrRequests)
                 .orElse(List.of());
-
-        if(!CollectionUtils.isEmpty(validatedAttachments)){
-            expressionAttributeNames.put("#paperStatus", PaperTrackings.COL_PAPER_STATUS);
-            expressionAttributeNames.put("#attachments", PaperStatus.COL_VALIDATED_ATTACHMENTS);
-            expressionAttributeValues.put(":validatedAttachments", AttributeValue.builder()
-                    .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("paperStatus").m().get("validatedAttachments").l()).build());
-            updateExpr += "#paperStatus.#attachments = list_append(#paperStatus.#attachments, :validatedAttachments), ";
-            paperTrackings.getPaperStatus().setValidatedAttachments(null);
-        }
 
         if(!CollectionUtils.isEmpty(ocrRequests)){
             expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);

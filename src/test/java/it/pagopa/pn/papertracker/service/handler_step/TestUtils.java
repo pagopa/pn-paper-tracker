@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -31,7 +30,6 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         ValidationConfig validationConfig = new ValidationConfig();
@@ -54,7 +52,6 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
@@ -110,7 +107,6 @@ public class TestUtils {
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
 
-        assertTrue(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());

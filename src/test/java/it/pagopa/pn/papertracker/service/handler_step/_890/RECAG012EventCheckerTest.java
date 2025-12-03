@@ -120,7 +120,6 @@ class RECAG012EventCheckerTest {
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
-        context.getPaperTrackings().getPaperStatus().setValidatedAttachments(List.of());
         context.getPaperTrackings().setEvents(List.of(
                 getEvent("RECAG005B", DocumentTypeEnum._23L.getValue(), "eventIdRECAG005B"),
                 getEvent("RECAG012", null, "eventIdRECAG012")

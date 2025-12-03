@@ -35,7 +35,6 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setOcrRequests(List.of());
