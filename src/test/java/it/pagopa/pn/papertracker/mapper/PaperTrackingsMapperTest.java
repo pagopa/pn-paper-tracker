@@ -30,8 +30,9 @@ public class PaperTrackingsMapperTest {
         request.setProductType("RS");
 
         PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
-        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD;CAD"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
         pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
         pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
@@ -106,7 +107,6 @@ public class PaperTrackingsMapperTest {
         paperStatus.setValidatedSequenceTimestamp(Instant.now());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
 
-        paperStatus.setValidatedAttachments(List.of(attachment));
         paperStatus.setValidatedEvents(List.of("event1","event2"));
         paperStatus.setFinalDematFound(true);
         paperTrackings.setPaperStatus(paperStatus);
@@ -179,17 +179,6 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(paperTrackings.getPaperStatus().getRegisteredLetterCode(), tracking.getPaperStatus().getRegisteredLetterCode());
         Assertions.assertEquals(paperTrackings.getPaperStatus().getRegisteredLetterCode(), tracking.getPaperStatus().getRegisteredLetterCode());
         Assertions.assertEquals(paperTrackings.getPaperStatus().getRegisteredLetterCode(), tracking.getPaperStatus().getRegisteredLetterCode());
-
-        Assertions.assertNotNull(tracking.getPaperStatus().getValidatedAttachments());
-        Assertions.assertEquals(paperTrackings.getPaperStatus().getValidatedAttachments().size(), tracking.getPaperStatus().getValidatedAttachments().size());
-
-        it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment trackingPaperStatusAttachment = tracking.getPaperStatus().getValidatedAttachments().getFirst();
-        Attachment entityPaperStatusAttachment = paperTrackings.getPaperStatus().getValidatedAttachments().get(0);
-        Assertions.assertEquals(entityPaperStatusAttachment.getId(), trackingPaperStatusAttachment.getId());
-        Assertions.assertEquals(entityPaperStatusAttachment.getUri(), trackingPaperStatusAttachment.getUri());
-        Assertions.assertEquals(entityPaperStatusAttachment.getSha256(), trackingPaperStatusAttachment.getSha256());
-        Assertions.assertEquals(entityPaperStatusAttachment.getDate(), trackingPaperStatusAttachment.getDate());
-        Assertions.assertEquals(entityPaperStatusAttachment.getDocumentType(), trackingPaperStatusAttachment.getDocumentType());
         Assertions.assertNotNull(tracking.getPaperStatus().getValidatedEvents());
         Assertions.assertEquals(paperTrackings.getPaperStatus().getValidatedEvents().size(), tracking.getPaperStatus().getValidatedEvents().size());
         Assertions.assertEquals(paperTrackings.getPaperStatus().getFinalDematFound(), tracking.getPaperStatus().getFinalDematFound());

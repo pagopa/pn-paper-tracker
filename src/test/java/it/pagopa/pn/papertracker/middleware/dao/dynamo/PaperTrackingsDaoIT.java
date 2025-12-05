@@ -114,7 +114,6 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
-        String ocrRequestId = "test-ocr-request-id";
 
         //Assert
         StepVerifier.create(paperTrackingsDAO.updateItem("non-existing-request-id", paperTrackingsToUpdate))
@@ -201,7 +200,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
     }
 
     @Test
-    void addValidatedAttachmentAndOcrRequests() {
+    void addOcrRequests() {
         //Arrange
         String requestId = "test-request-id-4";
         PaperTrackings paperTrackings = new PaperTrackings();
@@ -219,31 +218,24 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         validationFlow.setOcrRequests(List.of(req1, req2));
         paperTrackings.setValidationFlow(validationFlow);
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
-        PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
-        paperTrackings.setPaperStatus(paperStatus);
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
-        Attachment attachment2 = new Attachment();
-        attachment2.setId("attachment-id-1");
-        attachment2.setDocumentType("DOCUMENT_TYPE");
-        attachment2.setUri("http://example.com/document.pdf");
-
-
-        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(0, List.of(attachment2), requestId).block();
+        paperTrackingsDAO.updateOcrRequests(0, requestId).block();
 
         //Assert
         PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(fisrtResponse);
         Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
+        Assertions.assertNotNull(fisrtResponse.getValidationFlow().getOcrRequests().getFirst().getResponseTimestamp());
 
-        paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(1, List.of(attachment2), requestId).block();
+        paperTrackingsDAO.updateOcrRequests(1, requestId).block();
 
         PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(secondeResponse);
         Assertions.assertNotNull(secondeResponse.getUpdatedAt());
         Assertions.assertNotEquals(fisrtResponse.getUpdatedAt(), secondeResponse.getUpdatedAt());
+        Assertions.assertNotNull(secondeResponse.getValidationFlow().getOcrRequests().getLast().getResponseTimestamp());
     }
 
 }

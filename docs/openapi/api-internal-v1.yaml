@@ -471,6 +471,10 @@ components:
           type: array
           items:
             type: string
+        sendOcrAttachmentsRefinementStock890:
+          type: array
+          items:
+            type: string
         sendOcrAttachmentsFinalValidationStock890:
           type: array
           items:
@@ -507,10 +511,6 @@ components:
           type: string
           format: date-time
           description: Timestamp validato delle triplette (data di rendicontazione documento)
-        validatedAttachments:
-          type: array
-          items:
-            $ref: '#/components/schemas/Attachment'
         validatedEvents:
           type: array
           description: Lista di eventi validati

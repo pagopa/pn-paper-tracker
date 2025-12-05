@@ -145,6 +145,6 @@ public class RECAG012EventBuilder implements HandlerStep {
                 .map(OcrRequest::getDocumentType)
                 .collect(Collectors.toSet());
 
-        return completedDocs.containsAll(requiredDocs);
+        return TrackerUtility.hasRequiredAttachmentsRefinementStock890(requiredDocs, completedDocs);
     }
 }

@@ -35,7 +35,6 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setOcrRequests(List.of());
@@ -43,6 +42,7 @@ public class PaperTrackingsMapper {
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.fromValue(trackingCreationRequest.getProductType())));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890Config(LocalDate.ofInstant(now, ZoneOffset.UTC)));

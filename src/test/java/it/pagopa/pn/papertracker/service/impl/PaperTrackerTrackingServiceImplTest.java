@@ -44,6 +44,7 @@ class PaperTrackerTrackingServiceImplTest {
     @BeforeEach
     void setUp() {
         when(pnPaperTrackerConfigs.getRequiredAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
+        when(pnPaperTrackerConfigs.getSendOcrAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
