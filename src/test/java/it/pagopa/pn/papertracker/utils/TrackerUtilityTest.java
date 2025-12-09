@@ -34,10 +34,12 @@ public class TrackerUtilityTest {
 
     @Test
     void checkIfIsInternalEventReturnsTrueForInternalEventStatusCodes() {
-        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P000"));
-        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P011"));
-        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P012"));
-        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent("P013"));
+        List<String> internalEvents = List.of("P000", "P011", "P012", "P013");
+
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent(internalEvents, "P000"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent(internalEvents, "P011"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent(internalEvents, "P012"));
+        Assertions.assertTrue(TrackerUtility.checkIfIsInternalEvent(internalEvents, "P013"));
     }
 
     @Test
