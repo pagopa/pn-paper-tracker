@@ -43,6 +43,29 @@ public class TestUtils {
         return pt;
     }
 
+    public static PaperTrackings getPaperTrackingsOldVersion(String requestId, ProductType productType) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(productType.getValue());
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        pt.setValidationConfig(validationConfig);
+        return pt;
+    }
+
     public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);

@@ -93,6 +93,18 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             context.getEventId()
                     )
             );
+            case AWAITING_FINAL_STATUS_CODE -> throw new PnPaperTrackerValidationException(
+                    "Invalid state for processing stock 890 final event",
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                            context.getPaperTrackings(),
+                            context.getPaperProgressStatusEvent().getStatusCode(),
+                            ErrorCategory.INVALID_STATE_FOR_STOCK_890,
+                            ErrorCause.STOCK_890_REFINEMENT_ERROR,
+                            String.format("Invalid state %s for processing stock 890 final event",state),
+                            FlowThrow.SEQUENCE_VALIDATION,
+                            ErrorType.ERROR,
+                            context.getEventId()
+                    ));
         };
     }
 
