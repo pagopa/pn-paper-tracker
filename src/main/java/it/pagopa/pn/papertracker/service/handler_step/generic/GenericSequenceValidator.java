@@ -51,6 +51,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         log.debug("Executing GenericSequenceValidator with sequence config: {}", sequenceConfig);
         return Mono.just(context.getPaperTrackings())
                 .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, true))
+                .doOnNext(TrackerUtility::checkValidationConfig)//aggiunto per retrocompatibilità
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }

@@ -55,14 +55,6 @@ public class TestUtils {
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
-        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
-        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
-        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
-        validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("23L"));
-        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
-        pt.setValidationConfig(validationConfig);
         return pt;
     }
 
