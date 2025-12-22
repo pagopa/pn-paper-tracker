@@ -12,6 +12,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
@@ -47,6 +49,16 @@ public class TrackerUtility {
     public static List<Event> validatedEvents(List<String> eventsIds, List<Event> events) {
         return events.stream()
                 .filter(event -> eventsIds.contains(event.getId()))
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        Function.identity(),
+                        (existing, replacement) ->
+                                existing.getCreatedAt().isAfter(replacement.getCreatedAt())
+                                        ? existing
+                                        : replacement
+                ))
+                .values()
+                .stream()
                 .toList();
     }
 
