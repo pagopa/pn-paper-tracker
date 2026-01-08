@@ -2,10 +2,7 @@ package it.pagopa.pn.papertracker.utils;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.EventStatus;
-import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
-import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import lombok.AccessLevel;
@@ -15,6 +12,8 @@ import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
@@ -50,6 +49,16 @@ public class TrackerUtility {
     public static List<Event> validatedEvents(List<String> eventsIds, List<Event> events) {
         return events.stream()
                 .filter(event -> eventsIds.contains(event.getId()))
+                .collect(Collectors.toMap(
+                        Event::getId,
+                        Function.identity(),
+                        (existing, replacement) ->
+                                existing.getCreatedAt().isAfter(replacement.getCreatedAt())
+                                        ? existing
+                                        : replacement
+                ))
+                .values()
+                .stream()
                 .toList();
     }
 
@@ -70,6 +79,17 @@ public class TrackerUtility {
             paperTrackingsToUpdate.setBusinessState(businessState);
         }
     }
+
+    public static void checkValidationConfig(PaperTrackings paperTrackings) {
+        //CONFIGURAZIONE DI DEFAULT PER TUTTE LE SPEDIZIONI INIZIALIZZATE PRIMA DEL RILASCIO DELL 890 (PN-17784)
+        if(Objects.isNull(paperTrackings.getValidationConfig())){
+            ValidationConfig validationConfig = new ValidationConfig();
+            validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+            validationConfig.setSendOcrAttachmentsFinalValidation(List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue()));
+            paperTrackings.setValidationConfig(validationConfig);
+        }
+    }
+
 
     public static void setDematValidationTimestamp(PaperTrackings paperTrackingsToUpdate, String statusCode) {
         ValidationFlow validationFlow = new ValidationFlow();
