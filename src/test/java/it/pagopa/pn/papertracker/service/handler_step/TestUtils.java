@@ -43,6 +43,21 @@ public class TestUtils {
         return pt;
     }
 
+    public static PaperTrackings getPaperTrackingsOldVersion(String requestId, ProductType productType) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(productType.getValue());
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        return pt;
+    }
+
     public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);

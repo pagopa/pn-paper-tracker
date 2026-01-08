@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
+import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.mapper.PaperProgressStatusEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -24,6 +25,7 @@ public class MetadataUpserter implements HandlerStep {
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final DataVaultClient dataVaultClient;
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
+    private final TrackerConfigUtils trackerConfigUtils;
 
     /**
      * Step utilizzato per l'upsert dei metadati relativi all'evento di avanzamento. Inoltre se è presente l'indirizzo scoperto, si occupa di anonimizzarlo.
@@ -50,6 +52,7 @@ public class MetadataUpserter implements HandlerStep {
                         context.getPaperProgressStatusEvent().getRequestId(),
                         paperTrackings
                 ))
+                .doOnNext(TrackerUtility::checkValidationConfig)//aggiunto per retrocompatibilità
                 .doOnNext(paperTrackings -> updateContextWithTrackingInfo(context, paperTrackings))
                 .then();
     }

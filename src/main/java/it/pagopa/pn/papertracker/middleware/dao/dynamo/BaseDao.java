@@ -129,6 +129,10 @@ public class BaseDao<T> {
     protected List<String> buildUpdateExpressions(String key, AttributeValue value, AtomicInteger counter, Map<String, String> names, Map<String, AttributeValue> values) {
         List<String> expressions = new ArrayList<>();
 
+        if(key.equalsIgnoreCase("validationConfig")){
+            return expressions;
+        }
+
         if (isListAttributeType(value)) {
             int idx = counter.getAndIncrement();
             names.put("#k" + idx, key);
