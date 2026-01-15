@@ -53,8 +53,10 @@ public class PnPaperTrackerConfigs {
 
     @Data
     public static class Topics {
-        // Consumer
+        // Consumer + Producer
         private String externalChannelToPaperTrackerQueue;
+        // Consumer
+        private String externalChannelToPaperChannelQueue;
         private String pnOcrOutputsQueue;
         // Producer
         private String queueOcrInputsUrl;
@@ -62,6 +64,7 @@ public class PnPaperTrackerConfigs {
         private String externalChannelOutputsQueue;
         private String uninitializedShipmentDryRunQueue;
         private String uninitializedShipmentRunQueue;
+        private String externalChannelToPaperChannelDryRunQueue;
     }
 
     @PostConstruct
