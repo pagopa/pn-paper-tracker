@@ -35,6 +35,7 @@ public class PaperTrackings {
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
     public static final String COL_REWORK_ID = "reworkId";
     public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
+    public static final String COL_PROCESSING_MODE = "processingMode";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -89,6 +90,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
     private String notificationReworkId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROCESSING_MODE)}))
+    private ProcessingMode processingMode;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =
