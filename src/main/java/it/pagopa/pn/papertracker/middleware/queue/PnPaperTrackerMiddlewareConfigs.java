@@ -5,10 +5,7 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentDryRunMomProducer;
-import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentRunMomProducer;
+import it.pagopa.pn.papertracker.middleware.queue.producer.*;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,9 +46,17 @@ public class PnPaperTrackerMiddlewareConfigs {
     }
 
     @Bean
-    public UninitializedShipmentRunMomProducer uninitializedShipmentRunMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new UninitializedShipmentRunMomProducer(sqsClient,
-                this.pnPaperChannelConfigs.getTopics().getUninitializedShipmentRunQueue(),
+    public ExternalChannelToPaperChannelMomProducer externalChannelToPaperChannelMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new ExternalChannelToPaperChannelMomProducer(sqsClient,
+                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperChannelQueue(),
+                objMapper,
+                ExternalChannelEvent.class);
+    }
+
+    @Bean
+    public ExternalChannelToPaperChannelDryRunMomProducer externalChannelToPaperChannelDryRunMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new ExternalChannelToPaperChannelDryRunMomProducer(sqsClient,
+                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperChannelDryRunQueue(),
                 objMapper,
                 ExternalChannelEvent.class);
     }
