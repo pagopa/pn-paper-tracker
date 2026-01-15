@@ -6,8 +6,8 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.queue.model.CustomEventHeader;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
-import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEventHeader;
 import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentDryRunMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentRunMomProducer;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
@@ -100,12 +100,11 @@ public class ExternalChannelHandler {
     private Mono<Void> handleTrackingNotFoundException(SingleStatusUpdate payload, boolean isDryRun, String messageId) {
         return Mono.fromRunnable(() -> {
             var message = ExternalChannelEvent.builder()
-                    .header(ExternalChannelEventHeader.builder()
+                    .header(CustomEventHeader.builder()
                                     .publisher(PUBLISHER)
                                     .eventId(messageId)
                                     .createdAt(Instant.now())
                                     .eventType(DELIVERY_PUSH_EVENT_TYPE)
-                                    .dryRun(isDryRun)
                                     .build())
                     .payload(payload)
                     .build();
