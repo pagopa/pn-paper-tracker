@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
 @Slf4j
-public class ExternalChannelToPaperChannelMomProducer extends AbstractSqsMomProducer<ExternalChannelEvent> {
+public class ExternalChannelToPaperTrackerMomProducer extends AbstractSqsMomProducer<ExternalChannelEvent> {
 
-    public ExternalChannelToPaperChannelMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<ExternalChannelEvent> msgClass) {
+    public ExternalChannelToPaperTrackerMomProducer(SqsClient sqsClient, String topic, ObjectMapper objectMapper, Class<ExternalChannelEvent> msgClass) {
         super(sqsClient, topic, objectMapper, msgClass);
     }
 

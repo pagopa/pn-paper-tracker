@@ -46,9 +46,9 @@ public class PnPaperTrackerMiddlewareConfigs {
     }
 
     @Bean
-    public ExternalChannelToPaperChannelMomProducer externalChannelToPaperChannelMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new ExternalChannelToPaperChannelMomProducer(sqsClient,
-                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperChannelQueue(),
+    public ExternalChannelToPaperTrackerMomProducer externalChannelToPaperTrackerMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new ExternalChannelToPaperTrackerMomProducer(sqsClient,
+                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperTrackerQueue(),
                 objMapper,
                 ExternalChannelEvent.class);
     }
