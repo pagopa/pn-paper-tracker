@@ -2,12 +2,16 @@ package it.pagopa.pn.papertracker;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
+import it.pagopa.pn.papertracker.exception.ConfigNotFound;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -148,5 +152,47 @@ public class TrackerConfigUtilsTest {
         assertFalse(result);
     }
 
+    @Test
+    void returnsProductsProcessingModes() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RIR:RUN", "2026-02-02;AR:RUN;RIR:RUN;890:DRY"));
+        Map<ProductType, ProcessingMode> resultExpected = Map.of(
+                ProductType.AR, ProcessingMode.RUN,
+                ProductType.RIR, ProcessingMode.RUN
+        );
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+
+        assertEquals(resultExpected, result);
+    }
+
+    @Test
+    void returnsProductsProcessingModesStartDateAfterTwo() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setProductsProcessingModes(List.of("2024-04-12;890:RUN", "2025-03-01;AR:RUN;RIR:RUN;890:DRY"));
+        Map<ProductType, ProcessingMode> resultExpected = Map.of(
+                ProductType.AR, ProcessingMode.RUN,
+                ProductType.RIR, ProcessingMode.RUN,
+                ProductType._890, ProcessingMode.DRY
+        );
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+
+        assertEquals(resultExpected, result);
+    }
+
+    @Test
+    void returnsProductsProcessingModesNotFound() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setProductsProcessingModes(List.of("2026-02-02;AR:RUN;RIR:RUN;890:DRY"));
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        assertThrows(
+                ConfigNotFound.class,
+                () -> utils.getActualProductsProcessingModesConfig(startDate)
+        );
+    }
 
 }
