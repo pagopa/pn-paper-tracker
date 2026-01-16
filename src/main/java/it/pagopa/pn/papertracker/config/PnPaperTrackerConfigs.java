@@ -61,8 +61,6 @@ public class PnPaperTrackerConfigs {
         private String queueOcrInputsUrl;
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
-        private String uninitializedShipmentDryRunQueue;
-        private String uninitializedShipmentRunQueue;
     }
 
     @PostConstruct

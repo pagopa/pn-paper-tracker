@@ -234,22 +234,6 @@ Parameters:
     Type: String
     Description: 'Write paper-channel messages to this Queue'
 
-  UninitializedShipmentDryRunQueueName:
-    Type: String
-    Description: 'Write uninitialized shipment dryrun messages to this Queue'
-
-  UninitializedShipmentDryRunQueueARN:
-    Type: String
-    Description: 'Write uninitialized shipment dryrun messages to this Queue'
-
-  UninitializedShipmentRunQueueName:
-    Type: String
-    Description: 'Write uninitialized shipment messages to this Queue'
-
-  UninitializedShipmentRunQueueARN:
-    Type: String
-    Description: 'Write uninitialized shipment messages to this Queue'
-
   PaperTrackingsErrorsTableName:
     Type: String
     Description: 'DynamoDB table name for PaperTrackingsErrors'
@@ -454,8 +438,6 @@ Resources:
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTSQUEUE=${PnOcrOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTDRYRUNQUEUE=${UninitializedShipmentDryRunQueueName}'
-        ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTRUNQUEUE=${UninitializedShipmentRunQueueName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -545,8 +527,6 @@ Resources:
               - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref UninitializedShipmentDryRunQueueARN
-              - !Ref UninitializedShipmentRunQueueARN
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:
