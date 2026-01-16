@@ -9,7 +9,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.CustomEventHeader;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperChannelDryRunMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperTrackerMomProducer;
-import it.pagopa.pn.papertracker.utils.LogUtility;
+import it.pagopa.pn.papertracker.service.SourceQueueProxyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -33,13 +33,12 @@ import static it.pagopa.pn.papertracker.utils.QueueConst.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SourceQueueProxyServiceImpl {
+public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
     private static final String DRY_RUN_KEY = "dryRun";
 
     private final ExternalChannelToPaperTrackerMomProducer paperTrackerProducer;
     private final ExternalChannelToPaperChannelDryRunMomProducer paperChannelDryRunProducer;
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final LogUtility logUtility;
 
     /**
      * Gestisce un messaggio proveniente da pn-ec applicando le regole di routing in base al processingMode.
@@ -58,7 +57,7 @@ public class SourceQueueProxyServiceImpl {
     public Mono<Void> handleExternalChannelMessage(
             Message<SingleStatusUpdate> message
     ) {
-        log.info("Handling message: {}", logUtility.maskSensitiveData(message, JSON_PROPERTY_DISCOVERED_ADDRESS));
+        log.info("Routing message");
 
         String requestId;
         try {
