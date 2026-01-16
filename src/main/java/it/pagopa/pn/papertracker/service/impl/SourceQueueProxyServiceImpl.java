@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.mapper.MessageAttributeMapper;
@@ -10,6 +9,7 @@ import it.pagopa.pn.papertracker.middleware.queue.model.CustomEventHeader;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperChannelDryRunMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperTrackerMomProducer;
+import it.pagopa.pn.papertracker.utils.LogUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import java.time.Instant;
 import java.util.UUID;
 
+import static it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent.JSON_PROPERTY_DISCOVERED_ADDRESS;
 import static it.pagopa.pn.papertracker.utils.QueueConst.*;
 
 /**
@@ -35,20 +36,19 @@ import static it.pagopa.pn.papertracker.utils.QueueConst.*;
 public class SourceQueueProxyServiceImpl {
     private static final String DRY_RUN_KEY = "dryRun";
 
-    private final ObjectMapper objectMapper;
-
     private final ExternalChannelToPaperTrackerMomProducer paperTrackerProducer;
     private final ExternalChannelToPaperChannelDryRunMomProducer paperChannelDryRunProducer;
     private final PaperTrackingsDAO paperTrackingsDAO;
+    private final LogUtility logUtility;
 
     /**
      * Gestisce un messaggio proveniente da pn-ec applicando le regole di routing in base al processingMode.
      * <p>
      * Le regole applicate sono:
      * <ul>
-     *   <li>Spedizione NON presente su pn-PaperTrackings → evento inoltrato solo a pn-paper-channel</li>
-     *   <li>Spedizione presente e modalità DRY → evento inoltrato a pn-paper-channel e pn-paper-tracker</li>
-     *   <li>Spedizione presente e modalità RUN → evento inoltrato solo a pn-paper-tracker</li>
+     *   <li>Spedizione NON presente su pn-PaperTrackings -> evento inoltrato solo a pn-paper-channel</li>
+     *   <li>Spedizione presente e modalità DRY -> evento inoltrato a pn-paper-channel e pn-paper-tracker</li>
+     *   <li>Spedizione presente e modalità RUN -> evento inoltrato solo a pn-paper-tracker</li>
      * </ul>
      * </p>
      *
@@ -58,7 +58,7 @@ public class SourceQueueProxyServiceImpl {
     public Mono<Void> handleExternalChannelMessage(
             Message<SingleStatusUpdate> message
     ) {
-        log.info("Handling message {}", maskSensitiveData(message));
+        log.info("Handling message: {}", logUtility.maskSensitiveData(message, JSON_PROPERTY_DISCOVERED_ADDRESS));
 
         String requestId;
         try {
@@ -104,19 +104,14 @@ public class SourceQueueProxyServiceImpl {
             Message<SingleStatusUpdate> event
     ) {
         return switch (tracking.getProcessingMode()) {
-            case "DRY" -> Mono.fromRunnable(() -> {
+            case DRY -> Mono.fromRunnable(() -> {
                 var enrichedMessage = buildOutputMessage(event, true);
                 paperChannelDryRunProducer.push(enrichedMessage);
                 paperTrackerProducer.push(enrichedMessage);
             });
-            case "RUN" -> Mono.fromRunnable(() ->
+            case RUN -> Mono.fromRunnable(() ->
                     paperTrackerProducer.push(buildOutputMessage(event, false))
             );
-            default -> {
-                String errorMessage = "Unknown processing mode: " + tracking.getProcessingMode();
-                log.error(tracking.getProcessingMode());
-                yield Mono.error(new PaperTrackerException(errorMessage));
-            }
         };
     }
 
@@ -139,37 +134,9 @@ public class SourceQueueProxyServiceImpl {
                         .eventId(UUID.randomUUID().toString())
                         .createdAt(Instant.now())
                         .eventType(TRACKER_QUEUE_PROXY_EVENT_TYPE)
-                        .messageAttributes(MessageAttributeMapper.fromHeaders(message.getHeaders()))
+                        .messageAttributes(headers)
                         .build())
                 .payload(message.getPayload())
                 .build();
-    }
-
-    /**
-     * Maschera i dati sensibili nell'oggetto prima della serializzazione per il logging.
-     * In particolare, oscura il campo discoveredAddress.
-     *
-     * @param obj l'oggetto da serializzare e mascherare
-     * @return la rappresentazione JSON dell'oggetto con i dati sensibili mascherati
-     */
-    private String maskSensitiveData(Object obj) {
-        if (obj == null) return "null";
-
-        try {
-            // Serializza l'oggetto Java in JSON string
-            String jsonStr = objectMapper.writeValueAsString(obj);
-
-            // Maschera discoveredAddress
-            jsonStr = jsonStr.replaceAll(
-                    "(\"discoveredAddress\"\\s*:\\s*)(\"[^\"]*\"|\\{[^}]*\\})",
-                    "$1\"***\""
-            );
-
-            return jsonStr;
-
-        } catch (Exception e) {
-            // Fallback al toString() se la serializzazione fallisce
-            return obj.toString();
-        }
     }
 }

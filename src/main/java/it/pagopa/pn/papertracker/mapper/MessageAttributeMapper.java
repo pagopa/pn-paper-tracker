@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
-public final class MessageAttributeMapper {
+public class MessageAttributeMapper {
 
     public static Map<String, MessageAttributeValue> fromHeaders(MessageHeaders headers) {
         Map<String, MessageAttributeValue> attributes = new HashMap<>();
