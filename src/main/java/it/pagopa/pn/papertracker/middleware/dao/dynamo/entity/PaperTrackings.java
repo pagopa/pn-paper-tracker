@@ -92,7 +92,7 @@ public class PaperTrackings {
     private String notificationReworkId;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROCESSING_MODE)}))
-    private String processingMode;
+    private ProcessingMode processingMode;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =

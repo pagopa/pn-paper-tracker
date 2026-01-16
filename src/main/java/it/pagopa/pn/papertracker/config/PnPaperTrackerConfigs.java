@@ -39,6 +39,7 @@ public class PnPaperTrackerConfigs {
     private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
     private List<String> strictFinalValidationStock890;
     private List<String> internalEvents = new ArrayList<>();
+    private List<String> productsProcessingModes = new ArrayList<>();
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
@@ -62,8 +63,6 @@ public class PnPaperTrackerConfigs {
         private String queueOcrInputsUrl;
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
-        private String uninitializedShipmentDryRunQueue;
-        private String uninitializedShipmentRunQueue;
         private String externalChannelToPaperChannelDryRunQueue;
     }
 
