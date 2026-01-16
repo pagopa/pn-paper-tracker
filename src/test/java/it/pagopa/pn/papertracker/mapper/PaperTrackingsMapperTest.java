@@ -9,7 +9,6 @@ import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -17,8 +16,6 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PaperTrackingsMapperTest {
-
-    Duration paperTrackingsTtlDuration = Duration.ofDays(3650);
 
     @Test
     void toPaperTrackingsValidRequest() {
@@ -36,7 +33,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
         pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
-
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
 
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
@@ -49,6 +46,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.DRY, paperTrackings.getProcessingMode());
     }
 
     @Test
@@ -74,6 +72,7 @@ public class PaperTrackingsMapperTest {
         paperTrackings.setPcRetry("PCRETRY_1");
         paperTrackings.setProductType(ProductType._890.getValue());
         paperTrackings.setUnifiedDeliveryDriver("driver789");
+        paperTrackings.setProcessingMode(ProcessingMode.DRY);
 
         Attachment attachment = new Attachment();
         attachment.setUri("uri");
@@ -208,6 +207,8 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(paperTrackings.getNextRequestIdPcretry(), tracking.getNextRequestIdPcretry());
         Assertions.assertEquals(paperTrackings.getState().name(), tracking.getState().name());
         Assertions.assertEquals(paperTrackings.getBusinessState().name(), tracking.getBusinessState().name());
+        Assertions.assertEquals(paperTrackings.getProcessingMode() != null ? paperTrackings.getProcessingMode().name() : null,
+                tracking.getProcessingMode() != null ? tracking.getProcessingMode().name() : null);
         Assertions.assertNotNull(tracking.getCreatedAt());
         Assertions.assertNotNull(tracking.getUpdatedAt());
     }
