@@ -5,7 +5,9 @@ import io.awspring.cloud.sqs.annotation.SqsListener;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelSourceEventsHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
+import it.pagopa.pn.papertracker.service.SourceQueueProxyService;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -23,8 +25,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PnEventInboundService {
 
+    private final ExternalChannelSourceEventsHandler externalChannelSourceEventsHandler;
     private final ExternalChannelHandler externalChannelHandler;
     private final OcrEventHandler ocrEventHandler;
+
+    @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
+    public void externalChannelSourceConsumer(
+            @Payload Message<SingleStatusUpdate> message,
+            @Headers Map<String, Object> headers
+    ) {
+        processMessage(() -> externalChannelSourceEventsHandler.handleExternalChannelMessage(message),
+                "pn-external_channel_to_paper_tracker", message, headers);
+    }
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-tracker-queue}")
     public void externalChannelConsumer(
