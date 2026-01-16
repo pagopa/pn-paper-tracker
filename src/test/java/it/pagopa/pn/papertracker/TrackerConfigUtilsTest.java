@@ -184,6 +184,22 @@ public class TrackerConfigUtilsTest {
     }
 
     @Test
+    void returnsProductsProcessingModesStartDateEqualToConfigDate() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setProductsProcessingModes(List.of("2026-08-19;AR:RUN", "2025-03-02;AR:DRY;RIR:RUN;890:RUN"));
+        Map<ProductType, ProcessingMode> resultExpected = Map.of(
+                ProductType.AR, ProcessingMode.DRY,
+                ProductType.RIR, ProcessingMode.RUN,
+                ProductType._890, ProcessingMode.RUN
+        );
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+
+        assertEquals(resultExpected, result);
+    }
+
+    @Test
     void returnsProductsProcessingModesNotFound() {
         PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
         cfg.setProductsProcessingModes(List.of("2026-02-02;AR:RUN;RIR:RUN;890:DRY"));
