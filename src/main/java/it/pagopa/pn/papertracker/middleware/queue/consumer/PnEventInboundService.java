@@ -32,7 +32,7 @@ public class PnEventInboundService {
             @Header(name = "dryRun", required = false) Boolean dryRun,
             @Header(name = "reworkId", required = false) String reworkId,
             @Header(name = "id") String messageId,
-            @Header(name = "senderId", required = false) String senderId,
+            @Header(name = "SenderId", required = false) String senderId,
             @Headers Map<String, Object> headers
     ) {
         processMessage(() -> externalChannelHandler.handleExternalChannelMessage(
