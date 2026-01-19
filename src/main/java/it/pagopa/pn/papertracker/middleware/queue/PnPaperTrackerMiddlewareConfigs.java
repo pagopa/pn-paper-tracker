@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.middleware.queue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperChannelDryRunMomProducer;
