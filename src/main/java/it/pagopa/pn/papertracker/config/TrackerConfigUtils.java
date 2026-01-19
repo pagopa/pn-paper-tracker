@@ -4,175 +4,196 @@ import it.pagopa.pn.papertracker.exception.ConfigNotFound;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import lombok.*;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
 public class TrackerConfigUtils {
 
     private static final String SEPARATOR = ";";
-    private static final int START_DATE_INDEX = 0;
     private static final String CONFIG_ERROR_CODE = "REQUIRED_CONFIG_NOT_FOUND";
 
-    public record AttachmentsConfig(LocalDate startConfigurationTime, List<String> documentTypes) {}
-    public record StrictValidationConfig(LocalDate startConfigurationTime, Boolean enableStrictValidation) {}
-    public record ActivationModeConfig(LocalDate startConfigurationTime, Map<ProductType, ProcessingMode> activationMode) {}
 
-    private final List<AttachmentsConfig> requiredAttachmentsRefinementStock890Configs;
-    private final List<AttachmentsConfig> sendOcrAttachmentsRefinementStock890Configs;
-    private final List<AttachmentsConfig> sendOcrAttachmentsFinalValidationStock890Configs;
-    private final List<AttachmentsConfig> sendOcrAttachmentsFinalValidationConfigs;
-    private final List<StrictValidationConfig> strictFinalValidationStock890Config;
+    @Getter
+    public abstract static class ConfigWithDate<T> {
+
+        protected final LocalDate startConfigurationTime;
+        protected final List<String> stringConfigs;
+
+        protected ConfigWithDate(String configWithDate) {
+            var splitted = configWithDate.split(SEPARATOR);
+
+            this.startConfigurationTime = LocalDate.parse(splitted[0]);
+            this.stringConfigs = List.copyOf(
+                    Arrays.asList(Arrays.copyOfRange(splitted, 1, splitted.length))
+            );
+        }
+
+        public abstract T getConfig();
+    }
+
+    public static final class ListStringConfig extends ConfigWithDate<List<String>> {
+
+        public ListStringConfig(String configWithDate) {
+            super(configWithDate);
+        }
+
+        @Override
+        public List<String> getConfig() {
+            return stringConfigs;
+        }
+    }
+
+    public static final class BooleanConfig extends ConfigWithDate<Boolean> {
+
+        public BooleanConfig(String configWithDate) {
+            super(configWithDate);
+        }
+
+        @Override
+        public Boolean getConfig() {
+            if(stringConfigs.isEmpty())
+                return Boolean.FALSE;
+            return Boolean.parseBoolean(stringConfigs.getFirst());
+        }
+    }
+
+    public static final class ActivationModeConfig
+            extends ConfigWithDate<Map<ProductType, ProcessingMode>> {
+
+        public ActivationModeConfig(String configWithDate) {
+            super(configWithDate);
+        }
+
+        @Override
+        public Map<ProductType, ProcessingMode> getConfig() {
+            return stringConfigs.stream()
+                    .map(pm -> pm.split(":"))
+                    .collect(Collectors.toUnmodifiableMap(
+                            pm -> ProductType.fromValue(pm[0]),
+                            pm -> ProcessingMode.valueOf(pm[1])
+                    ));
+        }
+    }
+
+    private final List<ListStringConfig> requiredAttachmentsRefinementStock890Configs;
+    private final List<ListStringConfig> sendOcrAttachmentsRefinementStock890Configs;
+    private final List<ListStringConfig> sendOcrAttachmentsFinalValidationStock890Configs;
+    private final List<ListStringConfig> sendOcrAttachmentsFinalValidationConfigs;
+    private final List<BooleanConfig> strictFinalValidationStock890Config;
     private final List<ActivationModeConfig> productsProcessingModesConfig;
     private final PnPaperTrackerConfigs cfg;
 
     public TrackerConfigUtils(PnPaperTrackerConfigs cfg) {
-        this.requiredAttachmentsRefinementStock890Configs = buildAttachmentsConfigFromStringList(cfg.getRequiredAttachmentsRefinementStock890());
-        this.sendOcrAttachmentsRefinementStock890Configs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsRefinementStock890());
-        this.sendOcrAttachmentsFinalValidationConfigs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidation());
-        this.sendOcrAttachmentsFinalValidationStock890Configs = buildAttachmentsConfigFromStringList(cfg.getSendOcrAttachmentsFinalValidationStock890());
-        this.strictFinalValidationStock890Config = buildSortedList(cfg.getStrictFinalValidationStock890(), this::toStrictValidationConfig);
-        this.productsProcessingModesConfig = buildSortedList(cfg.getProductsProcessingModes(), this::toActivationModeConfig);
+        this.requiredAttachmentsRefinementStock890Configs = buildListStringConfig(cfg.getRequiredAttachmentsRefinementStock890());
+        this.sendOcrAttachmentsRefinementStock890Configs = buildListStringConfig(cfg.getSendOcrAttachmentsRefinementStock890());
+        this.sendOcrAttachmentsFinalValidationConfigs = buildListStringConfig(cfg.getSendOcrAttachmentsFinalValidation());
+        this.sendOcrAttachmentsFinalValidationStock890Configs = buildListStringConfig(cfg.getSendOcrAttachmentsFinalValidationStock890());
+        this.strictFinalValidationStock890Config = buildListBooleanConfig(cfg.getStrictFinalValidationStock890());
+        this.productsProcessingModesConfig = buildListActivationModeConfig(cfg.getProductsProcessingModes());
         this.cfg = cfg;
     }
 
-    private <T> List<T> buildSortedList(List<String> source, Function<String, T> mapper) {
-        if (CollectionUtils.isEmpty(source)) {
-            return Collections.emptyList();
-        }
-        return source.stream()
-                .map(mapper)
-                .sorted(Comparator.comparing(this::extractStartDate).reversed())
+    public List<ListStringConfig> buildListStringConfig(List<String> configList) {
+        return Optional.ofNullable(configList)
+                .orElse(List.of())
+                .stream()
+                .map(ListStringConfig::new)
                 .toList();
     }
 
-    private LocalDate extractStartDate(Object config) {
-        if (config instanceof AttachmentsConfig c) return c.startConfigurationTime();
-        if (config instanceof StrictValidationConfig c) return c.startConfigurationTime();
-        if (config instanceof ActivationModeConfig c) return c.startConfigurationTime();
-        throw new IllegalArgumentException("Unknown config type");
+    public List<BooleanConfig> buildListBooleanConfig(List<String> configList) {
+        return Optional.ofNullable(configList)
+                .orElse(List.of())
+                .stream()
+                .map(BooleanConfig::new)
+                .toList();
     }
 
-    private List<AttachmentsConfig> buildAttachmentsConfigFromStringList(List<String> attachmentsConfigsStr) {
-        return buildSortedList(attachmentsConfigsStr, this::toAttachmentsConfig);
+    public List<ActivationModeConfig> buildListActivationModeConfig(List<String> configList) {
+        return Optional.ofNullable(configList)
+                .orElse(List.of())
+                .stream()
+                .map(ActivationModeConfig::new)
+                .toList();
     }
 
-    private AttachmentsConfig toAttachmentsConfig(String config) {
-        String[] split = config.split(SEPARATOR);
-        LocalDate startDate = LocalDate.parse(split[START_DATE_INDEX]);
-        List<String> documentTypes = Arrays.asList(Arrays.copyOfRange(split, 1, split.length));
-        return new AttachmentsConfig(startDate, documentTypes);
-    }
-
-    private StrictValidationConfig toStrictValidationConfig(String config) {
-        String[] split = config.split(SEPARATOR);
-        LocalDate startDate = LocalDate.parse(split[START_DATE_INDEX]);
-        Boolean enabled = split.length > 1 && Boolean.parseBoolean(split[1]);
-        return new StrictValidationConfig(startDate, enabled);
-    }
-
-    private ActivationModeConfig toActivationModeConfig(String config) {
-        String[] split = config.split(SEPARATOR);
-        LocalDate startDate = LocalDate.parse(split[START_DATE_INDEX]);
-
-        Map<ProductType, ProcessingMode> activationModeMap =
-                Arrays.stream(split, 1, split.length)
-                        .map(pm -> pm.split(":"))
-                        .collect(Collectors.toMap(
-                                pm -> ProductType.fromValue(pm[0]),
-                                pm -> ProcessingMode.valueOf(pm[1])
-                        ));
-
-        return new ActivationModeConfig(startDate, activationModeMap);
-    }
-
-    private boolean isStartDateAfterOrEqualToConfigDate(LocalDate startDate, LocalDate configStartDate) {
-        return !startDate.isBefore(configStartDate); // negando isBefore ottengo isAfterOrEqual
-    }
-
-    private <T, R> R getActualConfig(
-            List<T> configs,
-            LocalDate startDate,
-            Function<T, LocalDate> dateExtractor,
-            Function<T, R> valueExtractor,
-            String errorMessage
+    public <T> T getActualConfig(
+            List<? extends ConfigWithDate<T>> configs,
+            LocalDate date,
+            String configName
     ) {
         return configs.stream()
-                .filter(c -> isStartDateAfterOrEqualToConfigDate(startDate, dateExtractor.apply(c)))
+                .sorted(Comparator.comparing(
+                        (ConfigWithDate<T> c) -> c.getStartConfigurationTime()
+                ).reversed())
+                .filter(c -> !date.isBefore(c.getStartConfigurationTime()))
                 .findFirst()
-                .map(valueExtractor)
-                .orElseThrow(() -> new ConfigNotFound(CONFIG_ERROR_CODE, errorMessage + startDate));
+                .map(ConfigWithDate::getConfig)
+                .orElseThrow(() -> new ConfigNotFound(
+                        CONFIG_ERROR_CODE,
+                        configName + " not found for date: " + date
+                ));
     }
 
-    public List<String> getActualRequiredAttachmentsRefinementStock890(LocalDate startDate) {
+    public List<String> getActualRequiredAttachmentsRefinementStock890(LocalDate date) {
         return getActualConfig(
                 requiredAttachmentsRefinementStock890Configs,
-                startDate,
-                AttachmentsConfig::startConfigurationTime,
-                AttachmentsConfig::documentTypes,
-                "RequiredAttachmentsRefinementStock890 not found for date: "
+                date,
+                "RequiredAttachmentsRefinementStock890"
         );
     }
 
-    public List<String> getActualSendOcrAttachmentsRefinementStock890(LocalDate startDate) {
+    public List<String> getActualSendOcrAttachmentsRefinementStock890(LocalDate date) {
         return getActualConfig(
                 sendOcrAttachmentsRefinementStock890Configs,
-                startDate,
-                AttachmentsConfig::startConfigurationTime,
-                AttachmentsConfig::documentTypes,
-                "SendOcrAttachmentsRefinementStock890 not found for date: "
+                date,
+                "SendOcrAttachmentsRefinementStock890"
         );
     }
 
-    public List<String> getActualSendOcrAttachmentsFinalValidationStock890(LocalDate startDate) {
+    public List<String> getActualSendOcrAttachmentsFinalValidationStock890(LocalDate date) {
         return getActualConfig(
                 sendOcrAttachmentsFinalValidationStock890Configs,
-                startDate,
-                AttachmentsConfig::startConfigurationTime,
-                AttachmentsConfig::documentTypes,
-                "SendOcrAttachmentsFinalValidationStock890 not found for date: "
+                date,
+                "SendOcrAttachmentsFinalValidationStock890"
         );
     }
 
-    public List<String> getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate startDate) {
+    public List<String> getActualSendOcrAttachmentsFinalValidation(LocalDate date) {
         return getActualConfig(
                 sendOcrAttachmentsFinalValidationConfigs,
-                startDate,
-                AttachmentsConfig::startConfigurationTime,
-                AttachmentsConfig::documentTypes,
-                "SendOcrAttachmentsFinalValidation not found for date: "
+                date,
+                "SendOcrAttachmentsFinalValidation"
         );
     }
 
-    public Boolean getActualStrictFinalValidationStock890Config(LocalDate startDate) {
-        return strictFinalValidationStock890Config.stream()
-                .filter(c -> isStartDateAfterOrEqualToConfigDate(startDate, c.startConfigurationTime()))
-                .findFirst()
-                .map(StrictValidationConfig::enableStrictValidation)
-                .orElse(Boolean.FALSE);
+    public Boolean getActualStrictFinalValidationStock890(LocalDate date) {
+        return getActualConfig(
+                strictFinalValidationStock890Config,
+                date,
+                "StrictFinalValidationStock890"
+        );
+    }
+
+    public Map<ProductType, ProcessingMode> getActualProductsProcessingModes(LocalDate date) {
+        return getActualConfig(
+                productsProcessingModesConfig,
+                date,
+                "ProductsProcessingModes"
+        );
     }
 
     public Map<ProductType, OcrStatusEnum> getEnableOcrValidationFor() {
         return cfg.getEnableOcrValidationFor().stream()
-                .map(config -> config.split(":"))
-                .collect(Collectors.toMap(
-                        split -> ProductType.fromValue(split[0]),
-                        split -> OcrStatusEnum.valueOf(split[1])
-                ));
-    }
-
-    public Map<ProductType, ProcessingMode> getActualProductsProcessingModesConfig(LocalDate startDate) {
-        return getActualConfig(
-                productsProcessingModesConfig,
-                startDate,
-                ActivationModeConfig::startConfigurationTime,
-                ActivationModeConfig::activationMode,
-                "ProductsProcessingModes not found for date: "
-        );
+                .map(config -> {
+                    String[] splittedConfig = config.split(":");
+                    return Map.entry(ProductType.fromValue(splittedConfig[0]), splittedConfig[1]);
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> OcrStatusEnum.valueOf(entry.getValue())));
     }
 }

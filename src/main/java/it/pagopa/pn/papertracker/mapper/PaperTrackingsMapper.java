@@ -33,7 +33,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
-        paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModesConfig(LocalDate.ofInstant(now, ZoneOffset.UTC)).get(productType));
+        paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModes(LocalDate.ofInstant(now, ZoneOffset.UTC)).get(productType));
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();
@@ -43,9 +43,9 @@ public class PaperTrackingsMapper {
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890Config(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }

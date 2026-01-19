@@ -59,7 +59,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2026-01-01;DOC1;DOC2", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidation(startDate);
 
         assertTrue(result.isEmpty());
     }
@@ -70,7 +70,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2024-01-01;DOC1", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidation(startDate);
 
         assertEquals(1, result.size());
     }
@@ -81,7 +81,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2024-01-01;DOC1", "2025-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidation(startDate);
 
         assertEquals(2, result.size());
     }
@@ -125,7 +125,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2026-01-01;true", "2027-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
+        Boolean result = utils.getActualStrictFinalValidationStock890(startDate);
 
         assertFalse(result);
     }
@@ -136,7 +136,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2024-01-01;true", "2027-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
+        Boolean result = utils.getActualStrictFinalValidationStock890(startDate);
 
         assertTrue(result);
     }
@@ -147,7 +147,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2024-01-01;true", "2025-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
+        Boolean result = utils.getActualStrictFinalValidationStock890(startDate);
 
         assertFalse(result);
     }
@@ -162,7 +162,7 @@ public class TrackerConfigUtilsTest {
         );
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModes(startDate);
 
         assertEquals(resultExpected, result);
     }
@@ -178,7 +178,7 @@ public class TrackerConfigUtilsTest {
         );
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModes(startDate);
 
         assertEquals(resultExpected, result);
     }
@@ -194,9 +194,20 @@ public class TrackerConfigUtilsTest {
         );
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModesConfig(startDate);
+        Map<ProductType, ProcessingMode> result = utils.getActualProductsProcessingModes(startDate);
 
         assertEquals(resultExpected, result);
+    }
+
+    @Test
+    void returnsProductsProcessingModesEmpty() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setProductsProcessingModes(List.of());
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+        assertThrows(
+                ConfigNotFound.class,
+                () -> utils.getActualProductsProcessingModes(startDate)
+        );
     }
 
     @Test
@@ -207,7 +218,7 @@ public class TrackerConfigUtilsTest {
 
         assertThrows(
                 ConfigNotFound.class,
-                () -> utils.getActualProductsProcessingModesConfig(startDate)
+                () -> utils.getActualProductsProcessingModes(startDate)
         );
     }
 
