@@ -40,6 +40,7 @@ public class PnPaperTrackerConfigs {
     private List<String> strictFinalValidationStock890;
     private List<String> internalEvents = new ArrayList<>();
     private List<String> productsProcessingModes = new ArrayList<>();
+    private List<String> redriveEnabledDomains = new ArrayList<>();
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
