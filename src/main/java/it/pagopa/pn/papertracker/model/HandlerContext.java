@@ -25,5 +25,6 @@ public class HandlerContext {
     private boolean needToSendRECAG012A;
     private String reworkId;
     private OcrDataResultPayload ocrDataResultPayload;
+    private boolean isRedrive;
 
 }
