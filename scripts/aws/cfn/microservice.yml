@@ -395,6 +395,16 @@ Parameters:
     Type: String
     Description: 'Comma separated list of invalid status codes for notification rework events'
 
+  EnableLambdaProxyQueueSource:
+    Type: String
+    AllowedValues: [ "true", "false" ]
+    Default: "true"
+
+  EnableInternalProxyQueueConsumer:
+    Type: String
+    AllowedValues: [ "true", "false" ]
+    Default: "true"
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -438,6 +448,7 @@ Resources:
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTSQUEUE=${PnOcrOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_ENABLEINTERNALPROXYQUEUECONSUMER=${EnableInternalProxyQueueConsumer}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -564,6 +575,7 @@ Resources:
         - ReportBatchItemFailures  # Enables partial batch failures
       ScalingConfig:
         MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
+      Enabled: !Equals [!Ref EnableLambdaProxyQueueSource, "true"]
 
   PaperTrackerQueueProxyExecutionRole:
     Type: AWS::IAM::Role
