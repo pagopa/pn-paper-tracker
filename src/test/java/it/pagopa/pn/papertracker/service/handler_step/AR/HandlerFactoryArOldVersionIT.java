@@ -89,12 +89,12 @@ public class HandlerFactoryArOldVersionIT extends BaseTest.WithLocalStack {
         if (seq.equals(FAIL_COMPIUTA_GIACENZA_AR) || seq.equals(KO_AR_NO_EVENT_B)) {
             assertThrows(PnPaperTrackerValidationException.class, () -> eventsToSend.forEach(singleStatusUpdate -> {
                 String messageId = UUID.randomUUID().toString();
-                externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
+                externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId, null);
             }));
         } else {
             eventsToSend.forEach(singleStatusUpdate -> {
                 String messageId = UUID.randomUUID().toString();
-                externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
+                externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId, null);
             });
         }
         ;

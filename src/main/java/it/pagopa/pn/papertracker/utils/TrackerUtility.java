@@ -290,4 +290,11 @@ public class TrackerUtility {
         return documentTypes.containsAll(requiredAttachments);
     }
 
+    public static boolean checkIfIsRedrive(String senderId, List<String> redriveEnabledDomains) {
+        if(StringUtils.isBlank(senderId) || CollectionUtils.isEmpty(redriveEnabledDomains)) {
+            return false;
+        }
+        return redriveEnabledDomains.stream().anyMatch(senderId::contains);
+    }
+
 }

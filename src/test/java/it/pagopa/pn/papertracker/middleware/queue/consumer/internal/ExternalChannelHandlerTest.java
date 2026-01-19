@@ -1,23 +1,29 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,6 +35,9 @@ public class ExternalChannelHandlerTest {
     @Mock
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
 
+    @Mock
+    private PnPaperTrackerConfigs pnPaperTrackerConfigs;
+
     private ExternalChannelHandler externalChannelHandler;
 
     private String eventId;
@@ -37,7 +46,8 @@ public class ExternalChannelHandlerTest {
     void setUp() {
         externalChannelHandler = new ExternalChannelHandler(
                                         paperTrackerExceptionHandler,
-                                        handleRegistry);
+                                        handleRegistry,
+                                        pnPaperTrackerConfigs);
         eventId = "eventId";
     }
 
@@ -46,12 +56,16 @@ public class ExternalChannelHandlerTest {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN002A.name());
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any())).thenReturn(Mono.empty());
+        when(pnPaperTrackerConfigs.getRedriveEnabledDomains()).thenReturn(List.of("@pagopa.it", "@external.pagopa.it"));
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null, eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null, eventId, "ABCDEF:nome.cognome@pagopa.it");
 
         //Assert
-        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.INTERMEDIATE_EVENT), any());
+        ArgumentCaptor<HandlerContext> contextCaptor = ArgumentCaptor.forClass(HandlerContext.class);
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR), eq(EventTypeEnum.INTERMEDIATE_EVENT), contextCaptor.capture());
+        HandlerContext capturedContext = contextCaptor.getValue();
+        assertTrue(capturedContext.isRedrive());
     }
 
     @Test
@@ -59,12 +73,16 @@ public class ExternalChannelHandlerTest {
         //Arrange
         SingleStatusUpdate payload = getSingleStatusUpdate(RECRN006.name());
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any())).thenReturn(Mono.empty());
+        when(pnPaperTrackerConfigs.getRedriveEnabledDomains()).thenReturn(List.of("@pagopa.it", "@external.pagopa.it"));
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId, "ABCDEF:nome.cognome@domain.it");
 
         //Assert
-        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.RETRYABLE_EVENT), any());
+        ArgumentCaptor<HandlerContext> contextCaptor = ArgumentCaptor.forClass(HandlerContext.class);
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR), eq(EventTypeEnum.RETRYABLE_EVENT), contextCaptor.capture());
+        HandlerContext capturedContext = contextCaptor.getValue();
+        assertFalse(capturedContext.isRedrive());
     }
 
     @Test
@@ -74,10 +92,13 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId, null);
 
         //Assert
-        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR),eq(EventTypeEnum.FINAL_EVENT), any());
+        ArgumentCaptor<HandlerContext> contextCaptor = ArgumentCaptor.forClass(HandlerContext.class);
+        verify(handleRegistry, times(1)).handleEvent(eq(ProductType.AR), eq(EventTypeEnum.FINAL_EVENT), contextCaptor.capture());
+        HandlerContext capturedContext = contextCaptor.getValue();
+        assertFalse(capturedContext.isRedrive());
     }
 
     @Test
@@ -87,7 +108,7 @@ public class ExternalChannelHandlerTest {
         when(handleRegistry.handleEvent(eq(ProductType.UNKNOWN),eq(null), any())).thenReturn(Mono.empty());
 
         //Act
-        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, getDryRunFlag(),null,  eventId, null);
 
         //Assert
         verify(handleRegistry, times(1)).handleEvent(eq(ProductType.UNKNOWN),eq(null), any());
@@ -102,7 +123,7 @@ public class ExternalChannelHandlerTest {
 
         // Act & Assert
         assertThrows(PnPaperTrackerNotFoundException.class, () ->
-                externalChannelHandler.handleExternalChannelMessage(payload, true, null, eventId)
+                externalChannelHandler.handleExternalChannelMessage(payload, true, null, eventId, null)
         );
     }
 
@@ -114,7 +135,7 @@ public class ExternalChannelHandlerTest {
                 .thenReturn(Mono.empty());
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(payload, true, "reworkId", eventId);
+        externalChannelHandler.handleExternalChannelMessage(payload, true, "reworkId", eventId, null);
 
         // Assert
         verify(handleRegistry, times(1))
