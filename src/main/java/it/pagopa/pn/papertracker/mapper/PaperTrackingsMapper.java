@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
@@ -13,7 +12,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -24,6 +22,7 @@ public class PaperTrackingsMapper {
     }
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, TrackerConfigUtils trackerConfigUtils) {
+        ProductType productType = ProductType.fromValue(trackingCreationRequest.getProductType());
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
@@ -34,13 +33,14 @@ public class PaperTrackingsMapper {
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
+        paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModesConfig(LocalDate.ofInstant(now, ZoneOffset.UTC)).get(productType));
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setOcrRequests(List.of());
         paperTrackings.setValidationFlow(validationFlow);
         ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, ProductType.fromValue(trackingCreationRequest.getProductType())));
+        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.ofInstant(now, ZoneOffset.UTC)));
@@ -55,22 +55,4 @@ public class PaperTrackingsMapper {
                 .orElse(OcrStatusEnum.DISABLED);
     }
 
-    public static PaperTrackings toPaperTrackings(PcRetryResponse pcRetryResponse, ProductType productType, String attemptId) {
-        Instant now = Instant.now();
-        PaperTrackings paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId(pcRetryResponse.getRequestId());
-        paperTrackings.setUnifiedDeliveryDriver(pcRetryResponse.getDeliveryDriverId());
-        if(Objects.nonNull(productType)) {
-            paperTrackings.setProductType(productType.getValue());
-        }
-        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
-        paperTrackings.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
-        paperTrackings.setAttemptId(attemptId);
-        paperTrackings.setPcRetry(pcRetryResponse.getPcRetry());
-        paperTrackings.setCreatedAt(now);
-        PaperStatus paperStatus = new PaperStatus();
-        paperTrackings.setValidationFlow(new ValidationFlow());
-        paperTrackings.setPaperStatus(paperStatus);
-        return paperTrackings;
-    }
 }
