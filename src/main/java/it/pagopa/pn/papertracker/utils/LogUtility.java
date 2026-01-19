@@ -4,18 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-/**
- * Utility per il masking dei dati sensibili negli oggetti destinati al logging.
- * <p>
- * La classe converte un oggetto Java in un albero JSON e maschera ricorsivamente
- * tutti i campi indicati, a qualsiasi profondità della struttura.
- */
+
 @Component
 @RequiredArgsConstructor
 public class LogUtility {
@@ -24,20 +18,13 @@ public class LogUtility {
 
     private final ObjectMapper objectMapper;
 
+
     /**
-     * Maschera i campi sensibili di un oggetto Java, identificati per nome,
-     * indipendentemente dal livello di annidamento.
-     *
-     * <p>Il metodo:
-     * <ul>
-     *   <li>converte l'oggetto in un albero JSON</li>
-     *   <li>attraversa ricorsivamente la struttura</li>
-     *   <li>sostituisce il valore dei campi indicati con {@value #MASK}</li>
-     * </ul>
+     * Maschera i campi sensibili di un oggetto Java.
      *
      * @param obj        oggetto da loggare; se {@code null} viene restituita la stringa {@code "null"}
      * @param fieldNames nomi dei campi da mascherare (case-sensitive)
-     * @return rappresentazione JSON dell'oggetto con i campi sensibili mascherati
+     * @return rappresentazione JSON con i campi sensibili mascherati
      */
     public String maskSensitiveData(Object obj, String... fieldNames) {
         if (obj == null) {
@@ -46,32 +33,61 @@ public class LogUtility {
 
         try {
             JsonNode rootNode = objectMapper.valueToTree(obj);
-            Set<String> fieldsToMask = new HashSet<>(Arrays.asList(fieldNames));
-
-            maskRecursively(rootNode, fieldsToMask);
-
+            maskSensitiveData(rootNode, fieldNames);
             return objectMapper.writeValueAsString(rootNode);
-
         } catch (Exception e) {
-            // Fallback sicuro in caso di errori di serializzazione
             return obj.toString();
         }
     }
 
     /**
+     * Maschera i campi sensibili di una stringa JSON.
+     *
+     * @param json       stringa JSON da loggare; se {@code null} viene restituita la stringa {@code "null"}
+     * @param fieldNames nomi dei campi da mascherare (case-sensitive)
+     * @return stringa JSON con i campi sensibili mascherati
+     */
+    public String maskSensitiveDataFromJson(String json, String... fieldNames) {
+        if (json == null) {
+            return "null";
+        }
+
+        try {
+            JsonNode rootNode = objectMapper.readTree(json);
+            maskSensitiveData(rootNode, fieldNames);
+            return objectMapper.writeValueAsString(rootNode);
+        } catch (Exception e) {
+            return json;
+        }
+    }
+
+    /**
+     * Maschera i campi sensibili direttamente su un {@link JsonNode}.
+     * <p>
+     * Nessuna serializzazione o deserializzazione viene eseguita.
+     * </p>
+     *
+     * @param rootNode   nodo JSON da mascherare
+     * @param fieldNames nomi dei campi da mascherare (case-sensitive)
+     * @return lo stesso {@link JsonNode} modificato
+     */
+    public JsonNode maskSensitiveData(JsonNode rootNode, String... fieldNames) {
+        if (rootNode == null) {
+            return null;
+        }
+
+        Set<String> fieldsToMask = new HashSet<>(Arrays.asList(fieldNames));
+        maskRecursively(rootNode, fieldsToMask);
+        return rootNode;
+    }
+
+
+    /**
      * Visita ricorsivamente un {@link JsonNode} e maschera i campi
      * il cui nome è presente nell'insieme {@code fieldsToMask}.
      *
-     * <p>
-     * Il metodo supporta:
-     * <ul>
-     *   <li>oggetti JSON</li>
-     *   <li>array JSON</li>
-     *   <li>strutture annidate di qualsiasi profondità</li>
-     * </ul>
-     *
-     * @param node          nodo corrente dell'albero JSON
-     * @param fieldsToMask  insieme dei nomi dei campi da mascherare
+     * @param node         nodo corrente dell'albero JSON
+     * @param fieldsToMask insieme dei nomi dei campi da mascherare
      */
     private void maskRecursively(JsonNode node, Set<String> fieldsToMask) {
 
@@ -93,5 +109,30 @@ public class LogUtility {
                 maskRecursively(element, fieldsToMask);
             }
         }
+    }
+
+    /**
+     * Converte un {@link Message} in una stringa pronta per il logging, anonimizzando
+     * i campi sensibili del payload e rimuovendo l'header "Body".
+     *
+     * @param <T> tipo del payload del messaggio
+     * @param message messaggio da convertire in stringa; non deve essere {@code null}
+     * @param fieldsToMask insieme dei nomi dei campi del payload da mascherare; se vuoto o {@code null}, il payload non viene modificato
+     * @return rappresentazione in stringa del messaggio con payload mascherato e headers senza "Body"
+     */
+    public <T> String messageToString(Message<T> message, Set<String> fieldsToMask) {
+        T payload = message.getPayload();
+        // Maschera il payload reale
+        String maskedPayload = maskSensitiveData(payload, fieldsToMask.toArray(new String[0]));
+
+        // Toglie Body da headers
+        Map<String, Object> headersMap = new LinkedHashMap<>();
+        message.getHeaders().forEach((k, v) -> {
+            if (!"Body".equalsIgnoreCase(k)) {
+                headersMap.put(k, v);
+            }
+        });
+
+        return "Message [payload=" + maskedPayload + ", headers=" + headersMap + "]";
     }
 }

@@ -4,9 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.support.GenericMessage;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -166,5 +171,41 @@ class LogUtilityTest {
 
         // Assert
         assertThat(node.get("foo").asText()).isEqualTo("bar");
+    }
+
+    @Test
+    void shouldAnonymizePayloadAndExcludeBodyFromHeaders() {
+        // Arrange
+        DiscoveredAddress address = new DiscoveredAddress();
+        address.name = "Mario Rossi";
+        address.address = "Via Roma 123";
+
+        AnalogMail analogMail = new AnalogMail();
+        analogMail.requestId = REQUEST_ID;
+        analogMail.discoveredAddress = address;
+
+        Payload payload = new Payload();
+        payload.analogMail = analogMail;
+
+        Map<String, Object> headers = new LinkedHashMap<>();
+        headers.put("SomeHeader", "SomeValue");
+        headers.put("Body", "{\"analogMail\":{}}"); // Simula header Body
+
+        Message<Payload> message = new GenericMessage<>(payload, new MessageHeaders(headers));
+
+        // Act
+        String result = logUtility.messageToString(message, Set.of("discoveredAddress"));
+
+        // Assert
+        // Il payload deve essere mascherato
+        assertThat(result).contains("\"discoveredAddress\":\"***\"");
+        // Il campo non sensibile resta invariato
+        assertThat(result).contains(REQUEST_ID);
+        // L'header "Body" non deve essere presente
+        assertThat(result).doesNotContain("Body");
+        // Gli altri header devono essere presenti
+        assertThat(result).contains("SomeHeader=SomeValue");
+
+        System.out.println(result);
     }
 }

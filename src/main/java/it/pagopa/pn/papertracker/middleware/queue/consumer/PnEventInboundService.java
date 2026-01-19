@@ -7,7 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.mode
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelSourceEventsHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
-import it.pagopa.pn.papertracker.service.SourceQueueProxyService;
+import it.pagopa.pn.papertracker.utils.LogUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -18,6 +18,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @CustomLog
@@ -28,6 +29,7 @@ public class PnEventInboundService {
     private final ExternalChannelSourceEventsHandler externalChannelSourceEventsHandler;
     private final ExternalChannelHandler externalChannelHandler;
     private final OcrEventHandler ocrEventHandler;
+    private final LogUtility logUtility;
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
     public void externalChannelSourceConsumer(
@@ -61,8 +63,9 @@ public class PnEventInboundService {
     }
 
     private void processMessage(Runnable handler, String source, Message<?> message, Map<String, Object> headers) {
+        String anonymizedMessage = logUtility.messageToString(message, Set.of("discoveredAddress"));
         try {
-            log.info("Handle message from {} with content {}", source, message);
+            log.info("Handle message from {} with content {}", source, anonymizedMessage);
             setMDCContext(headers);
             handler.run();
         } catch (Exception ex) {
