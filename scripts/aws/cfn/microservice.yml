@@ -456,6 +456,8 @@ Resources:
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
         ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTDRYRUNQUEUE=${UninitializedShipmentDryRunQueueName}'
         ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTRUNQUEUE=${UninitializedShipmentRunQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELQUEUE=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry23: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELDRYRUNQUEUE=${ExternalChannelsToPaperChannelDryrunQueueName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -547,6 +549,8 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref UninitializedShipmentDryRunQueueARN
               - !Ref UninitializedShipmentRunQueueARN
+              - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:
