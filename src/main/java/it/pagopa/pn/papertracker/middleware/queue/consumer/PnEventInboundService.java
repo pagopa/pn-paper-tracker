@@ -5,7 +5,9 @@ import io.awspring.cloud.sqs.annotation.SqsListener;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelSourceEventsHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
+import it.pagopa.pn.papertracker.utils.LogUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
@@ -16,6 +18,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @CustomLog
@@ -23,8 +26,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PnEventInboundService {
 
+    private final ExternalChannelSourceEventsHandler externalChannelSourceEventsHandler;
     private final ExternalChannelHandler externalChannelHandler;
     private final OcrEventHandler ocrEventHandler;
+    private final LogUtility logUtility;
+
+    @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
+    public void externalChannelSourceConsumer(
+            @Payload Message<SingleStatusUpdate> message,
+            @Headers Map<String, Object> headers
+    ) {
+        processMessage(() -> externalChannelSourceEventsHandler.handleExternalChannelMessage(message),
+                "pn-external_channel_to_paper_tracker", message, headers);
+    }
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-tracker-queue}")
     public void externalChannelConsumer(
@@ -50,8 +64,9 @@ public class PnEventInboundService {
     }
 
     private void processMessage(Runnable handler, String source, Message<?> message, Map<String, Object> headers) {
+        String anonymizedMessage = logUtility.messageToString(message, Set.of("discoveredAddress"));
         try {
-            log.info("Handle message from {} with content {}", source, message);
+            log.info("Handle message from {} with content {}", source, anonymizedMessage);
             setMDCContext(headers);
             handler.run();
         } catch (Exception ex) {
