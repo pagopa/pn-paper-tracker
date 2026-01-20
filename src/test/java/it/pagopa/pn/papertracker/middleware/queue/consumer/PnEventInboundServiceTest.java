@@ -66,7 +66,7 @@ class PnEventInboundServiceTest {
                 "SenderId", "sender123"
         );
 
-        service.externalChannelConsumer(message, true, "rework123", "message123", "sender123", headers);
+        service.externalChannelConsumer(message, true, "rework123", "message123", "sender123", "sqsSenderId", headers);
 
         verify(externalChannelHandler).handleExternalChannelMessage(
                 message.getPayload(), true, "rework123", "message123", "sender123"
