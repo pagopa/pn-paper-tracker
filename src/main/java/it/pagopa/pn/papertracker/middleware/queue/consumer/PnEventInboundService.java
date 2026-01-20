@@ -11,6 +11,7 @@ import it.pagopa.pn.papertracker.utils.LogUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
@@ -32,6 +33,11 @@ public class PnEventInboundService {
     private final LogUtility logUtility;
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
+    @ConditionalOnProperty(
+            prefix = "pn.paper-tracker.",
+            name = "enable-internal-proxy-queue-consumer",
+            havingValue = "true"
+    )
     public void externalChannelSourceConsumer(
             @Payload Message<SingleStatusUpdate> message,
             @Headers Map<String, Object> headers
