@@ -409,6 +409,9 @@ Conditions:
   EnableLambdaProxyQueueSourceCondition: !Equals
     - !Ref EnableLambdaProxyQueueSource
     - "true"
+  EnableInternalProxyQueueConsumerCondition: !Equals
+    - !Ref EnableLambdaProxyQueueSource
+    - "true"
 
 Resources:
 
@@ -545,8 +548,11 @@ Resources:
               - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref ExternalChannels2PaperChannelQueueARN
               - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
+              - !If
+                - EnableInternalProxyQueueConsumerCondition
+                - !Ref ExternalChannels2PaperChannelQueueARN
+                - !Ref "AWS::NoValue" # Rimuove l'entry dalla lista se la condizione è falsa
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:
