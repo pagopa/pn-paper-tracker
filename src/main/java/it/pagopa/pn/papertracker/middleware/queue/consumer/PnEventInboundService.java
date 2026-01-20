@@ -25,6 +25,11 @@ import java.util.UUID;
 @CustomLog
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "pn.paper-tracker.",
+        name = "disable-all-consumers",
+        havingValue = "true"
+)
 public class PnEventInboundService {
 
     private final ExternalChannelSourceEventsHandler externalChannelSourceEventsHandler;
@@ -33,11 +38,6 @@ public class PnEventInboundService {
     private final LogUtility logUtility;
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
-    @ConditionalOnProperty(
-            prefix = "pn.paper-tracker.",
-            name = "enable-internal-proxy-queue-consumer",
-            havingValue = "true"
-    )
     public void externalChannelSourceConsumer(
             @Payload Message<SingleStatusUpdate> message,
             @Headers Map<String, Object> headers
