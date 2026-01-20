@@ -405,6 +405,11 @@ Parameters:
     AllowedValues: [ "true", "false" ]
     Default: "true"
 
+Conditions:
+  EnableLambdaProxyQueueSourceCondition: !Equals
+    - !Ref EnableLambdaProxyQueueSource
+    - "true"
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -579,7 +584,7 @@ Resources:
         - ReportBatchItemFailures  # Enables partial batch failures
       ScalingConfig:
         MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
-      Enabled: !Equals [!Ref EnableLambdaProxyQueueSource, "true"]
+      Enabled: !If [EnableLambdaProxyQueueSourceCondition, true, false]
 
   PaperTrackerQueueProxyExecutionRole:
     Type: AWS::IAM::Role
