@@ -84,12 +84,12 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
        if(seq.equals(COMPIUTA_GIACENZA_NO_EVENTOB)){
            assertThrows(PnPaperTrackerValidationException.class, () -> eventsToSend.forEach(singleStatusUpdate -> {
                String messageId = UUID.randomUUID().toString();
-               externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
+               externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId, "senderId");
            }), "Necessary status code not found in events");
        }else {
            eventsToSend.forEach(singleStatusUpdate -> {
                String messageId = UUID.randomUUID().toString();
-               externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId);
+               externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, messageId, "senderId");
            });
           }
 

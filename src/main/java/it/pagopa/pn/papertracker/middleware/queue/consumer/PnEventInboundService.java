@@ -46,10 +46,11 @@ public class PnEventInboundService {
             @Header(name = "dryRun", required = false) Boolean dryRun,
             @Header(name = "reworkId", required = false) String reworkId,
             @Header(name = "id") String messageId,
+            @Header(name = "SenderId", required = false) String senderId,
             @Headers Map<String, Object> headers
     ) {
         processMessage(() -> externalChannelHandler.handleExternalChannelMessage(
-                        message.getPayload(), Boolean.TRUE.equals(dryRun), reworkId, messageId),
+                        message.getPayload(), Boolean.TRUE.equals(dryRun), reworkId, messageId, senderId),
                 "pn-external_channel_to_paper_tracker", message, headers);
     }
 
