@@ -28,7 +28,7 @@ import java.util.UUID;
 @ConditionalOnProperty(
         prefix = "pn.paper-tracker.",
         name = "disable-all-consumers",
-        havingValue = "true"
+        havingValue = "false"
 )
 public class PnEventInboundService {
 
@@ -40,8 +40,15 @@ public class PnEventInboundService {
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
     public void externalChannelSourceConsumer(
             @Payload Message<SingleStatusUpdate> message,
-            @Headers Map<String, Object> headers
+            @Headers Map<String, Object> headers,
+            @Header(name = "id") String messageId,
+            @Header(name = "SenderId", required = false) String senderId,
+            @Header(name = "Sqs_Msa_SenderId", required = false) String sqsSenderId,
+            @Header(name = "dryRun", required = false) Boolean dryRun
     ) {
+        log.info("reworkId: {}, id: {}, SenderId: {}, Sqs_Msa_SenderId: {}, headers: {}",
+                dryRun, messageId, senderId, sqsSenderId, headers);
+
         processMessage(() -> externalChannelSourceEventsHandler.handleExternalChannelMessage(message),
                 "pn-external_channel_to_paper_tracker", message, headers);
     }
