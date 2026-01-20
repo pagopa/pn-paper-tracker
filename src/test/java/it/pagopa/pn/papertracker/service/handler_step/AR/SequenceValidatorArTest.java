@@ -58,16 +58,16 @@ class SequenceValidatorArTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRN010", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
-                buildEvent("RECRN011", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "", "", null),
-                buildEvent("RECRN010", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "", "", null),
-                buildEvent("RECRN011", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "", "", null),
-                buildEvent("RECRN003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "", "", null),
-                buildEvent("RECRN004A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "", "", null),
-                buildEvent("RECRN003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRN003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "", "", null),
-                buildEvent("RECRN003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRN003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "", "", null)
+                buildEvent("RECRN010", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "REG1", "", null),
+                buildEvent("RECRN011", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "REG1", "", null),
+                buildEvent("RECRN010", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "REG1", "", null),
+                buildEvent("RECRN011", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "REG1", "", null),
+                buildEvent("RECRN003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "REG1", "", null),
+                buildEvent("RECRN004A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "REG1", "", null),
+                buildEvent("RECRN003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "REG1", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "REG1", "", null),
+                buildEvent("RECRN003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "REG1", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "REG1", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
@@ -89,11 +89,11 @@ class SequenceValidatorArTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "M01", null),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "", "", List.of(DocumentTypeEnum.INDAGINE.getValue())),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
-                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "", "", null)
+                buildEvent("RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "REG1", "M01", null),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "REG1", "", List.of(DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "REG1", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent("RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "REG1", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "REG1", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
@@ -371,6 +371,25 @@ class SequenceValidatorArTest {
         StepVerifier.create(sequenceValidatorAr.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
+                .verify();
+    }
+
+    @Test
+    void validateSequenceRegisteredLetterCodeNotFound() {
+        // Arrange
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRN001A", timestamp, businessTimestamp, null, "", null),
+                buildEvent("RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), null, "", null)
+        ));
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Registered letter code is null or empty in one or more events"))
                 .verify();
     }
 

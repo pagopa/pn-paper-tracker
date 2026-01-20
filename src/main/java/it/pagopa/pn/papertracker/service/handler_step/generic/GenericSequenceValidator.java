@@ -273,16 +273,21 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         log.info("Beginning validation for registered letter codes for events : {}", events);
 
         String firstRegisteredLetterCode = events.getFirst().getRegisteredLetterCode();
-        boolean allRegisteredLetterCodeMatch = events.stream().allMatch(event -> event.getRegisteredLetterCode().equals(firstRegisteredLetterCode));
-        return Mono.just(allRegisteredLetterCodeMatch)
-                .flatMap(registeredLetterCodeMatch -> {
-                    if (!registeredLetterCodeMatch) {
-                        return generateCustomError("Registered letter codes do not match in sequence: " + events.stream().map(Event::getRegisteredLetterCode).toList(), context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
-                    }
-                    paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
-                    return Mono.empty();
-                })
-                .thenReturn(events);
+
+        if (events.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
+            return generateCustomError("Registered letter code is null or empty in one or more events: "
+                            + events.stream().map(Event::getRegisteredLetterCode).toList(),
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation);
+        }
+
+        if (events.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
+            return generateCustomError("Registered letter codes do not match in sequence: "
+                            + events.stream().map(Event::getRegisteredLetterCode).toList(),
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
+        }
+
+        paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
+        return Mono.just(events);
     }
 
     /**
