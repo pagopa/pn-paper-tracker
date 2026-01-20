@@ -98,6 +98,28 @@ class SourceQueueProxyServiceImplTest {
     }
 
     @Test
+    void handleExternalChannelMessage_nullProcessingMode_shouldSendToPaperChannelOnly() {
+        // Arrange
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(null);
+        tracking.setTrackingId(REQUEST_ID);
+
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message);
+
+        // Assert
+        StepVerifier.create(result)
+                .verifyComplete();
+
+        verify(paperChannelDryRunProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, never()).push(any(ExternalChannelEvent.class));
+        verify(paperTrackingsDAO, times(1)).retrieveEntityByTrackingId(REQUEST_ID);
+    }
+
+    @Test
     void handleExternalChannelMessage_dryMode_shouldSendToBothQueues() {
         // Arrange
         PaperTrackings tracking = new PaperTrackings();
