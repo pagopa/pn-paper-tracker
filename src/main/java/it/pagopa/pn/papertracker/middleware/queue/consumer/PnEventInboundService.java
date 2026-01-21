@@ -52,8 +52,10 @@ public class PnEventInboundService {
         log.info("reworkId: {}, id: {}, SenderId: {}, Sqs_Msa_SenderId: {}, headers: {}, sourceMessage: {}",
                 dryRun, messageId, senderId, sqsSenderId, headers, sourceMessage);
 
-        processMessage(() -> externalChannelSourceEventsHandler.handleExternalChannelMessage(message),
-                "pn-external_channel_to_paper_tracker", message, headers);
+        processMessage(() -> {
+            var messageAttributes = sourceMessage.messageAttributes();
+            externalChannelSourceEventsHandler.handleExternalChannelMessage(message.getPayload(), messageAttributes);
+            }, "pn-external_channel_to_paper_tracker", message, headers);
     }
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-tracker-queue}")
@@ -62,12 +64,11 @@ public class PnEventInboundService {
             @Header(name = "dryRun", required = false) Boolean dryRun,
             @Header(name = "reworkId", required = false) String reworkId,
             @Header(name = "id") String messageId,
-            @Header(name = "SenderId", required = false) String senderId,
-            @Header(name = "Sqs_Msa_SenderId", required = false) String sqsSenderId,
+            @Header(name = SqsHeaders.MessageSystemAttributes.SQS_SENDER_ID, required = false) String senderId,
             @Headers Map<String, Object> headers
     ) {
-        log.info("dryRun: {}, reworkId: {}, id: {}, SenderId: {}, Sqs_Msa_SenderId: {}",
-                dryRun, reworkId, messageId, senderId, sqsSenderId);
+        log.info("dryRun: {}, reworkId: {}, id: {}, SenderId: {}}",
+                dryRun, reworkId, messageId, senderId);
         processMessage(() -> externalChannelHandler.handleExternalChannelMessage(
                         message.getPayload(), Boolean.TRUE.equals(dryRun), reworkId, messageId, senderId),
                 "pn-external_channel_to_paper_tracker", message, headers);

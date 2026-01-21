@@ -2,7 +2,6 @@ package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
-import it.pagopa.pn.papertracker.mapper.MessageAttributeMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.queue.model.CustomEventHeader;
@@ -12,15 +11,15 @@ import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPape
 import it.pagopa.pn.papertracker.service.SourceQueueProxyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-import static it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent.JSON_PROPERTY_DISCOVERED_ADDRESS;
 import static it.pagopa.pn.papertracker.utils.QueueConst.*;
 
 /**
@@ -52,25 +51,27 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
      * </p>
      *
      * @param message il messaggio da pn-ec
+     * @param messageAttributes attributi del messaggio
      * @return Mono<Void>
      */
     public Mono<Void> handleExternalChannelMessage(
-            Message<SingleStatusUpdate> message
+            SingleStatusUpdate message,
+            Map<String, MessageAttributeValue> messageAttributes
     ) {
         log.info("Routing message");
 
         String requestId;
         try {
-            requestId = message.getPayload().getAnalogMail().getRequestId();
+            requestId = message.getAnalogMail().getRequestId();
         } catch (NullPointerException e) {
             return Mono.error(new PaperTrackerException("Malformed event from external-channel", e));
         }
 
         return paperTrackingsDAO.retrieveEntityByTrackingId(requestId)
                 // caso: tracking NON trovato
-                .switchIfEmpty(handlePaperChannelEvent(message).then(Mono.empty()))
+                .switchIfEmpty(handlePaperChannelEvent(message, messageAttributes).then(Mono.empty()))
                 // caso: tracking trovato
-                .flatMap(tracking -> handleByProcessingMode(tracking, message))
+                .flatMap(tracking -> handleByProcessingMode(tracking, message, messageAttributes))
                 .then();
     }
 
@@ -81,9 +82,10 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
      * @param event l'evento da inoltrare
      * @return Mono<Void>
      */
-    private Mono<Void> handlePaperChannelEvent(Message<SingleStatusUpdate> event) {
+    private Mono<Void> handlePaperChannelEvent(SingleStatusUpdate event,
+                                               Map<String, MessageAttributeValue> messageAttributes) {
         return Mono.fromRunnable(() ->
-                paperChannelDryRunProducer.push(buildOutputMessage(event, true))
+                paperChannelDryRunProducer.push(buildOutputMessage(event, messageAttributes,true))
         );
     }
 
@@ -96,23 +98,25 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
      *
      * @param tracking oggetto della spedizione
      * @param event l'evento da processare
+     * @param messageAttributes attributi del messaggio
      * @return Mono<Void>
      */
     private Mono<Void> handleByProcessingMode(
             PaperTrackings tracking,
-            Message<SingleStatusUpdate> event
+            SingleStatusUpdate event,
+            Map<String, MessageAttributeValue> messageAttributes
     ) {
         return switch (tracking.getProcessingMode()) {
             case DRY -> Mono.fromRunnable(() -> {
-                var enrichedMessage = buildOutputMessage(event, true);
+                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
                 paperChannelDryRunProducer.push(enrichedMessage);
                 paperTrackerProducer.push(enrichedMessage);
             });
             case RUN -> Mono.fromRunnable(() ->
-                    paperTrackerProducer.push(buildOutputMessage(event, false))
+                    paperTrackerProducer.push(buildOutputMessage(event, messageAttributes, false))
             );
             case null -> Mono.fromRunnable(() ->
-                    paperChannelDryRunProducer.push(buildOutputMessage(event, true))
+                    paperChannelDryRunProducer.push(buildOutputMessage(event, messageAttributes, true))
             );
         };
     }
@@ -120,25 +124,33 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
     /**
      * Costruisce il messaggio di output da inoltrare ai consumer, arricchendolo con header e flag dry-run.
      *
-     * @param message il messaggio originale da pn-ec
+     * @param event il messaggio originale da pn-ec
+     * @param messageAttributes attributi del messaggio
      * @param isDryRun header dryRun
      * @return evento arricchito pronto per essere inoltrato
      */
-    private ExternalChannelEvent buildOutputMessage(Message<SingleStatusUpdate> message, boolean isDryRun) {
-        var headers = MessageAttributeMapper.fromHeaders(message.getHeaders());
-        headers.put(DRY_RUN_KEY, MessageAttributeValue.builder()
+    private ExternalChannelEvent buildOutputMessage(
+            SingleStatusUpdate event,
+            Map<String, MessageAttributeValue> messageAttributes,
+            boolean isDryRun) {
+
+        Map<String, MessageAttributeValue> attributes =
+                new HashMap<>(messageAttributes != null ? messageAttributes : Map.of());
+
+        attributes.put(DRY_RUN_KEY, MessageAttributeValue.builder()
                 .dataType("String")
                 .stringValue(String.valueOf(isDryRun))
                 .build());
+
         return ExternalChannelEvent.builder()
                 .header(CustomEventHeader.builder()
                         .publisher(PUBLISHER)
                         .eventId(UUID.randomUUID().toString())
                         .createdAt(Instant.now())
                         .eventType(TRACKER_QUEUE_PROXY_EVENT_TYPE)
-                        .messageAttributes(headers)
+                        .messageAttributes(attributes)
                         .build())
-                .payload(message.getPayload())
+                .payload(event)
                 .build();
     }
 }
