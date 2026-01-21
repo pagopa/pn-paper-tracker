@@ -12,13 +12,16 @@ describe("getLatestReworkRequestByIun", () => {
 
   it("returns the latest rework request when items are found", async () => {
     ddbMock.on(QueryCommand).resolves({
-      Items: [{ iun: "test-iun", reworkId: "rework-123" , recIndex: "RECINDEX_0" }]
+      Items: [{ iun: "test-iun", reworkId: "rework-123" , recIndex: "RECINDEX_0", createdAt: "2025-11-27T11:48:17.194069270Z" },
+        { iun: "test-iun", reworkId: "rework-124" , recIndex: "RECINDEX_0", createdAt: "2025-11-27T14:52:17.194069270Z" },
+        { iun: "test-iun", reworkId: "rework-125" , recIndex: "RECINDEX_0", createdAt: "2025-11-27T19:48:17.194069270Z"},
+      ]
     });
 
     const result = await getLatestReworkRequestByIun("test-iun", "PREPARE_ANALOG_DOMICILE.IUN_12345.RECINDEX_0.ATTEMPT_0");
 
     assert(ddbMock.commandCalls(QueryCommand).length == 1);
-    assert.deepStrictEqual(result, { iun: "test-iun", reworkId: "rework-123", recIndex: "RECINDEX_0" });
+    assert.deepStrictEqual(result.reworkId, "rework-125");
   });
 
   it("returns null when no items are found", async () => {
