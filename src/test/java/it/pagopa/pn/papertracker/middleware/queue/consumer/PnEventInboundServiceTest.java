@@ -51,7 +51,7 @@ class PnEventInboundServiceTest {
         Message<SingleStatusUpdate> message = MessageBuilder.withPayload(new SingleStatusUpdate()).build();
         Map<String, Object> headers = new HashMap<>();
 
-        service.externalChannelSourceConsumer(message, headers, "X", "X", "X", false);
+        service.externalChannelSourceConsumer(message, headers, "X", "X", "X", false, null);
 
         verify(externalChannelSourceEventsHandler).handleExternalChannelMessage(message);
     }
