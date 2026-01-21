@@ -59,7 +59,7 @@ class PnEventInboundServiceTest {
                 .messageAttributes(attributes)
                 .build();
 
-        service.externalChannelSourceConsumer(message, headers, "X", "X", "X", false, sqsMessage);
+        service.externalChannelSourceConsumer(message, headers, sqsMessage);
 
         verify(externalChannelSourceEventsHandler).handleExternalChannelMessage(payload, attributes);
     }
