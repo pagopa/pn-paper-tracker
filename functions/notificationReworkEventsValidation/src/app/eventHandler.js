@@ -112,7 +112,7 @@ async function checkStatusCode(messageId, reworkEntry, analogMail, statusCode, s
         return false;
     }
 
-    if(statusCode.endsWith("A")){
+    if(statusCode.endsWith("A") || statusCode.endsWith("D")){
       const deliveryFailureCauseValidation = checkDeliveryFailureCause(reworkEntry, deliveryFailureCause);
       if(!deliveryFailureCauseValidation){
         const message = "DeliveryFailureCause non valida.";

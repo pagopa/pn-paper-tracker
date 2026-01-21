@@ -295,6 +295,54 @@ describe("handleEvent - Error Cases", () => {
     assert.strictEqual(callAppend,false, 'appendReceivedStatusCode should not be called');
     assert.strictEqual(callSqs, false, 'sendToQueue should not be called');
   });
+
+  it("should reject rework with DeliveryFailureCause not valid", async () => {
+    let callAppend = false;
+    let callSqs = false;
+    let errorInserted = false;
+    let capturedArgs = [];
+    let reworkEntry = createReworkEntry();
+    reworkEntry.expectedStatusCodes.push({ statusCode: 'RECAG011A', attachments: ['AR'] });
+
+    mockDynamo.getLatestReworkRequestByIun = async (iun) => {
+      assert.strictEqual(iun, 'TEST-IUN-123');
+      return reworkEntry;
+    };
+
+    mockDynamo.appendReceivedStatusCode = async () => {
+      callAppend = true;
+    };
+
+    mockSqs.sendToQueue = async () => {
+      callSqs = true;
+    };
+
+    mockDynamo.insertEventsError = async (...args) => {
+      errorInserted = true;
+      capturedArgs = args;
+    };
+
+    handleEvent = proxyquire('../app/eventHandler', {
+      './dynamo': mockDynamo,
+      './sqs': mockSqs,
+      './log': mockLog
+    }).handleEvent;
+
+    const record = createValidRecord({
+      analogMail: { 
+        statusCode: 'RECAG011A',
+        deliveryFailureCause: 'INVALID_CAUSE'
+      }
+    });
+    const event = { Records: [record] };
+    const result = await handleEvent(event);
+
+    assert.deepStrictEqual(result, {"status": "ok"});
+    assert.strictEqual(errorInserted, true);
+    assert.strictEqual(capturedArgs[3], 'DeliveryFailureCause non valida.');
+    assert.strictEqual(callAppend, false, 'appendReceivedStatusCode should not be called');
+    assert.strictEqual(callSqs, false, 'sendToQueue should not be called');
+  });
 });
 
 describe("handleEvent - Status Code Validation", () => {
@@ -387,5 +435,5 @@ describe("handleEvent - Status Code Validation", () => {
     assert.strictEqual(capturedArgs[3], "Evento di furto, smarrimento o deterioramento");
     assert.strictEqual(appendCalled,false, 'appendReceivedStatusCode should not be called');
     assert.strictEqual(queueCalled, false, 'sendToQueue should not be called');
-});
+  });
 });
