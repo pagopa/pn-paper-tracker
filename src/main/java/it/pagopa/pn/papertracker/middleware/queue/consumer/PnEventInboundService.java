@@ -18,7 +18,6 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.Map;
 import java.util.Set;
