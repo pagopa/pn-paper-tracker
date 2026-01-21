@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.awspring.cloud.sqs.listener.SqsHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
@@ -202,7 +203,7 @@ class LogUtilityTest {
         // Il campo non sensibile resta invariato
         assertThat(result).contains(REQUEST_ID);
         // L'header "Body" non deve essere presente
-        assertThat(result).doesNotContain("Body");
+        assertThat(result).doesNotContain(SqsHeaders.SQS_SOURCE_DATA_HEADER);
         // Gli altri header devono essere presenti
         assertThat(result).contains("SomeHeader=SomeValue");
 

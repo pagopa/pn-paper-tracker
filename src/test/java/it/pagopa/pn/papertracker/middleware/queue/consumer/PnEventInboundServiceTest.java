@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,12 +49,19 @@ class PnEventInboundServiceTest {
 
     @Test
     void externalChannelSourceConsumerProcessesMessage() {
-        Message<SingleStatusUpdate> message = MessageBuilder.withPayload(new SingleStatusUpdate()).build();
+        var payload = new SingleStatusUpdate();
+        Message<SingleStatusUpdate> message = MessageBuilder.withPayload(payload).build();
         Map<String, Object> headers = new HashMap<>();
+        Map<String, MessageAttributeValue> attributes = new HashMap<>();
+        software.amazon.awssdk.services.sqs.model.Message sqsMessage = software.amazon.awssdk.services.sqs.model.Message.builder()
+                .messageId("msg-123")
+                .body("payload-ignored-in-test")
+                .messageAttributes(attributes)
+                .build();
 
-        service.externalChannelSourceConsumer(message, headers);
+        service.externalChannelSourceConsumer(message, headers, sqsMessage);
 
-        verify(externalChannelSourceEventsHandler).handleExternalChannelMessage(message);
+        verify(externalChannelSourceEventsHandler).handleExternalChannelMessage(payload, attributes);
     }
 
     @Test

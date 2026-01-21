@@ -22,6 +22,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,8 +52,8 @@ class SourceQueueProxyServiceImplTest {
     @Captor
     private ArgumentCaptor<ExternalChannelEvent> eventCaptor;
 
-    private Message<SingleStatusUpdate> message;
-    private SingleStatusUpdate statusUpdate;
+    private SingleStatusUpdate message;
+    private Map<String, MessageAttributeValue> attributes;
     private PaperProgressStatusEvent analogMail;
     private static final String REQUEST_ID = "test-request-id-123";
 
@@ -61,22 +62,10 @@ class SourceQueueProxyServiceImplTest {
         analogMail = new PaperProgressStatusEvent();
         analogMail.setRequestId(REQUEST_ID);
 
-        statusUpdate = new SingleStatusUpdate();
-        statusUpdate.setAnalogMail(analogMail);
+        message = new SingleStatusUpdate();
+        message.setAnalogMail(analogMail);
 
-        Map<String, Object> headers = new HashMap<>();
-        headers.put("header1", "value1");
-        message = new Message<>() {
-            @Override
-            public SingleStatusUpdate getPayload() {
-                return statusUpdate;
-            }
-
-            @Override
-            public MessageHeaders getHeaders() {
-                return new MessageHeaders(headers);
-            }
-        };
+        attributes = Map.of();
     }
 
     @Test
@@ -86,7 +75,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.empty());
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -108,7 +97,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -130,7 +119,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -146,7 +135,7 @@ class SourceQueueProxyServiceImplTest {
         capturedEvents.forEach(event -> {
             assertNotNull(event.getHeader());
             assertNotNull(event.getPayload());
-            assertEquals(statusUpdate, event.getPayload());
+            assertEquals(message, event.getPayload());
         });
     }
 
@@ -161,7 +150,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -174,29 +163,17 @@ class SourceQueueProxyServiceImplTest {
         // Verifica l'evento catturato
         ExternalChannelEvent capturedEvent = eventCaptor.getValue();
         assertNotNull(capturedEvent.getHeader());
-        assertEquals(statusUpdate, capturedEvent.getPayload());
+        assertEquals(message, capturedEvent.getPayload());
     }
 
     @Test
     void handleExternalChannelMessage_nullAnalogMail_shouldReturnError() {
         // Arrange
-        SingleStatusUpdate invalidUpdate = new SingleStatusUpdate();
-        invalidUpdate.setAnalogMail(null);
-
-        Message<SingleStatusUpdate> invalidMessage = new Message<>() {
-            @Override
-            public SingleStatusUpdate getPayload() {
-                return invalidUpdate;
-            }
-
-            @Override
-            public MessageHeaders getHeaders() {
-                return new MessageHeaders(new HashMap<>());
-            }
-        };
+        SingleStatusUpdate invalidMessage = new SingleStatusUpdate();
+        invalidMessage.setAnalogMail(null);
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(invalidMessage);
+        Mono<Void> result = service.handleExternalChannelMessage(invalidMessage, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -214,26 +191,14 @@ class SourceQueueProxyServiceImplTest {
         PaperProgressStatusEvent mailWithoutRequestId = new PaperProgressStatusEvent();
         mailWithoutRequestId.setRequestId(null);
 
-        SingleStatusUpdate updateWithoutRequestId = new SingleStatusUpdate();
-        updateWithoutRequestId.setAnalogMail(mailWithoutRequestId);
-
-        Message<SingleStatusUpdate> messageWithoutRequestId = new Message<>() {
-            @Override
-            public SingleStatusUpdate getPayload() {
-                return updateWithoutRequestId;
-            }
-
-            @Override
-            public MessageHeaders getHeaders() {
-                return new MessageHeaders(new HashMap<>());
-            }
-        };
+        SingleStatusUpdate messageWithoutRequestId = new SingleStatusUpdate();
+        messageWithoutRequestId.setAnalogMail(mailWithoutRequestId);
 
         when(paperTrackingsDAO.retrieveEntityByTrackingId(null))
                 .thenReturn(Mono.empty());
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(messageWithoutRequestId);
+        Mono<Void> result = service.handleExternalChannelMessage(messageWithoutRequestId, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -248,7 +213,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.error(daoException));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result)
@@ -262,22 +227,20 @@ class SourceQueueProxyServiceImplTest {
     @Test
     void buildOutputMessage_shouldPropagateOriginalMessageHeaders() {
         // Arrange
-        Map<String, Object> originalHeaders = new HashMap<>();
-        originalHeaders.put("customHeader1", "customValue1");
-        originalHeaders.put("customHeader2", 12345);
-        originalHeaders.put("customHeader3", true);
-
-        Message<SingleStatusUpdate> messageWithHeaders = new Message<>() {
-            @Override
-            public SingleStatusUpdate getPayload() {
-                return statusUpdate;
-            }
-
-            @Override
-            public MessageHeaders getHeaders() {
-                return new MessageHeaders(originalHeaders);
-            }
-        };
+        Map<String, MessageAttributeValue> messageAttributes = Map.of(
+                "customHeader1", MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("customValue1")
+                        .build(),
+                "customHeader2", MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("12345")
+                        .build(),
+                "customHeader3", MessageAttributeValue.builder()
+                        .dataType("String")
+                        .stringValue("true")
+                        .build()
+        );
 
         PaperTrackings tracking = new PaperTrackings();
         tracking.setProcessingMode(ProcessingMode.RUN);
@@ -287,7 +250,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(messageWithHeaders);
+        Mono<Void> result = service.handleExternalChannelMessage(message, messageAttributes);
 
         // Assert
         StepVerifier.create(result).verifyComplete();
@@ -300,18 +263,18 @@ class SourceQueueProxyServiceImplTest {
         assertNotNull(event.getHeader().getMessageAttributes());
 
         // Verifica che gli header originali siano stati propagati
-        var messageAttributes = event.getHeader().getMessageAttributes();
-        assertTrue(messageAttributes.containsKey("customHeader1"));
-        assertTrue(messageAttributes.containsKey("customHeader2"));
-        assertTrue(messageAttributes.containsKey("customHeader3"));
+        var messageAttributesOut = event.getHeader().getMessageAttributes();
+        assertTrue(messageAttributesOut.containsKey("customHeader1"));
+        assertTrue(messageAttributesOut.containsKey("customHeader2"));
+        assertTrue(messageAttributesOut.containsKey("customHeader3"));
 
-        assertEquals("customValue1", messageAttributes.get("customHeader1").stringValue());
-        assertEquals("12345", messageAttributes.get("customHeader2").stringValue());
-        assertEquals("true", messageAttributes.get("customHeader3").stringValue());
+        assertEquals("customValue1", messageAttributesOut.get("customHeader1").stringValue());
+        assertEquals("12345", messageAttributesOut.get("customHeader2").stringValue());
+        assertEquals("true", messageAttributesOut.get("customHeader3").stringValue());
 
         // Verifica che sia stato aggiunto anche il dryRun header
-        assertTrue(messageAttributes.containsKey("dryRun"));
-        assertEquals("false", messageAttributes.get("dryRun").stringValue());
+        assertTrue(messageAttributesOut.containsKey("dryRun"));
+        assertEquals("false", messageAttributesOut.get("dryRun").stringValue());
     }
 
 
@@ -324,7 +287,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result).verifyComplete();
@@ -344,7 +307,7 @@ class SourceQueueProxyServiceImplTest {
                 .thenReturn(Mono.just(tracking));
 
         // Act
-        Mono<Void> result = service.handleExternalChannelMessage(message);
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
 
         // Assert
         StepVerifier.create(result).verifyComplete();

@@ -11,6 +11,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -31,27 +35,29 @@ class ExternalChannelSourceEventsHandlerTest {
     @Test
     void handleExternalChannelMessage_ok() {
         // Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate("REQ-TEST");
+        SingleStatusUpdate message = getSingleStatusUpdate("REQ-TEST");
+        Map<String, MessageAttributeValue> attributes = new HashMap<>();
 
-        Message<SingleStatusUpdate> message =
-                MessageBuilder.withPayload(payload).build();
-
-        when(sourceQueueProxyService.handleExternalChannelMessage(message))
+        when(sourceQueueProxyService.handleExternalChannelMessage(message, attributes))
                 .thenReturn(Mono.empty());
 
         // Act
-        assertDoesNotThrow(() -> handler.handleExternalChannelMessage(message));
+        assertDoesNotThrow(() -> handler.handleExternalChannelMessage(message, attributes));
 
         // Assert
         verify(sourceQueueProxyService, times(1))
-                .handleExternalChannelMessage(message);
+                .handleExternalChannelMessage(message, attributes);
     }
 
     @Test
     void handleExternalChannelMessage_nullMessage_throwsException() {
+        // Arrange
+        Map<String, MessageAttributeValue> attributes = new HashMap<>();
+
+        // Act Assert
         assertThrows(
-                NullPointerException.class,
-                () -> handler.handleExternalChannelMessage(null)
+                IllegalArgumentException.class,
+                () -> handler.handleExternalChannelMessage(null, attributes)
         );
 
         verifyNoInteractions(sourceQueueProxyService);
@@ -59,17 +65,15 @@ class ExternalChannelSourceEventsHandlerTest {
 
     @Test
     void handleExternalChannelMessage_nullAnalogMail_throwsException() {
-        // given
-        SingleStatusUpdate payload = new SingleStatusUpdate();
-        payload.setAnalogMail(null);
+        // Arrange
+        SingleStatusUpdate message = new SingleStatusUpdate();
+        message.setAnalogMail(null);
+        Map<String, MessageAttributeValue> attributes = new HashMap<>();
 
-        Message<SingleStatusUpdate> message =
-                MessageBuilder.withPayload(payload).build();
-
-        // when / then
+        // Act Assert
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
-                () -> handler.handleExternalChannelMessage(message)
+                () -> handler.handleExternalChannelMessage(message, attributes)
         );
 
         assertEquals("Payload or analogMail cannot be null", ex.getMessage());
@@ -79,24 +83,22 @@ class ExternalChannelSourceEventsHandlerTest {
     @Test
     void handleExternalChannelMessage_serviceReturnsError_propagatesException() {
         // Arrange
-        SingleStatusUpdate payload = getSingleStatusUpdate("REQ-ERR");
-
-        Message<SingleStatusUpdate> message =
-                MessageBuilder.withPayload(payload).build();
+        SingleStatusUpdate message = getSingleStatusUpdate("REQ-ERR");
+        Map<String, MessageAttributeValue> attributes = new HashMap<>();
 
         RuntimeException serviceException = new RuntimeException("Boom");
 
-        when(sourceQueueProxyService.handleExternalChannelMessage(message))
+        when(sourceQueueProxyService.handleExternalChannelMessage(message, attributes))
                 .thenReturn(Mono.error(serviceException));
 
         // Act / Assert
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
-                () -> handler.handleExternalChannelMessage(message)
+                () -> handler.handleExternalChannelMessage(message, attributes)
         );
 
         assertEquals("Boom", ex.getMessage());
-        verify(sourceQueueProxyService).handleExternalChannelMessage(message);
+        verify(sourceQueueProxyService).handleExternalChannelMessage(message, attributes);
     }
 
     private SingleStatusUpdate getSingleStatusUpdate(String requestId) {

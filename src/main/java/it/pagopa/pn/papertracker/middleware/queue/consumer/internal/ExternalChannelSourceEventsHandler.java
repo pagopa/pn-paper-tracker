@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -49,18 +51,19 @@ import java.util.Objects;
 public class ExternalChannelSourceEventsHandler {
     private final SourceQueueProxyService sourceQueueProxyService;
 
-    public void handleExternalChannelMessage(Message<SingleStatusUpdate> message) {
-        SingleStatusUpdate payload = message.getPayload();
-        if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
+    public void handleExternalChannelMessage(
+            SingleStatusUpdate message,
+            Map<String, MessageAttributeValue> messageAttributes) {
+        if (Objects.isNull(message) || Objects.isNull(message.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
         }
 
         String processName = "processExternalChannelSourceMessage";
-        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
+        MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, message.getAnalogMail().getRequestId());
         log.logStartingProcess(processName);
 
-        MDCUtils.addMDCToContextAndExecute(sourceQueueProxyService.handleExternalChannelMessage(message)
+        MDCUtils.addMDCToContextAndExecute(sourceQueueProxyService.handleExternalChannelMessage(message, messageAttributes)
                         .doOnSuccess(unused -> log.logEndingProcess(processName)))
                 .block();
     }

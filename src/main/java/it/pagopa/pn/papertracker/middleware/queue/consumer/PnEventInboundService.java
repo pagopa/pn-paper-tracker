@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.middleware.queue.consumer;
 
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.awspring.cloud.sqs.listener.SqsHeaders;
 import it.pagopa.pn.commons.utils.MDCUtils;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
@@ -25,6 +26,11 @@ import java.util.UUID;
 @CustomLog
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "pn.paper-tracker.",
+        name = "disable-all-consumers",
+        havingValue = "false"
+)
 public class PnEventInboundService {
 
     private final ExternalChannelSourceEventsHandler externalChannelSourceEventsHandler;
@@ -33,17 +39,15 @@ public class PnEventInboundService {
     private final LogUtility logUtility;
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-channel-queue}")
-    @ConditionalOnProperty(
-            prefix = "pn.paper-tracker.",
-            name = "enable-internal-proxy-queue-consumer",
-            havingValue = "true"
-    )
     public void externalChannelSourceConsumer(
             @Payload Message<SingleStatusUpdate> message,
-            @Headers Map<String, Object> headers
+            @Headers Map<String, Object> headers,
+            @Header(name = SqsHeaders.SQS_SOURCE_DATA_HEADER) software.amazon.awssdk.services.sqs.model.Message sourceMessage
     ) {
-        processMessage(() -> externalChannelSourceEventsHandler.handleExternalChannelMessage(message),
-                "pn-external_channel_to_paper_tracker", message, headers);
+        processMessage(() -> {
+                var messageAttributes = sourceMessage.messageAttributes();
+                externalChannelSourceEventsHandler.handleExternalChannelMessage(message.getPayload(), messageAttributes);
+            }, "pn-external_channel_to_paper_channel", message, headers);
     }
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-tracker-queue}")
@@ -52,7 +56,7 @@ public class PnEventInboundService {
             @Header(name = "dryRun", required = false) Boolean dryRun,
             @Header(name = "reworkId", required = false) String reworkId,
             @Header(name = "id") String messageId,
-            @Header(name = "SenderId", required = false) String senderId,
+            @Header(name = SqsHeaders.MessageSystemAttributes.SQS_SENDER_ID, required = false) String senderId,
             @Headers Map<String, Object> headers
     ) {
         processMessage(() -> externalChannelHandler.handleExternalChannelMessage(

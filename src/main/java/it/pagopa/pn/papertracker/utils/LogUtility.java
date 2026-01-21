@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.awspring.cloud.sqs.listener.SqsHeaders;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
@@ -128,7 +129,7 @@ public class LogUtility {
         // Toglie Body da headers
         Map<String, Object> headersMap = new LinkedHashMap<>();
         message.getHeaders().forEach((k, v) -> {
-            if (!"Body".equalsIgnoreCase(k)) {
+            if (!SqsHeaders.SQS_SOURCE_DATA_HEADER.equalsIgnoreCase(k)) {
                 headersMap.put(k, v);
             }
         });
