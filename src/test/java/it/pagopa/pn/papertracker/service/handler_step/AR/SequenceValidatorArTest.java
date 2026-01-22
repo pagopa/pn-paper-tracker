@@ -415,6 +415,46 @@ class SequenceValidatorArTest {
                         throwable.getMessage().contains("Invalid deliveryFailureCause: TESTERR"))
                 .verify();
     }
+
+    @Test
+    void validateSequenceInvalidDeliveryFailureCauseExpectedEmpty() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN001C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "TESTERR", null),
+                buildEvent("RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+        ));
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: TESTERR"))
+                .verify();
+    }
+
+    @Test
+    void validateSequenceDeliveryFailureCauseExpectedEmptyOK() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN001C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+        ));
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .verifyComplete();
+    }
     
     private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
         Event event = new Event();

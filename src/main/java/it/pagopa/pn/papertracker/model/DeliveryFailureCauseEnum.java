@@ -26,7 +26,8 @@ public enum DeliveryFailureCauseEnum {
     C04,
     C05,
     C06,
-    UNKNOWN;
+    UNKNOWN,
+    SKIP_VALIDATION;
 
     public static DeliveryFailureCauseEnum fromValue(String deliveryFailureCause) {
         return Stream.of(values())
