@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.service.handler_step.TestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -165,7 +166,8 @@ public class HandlerFactoryArOldVersionIT extends BaseTest.WithLocalStack {
             var conf = EventStatusCodeEnum.fromKey(finalCode);
             ev.setStatusCode(finalCode);
             ev.setStatusDescription(conf.getStatusCodeDescription());
-            if (!CollectionUtils.isEmpty(conf.getDeliveryFailureCauseList())) {
+            if (!CollectionUtils.isEmpty(conf.getDeliveryFailureCauseList()) &&
+                    !conf.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.SKIP_VALIDATION)) {
                 ev.setDeliveryFailureCause(conf.getDeliveryFailureCauseList().getFirst().name());
             }
             if (!CollectionUtils.isEmpty(requiredDoc)) {

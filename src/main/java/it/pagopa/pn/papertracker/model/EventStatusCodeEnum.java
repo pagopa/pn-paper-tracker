@@ -37,15 +37,15 @@ public enum EventStatusCodeEnum {
     PNRN012(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Perfezionamento per decorrenza termini", false),
 
     // RIR
-    RECRI001(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Avviato all’estero", false),
+    RECRI001(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
     RECRI002(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false),
     RECRI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto, smarrimento o deterioramento", false),
     RECRI003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
-    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Mancata consegna - pre-esito", false),
+    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(SKIP_VALIDATION), "Mancata consegna - pre-esito", false),
     RECRI003B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
-    RECRI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Mancata consegna - In Dematerializzazione", true),
+    RECRI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(SKIP_VALIDATION), "Mancata consegna - In Dematerializzazione", true),
     RECRI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.OK, List.of(),"Consegnato - Fascicolo Chiuso", false),
-    RECRI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.KO, List.of(), "Mancata consegna - Fascicolo Chiuso", false),
+    RECRI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.KO, List.of(SKIP_VALIDATION), "Mancata consegna - Fascicolo Chiuso", false),
 
     // CON
     CON998(EventTypeEnum.NOT_RETRYABLE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Scartato NODOC", false),

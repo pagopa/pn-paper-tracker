@@ -451,6 +451,50 @@ class SequenceValidatorArTest {
                 buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .verifyComplete();
+    }
+
+    @Test
+    void validateSequenceInvalidDeliveryFailureCauseExpectedEmpty_2() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN001C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRN001A", timestamp, businessTimestamp, "REG123", null, null),
+                buildEvent("RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", null, List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "TESTERR", null)
+        ));
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: TESTERR"))
+                .verify();
+    }
+
+    @Test
+    void validateSequenceDeliveryFailureCauseExpectedNullOK() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG001C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECAG001A", timestamp, businessTimestamp, "REG123", null, null),
+                buildEvent("RECAG001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", null, List.of(DocumentTypeEnum._23L.getValue())),
+                buildEvent("RECAG001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", null, null)
+        ));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
         // Act & Assert
         StepVerifier.create(sequenceValidatorAr.execute(context))
                 .verifyComplete();
