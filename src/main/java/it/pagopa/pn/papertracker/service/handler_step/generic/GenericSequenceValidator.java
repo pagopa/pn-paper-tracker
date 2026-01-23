@@ -241,7 +241,12 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     }
 
     /**
-     * Valida la presenza e la correttezza del delivery failure cause negli eventi.
+     * Valida la presenza e la correttezza della deliveryFailureCause negli eventi.<br>
+     * Il controllo viene effettuato sulla base di quanto censito nell'enum {@link it.pagopa.pn.papertracker.model.EventStatusCodeEnum}:<br>
+     * - Se per lo status code dell'evento, come deliveryFailureCauseList, risulta censita SKIP_VALIDATION,
+     * allora la validazione viene saltata<br>
+     * - Se per lo status code dell'evento, come deliveryFailureCauseList, risulta censita una lista vuota o una lista con valori specifici,
+     * allora viene controllato che la deliveryFailureCause dell'evento sia assente (nel primo caso) o presente e valida (nel secondo caso)<br>
      *
      * @param events         lista di eventi da validare
      * @param paperTrackings oggetto principale della richiesta
@@ -253,11 +258,23 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .flatMap(event -> {
                     String deliveryFailureCause = event.getDeliveryFailureCause();
                     EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
-                    if ((!CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && !statusCodeEnum.getDeliveryFailureCauseList().contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause))) ||
-                            (CollectionUtils.isEmpty(statusCodeEnum.getDeliveryFailureCauseList()) && StringUtils.hasText(deliveryFailureCause))) {
-                        return generateCustomError("Invalid deliveryFailureCause: " + deliveryFailureCause, context, paperTrackings, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR, strictFinalEventValidation);
+                    List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
+
+                    boolean isSkipValidation = allowedCauses.contains(DeliveryFailureCauseEnum.SKIP_VALIDATION);
+                    boolean isEmptyAllowedAndNoCause = CollectionUtils.isEmpty(allowedCauses) && !StringUtils.hasText(deliveryFailureCause);
+                    boolean isValidCause = allowedCauses.contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause));
+
+                    if (isSkipValidation || isEmptyAllowedAndNoCause || isValidCause) {
+                        return Mono.just(event);
                     }
-                    return Mono.just(event);
+
+                    return generateCustomError(
+                            "Invalid deliveryFailureCause: " + deliveryFailureCause,
+                            context,
+                            paperTrackings,
+                            ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
+                            strictFinalEventValidation
+                    );
                 })
                 .collectList();
     }
