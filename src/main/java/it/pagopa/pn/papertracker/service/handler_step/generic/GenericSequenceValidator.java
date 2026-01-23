@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
@@ -33,7 +34,7 @@ import static it.pagopa.pn.papertracker.model.PredictedRefinementType.PRE10;
 public abstract class GenericSequenceValidator implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-
+    private final PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
 
     /**
      * Step di validazione della sequenza degli eventi di una raccomandata.
@@ -68,7 +69,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
         return extractSequenceFromEvents(paperTrackings.getEvents(), sequenceConfig.sequenceStatusCodes())
                 .filter(events -> !CollectionUtils.isEmpty(events))
-                .switchIfEmpty(generateCustomError("Invalid lastEvent for sequence validation", context, paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR,strictFinalEventValidation))
+                .switchIfEmpty(Mono.defer(() -> getErrorOrSaveWarning("Invalid lastEvent for sequence validation", context, paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR, strictFinalEventValidation, Collections.emptyList())))
                 .flatMap(this::getOnlyLatestEvents)
                 .flatMap(events -> validatePresenceOfStatusCodes(events, paperTrackings, context, sequenceConfig.requiredStatusCodes(),strictFinalEventValidation))
                 .flatMap(events -> validateBusinessTimestamps(events, paperTrackings, context, sequenceConfig,strictFinalEventValidation, paperTrackingsToUpdate))
@@ -147,7 +148,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         if (missingDocs.isEmpty() || isPresentArcadOrCadForStock890(missingDocs)) {
             return Mono.just(events);
         }
-        return generateCustomError("Missed required attachments for the sequence validation: " + missingDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, strictFinalEventValidation);
+        return getErrorOrSaveWarning("Missed required attachments for the sequence validation: " + missingDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, strictFinalEventValidation, events);
     }
 
     private boolean isPresentArcadOrCadForStock890(HashSet<String> missingDocs) {
@@ -168,7 +169,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     .collect(Collectors.toSet());
 
             if (!CollectionUtils.isEmpty(invalidDocs)) {
-                return generateCustomError("Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, strictFinalEventValidation);
+                return getErrorOrSaveWarning("Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, strictFinalEventValidation, events);
             }
         }
         return Mono.just(events);
@@ -268,12 +269,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                         return Mono.just(event);
                     }
 
-                    return generateCustomError(
+                    return getErrorOrSaveWarning(
                             "Invalid deliveryFailureCause: " + deliveryFailureCause,
                             context,
                             paperTrackings,
                             ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
-                            strictFinalEventValidation
+                            strictFinalEventValidation,
+                            event
                     );
                 })
                 .collectList();
@@ -292,15 +294,15 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         String firstRegisteredLetterCode = events.getFirst().getRegisteredLetterCode();
 
         if (events.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
-            return generateCustomError("Registered letter code is null or empty in one or more events: "
+            return getErrorOrSaveWarning("Registered letter code is null or empty in one or more events: "
                             + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, events);
         }
 
         if (events.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
-            return generateCustomError("Registered letter codes do not match in sequence: "
+            return getErrorOrSaveWarning("Registered letter codes do not match in sequence: "
                             + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, events);
         }
 
         paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
@@ -334,12 +336,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         Set<String> missingStatusCodes = new HashSet<>(requiredStatusCodes);
         missingStatusCodes.removeAll(eventStatusCodes);
         if (!missingStatusCodes.isEmpty()) {
-            return generateCustomError(
+            return getErrorOrSaveWarning(
                     "Necessary status code not found in events: " + missingStatusCodes,
                     context,
                     paperTrackings,
                     ErrorCategory.STATUS_CODE_ERROR,
-                    strictFinalEventValidation
+                    strictFinalEventValidation,
+                    events
             );
         }
         return Mono.just(events);
@@ -366,7 +369,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
             paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(validFinal);
             return Mono.just(events);
         }
-        return generateCustomError("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, strictFinalEventValidation);
+        return getErrorOrSaveWarning("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, strictFinalEventValidation, events);
     }
 
     private boolean checkPredictedRefinementTypeIfStock890(PaperTrackings paperTrackings, Instant validFinal) {
@@ -397,16 +400,23 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         return timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()));
     }
 
-    private <T> Mono<T> generateCustomError(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, Boolean strictFinalEventValidation) {
-        return Mono.error(new PnPaperTrackerValidationException(message, PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+    private <T> Mono<T> getErrorOrSaveWarning(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, Boolean strictFinalEventValidation, T returnValue) {
+        log.info("getErrorOrSaveWarning for trackingId {}: {} | strictFinalEventValidation: {}", context.getTrackingId(), message, strictFinalEventValidation);
+
+        var error = PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                 paperTrackings,
                 context.getPaperProgressStatusEvent().getStatusCode(),
                 errorCategory,
                 null,
                 message,
                 FlowThrow.SEQUENCE_VALIDATION,
-                Boolean.TRUE.equals(strictFinalEventValidation) ? ErrorType.ERROR : ErrorType.WARNING,
-                context.getEventId())));
+                strictFinalEventValidation ? ErrorType.ERROR : ErrorType.WARNING,
+                context.getEventId()
+        );
+
+        return strictFinalEventValidation
+                ? Mono.error(new PnPaperTrackerValidationException(message, error))
+                : paperTrackingsErrorsDAO.insertError(error).thenReturn(returnValue);
     }
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {

@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.AR;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -27,6 +28,9 @@ class SequenceValidatorArTest {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
+    @Mock
+    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+
     private SequenceValidatorAr sequenceValidatorAr;
 
     @InjectMocks
@@ -40,7 +44,7 @@ class SequenceValidatorArTest {
         context.setPaperProgressStatusEvent(paperProgressStatusEvent);
         PaperTrackings paperTrackings = getPaperTrackings();
         context.setPaperTrackings(paperTrackings);
-        sequenceValidatorAr = new SequenceValidatorAr(paperTrackingsDAO);
+        sequenceValidatorAr = new SequenceValidatorAr(paperTrackingsDAO, paperTrackingsErrorsDAO);
     }
 
     private PaperTrackings getPaperTrackings() {
