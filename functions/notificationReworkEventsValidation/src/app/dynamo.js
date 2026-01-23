@@ -1,5 +1,4 @@
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const utils = require("./utils");
 const {
   DynamoDBDocumentClient,
   QueryCommand,
@@ -25,9 +24,23 @@ async function getLatestReworkRequestByIun(iun, requestId) {
 
     const result = await docClient.send(new QueryCommand(params));
     const recIndex = getRecIndexFromRequestId(requestId);
-    return result.Items && result.Items.length > 0
-      ? result.Items.find(item => item.recIndex === recIndex) || null
-      : null;
+    if (!result.Items || result.Items.length === 0) {
+      return null;
+    }
+
+    return result.Items.reduce((latest, item) => {
+      if (item.recIndex !== recIndex || !item.createdAt) {
+        return latest;
+      }
+
+      if (!latest) {
+        return item;
+      }
+
+      return Date.parse(item.createdAt) > Date.parse(latest.createdAt)
+        ? item
+        : latest;
+    }, null);
 }
 
 function getRecIndexFromRequestId(requestId){

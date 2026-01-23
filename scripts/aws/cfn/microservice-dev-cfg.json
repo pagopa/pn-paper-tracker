@@ -16,10 +16,10 @@
     "PaperTrackerExternalChannelUser": "pn-cons-000",
     "DataVaultBaseUrl": "http://alb.confidential.pn.internal:8080",
     "ExternalChannelsToPaperChannelDryrunQueueName": "pn-external_channel_to_paper_channel_dry_run",
-    "PaperTrackerEnabledProductsModes": "AR:RUN",
-    "PaperChannelEnabledProducts": "RS,890,RIR,RIS,UNKNOWN",
     "PaperTrackerQueueProxyBatchSize": "10",
     "PaperTrackerQueueProxyMaximumBatchingWindowInSeconds": "0",
-    "NotificationReworkInvalidStatusCode": "RECRN006,RECRN013,RECRI005,CON996,RECAG013,RECAG004"
+    "NotificationReworkInvalidStatusCode": "RECRN006,RECRN013,RECRI005,CON996,RECAG013,RECAG004",
+    "EnableLambdaProxyQueueSource": "false",
+    "DisableAllConsumers": "false"
   }
 }

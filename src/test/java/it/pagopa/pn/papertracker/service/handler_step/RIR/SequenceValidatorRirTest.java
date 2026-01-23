@@ -60,16 +60,16 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "", "", null),
-                buildEvent("RECRI002", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "", "", null),
-                buildEvent("RECRI001", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "", "", null),
-                buildEvent("RECRI002", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "", "", null),
-                buildEvent("RECRI003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "", "", null),
-                buildEvent("RECRI003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "", "", null)
+                buildEvent("RECRI001", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "REG1", "", null),
+                buildEvent("RECRI002", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "REG1", "", null),
+                buildEvent("RECRI001", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "REG1", "", null),
+                buildEvent("RECRI002", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "REG1", "", null),
+                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "REG1", "", null),
+                buildEvent("RECRI003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "REG1", "", null),
+                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "REG1", "", null),
+                buildEvent("RECRI003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "REG1", "", null),
+                buildEvent("RECRI003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "REG1", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent("RECRI003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "REG1", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
