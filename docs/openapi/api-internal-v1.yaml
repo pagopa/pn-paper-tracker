@@ -374,6 +374,11 @@ components:
         updatedAt:
           type: string
           format: date-time
+        processingMode:
+          type: string
+          enum:
+            - DRY
+            - RUN
     PaperEvent:
       type: object
       properties:

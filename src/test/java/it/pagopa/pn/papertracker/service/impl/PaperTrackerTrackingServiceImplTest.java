@@ -9,7 +9,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRespon
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +48,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
+        when(pnPaperTrackerConfigs.getProductsProcessingModes()).thenReturn(List.of("1970-01-01;AR:RUN;RS:DRY"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
         paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils);
     }
@@ -60,7 +61,8 @@ class PaperTrackerTrackingServiceImplTest {
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS.getValue()
+                        pt.getProductType() == ProductType.RS.getValue() &&
+                        pt.getProcessingMode() == ProcessingMode.DRY
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
@@ -72,7 +74,8 @@ class PaperTrackerTrackingServiceImplTest {
         verify(paperTrackingsDAO, times(1)).putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
-                        pt.getProductType() == ProductType.RS.getValue()
+                        pt.getProductType() == ProductType.RS.getValue() &&
+                        pt.getProcessingMode() == ProcessingMode.DRY
         ));
     }
 

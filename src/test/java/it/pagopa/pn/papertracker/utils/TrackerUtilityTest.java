@@ -99,4 +99,35 @@ public class TrackerUtilityTest {
         Assertions.assertTrue(result.stream().noneMatch(event -> "OLD".equals(event.getStatusCode())));
     }
 
+    @Test
+    void checkIfIsRedriveReturnsTrueWhenSenderIdMatchesDomain() {
+        String senderId = "ABCDEF:nome.cognome@pagopa.it";
+        List<String> redriveEnabledDomains = List.of("@pagopa.it", "@external.pagopa.it");
+
+        Assertions.assertTrue(TrackerUtility.checkIfIsRedrive(senderId, redriveEnabledDomains));
+    }
+
+    @Test
+    void checkIfIsRedriveReturnsFalseWhenSenderIdDoesNotMatchDomain() {
+        String senderId = "ABCDEF:nome.cognome@anotherdomain.com";
+        List<String> redriveEnabledDomains = List.of("@pagopa.it", "@external.pagopa.it");
+
+        Assertions.assertFalse(TrackerUtility.checkIfIsRedrive(senderId, redriveEnabledDomains));
+    }
+
+    @Test
+    void checkIfIsRedriveReturnsFalseWhenRedriveEnabledDomainsIsEmpty() {
+        String senderId = "example@domain.com";
+        List<String> redriveEnabledDomains = List.of();
+
+        Assertions.assertFalse(TrackerUtility.checkIfIsRedrive(senderId, redriveEnabledDomains));
+    }
+
+    @Test
+    void checkIfIsRedriveReturnsFalseWhenSenderIdIsNull() {
+        List<String> redriveEnabledDomains = List.of("@pagopa.it", "@external.pagopa.it");
+
+        Assertions.assertFalse(TrackerUtility.checkIfIsRedrive(null, redriveEnabledDomains));
+    }
+
 }

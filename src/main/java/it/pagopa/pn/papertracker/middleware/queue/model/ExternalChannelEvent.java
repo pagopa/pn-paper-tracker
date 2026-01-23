@@ -10,9 +10,9 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Builder(toBuilder = true)
-public class ExternalChannelEvent implements GenericEvent<ExternalChannelEventHeader, SingleStatusUpdate> {
+public class ExternalChannelEvent implements GenericEvent<CustomEventHeader, SingleStatusUpdate> {
 
-    private ExternalChannelEventHeader header;
+    private CustomEventHeader header;
     private SingleStatusUpdate payload;
 
 }

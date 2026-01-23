@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
-import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -36,7 +35,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.getPaperTrackings;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -109,7 +107,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId, null);
 
         // Assert
         verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
@@ -151,7 +149,7 @@ class RECRN004CMessageHandlerTest extends BaseTest.WithLocalStack {
         singleStatusUpdate.setAnalogMail(paperRequest);
 
         // Act
-        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId);
+        externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId, null);
 
         // Assert
         verify(externalChannelOutputsMomProducer).push(capturedSendEvent.capture());

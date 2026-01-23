@@ -212,6 +212,16 @@ class DuplicatedEventFilteringTest {
         verifyNoInteractions(dataVaultClient);
     }
 
+    @Test
+    void executeWithIsRedriveTrue() {
+        context.setTrackingId("tracking-id-1");
+        context.setRedrive(true);
+
+        StepVerifier.create(duplicatedEventFiltering.execute(context))
+                .verifyComplete();
+        verifyNoInteractions(dataVaultClient);
+    }
+
     private PaperAddress getPaperAddress() {
         PaperAddress paperAddress = new PaperAddress();
         paperAddress.setAddress("Via Roma");
