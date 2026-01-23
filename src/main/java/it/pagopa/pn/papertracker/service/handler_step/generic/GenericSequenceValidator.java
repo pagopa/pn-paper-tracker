@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.ARCAD;
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.CAD;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static it.pagopa.pn.papertracker.model.PredictedRefinementType.PRE10;
 
 @Service
@@ -272,12 +273,15 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     private Mono<List<Event>> validateRegisteredLetterCode(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate, HandlerContext context, Boolean strictFinalEventValidation) {
         log.info("Beginning validation for registered letter codes for events : {}", events);
 
-        String firstRegisteredLetterCode = events.getFirst().getRegisteredLetterCode();
-        boolean allRegisteredLetterCodeMatch = events.stream().allMatch(event -> event.getRegisteredLetterCode().equals(firstRegisteredLetterCode));
+        // escludo RECAG012 dalla validazione in quanto potrebbe avere registeredLetterCode diverso
+        List<Event> filteredEvents = events.stream().filter(event -> !RECAG012.name().equalsIgnoreCase(event.getStatusCode())).toList();
+
+        String firstRegisteredLetterCode = filteredEvents.getFirst().getRegisteredLetterCode();
+        boolean allRegisteredLetterCodeMatch = filteredEvents.stream().allMatch(event -> event.getRegisteredLetterCode().equals(firstRegisteredLetterCode));
         return Mono.just(allRegisteredLetterCodeMatch)
                 .flatMap(registeredLetterCodeMatch -> {
                     if (!registeredLetterCodeMatch) {
-                        return generateCustomError("Registered letter codes do not match in sequence: " + events.stream().map(Event::getRegisteredLetterCode).toList(), context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
+                        return generateCustomError("Registered letter codes do not match in sequence: " + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(), context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
                     }
                     paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
                     return Mono.empty();

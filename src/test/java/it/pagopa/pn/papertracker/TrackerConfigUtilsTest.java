@@ -4,18 +4,17 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 public class TrackerConfigUtilsTest {
+
+    private final LocalDate startDate = LocalDate.of(2025, 3, 2);
 
     @Test
     void returnsRequiredAttachmentsRefinementStock890Empty() {
@@ -23,7 +22,7 @@ public class TrackerConfigUtilsTest {
         cfg.setRequiredAttachmentsRefinementStock890(List.of("2023-01-01", "2026-01-01;DOC1;DOC2", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(LocalDate.now());
+        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(startDate);
 
         assertTrue(result.isEmpty());
     }
@@ -34,7 +33,7 @@ public class TrackerConfigUtilsTest {
         cfg.setRequiredAttachmentsRefinementStock890(List.of("2023-01-01", "2024-01-01;DOC1", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(LocalDate.now());
+        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(startDate);
 
         assertEquals(1, result.size());
     }
@@ -45,7 +44,7 @@ public class TrackerConfigUtilsTest {
         cfg.setRequiredAttachmentsRefinementStock890(List.of("2023-01-01", "2024-01-01;DOC1", "2025-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(LocalDate.now());
+        List<String> result = utils.getActualRequiredAttachmentsRefinementStock890(startDate);
 
         assertEquals(2, result.size());
     }
@@ -56,7 +55,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2026-01-01;DOC1;DOC2", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
 
         assertTrue(result.isEmpty());
     }
@@ -67,7 +66,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2024-01-01;DOC1", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
 
         assertEquals(1, result.size());
     }
@@ -78,7 +77,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidation(List.of("2023-01-01", "2024-01-01;DOC1", "2025-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationConfigs(startDate);
 
         assertEquals(2, result.size());
     }
@@ -89,7 +88,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidationStock890(List.of("2023-01-01", "2026-01-01;DOC1;DOC2", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(startDate);
 
         assertTrue(result.isEmpty());
     }
@@ -100,7 +99,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidationStock890(List.of("2023-01-01", "2024-01-01;DOC1", "2027-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(startDate);
 
         assertEquals(1, result.size());
     }
@@ -111,7 +110,7 @@ public class TrackerConfigUtilsTest {
         cfg.setSendOcrAttachmentsFinalValidationStock890(List.of("2023-01-01", "2024-01-01;DOC1", "2025-01-01;DOC3;DOC4"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.now());
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(startDate);
 
         assertEquals(2, result.size());
     }
@@ -122,7 +121,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2026-01-01;true", "2027-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(LocalDate.now());
+        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
 
         assertFalse(result);
     }
@@ -133,7 +132,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2024-01-01;true", "2027-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(LocalDate.now());
+        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
 
         assertTrue(result);
     }
@@ -144,7 +143,7 @@ public class TrackerConfigUtilsTest {
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2024-01-01;true", "2025-01-01;false"));
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        Boolean result = utils.getActualStrictFinalValidationStock890Config(LocalDate.now());
+        Boolean result = utils.getActualStrictFinalValidationStock890Config(startDate);
 
         assertFalse(result);
     }
