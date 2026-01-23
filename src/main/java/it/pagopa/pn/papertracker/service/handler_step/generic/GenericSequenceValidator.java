@@ -296,13 +296,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         if (events.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
             return getErrorOrSaveWarning("Registered letter code is null or empty in one or more events: "
                             + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, events);
         }
 
         if (events.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
             return getErrorOrSaveWarning("Registered letter codes do not match in sequence: "
                             + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, events);
         }
 
         paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
