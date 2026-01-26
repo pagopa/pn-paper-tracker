@@ -115,9 +115,11 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
             case RUN -> Mono.fromRunnable(() ->
                     paperTrackerProducer.push(buildOutputMessage(event, messageAttributes, false))
             );
-            case null -> Mono.fromRunnable(() ->
-                    paperChannelDryRunProducer.push(buildOutputMessage(event, messageAttributes, true))
-            );
+            case null -> Mono.fromRunnable(() -> {
+                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
+                paperChannelDryRunProducer.push(enrichedMessage);
+                paperTrackerProducer.push(enrichedMessage);
+            });
         };
     }
 
