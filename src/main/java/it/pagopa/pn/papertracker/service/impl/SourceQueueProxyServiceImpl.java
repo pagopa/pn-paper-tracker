@@ -94,6 +94,7 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
      * <p>
      * Modalità DRY: l'evento viene inoltrato sia a pn-paper-channel che a pn-paper-tracker.
      * Modalità RUN: l'evento viene inviato solo a pn-paper-tracker.
+     * Null: spedizioni inizializzate prima della GA26Q1.A
      * </p>
      *
      * @param tracking oggetto della spedizione
@@ -116,6 +117,7 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
                     paperTrackerProducer.push(buildOutputMessage(event, messageAttributes, false))
             );
             case null -> Mono.fromRunnable(() -> {
+                log.info("Tracking entity created without processignMode, createdAt: {}", tracking.getCreatedAt());
                 var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
                 paperChannelDryRunProducer.push(enrichedMessage);
                 paperTrackerProducer.push(enrichedMessage);
