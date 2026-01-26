@@ -66,6 +66,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         return putIfAbsent(expression, entity)
                 .onErrorMap(ConditionalCheckFailedException.class, ex -> {
                     log.error("Conditional check exception on PaperTrackingsDAOImpl putTrackings trackingId={} exmessage={}", entity.getTrackingId(), ex.getMessage());
+                    log.warn("Duplicate trackingId detected in putIfAbsent: {}", entity.getTrackingId());
                     return new PnPaperTrackerConflictException(ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM, String.format("RequestId %s already exists", entity.getTrackingId()));
                 });
     }
