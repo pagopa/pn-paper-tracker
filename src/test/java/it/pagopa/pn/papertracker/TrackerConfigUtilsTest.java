@@ -120,6 +120,17 @@ public class TrackerConfigUtilsTest {
     }
 
     @Test
+    void returnsSendOcrAttachmentsFinalValidationStock890OnlyStartDate() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01"));
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        List<String> result = utils.getActualSendOcrAttachmentsFinalValidationStock890(startDate);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     void returnsStrictFinalValidationStock890Default() {
         PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
         cfg.setStrictFinalValidationStock890(List.of("2023-01-01", "2026-01-01;true", "2027-01-01;false"));
