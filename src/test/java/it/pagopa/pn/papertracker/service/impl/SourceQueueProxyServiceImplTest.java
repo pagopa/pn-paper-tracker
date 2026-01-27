@@ -18,13 +18,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,7 +84,7 @@ class SourceQueueProxyServiceImplTest {
     }
 
     @Test
-    void handleExternalChannelMessage_nullProcessingMode_shouldSendToPaperChannelOnly() {
+    void handleExternalChannelMessage_nullProcessingMode_shouldSendToBothQueues() {
         // Arrange
         PaperTrackings tracking = new PaperTrackings();
         tracking.setProcessingMode(null);
@@ -103,9 +100,18 @@ class SourceQueueProxyServiceImplTest {
         StepVerifier.create(result)
                 .verifyComplete();
 
-        verify(paperChannelDryRunProducer, times(1)).push(any(ExternalChannelEvent.class));
-        verify(paperTrackerProducer, never()).push(any(ExternalChannelEvent.class));
+        verify(paperChannelDryRunProducer, times(1)).push(eventCaptor.capture());
+        verify(paperTrackerProducer, times(1)).push(eventCaptor.capture());
         verify(paperTrackingsDAO, times(1)).retrieveEntityByTrackingId(REQUEST_ID);
+
+        // Verifica che l'evento abbia il flag dryRun impostato a true
+        var capturedEvents = eventCaptor.getAllValues();
+        assertEquals(2, capturedEvents.size());
+        capturedEvents.forEach(event -> {
+            assertNotNull(event.getHeader());
+            assertNotNull(event.getPayload());
+            assertEquals(message, event.getPayload());
+        });
     }
 
     @Test
