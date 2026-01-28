@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.ARCAD;
 import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.CAD;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static it.pagopa.pn.papertracker.model.PredictedRefinementType.PRE10;
 
 @Service
@@ -291,18 +292,21 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     private Mono<List<Event>> validateRegisteredLetterCode(List<Event> events, PaperTrackings paperTrackings, PaperTrackings paperTrackingsToUpdate, HandlerContext context, Boolean strictFinalEventValidation) {
         log.info("Beginning validation for registered letter codes for events : {}", events);
 
-        String firstRegisteredLetterCode = events.getFirst().getRegisteredLetterCode();
+        // escludo RECAG012 dalla validazione in quanto potrebbe avere registeredLetterCode diverso
+        List<Event> filteredEvents = events.stream().filter(event -> !RECAG012.name().equalsIgnoreCase(event.getStatusCode())).toList();
 
-        if (events.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
+        String firstRegisteredLetterCode = filteredEvents.getFirst().getRegisteredLetterCode();
+
+        if (filteredEvents.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
             return getErrorOrSaveWarning("Registered letter code is null or empty in one or more events: "
-                            + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, events);
+                            + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(),
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, filteredEvents);
         }
 
-        if (events.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
+        if (filteredEvents.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
             return getErrorOrSaveWarning("Registered letter codes do not match in sequence: "
-                            + events.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, events);
+                            + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(),
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, filteredEvents);
         }
 
         paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);

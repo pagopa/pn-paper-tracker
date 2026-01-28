@@ -196,6 +196,43 @@ class SequenceValidator890Test {
         assertNotNull(paperTrackingsArgumentCaptor.getValue().getValidationFlow().getSequencesValidationTimestamp());
     }
 
+    @Test
+    void executeWithDifferentRegisteredLetterCodeForRECAG012() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.DONE);
+        Attachment attach = new Attachment();
+        attach.setDocumentType("ARCAD");
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG005B"))
+                .findFirst()
+                .map(event -> {
+                    event.getAttachments().add(attach);
+                    return event;
+                });
+        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+        event3.setRegisteredLetterCode("REG999");
+
+        List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
+        tmpList.add(event1);
+        tmpList.add(event2);
+        tmpList.add(event3);
+        paperTrackings.setEvents(tmpList);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        assertEquals("REG123", paperTrackingsArgumentCaptor.getValue().getPaperStatus().getRegisteredLetterCode());
+    }
+
     private PaperTrackings getPaperTrackings() {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
