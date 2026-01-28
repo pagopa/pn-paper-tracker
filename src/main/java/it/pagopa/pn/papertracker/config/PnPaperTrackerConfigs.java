@@ -69,7 +69,21 @@ public class PnPaperTrackerConfigs {
 
     @PostConstruct
     public void init() {
+        validateSendOcrAttachmentsFinalValidationStock890();
+
         log.info("CONFIGURATIONS: {}", this);
     }
 
+
+    public void validateSendOcrAttachmentsFinalValidationStock890() {
+        List<String> expected = List.of("1970-01-01;");
+
+        if (!expected.equals(sendOcrAttachmentsFinalValidationStock890)) {
+            throw new IllegalStateException(
+                    "Invalid configuration for sendOcrAttachmentsFinalValidationStock890. " +
+                            "Expected exactly: " + expected +
+                            ", but found: " + sendOcrAttachmentsFinalValidationStock890
+            );
+        }
+    }
 }
