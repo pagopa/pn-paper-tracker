@@ -234,22 +234,6 @@ Parameters:
     Type: String
     Description: 'Write paper-channel messages to this Queue'
 
-  UninitializedShipmentDryRunQueueName:
-    Type: String
-    Description: 'Write uninitialized shipment dryrun messages to this Queue'
-
-  UninitializedShipmentDryRunQueueARN:
-    Type: String
-    Description: 'Write uninitialized shipment dryrun messages to this Queue'
-
-  UninitializedShipmentRunQueueName:
-    Type: String
-    Description: 'Write uninitialized shipment messages to this Queue'
-
-  UninitializedShipmentRunQueueARN:
-    Type: String
-    Description: 'Write uninitialized shipment messages to this Queue'
-
   PaperTrackingsErrorsTableName:
     Type: String
     Description: 'DynamoDB table name for PaperTrackingsErrors'
@@ -411,6 +395,21 @@ Parameters:
     Type: String
     Description: 'Comma separated list of invalid status codes for notification rework events'
 
+  EnableLambdaProxyQueueSource:
+    Type: String
+    AllowedValues: [ "true", "false" ]
+    Default: "true"
+
+  DisableAllConsumers:
+    Type: String
+    AllowedValues: [ "true", "false" ]
+    Default: "false"
+
+Conditions:
+  EnableLambdaProxyQueueSourceCondition: !Equals
+    - !Ref EnableLambdaProxyQueueSource
+    - "true"
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -454,8 +453,9 @@ Resources:
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
         ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTSQUEUE=${PnOcrOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
-        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTDRYRUNQUEUE=${UninitializedShipmentDryRunQueueName}'
-        ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_UNINITIALIZEDSHIPMENTRUNQUEUE=${UninitializedShipmentRunQueueName}'
+        ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_DISABLEALLCONSUMERS=${DisableAllConsumers}'
+        ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELQUEUE=${ExternalChannels2PaperChannelQueueName}'
+        ContainerEnvEntry22: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELDRYRUNQUEUE=${ExternalChannelsToPaperChannelDryrunQueueName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -545,8 +545,8 @@ Resources:
               - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
-              - !Ref UninitializedShipmentDryRunQueueARN
-              - !Ref UninitializedShipmentRunQueueARN
+              - !Ref ExternalChannels2PaperChannelQueueARN
+              - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
 
   # PaperTrackerQueueProxy Lambda
   PaperTrackerQueueProxy:
@@ -584,6 +584,7 @@ Resources:
         - ReportBatchItemFailures  # Enables partial batch failures
       ScalingConfig:
         MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
+      Enabled: !If [EnableLambdaProxyQueueSourceCondition, true, false]
 
   PaperTrackerQueueProxyExecutionRole:
     Type: AWS::IAM::Role

@@ -47,6 +47,11 @@ public class DuplicatedEventFiltering implements HandlerStep {
         PaperTrackings paperTrackings = context.getPaperTrackings();
         PaperProgressStatusEvent paperProgressStatusEvent = context.getPaperProgressStatusEvent();
 
+        if (context.isRedrive()) {
+            log.info("Skipping DuplicatedEventFiltering isRedrive: true");
+            return Mono.empty();
+        }
+
         return Flux.fromIterable(paperTrackings.getEvents())
                 .filter(event -> !event.getId().equalsIgnoreCase(context.getEventId()))
                 .flatMap(event -> isDuplicatedEvent(event, paperProgressStatusEvent, paperTrackings.getNotificationReworkId()))

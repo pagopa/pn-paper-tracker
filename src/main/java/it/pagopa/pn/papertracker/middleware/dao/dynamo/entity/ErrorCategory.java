@@ -12,6 +12,7 @@ public enum ErrorCategory {
     STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza."),
     LAST_EVENT_EXTRACTION_ERROR("Errore nell'estrazione della sequenza dall'ultimo evento."),
     REGISTERED_LETTER_CODE_ERROR("Errore nella validazione del registered letter code"),
+    REGISTERED_LETTER_CODE_NOT_FOUND("Registered letter code non trovato"),
     DELIVERY_FAILURE_CAUSE_ERROR("Errore nella validazione del delivery Failure Cause"),
     ATTACHMENTS_ERROR("Errore nella validazione degli allegati della sequenza"),
     MAX_RETRY_REACHED_ERROR("Numero massimo di retry raggiunto"),
