@@ -248,6 +248,10 @@ public class TrackerUtility {
             };
         }
 
+        if(isStockStatus890(statusCodeToEvaluate)){
+            return EventStatus.OK;
+        }
+
         return statusCodeEnum.getStatus();
     }
 
