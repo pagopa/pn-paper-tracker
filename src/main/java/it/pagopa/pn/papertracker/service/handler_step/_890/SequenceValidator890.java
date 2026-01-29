@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -16,16 +17,14 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType.WARNING;
-
 @Component
 @Slf4j
 public class SequenceValidator890 extends GenericSequenceValidator implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public SequenceValidator890(PaperTrackingsDAO paperTrackingsDAO) {
-        super(paperTrackingsDAO);
+    public SequenceValidator890(PaperTrackingsDAO paperTrackingsDAO, PaperTrackingsErrorsDAO paperTrackingsErrorsDAO) {
+        super(paperTrackingsDAO, paperTrackingsErrorsDAO);
         this.paperTrackingsDAO = paperTrackingsDAO;
     }
 
@@ -44,12 +43,6 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                 .filter(paperTrackings -> checkState(context))
                 .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, strictFinalValidationStock890))
                 .doOnNext(context::setPaperTrackings)
-                .onErrorResume(PnPaperTrackerValidationException.class, ex -> {
-                    if(WARNING.equals(ex.getError().getType())){
-                        return Mono.empty();
-                    }
-                    return Mono.error(ex);
-                })
                 .then();
     }
 
@@ -93,6 +86,18 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             context.getEventId()
                     )
             );
+            case AWAITING_FINAL_STATUS_CODE -> throw new PnPaperTrackerValidationException(
+                    "Invalid state for processing stock 890 final event",
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                            context.getPaperTrackings(),
+                            context.getPaperProgressStatusEvent().getStatusCode(),
+                            ErrorCategory.INVALID_STATE_FOR_STOCK_890,
+                            ErrorCause.STOCK_890_REFINEMENT_ERROR,
+                            String.format("Invalid state %s for processing stock 890 final event",state),
+                            FlowThrow.SEQUENCE_VALIDATION,
+                            ErrorType.ERROR,
+                            context.getEventId()
+                    ));
         };
     }
 

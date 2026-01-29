@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -109,9 +108,8 @@ public class CheckOcrResponse implements HandlerStep {
         String trackingId = parsedOcrCommandId[0];
 
         Integer index = TrackerUtility.getOcrRequestIndexByEventIdAndDocType(tracking, context.getEventId(), docType);
-        Attachment attachment = TrackerUtility.getAttachmentFromEventIdAndDocType(tracking, context.getEventId(), docType);
 
-        return paperTrackingsDAO.updateOcrRequestsAndValidatedAttachments(index, Objects.nonNull(attachment) ? List.of(attachment) : List.of(), trackingId)
+        return paperTrackingsDAO.updateOcrRequests(index, trackingId)
                 .doOnNext(context::setPaperTrackings)
                 .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(paperTrackings.getValidationFlow(), paperTrackings.getValidationConfig(), event.getStatusCode()))
                 .flatMap(ocrResponseCompleted -> {

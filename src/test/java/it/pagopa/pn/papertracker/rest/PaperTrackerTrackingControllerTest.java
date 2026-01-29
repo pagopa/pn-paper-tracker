@@ -65,8 +65,27 @@ class PaperTrackerTrackingControllerTest {
 
         //ASSERT
         StepVerifier.create(response)
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerConflictException
-                        && "Conflict".equals(throwable.getMessage()))
+                .expectNext(ResponseEntity.noContent().build())
+                .verifyComplete();
+        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request);
+    }
+
+    @Test
+    void initTrackingThrowsRuntimeException() {
+        // ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        Mono<TrackingCreationRequest> requestMono = Mono.just(request);
+
+        when(paperTrackerEventService.insertPaperTrackings(request))
+                .thenReturn(Mono.error(new RuntimeException("Unexpected error")));
+
+        // ACT
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
+
+        // ASSERT
+        StepVerifier.create(response)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && "Unexpected error".equals(throwable.getMessage()))
                 .verify();
         verify(paperTrackerEventService, times(1)).insertPaperTrackings(request);
     }

@@ -81,7 +81,8 @@ Resources:
               >>>>,
               registeredLetterCode:struct<S:string>,
               dryRun:struct<BOOL:boolean>,
-              createdAt:struct<S:string>
+              createdAt:struct<S:string>,
+              notificationReworkId:struct<S:string>
             >>>>,
             paperStatus:struct<M:struct<
               registeredLetterCode:struct<S:string>,
@@ -89,25 +90,44 @@ Resources:
               anonymizedDiscoveredAddress:struct<S:string>,
               finalStatusCode:struct<S:string>,
               validatedSequenceTimestamp:struct<S:string>,
-              validatedAttachmentUri:struct<S:string>,
-              validatedAttachmentType:struct<S:string>,
+              validatedEvents:struct<L:array<struct<S:string>>>,
               finalDematFound:struct<BOOL:boolean>,
               paperDeliveryTimestamp:struct<S:string>,
-              actualPaperDeliveryTimestamp:struct<S:string>
+              actualPaperDeliveryTimestamp:struct<S:string>,
+              predictedRefinementType:struct<S:string>
             >>,
             validationFlow:struct<M:struct<
-              ocrEnabled:struct<BOOL:boolean>,
               sequencesValidationTimestamp:struct<S:string>,
-              ocrRequestTimestamp:struct<S:string>,
-              dematValidationTimestamp:struct<S:string>,
-              finalEventBuilderTimestamp:struct<S:string>
+              finalEventDematValidationTimestamp:struct<S:string>,
+              refinementDematValidationTimestamp:struct<S:string>,
+              finalEventBuilderTimestamp:struct<S:string>,
+              recag012StatusTimestamp:struct<S:string>,
+              ocrRequests:struct<L:array<struct<M:struct<
+                documentType:struct<S:string>,
+                finalEventId:struct<S:string>,
+                attachmentEventId:struct<S:string>,
+                responseTimestamp:struct<S:string>,
+                requestTimestamp:struct<S:string>,
+                uri:struct<S:string>
+              >>>>
             >>,
-            ocrRequestId:struct<S:string>,
+            validationConfig:struct<M:struct<
+              ocrEnabled:struct<S:string>,
+              requiredAttachmentsRefinementStock890:struct<L:array<struct<S:string>>>,
+              sendOcrAttachmentsRefinementStock890:struct<L:array<struct<S:string>>>,
+              sendOcrAttachmentsFinalValidationStock890:struct<L:array<struct<S:string>>>,
+              sendOcrAttachmentsFinalValidation:struct<L:array<struct<S:string>>>,
+              strictFinalValidationStock890:struct<BOOL:boolean>
+            >>,
             nextRequestIdPcretry:struct<S:string>,
             state:struct<S:string>,
+            businessState:struct<S:string>,
+            pendingFinalEventId:struct<S:string>,
             createdAt:struct<S:string>,
             updatedAt:struct<S:string>,
-            ttl:struct<N:string>
+            ttl:struct<N:string>,
+            notificationReworkRequestTimestamp:struct<S:string>,
+            notificationReworkId:struct<S:string>
           >
 
   PaperTrackingsErrorsDataQualityStack:
@@ -129,8 +149,8 @@ Resources:
           struct<
             trackingId:struct<S:string>,
             created:struct<S:string>,
-            errorCategory:struct<S:string>,
-            errorDetails:struct<M:struct<
+            category:struct<S:string>,
+            details:struct<M:struct<
               cause:struct<S:string>,
               message:struct<S:string>
             >>,
@@ -138,5 +158,6 @@ Resources:
             eventThrow:struct<S:string>,
             eventIdThrow:struct<S:string>,
             productType:struct<S:string>,
-            type:struct<S:string>
+            type:struct<S:string>,
+            ttl:struct<N:string>
           >

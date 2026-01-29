@@ -46,7 +46,6 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     }
 
     public Handler build(EventTypeEnum eventType, HandlerContext context) {
-        log.info("Handling {} event for productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());
         var handler = getDispatcher(eventType);
         if (Objects.isNull(handler)) {
             log.error("No handler founded for EventType ={} and productType: [{}] (trackingId={})", eventType, getProductType(), context.getTrackingId());

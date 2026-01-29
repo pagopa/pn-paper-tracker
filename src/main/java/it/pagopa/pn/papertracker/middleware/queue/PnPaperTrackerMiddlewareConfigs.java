@@ -6,9 +6,9 @@ import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.ExternalChannelEvent;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperChannelDryRunMomProducer;
+import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelToPaperTrackerMomProducer;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentDryRunMomProducer;
-import it.pagopa.pn.papertracker.middleware.queue.producer.UninitializedShipmentRunMomProducer;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,19 +41,18 @@ public class PnPaperTrackerMiddlewareConfigs {
     }
 
     @Bean
-    public UninitializedShipmentDryRunMomProducer uninitializedShipmentDryRunMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new UninitializedShipmentDryRunMomProducer(sqsClient,
-                this.pnPaperChannelConfigs.getTopics().getUninitializedShipmentDryRunQueue(),
+    public ExternalChannelToPaperTrackerMomProducer externalChannelToPaperTrackerMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new ExternalChannelToPaperTrackerMomProducer(sqsClient,
+                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperTrackerQueue(),
                 objMapper,
                 ExternalChannelEvent.class);
     }
 
     @Bean
-    public UninitializedShipmentRunMomProducer uninitializedShipmentRunMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
-        return new UninitializedShipmentRunMomProducer(sqsClient,
-                this.pnPaperChannelConfigs.getTopics().getUninitializedShipmentRunQueue(),
+    public ExternalChannelToPaperChannelDryRunMomProducer externalChannelToPaperChannelDryRunMomProducer(SqsClient sqsClient, ObjectMapper objMapper) {
+        return new ExternalChannelToPaperChannelDryRunMomProducer(sqsClient,
+                this.pnPaperChannelConfigs.getTopics().getExternalChannelToPaperChannelDryRunQueue(),
                 objMapper,
                 ExternalChannelEvent.class);
     }
 }
-

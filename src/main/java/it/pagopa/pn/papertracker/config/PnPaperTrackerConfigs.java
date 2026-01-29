@@ -38,6 +38,9 @@ public class PnPaperTrackerConfigs {
     private List<String> sendOcrAttachmentsFinalValidationStock890 = new ArrayList<>();
     private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
     private List<String> strictFinalValidationStock890;
+    private List<String> internalEvents = new ArrayList<>();
+    private List<String> productsProcessingModes = new ArrayList<>();
+    private List<String> redriveEnabledDomains = new ArrayList<>();
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
@@ -52,20 +55,35 @@ public class PnPaperTrackerConfigs {
 
     @Data
     public static class Topics {
-        // Consumer
+        // Consumer + Producer
         private String externalChannelToPaperTrackerQueue;
+        // Consumer
+        private String externalChannelToPaperChannelQueue;
         private String pnOcrOutputsQueue;
         // Producer
         private String queueOcrInputsUrl;
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
-        private String uninitializedShipmentDryRunQueue;
-        private String uninitializedShipmentRunQueue;
+        private String externalChannelToPaperChannelDryRunQueue;
     }
 
     @PostConstruct
     public void init() {
+        validateSendOcrAttachmentsFinalValidationStock890();
+
         log.info("CONFIGURATIONS: {}", this);
     }
 
+
+    public void validateSendOcrAttachmentsFinalValidationStock890() {
+        List<String> expected = List.of("1970-01-01;");
+
+        if (!expected.equals(sendOcrAttachmentsFinalValidationStock890)) {
+            throw new IllegalStateException(
+                    "Invalid configuration for sendOcrAttachmentsFinalValidationStock890. " +
+                            "Expected exactly: " + expected +
+                            ", but found: " + sendOcrAttachmentsFinalValidationStock890
+            );
+        }
+    }
 }

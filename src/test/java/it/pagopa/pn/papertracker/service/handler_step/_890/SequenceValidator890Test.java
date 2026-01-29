@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -17,13 +18,14 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.awt.print.Paper;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -33,6 +35,8 @@ class SequenceValidator890Test {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
+    @Mock
+    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
 
     private SequenceValidator890 sequenceValidator890;
 
@@ -40,7 +44,7 @@ class SequenceValidator890Test {
 
     @BeforeEach
     void setUp() {
-        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO);
+        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO, paperTrackingsErrorsDAO);
         context = new HandlerContext();
         context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
     }
@@ -158,6 +162,75 @@ class SequenceValidator890Test {
 
         // Assert
         verify(paperTrackingsDAO, never()).updateItem(any(), any());
+    }
+
+    @Test
+    void executeWithStockStatusFalseStrictFinalValidationStock890FalseSaveFourErrors() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.getValidationConfig().setStrictFinalValidationStock890(Boolean.FALSE);
+        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
+        paperTrackings.setEvents(paperTrackings.getEvents()
+                .stream()
+                .filter(event -> !event.getStatusCode().equalsIgnoreCase("RECAG002B"))
+                .collect(Collectors.toList()));
+        paperTrackings.getEvents().getFirst().setStatusTimestamp(Instant.now().plusSeconds(10));
+        paperTrackings.getEvents().getFirst().setRegisteredLetterCode("REG999");
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackingsErrorsDAO.insertError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsErrorsDAO, times(4)).insertError(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        assertNull(paperTrackingsArgumentCaptor.getValue().getPaperStatus().getValidatedSequenceTimestamp());
+        assertNull(paperTrackingsArgumentCaptor.getValue().getPaperStatus().getRegisteredLetterCode());
+        assertEquals(2, paperTrackingsArgumentCaptor.getValue().getPaperStatus().getValidatedEvents().size());
+        assertNull(paperTrackingsArgumentCaptor.getValue().getPaperStatus().getDeliveryFailureCause());
+        assertNotNull(paperTrackingsArgumentCaptor.getValue().getValidationFlow().getSequencesValidationTimestamp());
+    }
+
+    @Test
+    void executeWithDifferentRegisteredLetterCodeForRECAG012() {
+        // Arrange
+        PaperTrackings paperTrackings = getPaperTrackings();
+        paperTrackings.setState(PaperTrackingsState.DONE);
+        Attachment attach = new Attachment();
+        attach.setDocumentType("ARCAD");
+        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG005B"))
+                .findFirst()
+                .map(event -> {
+                    event.getAttachments().add(attach);
+                    return event;
+                });
+        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
+        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+        event3.setRegisteredLetterCode("REG999");
+
+        List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
+        tmpList.add(event1);
+        tmpList.add(event2);
+        tmpList.add(event3);
+        paperTrackings.setEvents(tmpList);
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setPaperTrackings(paperTrackings);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidator890.execute(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        assertEquals("REG123", paperTrackingsArgumentCaptor.getValue().getPaperStatus().getRegisteredLetterCode());
     }
 
     private PaperTrackings getPaperTrackings() {

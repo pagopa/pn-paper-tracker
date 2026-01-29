@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -31,7 +30,6 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         ValidationConfig validationConfig = new ValidationConfig();
@@ -45,6 +43,21 @@ public class TestUtils {
         return pt;
     }
 
+    public static PaperTrackings getPaperTrackingsOldVersion(String requestId, ProductType productType) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(productType.getValue());
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        return pt;
+    }
+
     public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
@@ -54,7 +67,6 @@ public class TestUtils {
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setValidatedAttachments(List.of());
         paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
         pt.setEvents(events);
@@ -110,7 +122,6 @@ public class TestUtils {
         assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
 
-        assertTrue(pt.getPaperStatus().getValidatedAttachments().isEmpty());
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());

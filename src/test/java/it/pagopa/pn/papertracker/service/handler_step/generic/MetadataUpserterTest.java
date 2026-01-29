@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
@@ -35,6 +36,9 @@ class MetadataUpserterTest {
 
     @Mock
     private DataVaultClient dataVaultClient;
+
+    @Mock
+    private PnPaperTrackerConfigs PnPaperTrackerConfigs;
 
     @InjectMocks
     private MetadataUpserter metadataUpserter;
