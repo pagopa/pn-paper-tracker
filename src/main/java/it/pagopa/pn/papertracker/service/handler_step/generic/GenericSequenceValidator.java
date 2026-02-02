@@ -14,7 +14,6 @@ import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -29,7 +28,6 @@ import static it.pagopa.pn.papertracker.model.DocumentTypeEnum.CAD;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static it.pagopa.pn.papertracker.model.PredictedRefinementType.PRE10;
 
-@Service
 @RequiredArgsConstructor
 @Slf4j
 public abstract class GenericSequenceValidator implements HandlerStep {

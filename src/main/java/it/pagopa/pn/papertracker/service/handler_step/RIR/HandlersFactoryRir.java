@@ -14,7 +14,7 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               DeliveryPushSender deliveryPushSender,
                               FinalEventBuilderRir finalEventBuilder,
                               IntermediateEventsBuilder intermediateEventsBuilder,
-                              DematValidator dematValidator,
+                              DematValidatorRir dematValidator,
                               SequenceValidatorRir sequenceValidator,
                               RetrySender retrySender,
                               NotRetryableErrorInserting notRetryableErrorInserting,
