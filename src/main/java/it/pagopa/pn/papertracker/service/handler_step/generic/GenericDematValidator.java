@@ -19,9 +19,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-public abstract class DematValidator implements HandlerStep {
+public abstract class GenericDematValidator implements HandlerStep {
 
-    private static final Logger log = LoggerFactory.getLogger(DematValidator.class);
+    private static final Logger log = LoggerFactory.getLogger(GenericDematValidator.class);
 
     private final OcrUtility ocrUtility;
 

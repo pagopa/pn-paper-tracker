@@ -55,10 +55,11 @@ class GenericSequenceValidatorTest {
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
 
+        Instant statusTimestamp = Instant.now();
         Event e1 = new Event();
         e1.setId("e1");
         e1.setStatusCode("RECRN002A");
-        e1.setStatusTimestamp(Instant.now());
+        e1.setStatusTimestamp(statusTimestamp);
         e1.setRequestTimestamp(Instant.now());
         e1.setRegisteredLetterCode("RL1");
         e1.setDeliveryFailureCause("M08");
@@ -67,7 +68,7 @@ class GenericSequenceValidatorTest {
         Event e2 = new Event();
         e2.setId("e2");
         e2.setStatusCode("RECRN002B");
-        e2.setStatusTimestamp(Instant.now());
+        e2.setStatusTimestamp(statusTimestamp);
         e2.setRequestTimestamp(Instant.now());
         e2.setRegisteredLetterCode("RL1");
         e2.setDeliveryFailureCause("M08");

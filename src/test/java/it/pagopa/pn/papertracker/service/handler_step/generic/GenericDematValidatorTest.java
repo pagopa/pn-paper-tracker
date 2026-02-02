@@ -27,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DematValidatorTest {
+class GenericDematValidatorTest {
 
     @Mock
     PaperTrackingsDAO paperTrackingsDAO;
@@ -38,7 +38,7 @@ class DematValidatorTest {
     @Mock
     SafeStorageClient safeStorageClient;
 
-    DematValidator dematValidator;
+    GenericDematValidator dematValidator;
 
     PaperTrackings paperTrackings;
 
@@ -66,7 +66,7 @@ class DematValidatorTest {
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
-        dematValidator = new DematValidator(ocrUtility) { };
+        dematValidator = new GenericDematValidator(ocrUtility) { };
     }
 
     private Event getEvent(String statusCode, String documentType, String eventId) {
