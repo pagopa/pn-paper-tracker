@@ -21,7 +21,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     protected final DeliveryPushSender deliveryPushSender;
     protected final GenericFinalEventBuilder finalEventBuilder;
     protected final IntermediateEventsBuilder intermediateEventsBuilder;
-    protected final DematValidator dematValidator;
+    protected final GenericDematValidator dematValidator;
     protected final GenericSequenceValidator sequenceValidator;
     protected final RetrySender retrySender;
     protected final NotRetryableErrorInserting notRetryableErrorInserting;

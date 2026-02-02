@@ -47,7 +47,7 @@ class GenericFinalEventBuilderTest {
         Instant now = Instant.now();
         handlerContext = new HandlerContext();
         handlerContext.setTrackingId("req-123");
-        genericFinalEventBuilder = new GenericFinalEventBuilder(dataVaultClient, paperTrackingsDAO);
+        genericFinalEventBuilder = new GenericFinalEventBuilder(dataVaultClient, paperTrackingsDAO) { };
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR.getValue());

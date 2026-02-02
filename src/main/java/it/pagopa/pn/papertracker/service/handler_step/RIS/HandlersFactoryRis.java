@@ -2,15 +2,17 @@ package it.pagopa.pn.papertracker.service.handler_step.RIS;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
+import org.springframework.stereotype.Component;
 
+@Component
 public class HandlersFactoryRis extends AbstractHandlersFactory {
 
     public HandlersFactoryRis(MetadataUpserter metadataUpserter,
                               DeliveryPushSender deliveryPushSender,
-                              GenericFinalEventBuilder finalEventBuilder,
+                              FinalEventBuilderRis finalEventBuilder,
                               IntermediateEventsBuilder intermediateEventsBuilder,
                               DematValidatorRis dematValidator,
-                              GenericSequenceValidator sequenceValidator,
+                              SequenceValidatorRis sequenceValidator,
                               RetrySender retrySender,
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,

@@ -33,7 +33,7 @@ class HandlersFactory890Test {
     private IntermediateEventsBuilder intermediateEventsBuilder;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidator890 dematValidator;
 
     @Mock
     private SequenceValidator890 sequenceValidator;

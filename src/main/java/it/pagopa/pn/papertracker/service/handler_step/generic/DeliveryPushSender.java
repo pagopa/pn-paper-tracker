@@ -19,7 +19,6 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -33,7 +32,6 @@ import static it.pagopa.pn.papertracker.utils.QueueConst.DELIVERY_PUSH_EVENT_TYP
 import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.setNewStatus;
 
-@Service
 @Slf4j
 @RequiredArgsConstructor
 @Component
