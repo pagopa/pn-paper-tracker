@@ -25,7 +25,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
             DeliveryPushSender deliveryPushSender,
             FinalEventBuilder890 finalEventBuilder,
             IntermediateEventsBuilder intermediateEventsBuilder,
-            DematValidator dematValidator,
+            DematValidator890 dematValidator,
             SequenceValidator890 sequenceValidator,
             RetrySender retrySender,
             NotRetryableErrorInserting notRetryableErrorInserting,

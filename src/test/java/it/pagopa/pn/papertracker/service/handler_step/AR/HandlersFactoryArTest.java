@@ -32,7 +32,7 @@ class HandlersFactoryArTest {
     private SequenceValidatorAr sequenceValidatorAr;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidatorAr dematValidator;
 
     @Mock
     private FinalEventBuilderAr finalEventBuilder;

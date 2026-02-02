@@ -14,7 +14,6 @@ import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.StringUtils;
@@ -39,7 +38,6 @@ class DematValidatorTest {
     @Mock
     SafeStorageClient safeStorageClient;
 
-    @InjectMocks
     DematValidator dematValidator;
 
     PaperTrackings paperTrackings;
@@ -68,7 +66,7 @@ class DematValidatorTest {
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
-        dematValidator = new DematValidator(ocrUtility);
+        dematValidator = new DematValidator(ocrUtility) { };
     }
 
     private Event getEvent(String statusCode, String documentType, String eventId) {

@@ -13,7 +13,7 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                              DeliveryPushSender deliveryPushSender,
                              FinalEventBuilderAr finalEventBuilder,
                              IntermediateEventsBuilder intermediateEventsBuilder,
-                             DematValidator dematValidator,
+                             DematValidatorAr dematValidator,
                              SequenceValidatorAr sequenceValidator,
                              RetrySender retrySender,
                              NotRetryableErrorInserting notRetryableErrorInserting,

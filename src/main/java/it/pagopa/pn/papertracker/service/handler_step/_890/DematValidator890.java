@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.RIS;
+package it.pagopa.pn.papertracker.service.handler_step._890;
 
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.DematValidator;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class DematValidatorRis extends DematValidator implements HandlerStep {
+public class DematValidator890 extends DematValidator implements HandlerStep {
 
-    public DematValidatorRis(OcrUtility ocrUtility) {
+    public DematValidator890(OcrUtility ocrUtility) {
         super(ocrUtility);
     }
 }

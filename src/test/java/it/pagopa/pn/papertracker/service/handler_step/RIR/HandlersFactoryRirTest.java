@@ -28,7 +28,7 @@ class HandlersFactoryRirTest {
     private SequenceValidatorRir sequenceValidatorRir;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidatorRir dematValidator;
 
     @Mock
     private FinalEventBuilderRir finalEventBuilder;
