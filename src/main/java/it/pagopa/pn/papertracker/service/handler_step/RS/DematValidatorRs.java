@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.RS;
 
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericDematValidator;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
