@@ -82,6 +82,28 @@ class NotificationReworkServiceImplTest {
     }
 
     @Test
+    void retrieveSequenceAndEventStatus_shouldReturnSequenceForStock890() {
+        String statusCode = "RECAG005C";
+
+        StepVerifier.create(service.retrieveSequenceAndEventStatus(statusCode, null,"890"))
+                .assertNext(response -> {
+                    assertEquals(SequenceResponse.FinalStatusCodeEnum.OK, response.getFinalStatusCode());
+                    assertNotNull(response.getSequence());
+                    assertEquals(
+                            SequenceConfiguration.getConfig(statusCode).sequenceStatusCodes().size(),
+                            response.getSequence().size()
+                    );
+                    response.getSequence().forEach(sequenceItem -> {
+                        if(!CollectionUtils.isEmpty(sequenceItem.getAttachments())) {
+                            assertTrue(sequenceItem.getAttachments().containsAll(SequenceConfiguration.getConfig(statusCode).validAttachments().get(sequenceItem.getStatusCode())));
+                        }
+                    });
+                    response.getSequence().forEach(item -> assertTrue(StringUtils.hasText(item.getStatusCode())));
+                })
+                .verifyComplete();
+    }
+
+    @Test
     void retrieveSequenceAndEventStatus_shouldReturnSequenceForKOStatusCode() {
         String statusCode = "RECRN002F";
         String deliveryFailureCause = "M01";
