@@ -51,9 +51,10 @@ class PaperTrackerExceptionHandlerTest {
         PnPaperTrackerValidationException exception = new PnPaperTrackerValidationException("Validation error", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                 new PaperTrackings(),
                 "RECRN001C",
-                ErrorCategory.STATUS_CODE_ERROR,
+                ErrorCategory.INCONSISTENT_STATE,
                 null,
                 "message",
+                null,
                 FlowThrow.SEQUENCE_VALIDATION,
                 ErrorType.ERROR,
                 "eventId"));
@@ -74,9 +75,10 @@ class PaperTrackerExceptionHandlerTest {
         PnPaperTrackerValidationException exception = new PnPaperTrackerValidationException("Validation error", PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                 new PaperTrackings(),
                 "RECRN001C",
-                ErrorCategory.STATUS_CODE_ERROR,
+                ErrorCategory.INCONSISTENT_STATE,
                 null,
                 "message",
+                null,
                 FlowThrow.SEQUENCE_VALIDATION,
                 ErrorType.ERROR,
                 "eventId"));
@@ -100,6 +102,7 @@ class PaperTrackerExceptionHandlerTest {
                 ErrorCategory.ATTACHMENTS_ERROR,
                 null,
                 "message",
+                null,
                 FlowThrow.SEQUENCE_VALIDATION,
                 ErrorType.ERROR,
                 "eventId"));

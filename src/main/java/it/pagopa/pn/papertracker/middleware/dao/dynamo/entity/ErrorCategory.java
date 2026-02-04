@@ -9,7 +9,6 @@ public enum ErrorCategory {
     NOT_RETRYABLE_EVENT_ERROR("Evento not retryable ricevuto"),
     RENDICONTAZIONE_SCARTATA("Rendicontazione scartata"),
     DATE_ERROR("Errore nella validazione delle date della sequenza."),
-    STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza."),
     LAST_EVENT_EXTRACTION_ERROR("Errore nell'estrazione della sequenza dall'ultimo evento."),
     REGISTERED_LETTER_CODE_ERROR("Errore nella validazione del registered letter code"),
     REGISTERED_LETTER_CODE_NOT_FOUND("Registered letter code non trovato"),

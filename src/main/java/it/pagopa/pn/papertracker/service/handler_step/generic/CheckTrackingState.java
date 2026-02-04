@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCause;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -12,7 +13,9 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.Map;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
@@ -51,6 +54,9 @@ public class CheckTrackingState implements HandlerStep {
                 : ctx.getPaperTrackings().getState().name();
 
         String errorMsg = String.format("Tracking in state %s, statusCode %s: %s", state, statusCode, ctx.getTrackingId());
+        Map<String, AttributeValue> additionalDetails = Map.of("statusCode", AttributeValue.builder().s(statusCode).build(),
+                "statusTimestamp", AttributeValue.builder().s(ctx.getPaperProgressStatusEvent().getStatusDateTime().toString()).build()
+        );
 
         return Mono.error(new PnPaperTrackerValidationException(
                 errorMsg,
@@ -58,8 +64,9 @@ public class CheckTrackingState implements HandlerStep {
                         ctx.getPaperTrackings(),
                         statusCode,
                         ErrorCategory.INCONSISTENT_STATE,
-                        null,
+                        ErrorCause.VALUE_AFTER_REFINEMENT,
                         errorMsg,
+                        additionalDetails,
                         FlowThrow.CHECK_TRACKING_STATE,
                         ErrorType.WARNING,
                         ctx.getEventId()

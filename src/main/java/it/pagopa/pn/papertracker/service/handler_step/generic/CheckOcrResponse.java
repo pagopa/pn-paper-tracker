@@ -14,7 +14,9 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -71,6 +73,7 @@ public class CheckOcrResponse implements HandlerStep {
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                         cause, "CommandId: " + ocrResultMessage.getCommandId(),
+                        Map.of("ocrDataResultPayload", AttributeValue.builder().s(ocrResultMessage.getData().toString()).build()),
                         FlowThrow.DEMAT_VALIDATION, type, event.getId()
                 )
         ));
@@ -84,6 +87,7 @@ public class CheckOcrResponse implements HandlerStep {
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                             ErrorCause.OCR_KO, ocrResultMessage.getData().getDescription(),
+                            Map.of("ocrDataResultPayload", AttributeValue.builder().s(ocrResultMessage.getData().toString()).build()),
                             FlowThrow.DEMAT_VALIDATION, ErrorType.ERROR, event.getId()
                     )
             ));

@@ -35,7 +35,7 @@ public class PaperTrackerExceptionHandler {
     }
 
     public Mono<Void> handleError(PaperTrackingsErrors paperTrackingsErrors, Long messageReceiveCount, PnPaperTrackerValidationException ex) {
-        boolean isStatusCodeError = ErrorCategory.STATUS_CODE_ERROR.equals(paperTrackingsErrors.getErrorCategory());
+        boolean isStatusCodeError = ErrorCategory.INCONSISTENT_STATE.equals(paperTrackingsErrors.getErrorCategory());
 
         if (isStatusCodeError) {
             if (messageReceiveCount < 5) {

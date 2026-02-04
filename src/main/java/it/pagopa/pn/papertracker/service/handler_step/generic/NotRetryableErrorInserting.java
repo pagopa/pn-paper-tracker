@@ -34,6 +34,7 @@ public class NotRetryableErrorInserting implements HandlerStep {
                 ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,
                 null,
                 EventStatusCodeEnum.fromKey(statusCode).getStatusCodeDescription(),
+                null,
                 FlowThrow.NOT_RETRYABLE_EVENT_HANDLER,
                 ErrorType.WARNING,
                 context.getEventId()
