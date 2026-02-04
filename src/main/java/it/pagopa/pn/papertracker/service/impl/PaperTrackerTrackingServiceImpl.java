@@ -25,11 +25,15 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
+        log.info("Init tracking for request: {}", trackingCreationRequest);
+
         return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils)).then();
     }
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest) {
+        log.info("Retrieving trackings for request: {}", trackingsRequest);
+
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
                 .map(PaperTrackingsMapper::toTracking)
@@ -41,12 +45,16 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings) {
+        log.info("Updating tracking status for trackingId: {}", trackingId);
+
         return paperTrackingsDAO.updateItem(trackingId, paperTrackings)
                 .then();
     }
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry) {
+        log.info("Retrieving trackings for attemptId: {} with pcRetry: {}", attemptId, pcRetry);
+
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry)
                 .map(PaperTrackingsMapper::toTracking)
