@@ -42,7 +42,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
             sequenceConfig = SequenceConfiguration.getConfig(finalEventStatusCode);
         }
         return Mono.just(context.getPaperTrackings())
-                .filter(paperTrackings -> checkState(context) || !isStock890)
+                .filter(paperTrackings -> !isStock890 || checkState(context))
                 .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig,
                         isStock890 ? strictFinalValidationStock890 : true))
                 .doOnNext(context::setPaperTrackings)
