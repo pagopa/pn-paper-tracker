@@ -34,7 +34,9 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
     public Mono<Void> execute(HandlerContext context) {
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
         SequenceConfig sequenceConfig;
+        boolean isStock890 = TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode());
         Boolean strictFinalValidationStock890 = context.getPaperTrackings().getValidationConfig().getStrictFinalValidationStock890();
+
         if(Objects.nonNull(context.getPaperProgressStatusEvent())){
             sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
         }else{
@@ -42,16 +44,14 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
             sequenceConfig = SequenceConfiguration.getConfig(finalEventStatusCode);
         }
         return Mono.just(context.getPaperTrackings())
-                .filter(paperTrackings -> checkState(context))
-                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, strictFinalValidationStock890))
+                .filter(paperTrackings -> !isStock890 || checkState(context))
+                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig,
+                        isStock890 ? strictFinalValidationStock890 : true))
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
     private boolean checkState(HandlerContext context) {
-        if (!TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode()))
-            return true;
-
         PaperTrackingsState state = context.getPaperTrackings().getState();
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
         return switch (state) {
