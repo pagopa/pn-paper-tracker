@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -55,13 +56,8 @@ class SequenceValidator890Test {
         PaperTrackings paperTrackings = getPaperTrackings();
         Attachment attach = new Attachment();
         attach.setDocumentType("23L");
+        paperTrackings.setState(DONE);
         paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
-        paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG002B"))
-                .findFirst()
-                .map(event -> {
-                    event.setAttachments(List.of(attach));
-                    return event;
-                });
         context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
@@ -78,7 +74,7 @@ class SequenceValidator890Test {
     void executeWithStockStatusTrueAndStateDONE() {
         // Arrange
         PaperTrackings paperTrackings = getPaperTrackings();
-        paperTrackings.setState(PaperTrackingsState.DONE);
+        paperTrackings.setState(DONE);
         Attachment attach = new Attachment();
         attach.setDocumentType("23L");
         Attachment attach2 = new Attachment();
@@ -169,14 +165,14 @@ class SequenceValidator890Test {
         // Arrange
         PaperTrackings paperTrackings = getPaperTrackings();
         paperTrackings.getValidationConfig().setStrictFinalValidationStock890(Boolean.FALSE);
-        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
+        paperTrackings.setState(DONE);
         paperTrackings.setEvents(paperTrackings.getEvents()
                 .stream()
-                .filter(event -> !event.getStatusCode().equalsIgnoreCase("RECAG002B"))
+                .filter(event -> !event.getStatusCode().equalsIgnoreCase("RECAG005B"))
                 .collect(Collectors.toList()));
         paperTrackings.getEvents().getFirst().setStatusTimestamp(Instant.now().plusSeconds(10));
         paperTrackings.getEvents().getFirst().setRegisteredLetterCode("REG999");
-        context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
         when(paperTrackingsErrorsDAO.insertError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
@@ -200,7 +196,7 @@ class SequenceValidator890Test {
     void executeWithDifferentRegisteredLetterCodeForRECAG012() {
         // Arrange
         PaperTrackings paperTrackings = getPaperTrackings();
-        paperTrackings.setState(PaperTrackingsState.DONE);
+        paperTrackings.setState(DONE);
         Attachment attach = new Attachment();
         attach.setDocumentType("ARCAD");
         paperTrackings.getEvents().stream().filter(event -> event.getStatusCode().equalsIgnoreCase("RECAG005B"))
