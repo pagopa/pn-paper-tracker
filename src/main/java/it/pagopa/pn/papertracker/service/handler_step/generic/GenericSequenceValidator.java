@@ -68,7 +68,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         PaperTrackings paperTrackingsToUpdate = new PaperTrackings();
         paperTrackingsToUpdate.setPaperStatus(new PaperStatus());
         log.info("Starting validation for sequence for paper tracking : {}", paperTrackings);
-        return extractSequenceFromEvents(paperTrackings.getEvents(), sequenceConfig.sequenceStatusCodes())
+        return extractSequenceFromEvents(paperTrackings.getEvents(), sequenceConfig.sequenceStatusCodes(), context.getReworkId())
                 .filter(events -> !CollectionUtils.isEmpty(events))
                 .switchIfEmpty(Mono.defer(() -> getErrorOrSaveWarning("Invalid lastEvent for sequence validation", context, paperTrackings, ErrorCategory.LAST_EVENT_EXTRACTION_ERROR, strictFinalEventValidation, Collections.emptyList())))
                 .flatMap(this::getOnlyLatestEvents)
@@ -319,11 +319,12 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      * @param events lista di eventi da cui estrarre la sequenza
      * @return Mono contenente la lista filtrata di eventi
      */
-    private Mono<List<Event>> extractSequenceFromEvents(List<Event> events, Set<String> requiredStatusCodes) {
+    private Mono<List<Event>> extractSequenceFromEvents(List<Event> events, Set<String> requiredStatusCodes, String notificationReworkId) {
         log.info("Beginning extraction of relevant events from : {}", events);
         return Mono.just(events.stream()
-                .filter(e -> requiredStatusCodes.contains(e.getStatusCode()))
-                .toList());
+                    .filter(event -> !StringUtils.hasText(notificationReworkId) || notificationReworkId.equalsIgnoreCase(event.getNotificationReworkId()))
+                    .filter(e -> requiredStatusCodes.contains(e.getStatusCode()))
+                    .toList());
     }
 
     /**
@@ -369,7 +370,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         Instant validFinal = allStatusTimestampAreEquals(events, finalGroup);
         boolean validStock = allStockStatusTimestampAreEquals(events, stockGroup);
 
-        if (Objects.nonNull(validFinal) && validStock && checkPredictedRefinementTypeIfStock890(paperTrackings, validFinal)){
+        if (Objects.nonNull(validFinal) && validStock && checkPredictedRefinementTypeIfStock890(paperTrackings, validFinal)) {
             paperTrackingsToUpdate.getPaperStatus().setValidatedSequenceTimestamp(validFinal);
             return Mono.just(events);
         }
@@ -377,8 +378,8 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     }
 
     private boolean checkPredictedRefinementTypeIfStock890(PaperTrackings paperTrackings, Instant validFinal) {
-        if(StringUtils.hasText(paperTrackings.getPaperStatus().getPredictedRefinementType())
-            && paperTrackings.getPaperStatus().getPredictedRefinementType().equalsIgnoreCase(PRE10.name())){
+        if (StringUtils.hasText(paperTrackings.getPaperStatus().getPredictedRefinementType())
+                && paperTrackings.getPaperStatus().getPredictedRefinementType().equalsIgnoreCase(PRE10.name())) {
             Optional<Event> RECAG012Event = TrackerUtility.findRECAG012Event(paperTrackings);
             return RECAG012Event.map(event -> event.getStatusTimestamp().equals(validFinal)).orElse(true);
         }
@@ -390,7 +391,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .filter(e -> group.contains(e.getStatusCode()))
                 .map(Event::getStatusTimestamp)
                 .toList();
-        if(timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()))){
+        if (timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()))) {
             return timestamps.getFirst();
         }
         return null;
