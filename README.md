@@ -1,52 +1,58 @@
 # pn-paper-tracker
-TODO: Aggiungi una breve descrizione del progetto qui.
 
-## Panoramica
-Si compone di:
-- Microservizio pn-paper-tracker : Aggiungi una descrizione del componente qui.
+## Descrizione
+**pn-paper-tracker** è il microservizio responsabile della validazione e tracciamento delle spedizioni analogiche (cartacee) all'interno del sistema **[SEND](https://notifichedigitali.it/)**.
 
-### Architettura
-TODO: Aggiungi un diagramma dell'architettura qui.
+### Responsabilità principali
 
-### 
-- **GET - &#x2F;status**: health check path per verificare lo stato del micro servizio- **POST - &#x2F;paper-tracker-private&#x2F;v1&#x2F;init**: Permette l&#39;inizializzazione di un&#39;entità di tracking.- **POST - &#x2F;paper-tracker-private&#x2F;v1&#x2F;trackings**: Permette il recupero delle entità di tracking da una lista di trackingId.- **POST - &#x2F;paper-tracker-private&#x2F;v1&#x2F;errors**: Permette il recupero degli errori presenti nella tabella PnPaperTrackingsErrors.- **POST - &#x2F;paper-tracker-private&#x2F;v1&#x2F;outputs**: Permette il recupero degli oggetti in output nella tabella PnPaperTrackerDryRunOutputs.- **GET - &#x2F;paper-tracker-private&#x2F;v1&#x2F;attempts&#x2F;{attemptId}**: Recupera il tracking della spedizione dato l&#39;attemptId.
+* **Ricezione eventi:** Riceve gli aggiornamenti di stato delle spedizioni dal consolidatore tramite **pn-external-channel**
+* **Validazione triplette:** Valida la coerenza degli eventi ricevuti (pre-esito, dematerializzazione, fascicolo chiuso) verificando:
+  * Presenza di tutti gli eventi richiesti per ogni flusso
+  * Coerenza dei timestamp di business
+  * Correttezza dei metadati (`registeredLetterCode`, `deliveryFailureCause`, ecc.)
+* **Validazione OCR/AI:** Integra il servizio OCR per la verifica dei documenti allegati scansionati
+* **Tracciamento spedizioni:** Mantiene lo stato completo di ogni tentativo di spedizione verso un destinatario
+* **Inoltro eventi:** Produce eventi validati verso **pn-delivery-push** per l'aggiornamento della timeline notifica
+
+### Prodotti postali gestiti
+* AR (Raccomandata con Ricevuta di Ritorno)
+* RIR (Raccomandata Internazionale con Ricevuta di Ritorno)
+* 890 (Atti Giudiziari)
+* RS, RIS (Raccomandata Semplice, Raccomandati Internazionale Semplice) (in roadmap)
+
+### Contesto storico
+Il servizio è stato introdotto per separare le responsabilità di validazione e tracciamento dal microservizio **pn-paper-channel**, che ora gestisce solo le fasi iniziali (PREPARE e SEND).
+Questa riorganizzazione permette di:
+* Ridurre la complessità di pn-paper-channel
+* Migliorare la manutenibilità
+* Introdurre nuove validazioni OCR
+
+## Tecnologie Utilizzate
+### Stack Tecnologico
+* **Java 21** con **Spring Boot 3.x** e **WebFlux**
+* **AWS SDK v2** per integrazione servizi AWS
+* **OpenAPI 3.0** per definizione contratti API
+* **AsyncAPI 3.0** per definizione DTO code
+* **Maven** per build management
+
+### Servizi utilizzati
+* **Amazon DynamoDB:** DB principale per tracciamento spedizioni
+* **Amazon SQS:** messaggistica asincrona
+
+## Architettura
+
+### Dipendenze interne
 
 
-## Componenti
+### Dipendenze esterne
 
-### pn-paper-tracker
 
-#### Responsabilità
-- Legge e scrive sulle tabelle DynamoDB: PaperTrackingsTable, PaperTrackerDryRunOutputsTable, PaperTrackingsErrorsTable, PaperTrackingsTable, PaperTrackerDryRunOutputsTable, PaperTrackingsErrorsTable
-- Legge e scrive sulle code SQS: ExternalChannelToPaperTrackerQueue, PnOcrOutputsQueue, PnOcrInputsQueue, ExternalChannelsOutputsQueue
+## API & Documentazione
 
-#### Configurazione
-| Variabile Ambiente | Descrizione                                                             | Default | Obbligatorio |
-|--------------------|-------------------------------------------------------------------------|---------|--------------|
-| AWS_REGIONCODE      | AWS Region Code                                                         | -       | Si           |
-| PN_CRON_ANALYZER    | Cron for which you send the metric to CloudWatch                        | -       | No           |
-| WIRE_TAP_LOG        | Activation of wire logs                                                 | -       | No           |
-| PN_PAPERTRACKER_DAO_PAPERTRACKERDRYRUNOUTPUTSTABLE    | DynamoDB table name for PaperTrackerDryRunOutputs                       | -       | Si           |
-| PN_PAPERTRACKER_DAO_PAPERTRACKINGSERRORSTABLE    | DynamoDB table name for PaperTrackingsErrors                            | -       | Si           |
-| PN_PAPERTRACKER_DAO_PAPERTRACKINGSTABLE    | DynamoDB table name for PaperTrackings                                  | -       | Si           |
-| PN_PAPERTRACKER_PAPERCHANNELBASEURL    | Base url for paper-channel APIs                                         | -       | Si           |
-| PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION    | DynamoDB PaperTrackings entity TTL duration                             | -       | Sì           |
-| PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERTRACKER    | Name of the SQS queue where external channel messages are sent          | -       | Si           |
-| PN_PAPERTRACKER_QUEUEOCRINPUTSURL    | URL of the SQS queue where OCR inputs are sent                          | -       | Si           |
-| PN_PAPERTRACKER_QUEUEOCRINPUTSREGION    | Region of the SQS queue where OCR inputs are sent                       | -       | Si           |
-| PN_PAPERTRACKER_EXTERNALCHANNELOUTPUTSQUEUE    | Name of the SQS queue where external channel outputs are sent           | -       | Si           |
-| PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION    | Duration for compiuta giacenza (e.g., 5d, 5h, 5m, 5s)                   | -       | Si           |
-| PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK    | If enabled truncate datetime to local date for refinement check         | -       | Sì           |
-| PN_PAPERTRACKER_REFINEMENTDURATION    | Duration for refinement                                                 | -       | Si           |
-| PN_PAPERTRACKER_SAFESTORAGEBASEURL    | URL to the SafeStorage microservice                                     | -       | Si           |
-| PN_PAPERTRACKER_SAFESTORAGECXID    | CxId for the SafeStorage microservice                                   | -       | Si           |
-| PN_PAPERTRACKER_TOPICS_PNOCROUTPUTS    | Name of the SQS queue where OCR outputs are sent                        | -       | Si           |
-| PN_PAPERTRACKER_ENABLEOCRVALIDATION    | Feature flag for enabling OCR validation                                | -       | Sì           |
+## Allarmi e monitoraggio
 
-## Testing in locale
+## Configurazione
 
-### Prerequisiti
-1. Docker/Podman avviato con container di Localstack (puoi utilizzare il Docker Compose di [Localdev] https://github.com/pagopa/pn-localdev)
-...
-
-I dettagli sui test di integrazione e le procedure di testing sono disponibili in [README_TEST.md](./README_TEST.md).
+## Esecuzione
+**Prerequisiti**
+* Docker/Podman avviato
