@@ -259,6 +259,31 @@ class SequenceValidatorArTest {
     }
 
     @Test
+    void validateSequenceInvalidReworkEventCount() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN002F");
+        context.setReworkId("reworkId");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        Event reworkEventD = buildEvent("RECRN002D", timestamp, businessTimestamp, "REG123", "", null);
+        reworkEventD.setNotificationReworkId("reworkId");
+        Event reworkEventF = buildEvent("RECRN002F", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null);
+        reworkEventF.setNotificationReworkId("reworkId");
+
+        context.getPaperTrackings().setEvents(List.of(
+                reworkEventD,
+                buildEvent("RECRN002E", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M01", List.of(DocumentTypeEnum.AR.getValue(), DocumentTypeEnum.AR.getValue())),
+                reworkEventF
+        ));
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Necessary status code not found in events"))
+                .verify();
+    }
+
+    @Test
     void invalidBusinessTimestamp() {
         // Arrange
         context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
@@ -522,7 +547,7 @@ class SequenceValidatorArTest {
         StepVerifier.create(sequenceValidatorAr.execute(context))
                 .verifyComplete();
     }
-    
+
     private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
         Event event = new Event();
         event.setAttachments(new ArrayList<>());
