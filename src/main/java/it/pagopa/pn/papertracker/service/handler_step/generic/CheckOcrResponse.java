@@ -1,5 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -14,7 +16,6 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +26,7 @@ import java.util.Objects;
 public class CheckOcrResponse implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
+    private final ObjectMapper objectMapper;
 
     /**
      * Step che effettua un controllo sul messaggio ricevuto dal servizio OCR.<br>
@@ -73,11 +75,20 @@ public class CheckOcrResponse implements HandlerStep {
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                         cause, "CommandId: " + ocrResultMessage.getCommandId(),
-                        Map.of("ocrDataResultPayload", AttributeValue.builder().s(ocrResultMessage.getData().toString()).build()),
+                        Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
                         FlowThrow.DEMAT_VALIDATION, type, event.getId()
                 )
         ));
     }
+
+    private Map<String,String> transformToMap(Data data) {
+        return  objectMapper.convertValue(
+                    data,
+                    new TypeReference<>() {
+                    }
+            );
+    }
+
 
     private Mono<Void> handleValidationStatus(Data.ValidationStatus status, PaperTrackings paperTrackings,
                                               Event event, OcrDataResultPayload ocrResultMessage, HandlerContext context) {
@@ -87,7 +98,7 @@ public class CheckOcrResponse implements HandlerStep {
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                             ErrorCause.OCR_KO, ocrResultMessage.getData().getDescription(),
-                            Map.of("ocrDataResultPayload", AttributeValue.builder().s(ocrResultMessage.getData().toString()).build()),
+                            Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
                             FlowThrow.DEMAT_VALIDATION, ErrorType.ERROR, event.getId()
                     )
             ));

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.ZoneOffset;
 import java.util.List;
@@ -67,9 +66,9 @@ public class DuplicatedEventFiltering implements HandlerStep {
                                                                         PaperProgressStatusEvent event,
                                                                         HandlerContext context) {
         String statusCode = event.getStatusCode();
-        Map<String, AttributeValue> additionalDetails = Map.of(
-                "statusCode", AttributeValue.builder().s(statusCode).build(),
-                "statusTimestamp", AttributeValue.builder().s(event.getStatusDateTime().toString()).build()
+        Map<String, Object> additionalDetails = Map.of(
+                "statusCode", statusCode,
+                "statusTimestamp", event.getStatusDateTime().toString()
         );
         return new PnPaperTrackerValidationException(
                 "Duplicated event found: " + statusCode,

@@ -1,8 +1,9 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.AdditionalDetailsConverter;
 import lombok.*;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
 
 import java.util.Map;
 
@@ -20,5 +21,6 @@ public class ErrorDetails {
 
     private ErrorCause cause;
     private String message;
-    private Map<String, AttributeValue> additionalDetails;
+    @Getter(onMethod = @__({ @DynamoDbConvertedBy(AdditionalDetailsConverter.class) }))
+    private Map<String, Object> additionalDetails;
 }

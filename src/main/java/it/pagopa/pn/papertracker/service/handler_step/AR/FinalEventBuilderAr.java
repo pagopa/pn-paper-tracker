@@ -16,7 +16,6 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -91,8 +90,8 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                     "The difference between RECRN005A and RECRN010 is greater than the configured duration",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings, finalEvent.getStatusCode(), ErrorCategory.RENDICONTAZIONE_SCARTATA, ErrorCause.GIACENZA_DATE_ERROR,
                             String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
-                            Map.of("recrn005aTimestamp", AttributeValue.builder().s(eventRECRN00XA.getStatusTimestamp().toString()).build(),
-                                    "recrn010Timestamp", AttributeValue.builder().s(eventRECRN010.getStatusTimestamp().toString()).build()
+                            Map.of("recrn005aTimestamp", eventRECRN00XA.getStatusTimestamp().toString(),
+                                    "recrn010Timestamp", eventRECRN010.getStatusTimestamp().toString()
                             ),
                             FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR, finalEvent.getId())));
         }

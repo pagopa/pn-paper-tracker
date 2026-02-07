@@ -14,7 +14,6 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Map;
 import java.util.Objects;
@@ -64,8 +63,8 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCategory.INCONSISTENT_STATE,
                             ErrorCause.STOCK_890_REFINEMENT_MISSING,
                             "invalid AWAITING_REFINEMENT state for stock 890",
-                            Map.of("statusCode", AttributeValue.builder().s(context.getPaperProgressStatusEvent().getStatusCode()).build(),
-                                "statusTimestamp", AttributeValue.builder().s(context.getPaperProgressStatusEvent().getStatusDateTime().toString()).build()
+                            Map.of("statusCode", context.getPaperProgressStatusEvent().getStatusCode(),
+                                "statusTimestamp", context.getPaperProgressStatusEvent().getStatusDateTime().toString()
                             ),
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
@@ -86,8 +85,8 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCategory.INCONSISTENT_STATE,
                             ErrorCause.STOCK_890_REFINEMENT_ERROR,
                             "Refinement process reached KO state, cannot proceed with final event validation",
-                            Map.of("statusCode", AttributeValue.builder().s(context.getPaperProgressStatusEvent().getStatusCode()).build(),
-                                    "statusTimestamp", AttributeValue.builder().s(context.getPaperProgressStatusEvent().getStatusDateTime().toString()).build()
+                            Map.of("statusCode", context.getPaperProgressStatusEvent().getStatusCode(),
+                                    "statusTimestamp", context.getPaperProgressStatusEvent().getStatusDateTime().toString()
                             ),
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,

@@ -4,7 +4,6 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingError;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 import java.util.Map;
@@ -17,7 +16,7 @@ public class PaperTrackingsErrorsMapper {
                                                                 ErrorCategory errorCategory,
                                                                 ErrorCause errorCause,
                                                                 String errorMessage,
-                                                                Map<String, AttributeValue> additionalDetails,
+                                                                Map<String, Object> additionalDetails,
                                                                 FlowThrow flowThrow,
                                                                 ErrorType errorType,
                                                                 String eventIdThrow) {

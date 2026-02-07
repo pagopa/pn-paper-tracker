@@ -13,7 +13,6 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Map;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
@@ -54,8 +53,8 @@ public class CheckTrackingState implements HandlerStep {
                 : ctx.getPaperTrackings().getState().name();
 
         String errorMsg = String.format("Tracking in state %s, statusCode %s: %s", state, statusCode, ctx.getTrackingId());
-        Map<String, AttributeValue> additionalDetails = Map.of("statusCode", AttributeValue.builder().s(statusCode).build(),
-                "statusTimestamp", AttributeValue.builder().s(ctx.getPaperProgressStatusEvent().getStatusDateTime().toString()).build()
+        Map<String, Object> additionalDetails = Map.of("statusCode", statusCode,
+                "statusTimestamp", ctx.getPaperProgressStatusEvent().getStatusDateTime().toString()
         );
 
         return Mono.error(new PnPaperTrackerValidationException(

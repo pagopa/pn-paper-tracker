@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +48,9 @@ class SequenceValidator890Test {
     void setUp() {
         sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO, paperTrackingsErrorsDAO);
         context = new HandlerContext();
-        context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
+        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
+        paperProgressStatusEvent.setStatusDateTime(OffsetDateTime.now());
+        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
     }
 
     @Test
