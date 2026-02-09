@@ -76,7 +76,7 @@ class PaperTrackerExceptionHandlerTest {
                 new PaperTrackings(),
                 "RECRN001C",
                 ErrorCategory.INCONSISTENT_STATE,
-                null,
+                ErrorCause.VALUES_NOT_FOUND,
                 "message",
                 null,
                 FlowThrow.SEQUENCE_VALIDATION,

@@ -169,7 +169,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     .collect(Collectors.toSet());
 
             if (!CollectionUtils.isEmpty(invalidDocs)) {
-                Map<String, Object> additionalDetails = Map.of("missingAttachments",  String.join(",", invalidDocs));
+                Map<String, Object> additionalDetails = Map.of("invalidAttachments",  String.join(",", invalidDocs));
 
                 return getErrorOrSaveWarning("Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, ErrorCause.INVALID_VALUES, additionalDetails, strictFinalEventValidation, events);
             }

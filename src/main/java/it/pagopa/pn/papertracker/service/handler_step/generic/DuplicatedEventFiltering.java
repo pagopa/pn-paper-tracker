@@ -68,7 +68,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
         String statusCode = event.getStatusCode();
         Map<String, Object> additionalDetails = Map.of(
                 "statusCode", statusCode,
-                "statusTimestamp", event.getStatusDateTime().toString()
+                "statusTimestamp", Objects.toString(event.getStatusDateTime(), null)
         );
         return new PnPaperTrackerValidationException(
                 "Duplicated event found: " + statusCode,

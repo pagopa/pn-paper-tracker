@@ -15,6 +15,9 @@ public class AdditionalDetailsConverter implements AttributeConverter<Map<String
 
     @Override
     public AttributeValue transformFrom(Map<String, Object> value) {
+        if (Objects.isNull(value)) {
+            return AttributeValue.builder().nul(true).build();
+        }
         return AttributeValue.builder().m(value.entrySet().stream()
                         .collect(java.util.stream.Collectors.toMap(
                                 Map.Entry::getKey,
@@ -24,6 +27,12 @@ public class AdditionalDetailsConverter implements AttributeConverter<Map<String
 
     @Override
     public Map<String, Object> transformTo(AttributeValue attributeValue) {
+        if (Boolean.TRUE.equals(attributeValue.nul())) {
+            return null;
+        }
+        if (Objects.isNull(attributeValue.m())) {
+            return Map.of();
+        }
         return attributeValue.m().entrySet().stream().collect(java.util.stream.Collectors.toMap(
                         Map.Entry::getKey,
                         e -> Optional.ofNullable(fromAttr(e.getValue())).orElse("")

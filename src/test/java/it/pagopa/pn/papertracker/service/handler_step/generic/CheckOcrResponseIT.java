@@ -4,16 +4,19 @@ import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class CheckOcrResponseIT extends BaseTest.WithLocalStack {
@@ -23,6 +26,9 @@ public class CheckOcrResponseIT extends BaseTest.WithLocalStack {
 
     @Autowired
     PaperTrackingsDAO paperTrackingsDAO;
+
+    @Autowired
+    PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
 
     @Test
     void checkOcrResponseHandler(){
@@ -52,7 +58,18 @@ public class CheckOcrResponseIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
-        ocrEventHandler.handleOcrMessage(payload);
+        Assertions.assertDoesNotThrow(()-> ocrEventHandler.handleOcrMessage(payload));
+        PaperTrackingsErrors paperTrackingsErrors = paperTrackingsErrorsDAO.retrieveErrors(paperTrackings.getTrackingId()).blockFirst();
+        Assertions.assertNotNull(paperTrackingsErrors);
+        Object additionalDetailsField = paperTrackingsErrors.getDetails().getAdditionalDetails().get("ocrDataResultPayload");
+        if (additionalDetailsField instanceof HashMap<?,?> map) {
+            Assertions.assertEquals("description", map.get("description"));
+            Assertions.assertEquals("POST10", map.get("predictedRefinementType"));
+            Assertions.assertEquals("ai", map.get("validationType"));
+            Assertions.assertEquals("KO", map.get("validationStatus"));
+        } else {
+            Assertions.fail("Expected additionalDetailsField to be a Map");
+        }
     }
 
     private Event buildEvent(String id, String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {

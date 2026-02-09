@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.Objects;
+
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
@@ -56,7 +58,7 @@ public class CheckTrackingState implements HandlerStep {
 
         String errorMsg = String.format("Tracking in state %s, statusCode %s: %s", state, statusCode, ctx.getTrackingId());
         Map<String, Object> additionalDetails = Map.of("statusCode", statusCode,
-                "statusTimestamp", ctx.getPaperProgressStatusEvent().getStatusDateTime().toString()
+                "statusTimestamp", Objects.toString(ctx.getPaperProgressStatusEvent().getStatusDateTime(), null)
         );
 
         return Mono.error(new PnPaperTrackerValidationException(

@@ -21,8 +21,10 @@ public enum ErrorCategory {
     DUPLICATED_EVENT("Errore nella validazione della presenza di eventi duplicati"),
     INVALID_STATE_FOR_STOCK_890("Stato non valido per giacenza 890"),
     INCONSISTENT_STATE("Tracking completato o in attesa validazione OCR"),
-
-    //DEPRECATE NON UTILIZZARE
+    /**
+     * @deprecated Non utilizzare. Campo mantenuto solo per retrocompatibilità.
+     */
+    @Deprecated
     STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza.");
 
     private final String value;

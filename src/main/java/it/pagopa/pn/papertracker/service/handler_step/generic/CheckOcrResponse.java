@@ -81,7 +81,7 @@ public class CheckOcrResponse implements HandlerStep {
         ));
     }
 
-    private Map<String,String> transformToMap(Data data) {
+    private Map<String,Object> transformToMap(Data data) {
         return  objectMapper.convertValue(
                     data,
                     new TypeReference<>() {
