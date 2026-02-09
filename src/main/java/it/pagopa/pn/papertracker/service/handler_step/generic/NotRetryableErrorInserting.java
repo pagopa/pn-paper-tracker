@@ -28,6 +28,8 @@ public class NotRetryableErrorInserting implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
+        log.info("Executing NotRetryableErrorInserting step for trackingId: {}", context.getTrackingId());
+
         String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         PaperTrackingsErrors paperTrackingsErrors = PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
                 statusCode,

@@ -37,6 +37,8 @@ public abstract class GenericFinalEventBuilder implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
+        log.info("Executing GenericFinalEventBuilder step for trackingId: {}", context.getTrackingId());
+
         Event finalEvent = TrackerUtility.extractEventFromContext(context);
         return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(finalEvent.getStatusCode()).getStatus().name())
                 .thenReturn(finalEvent)
