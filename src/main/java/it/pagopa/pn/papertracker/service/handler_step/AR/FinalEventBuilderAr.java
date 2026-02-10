@@ -25,7 +25,8 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @Component
 @Slf4j
-public class FinalEventBuilderAr extends GenericFinalEventBuilder implements HandlerStep {
+public class
+FinalEventBuilderAr extends GenericFinalEventBuilder implements HandlerStep {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final PaperTrackingsDAO paperTrackingsDAO;
@@ -50,7 +51,7 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         log.info("Executing FinalEventBuilderAr step for trackingId: {}", context.getTrackingId());
 
         return Mono.just(TrackerUtility.extractEventFromContext(context))
-                .doOnNext(event -> context.setFinalStatusCode(context.getPaperProgressStatusEvent().getStatusCode()))
+                .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
                 .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
