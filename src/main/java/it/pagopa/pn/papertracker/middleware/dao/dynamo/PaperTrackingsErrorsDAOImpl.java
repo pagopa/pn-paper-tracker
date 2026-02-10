@@ -31,12 +31,12 @@ public class PaperTrackingsErrorsDAOImpl extends BaseDao<PaperTrackingsErrors> i
     }
 
     public Mono<PaperTrackingsErrors> insertError(PaperTrackingsErrors paperTrackingsErrors) {
-        String logMessage = "Logging metrics : " + MetricUtils.DimensionName.ERROR_CATEGORY.getValue() + " - " + MetricUtils.DimensionName.PRODUCT_TYPE.getValue();
+        String logMessage = "Logging metrics: " + MetricUtils.MetricName.ERROR_COUNT +"; Dimensions: " + MetricUtils.DimensionName.ERROR_CATEGORY.getValue() + ", " + MetricUtils.DimensionName.PRODUCT_TYPE.getValue();
         GeneralMetric errorCountMetric = MetricUtils.generateGeneralMetric(
                 MetricUtils.MetricName.ERROR_COUNT,
                 1,
                 List.of(
-                        MetricUtils.generateDimension(MetricUtils.DimensionName.ERROR_CATEGORY, paperTrackingsErrors.getErrorCategory().getValue()),
+                        MetricUtils.generateDimension(MetricUtils.DimensionName.ERROR_CATEGORY, paperTrackingsErrors.getErrorCategory().name()),
                         MetricUtils.generateDimension(MetricUtils.DimensionName.PRODUCT_TYPE, paperTrackingsErrors.getProductType())
                 )
         );
