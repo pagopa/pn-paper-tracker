@@ -25,8 +25,7 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @Component
 @Slf4j
-public class
-FinalEventBuilderAr extends GenericFinalEventBuilder implements HandlerStep {
+public class FinalEventBuilderAr extends GenericFinalEventBuilder implements HandlerStep {
 
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
     private final PaperTrackingsDAO paperTrackingsDAO;
