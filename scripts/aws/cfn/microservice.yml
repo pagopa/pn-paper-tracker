@@ -482,7 +482,7 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource:
-              - !Ref PnOcrOutputsQueueURL
+              - !Ref PnOcrOutputsQueueARN
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref OcrAwsRoleARN
