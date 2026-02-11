@@ -37,6 +37,8 @@ public class RECAG012EventBuilder implements HandlerStep {
 
     @Override
     public Mono<Void> execute(HandlerContext context) {
+        log.info("Executing RECAG012EventBuilder step for trackingId: {}", context.getTrackingId());
+
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = TrackerUtility.getStatusCodeFromEventId(paperTrackings, context.getEventId());
         String currentStatusCode = context.getPaperProgressStatusEvent().getStatusCode();

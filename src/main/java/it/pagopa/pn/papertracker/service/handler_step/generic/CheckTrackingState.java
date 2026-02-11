@@ -31,6 +31,8 @@ public class CheckTrackingState implements HandlerStep {
      * @return Mono(Void)
      */
     public Mono<Void> execute(HandlerContext context) {
+        log.info("Executing CheckTrackingState step for trackingId: {}", context.getTrackingId());
+
         return Mono.just(context)
                 .flatMap(ctx -> {
                     String statusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), ctx.getEventId());

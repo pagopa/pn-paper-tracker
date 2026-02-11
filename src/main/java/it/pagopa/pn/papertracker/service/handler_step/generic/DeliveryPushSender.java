@@ -51,11 +51,14 @@ public class DeliveryPushSender implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
+        log.info("Executing DeliveryPushSender step for trackingId: {}", context.getTrackingId());
+
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
                 .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
 
         if (CollectionUtils.isEmpty(filteredEvent)) {
+            log.info("No events to send for trackingId: {}. Skipping DeliveryPushSender step.", context.getTrackingId());
             return Mono.empty();
         }
 
