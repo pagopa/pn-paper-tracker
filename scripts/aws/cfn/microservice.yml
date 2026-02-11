@@ -405,6 +405,11 @@ Parameters:
     AllowedValues: [ "true", "false" ]
     Default: "false"
 
+  MetricFormatType:
+    Type: String
+    Description: 'Metric format type'
+    Default: 'EMF'
+
 Conditions:
   EnableLambdaProxyQueueSourceCondition: !Equals
     - !Ref EnableLambdaProxyQueueSource
@@ -456,6 +461,7 @@ Resources:
         ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_DISABLEALLCONSUMERS=${DisableAllConsumers}'
         ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELQUEUE=${ExternalChannels2PaperChannelQueueName}'
         ContainerEnvEntry22: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELDRYRUNQUEUE=${ExternalChannelsToPaperChannelDryrunQueueName}'
+        ContainerEnvEntry23: !Sub 'METRIC_FORMAT_TYPE=${MetricFormatType}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
