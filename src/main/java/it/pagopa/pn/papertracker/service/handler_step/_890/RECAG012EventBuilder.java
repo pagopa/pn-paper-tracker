@@ -19,14 +19,16 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012A;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
 
 @Component
 @RequiredArgsConstructor
@@ -35,59 +37,85 @@ public class RECAG012EventBuilder implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
+
     @Override
     public Mono<Void> execute(HandlerContext context) {
         log.info("Executing RECAG012EventBuilder step for trackingId: {}", context.getTrackingId());
 
         PaperTrackings paperTrackings = context.getPaperTrackings();
+        // StatusCode dell'evento appena arrivato da pn-ec (RECAG011B o RECA00xB)
+        // Oppure StatusCode dell'evento inviato all'OCR (RECAG012, RECAG005C, RECAG006C, RECAG007C, RECAG008C)
         String statusCode = TrackerUtility.getStatusCodeFromEventId(paperTrackings, context.getEventId());
-        String currentStatusCode = context.getPaperProgressStatusEvent().getStatusCode();
         PaperTrackingsState state = paperTrackings.getState();
         EventStatusCodeEnum eventStatus = EventStatusCodeEnum.fromKey(statusCode);
 
+        // Flusso OCR eventi RECAG005C, RECAG006C, RECAG007C, RECAG008C
         if (state == PaperTrackingsState.DONE || eventStatus.getCodeType() == EventTypeEnum.FINAL_EVENT) {
             log.info("Skip RECAG012 event build for trackingId={} (state={}, statusCode={})", context.getTrackingId(), state, statusCode);
             return Mono.empty();
         }
 
-        OcrStatusEnum ocrEnabled = paperTrackings.getValidationConfig().getOcrEnabled();
         if (context.isNeedToSendRECAG012A()) {
-            return RECAG012.name().equalsIgnoreCase(currentStatusCode) ?
-                    buildRECAG012AEvent(context).doOnNext(context.getEventsToSend()::add).then() : Mono.empty();
+            // Caso 1: Non sono arrivati tutti gli allegati necessari ma è arrivato il RECAG012
+            if(RECAG012.name().equalsIgnoreCase(statusCode)) {
+                log.info("Building RECAG012A for trackingId: {}", context.getTrackingId());
+                return buildRECAG012AEvent(context)
+                        .doOnNext(context.getEventsToSend()::add)
+                        .then();
+            }
+            // Caso 2: Non sono arrivati tutti gli allegati necessari e NON è arrivato il RECAG012
+            return Mono.empty();
         }
 
+        // Caso 3: Sono arrivati tutti gli allegati necessari ma non è arrivato il RECAG012
+        Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
+        if(recag012Event.isEmpty()) {
+            log.info("Skip RECAG012 FEEDBACK build, RECAG012 event not found");
+            return Mono.empty();
+        }
+
+        // Caso 4: Sono arrivati tutti gli allegati necessari e il RECAG012
+
+        // Se l'OCR è disabilitato o in DRY non resto in attesa della risposta e invio RECAG012
+        OcrStatusEnum ocrEnabled = paperTrackings.getValidationConfig().getOcrEnabled();
         if (OcrStatusEnum.DISABLED.equals(ocrEnabled) || OcrStatusEnum.DRY.equals(ocrEnabled)) {
-            return handleWithoutOcr(context, currentStatusCode);
+            return buildFeedbackAndUpdateEntity(context, recag012Event.get());
         }
-        return handleWithOcr(context);
+
+        // Se l'OCR è in modalità RUN ma non ho mandato nessuna richiesta (allegati necessari vuoti)
+        // non resto in attesa della risposta e invio RECAG012
+        if (checkEmptyOcrRequests(context)) {
+            return buildFeedbackAndUpdateEntity(context, recag012Event.get());
+        }
+
+
+        // Se l'OCR è in modalità RUN e ho richieste
+        // Controllo tutte le risposte e invio RECAG012 FEEDBACK OK
+        if (checkAllOcrResponse(context)){
+            return buildFeedbackAndUpdateEntity(context, recag012Event.get());
+        }
+
+        return Mono.empty();
     }
 
-    private Mono<Void> handleWithoutOcr(HandlerContext context, String currentStatusCode) {
-        return RECAG012.name().equalsIgnoreCase(currentStatusCode) ? buildAndUpdate(context, this::buildRECAG012Event)
-                : buildAndUpdate(context, this::buildOkEventFromExisting);
+    private Mono<Void> buildFeedbackAndUpdateEntity(HandlerContext context, Event recag012Event) {
 
-    }
-
-    private Mono<Void> handleWithOcr(HandlerContext context) {
-        if (!checkAllOcrResponse(context)) return Mono.empty();
-        return buildAndUpdate(context, this::buildRECAG012EventFromEventId);
-    }
-
-    private Event findExistingRECAG012Event(PaperTrackings paperTrackings) {
-        return Objects.nonNull(paperTrackings.getEvents())
-                ? paperTrackings.getEvents().stream()
-                .filter(e -> RECAG012.name().equalsIgnoreCase(e.getStatusCode()))
-                .findFirst()
-                .orElse(null)
-                : null;
-    }
-
-    private Mono<Void> buildAndUpdate(HandlerContext context, Function<HandlerContext, Flux<SendEvent>> builder) {
-        return builder.apply(context)
+        return SendEventMapper.createSendEventsFromEventEntity(
+                        context.getTrackingId(),
+                        recag012Event,
+                        StatusCodeEnum.OK,
+                        RECAG012.name(),
+                        recag012Event.getStatusTimestamp().atOffset(ZoneOffset.UTC)
+                )
                 .doOnNext(context.getEventsToSend()::add)
                 .collectList()
                 .filter(sendEvents -> !CollectionUtils.isEmpty(sendEvents))
-                .flatMap(list -> paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate()))
+                .flatMap(list ->
+                        paperTrackingsDAO.updateItem(
+                                context.getTrackingId(),
+                                getPaperTrackingsToUpdate()
+                        )
+                )
                 .then();
     }
 
@@ -99,32 +127,6 @@ public class RECAG012EventBuilder implements HandlerStep {
         update.setState(PaperTrackingsState.DONE);
         update.setValidationFlow(validationFlow);
         return update;
-    }
-
-    private Flux<SendEvent> buildRECAG012Event(HandlerContext context) {
-        return SendEventMapper.createSendEventsFromPaperProgressStatusEvent(context.getPaperProgressStatusEvent());
-    }
-
-    private Flux<SendEvent> buildRECAG012EventFromEventId(HandlerContext context) {
-        Event recag012Event = TrackerUtility.extractEventFromContext(context);
-        return createEvents(context, recag012Event);
-    }
-
-    private Flux<SendEvent> buildOkEventFromExisting(HandlerContext context) {
-        Event recag012Event = findExistingRECAG012Event(context.getPaperTrackings());
-        if (Objects.isNull(recag012Event)) return Flux.empty();
-        return createEvents(context, recag012Event);
-
-    }
-
-    private Flux<SendEvent> createEvents(HandlerContext context, Event recag012Event) {
-        return SendEventMapper.createSendEventsFromEventEntity(
-                context.getTrackingId(),
-                recag012Event,
-                StatusCodeEnum.OK,
-                RECAG012.name(),
-                recag012Event.getStatusTimestamp().atOffset(java.time.ZoneOffset.UTC)
-        );
     }
 
     private Flux<SendEvent> buildRECAG012AEvent(HandlerContext context) {
@@ -149,4 +151,15 @@ public class RECAG012EventBuilder implements HandlerStep {
 
         return TrackerUtility.hasRequiredAttachmentsRefinementStock890(requiredDocs, completedDocs);
     }
+
+    private boolean checkEmptyOcrRequests(HandlerContext context) {
+        ValidationConfig config = context.getPaperTrackings().getValidationConfig();
+        List<String> requiredDocs = config.getRequiredAttachmentsRefinementStock890();
+        List<OcrRequest> ocrRequests = context.getPaperTrackings().getValidationFlow().getOcrRequests();
+
+        // Ritorna true se NESSUNA richiesta OCR corrisponde ai documenti richiesti al refinement giacenza 890
+        return ocrRequests.stream()
+                .noneMatch(req -> requiredDocs.contains(req.getDocumentType()));
+    }
+
 }

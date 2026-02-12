@@ -60,6 +60,7 @@ class OcrUtilityTest {
 
     @Test
     void checkAndSendToOcr_OcrEnabled_ValidAttachments() {
+        // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Attachment att = new Attachment();
@@ -73,30 +74,38 @@ class OcrUtilityTest {
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
+        // Act
         StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
                 .expectNext(true)
                 .verifyComplete();
+
+        // Assert
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
     void checkAndSendToOcr_OcrDisabled() {
+        // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Event event = new Event();
         event.setStatusCode(RECAG012.name());
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
+        // Act
         StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
                 .expectNext(false)
                 .verifyComplete();
+
+        // Assert
         verifyNoInteractions(ocrMomProducer);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
     void checkAndSendToOcr_OcrEnabled_NoValidAttachments() {
+        // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Attachment att = new Attachment();
@@ -108,24 +117,31 @@ class OcrUtilityTest {
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
+        // Act
         StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
                 .expectNext(false)
                 .verifyComplete();
+
+        // Assert
         verifyNoInteractions(ocrMomProducer);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
     void checkAndSendToOcr_OcrEnabled_EmptyAttachments() {
+        // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         Event event = new Event();
         event.setStatusCode(RECAG012.name());
         Map<String, List<Attachment>> attachments = new HashMap<>();
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
+        // Act
         StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
                 .expectNext(false)
                 .verifyComplete();
+
+        // Assert
         verifyNoInteractions(ocrMomProducer);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }

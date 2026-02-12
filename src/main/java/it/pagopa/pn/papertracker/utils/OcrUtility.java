@@ -193,7 +193,7 @@ public class OcrUtility {
                         .details(
                                 DetailsDTO.builder()
                                         .attachment(presignedUrl)
-                                        .registeredLetterCode(event.getRegisteredLetterCode())
+                                        .registeredLetterCode(paperTracking.getPaperStatus().getRegisteredLetterCode())
                                         .notificationDate(LocalDateTime.ofInstant(event.getStatusTimestamp(), ZoneOffset.UTC))
                                         .deliveryFailureCause(deliveryFailureCause)
                                         .deliveryDetailCode(event.getStatusCode())

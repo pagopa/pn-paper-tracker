@@ -2,20 +2,20 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
@@ -47,26 +47,32 @@ public class RECAG012EventChecker implements HandlerStep {
         Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
         List<String> ocrAttachments = context.getPaperTrackings().getValidationConfig().getSendOcrAttachmentsRefinementStock890();
+        context.setNeedToSendRECAG012A(false);
 
         if(recag012Event.isEmpty()){
             log.info("RECAG012 event not found for trackingId {}", context.getTrackingId());
             return Mono.empty();
         }
 
+        // Non ha tutti gli allegati richiesti al refinement ma è arrivato il RECAG012
         if (!hasRequiredAttachments(context, requiredAttachments)) {
             log.info("Missing required attachments for trackingId {}", context.getTrackingId());
             context.setNeedToSendRECAG012A(true);
             return Mono.empty();
         }
 
+        PaperStatus paperStatus = context.getPaperTrackings().getPaperStatus();
+
         Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
+                // Popola il registeredLetterCode perchè non presente prima del SequenceValidator890
+                .peek(event -> paperStatus.setRegisteredLetterCode(event.getRegisteredLetterCode()))
                 .map(event -> Map.entry(
-                        event.getId(),
-                        event.getAttachments().stream()
-                                .filter(att -> ocrAttachments.contains(att.getDocumentType()))
-                                .toList()
-                ))
+                            event.getId(),
+                            event.getAttachments().stream()
+                                    .filter(att -> ocrAttachments.contains(att.getDocumentType()))
+                                    .toList()
+                    ))
                 .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
