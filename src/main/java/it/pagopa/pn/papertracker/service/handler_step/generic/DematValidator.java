@@ -51,7 +51,8 @@ public class DematValidator implements HandlerStep {
         Map<String, List<Attachment>> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
         return ocrUtility.checkAndSendToOcr(currentEvent, attachmentList, context)
                 .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)))
-                .filter(ocrStatusEnum -> ocrStatusEnum.equals(OcrStatusEnum.RUN))
+                .filter(isSentToOcr -> Boolean.TRUE.equals(isSentToOcr))
+                // Ferma l'esecuzione degli step se è stato inviato all'OCR
                 .doOnNext(unused -> context.setStopExecution(true))
                 .then();
     }
