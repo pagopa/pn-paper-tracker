@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.checkIfIsFinalDemat;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
 
 @Component
@@ -65,8 +66,11 @@ public class RECAG012EventChecker implements HandlerStep {
 
         Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
-                // Popola il registeredLetterCode perchè non presente prima del SequenceValidator890
-                .peek(event -> paperStatus.setRegisteredLetterCode(event.getRegisteredLetterCode()))
+                .peek(event -> {
+                    // Popola il registeredLetterCode perchè non presente prima del SequenceValidator890
+                    if(checkIfIsFinalDemat(event.getStatusCode()))
+                        paperStatus.setRegisteredLetterCode(event.getRegisteredLetterCode());
+                })
                 .map(event -> Map.entry(
                             event.getId(),
                             event.getAttachments().stream()
