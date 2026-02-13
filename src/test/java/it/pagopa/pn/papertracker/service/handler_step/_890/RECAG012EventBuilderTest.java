@@ -253,6 +253,7 @@ class RECAG012EventBuilderTest {
             context.setNeedToSendRECAG012A(false);
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("DOC_TYPE_A"));
 
             OcrRequest ocrRequest = new OcrRequest();
             ocrRequest.setDocumentType("DOC_TYPE_C"); // Different type
@@ -345,6 +346,7 @@ class RECAG012EventBuilderTest {
             context.setNeedToSendRECAG012A(false);
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setSendOcrAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
 
             OcrRequest request1 = new OcrRequest();
             request1.setDocumentType("DOC_TYPE_A");
@@ -376,7 +378,8 @@ class RECAG012EventBuilderTest {
             paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
             context.setNeedToSendRECAG012A(false);
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
-            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setRequiredAttachmentsRefinementStock890(List.of("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("DOC_TYPE_A", "DOC_TYPE_B"));
 
             OcrRequest request1 = new OcrRequest();
             request1.setDocumentType("DOC_TYPE_A");
