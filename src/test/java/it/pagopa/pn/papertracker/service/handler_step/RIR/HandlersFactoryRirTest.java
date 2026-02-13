@@ -25,6 +25,9 @@ class HandlersFactoryRirTest {
     private MetadataUpserter metadataUpserter;
 
     @Mock
+    private CheckTrackingProduct checkTrackingProduct;
+
+    @Mock
     private SequenceValidatorRir sequenceValidatorRir;
 
     @Mock
@@ -74,6 +77,7 @@ class HandlersFactoryRirTest {
     void buildEventsHandler_WithValidSteps_ExecutesAllStepsInOrder() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
@@ -100,6 +104,7 @@ class HandlersFactoryRirTest {
         RuntimeException testException = new RuntimeException("Second step failed");
 
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
@@ -117,6 +122,7 @@ class HandlersFactoryRirTest {
     void buildFinalEventsHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
@@ -140,6 +146,7 @@ class HandlersFactoryRirTest {
     void buildIntermediateEventsHandler_ExecutesMetadataUpserterAndDeliveryPushSender() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
@@ -160,6 +167,7 @@ class HandlersFactoryRirTest {
     void buildRetryEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
@@ -179,6 +187,7 @@ class HandlersFactoryRirTest {
     void buildNotRetryableEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
         when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
@@ -190,8 +199,9 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, deliveryPushSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
         inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
         inOrder.verify(notRetryableErrorInserting).execute(handlerContext);
         inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
@@ -213,13 +223,15 @@ class HandlersFactoryRirTest {
     void buildSaveOnlyEventHandler_ExecutesMetadataUpserter() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryRir.buildSaveOnlyEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
     }
 }

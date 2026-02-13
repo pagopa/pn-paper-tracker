@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 public class HandlersFactoryRs extends AbstractHandlersFactory {
 
     public HandlersFactoryRs(MetadataUpserter metadataUpserter,
+                             CheckTrackingProduct checkTrackingProduct,
                              DeliveryPushSender deliveryPushSender,
                              FinalEventBuilderRs finalEventBuilder,
                              IntermediateEventsBuilder intermediateEventsBuilder,
@@ -20,6 +21,7 @@ public class HandlersFactoryRs extends AbstractHandlersFactory {
                              CheckOcrResponse checkOcrResponse,
                              RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
+                checkTrackingProduct,
                 deliveryPushSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
