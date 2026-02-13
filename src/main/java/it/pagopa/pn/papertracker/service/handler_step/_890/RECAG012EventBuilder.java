@@ -104,16 +104,23 @@ public class RECAG012EventBuilder implements HandlerStep {
 
         Event recag012Event = findExistingRecag012(context.getPaperTrackings());
 
+        if(recag012Event == null){
+            log.info("Skip RECAG012 build, RECAG012 not found in events");
+            return Mono.empty();
+        }
+
         // OCR DISABLED / DRY
         if (ocrDisabled) {
-            return recag012Event != null ? sendRecag012(context, recag012Event) : Mono.empty();
+            return sendRecag012(context, recag012Event);
         }
 
         // OCR RUN
         if (allOcrCompleted) {
-            return recag012Event != null ? sendRecag012(context, recag012Event) : Mono.empty();
+            log.info("Check OCR responses completed: OCR RUN");
+            return sendRecag012(context, recag012Event);
         }
 
+        log.info("Skip RECAG012 build");
         return Mono.empty();
     }
 
@@ -169,6 +176,7 @@ public class RECAG012EventBuilder implements HandlerStep {
     }
 
     private Event findExistingRecag012(PaperTrackings tracking) {
+        log.debug("Send RECAG012 event");
         return Optional.ofNullable(tracking.getEvents())
                 .orElse(List.of())
                 .stream()
