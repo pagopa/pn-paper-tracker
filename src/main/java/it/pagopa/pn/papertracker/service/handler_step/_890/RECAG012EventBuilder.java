@@ -109,13 +109,15 @@ public class RECAG012EventBuilder implements HandlerStep {
             return Mono.empty();
         }
 
+        // Da qui in poi è arrivato il RECAG012 e ci sono tutti gli allegati required
+
         // OCR DISABLED / DRY
         if (ocrDisabled) {
             return sendRecag012(context, recag012Event);
         }
 
         // OCR RUN
-        if (isRecag012 && allOcrCompleted) {
+        if (allOcrCompleted) {
             log.info("Check OCR responses completed: OCR RUN");
             return sendRecag012(context, recag012Event);
         }
@@ -188,7 +190,7 @@ public class RECAG012EventBuilder implements HandlerStep {
         PaperTrackings tracking = context.getPaperTrackings();
         ValidationConfig config = tracking.getValidationConfig();
 
-        List<String> requiredDocs = Optional.ofNullable(config.getRequiredAttachmentsRefinementStock890()).orElse(List.of());
+        List<String> requiredDocs = Optional.ofNullable(config.getSendOcrAttachmentsRefinementStock890()).orElse(List.of());
 
         if (requiredDocs.isEmpty()) {return true;}
 
