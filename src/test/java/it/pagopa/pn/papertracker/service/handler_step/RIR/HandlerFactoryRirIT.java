@@ -170,7 +170,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
                     if (is(e, "RECRI002")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "RECRI004A")) {assertNoAttach(e);assertProgress(e);}
                     if (is(e, "RECRI004B")) {assertAttach(e, "Plico");assertProgress(e);}
-                    if (is(e, "RECRI004C")) {assertNoAttach(e);assertKo(e);assertNull(e.getDeliveryFailureCause());}
+                    if (is(e, "RECRI004C")) {assertNoAttach(e);assertKo(e);assertNotNull(e.getDeliveryFailureCause());}
                 });
             }
             case OK_RETRY_RIR -> {
@@ -228,7 +228,7 @@ public class HandlerFactoryRirIT extends BaseTest.WithLocalStack {
             case OK_RIR ->
                     assertValidatedDoneSubset(pt, 7, 5, null, List.of("RECRI001", "RECRI002", "RECRI003A", "RECRI003B", "RECRI003C"),  DONE,BusinessState.DONE);
             case OK_RETRY_RIR -> assertValidatedDone(newPt, 7, 5, null, DONE,BusinessState.DONE);
-            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, null, DONE,BusinessState.DONE);
+            case FAIL_RIR -> assertValidatedDone(pt, 7, 5, "M01", DONE,BusinessState.DONE);
         }
     }
 

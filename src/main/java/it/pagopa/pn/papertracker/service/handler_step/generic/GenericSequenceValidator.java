@@ -254,30 +254,40 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      */
     private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Boolean strictFinalEventValidation) {
         log.info("Beginning validation for delivery failure cause for events : {}", events);
+
         return Flux.fromIterable(events)
-                .flatMap(event -> {
-                    String deliveryFailureCause = event.getDeliveryFailureCause();
-                    EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
-                    List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
-
-                    boolean isSkipValidation = allowedCauses.contains(DeliveryFailureCauseEnum.SKIP_VALIDATION);
-                    boolean isEmptyAllowedAndNoCause = CollectionUtils.isEmpty(allowedCauses) && !StringUtils.hasText(deliveryFailureCause);
-                    boolean isValidCause = allowedCauses.contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause));
-
-                    if (isSkipValidation || isEmptyAllowedAndNoCause || isValidCause) {
-                        return Mono.just(event);
-                    }
-
-                    return getErrorOrSaveWarning(
-                            "Invalid deliveryFailureCause: " + deliveryFailureCause,
-                            context,
-                            paperTrackings,
-                            ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
-                            strictFinalEventValidation,
-                            event
-                    );
-                })
+                .flatMap(event -> validateSingleDeliveryFailureCause(
+                        event, paperTrackings, context, strictFinalEventValidation))
                 .collectList();
+    }
+
+    protected Mono<Event> validateSingleDeliveryFailureCause(Event event,
+                                                             PaperTrackings paperTrackings,
+                                                             HandlerContext context,
+                                                             Boolean strictFinalEventValidation) {
+
+        String deliveryFailureCause = event.getDeliveryFailureCause();
+        EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
+        List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
+
+        boolean isSkipValidation = allowedCauses.contains(DeliveryFailureCauseEnum.SKIP_VALIDATION);
+        boolean isEmptyAllowedAndNoCause = CollectionUtils.isEmpty(allowedCauses)
+                && !StringUtils.hasText(deliveryFailureCause);
+        boolean isValidCause = allowedCauses.contains(
+                DeliveryFailureCauseEnum.fromValue(deliveryFailureCause));
+
+        if (isSkipValidation || isEmptyAllowedAndNoCause || isValidCause) {
+            return Mono.just(event);
+        }
+
+        return getErrorOrSaveWarning(
+                "Invalid deliveryFailureCause: " + deliveryFailureCause,
+                context,
+                paperTrackings,
+                ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
+                strictFinalEventValidation,
+                event
+        );
     }
 
     /**
@@ -403,7 +413,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         return timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()));
     }
 
-    private <T> Mono<T> getErrorOrSaveWarning(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, Boolean strictFinalEventValidation, T returnValue) {
+    protected <T> Mono<T> getErrorOrSaveWarning(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, Boolean strictFinalEventValidation, T returnValue) {
         log.info("getErrorOrSaveWarning for trackingId {}: {} | strictFinalEventValidation: {}", context.getTrackingId(), message, strictFinalEventValidation);
 
         var error = PaperTrackingsErrorsMapper.buildPaperTrackingsError(
