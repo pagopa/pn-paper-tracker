@@ -247,7 +247,7 @@ class RECAG012EventBuilderTest {
     class OcrRunModeEmptyRequests {
 
         @Test
-        void shouldBuildFeedbackWhenNoOcrRequestsMatchRequiredDocs() {
+        void shouldNotBuildFeedbackWhenNoOcrRequestsMatchRequiredDocs() {
             // Arrange
             paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
             context.setNeedToSendRECAG012A(false);
@@ -261,9 +261,6 @@ class RECAG012EventBuilderTest {
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -271,8 +268,7 @@ class RECAG012EventBuilderTest {
             StepVerifier.create(result)
                     .verifyComplete();
 
-            assertThat(eventsToSend).isNotEmpty();
-            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
+            assertThat(eventsToSend).isEmpty();
         }
 
         @Test
@@ -281,7 +277,7 @@ class RECAG012EventBuilderTest {
             paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
             context.setNeedToSendRECAG012A(false);
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
-            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A"));
+            validationConfig.setRequiredAttachmentsRefinementStock890(List.of());
             validationFlow.setOcrRequests(Collections.emptyList());
 
             addEventToPaperTrackings("RECAG011B");

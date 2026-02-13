@@ -102,14 +102,16 @@ public class RECAG012EventBuilder implements HandlerStep {
             return isRecag012 ? sendRecag012A(context) : Mono.empty();
         }
 
+        Event recag012Event = findExistingRecag012(context.getPaperTrackings());
+
         // OCR DISABLED / DRY
         if (ocrDisabled) {
-            return sendRecag012(context, currentEvent);
+            return recag012Event != null ? sendRecag012(context, recag012Event) : Mono.empty();
         }
 
         // OCR RUN
-        if (isRecag012 && allOcrCompleted) {
-            return sendRecag012(context, currentEvent);
+        if (allOcrCompleted) {
+            return recag012Event != null ? sendRecag012(context, recag012Event) : Mono.empty();
         }
 
         return Mono.empty();
@@ -120,12 +122,7 @@ public class RECAG012EventBuilder implements HandlerStep {
         return OcrStatusEnum.DISABLED.equals(status) || OcrStatusEnum.DRY.equals(status);
     }
 
-    private Mono<Void> sendRecag012(HandlerContext context, Event currentEvent) {
-        Event recag012Event = currentEvent;
-
-        if(!RECAG012.name().equalsIgnoreCase(currentEvent.getStatusCode())) {
-            recag012Event = findExistingRecag012(context.getPaperTrackings());
-        }
+    private Mono<Void> sendRecag012(HandlerContext context, Event recag012Event) {
 
         return SendEventMapper.createSendEventsFromEventEntity(
                         context.getTrackingId(),
