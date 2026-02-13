@@ -115,7 +115,7 @@ public class RECAG012EventBuilder implements HandlerStep {
         }
 
         // OCR RUN
-        if (allOcrCompleted) {
+        if (isRecag012 && allOcrCompleted) {
             log.info("Check OCR responses completed: OCR RUN");
             return sendRecag012(context, recag012Event);
         }

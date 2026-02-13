@@ -279,6 +279,7 @@ class RECAG012EventBuilderTest {
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(List.of());
             validationFlow.setOcrRequests(Collections.emptyList());
+            context.setEventId("RECAG012_EVENT_ID");
 
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
@@ -321,6 +322,7 @@ class RECAG012EventBuilderTest {
 
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
+            context.setEventId("RECAG012_EVENT_ID");
 
             when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
                     .thenReturn(Mono.just(paperTrackings));
@@ -415,6 +417,7 @@ class RECAG012EventBuilderTest {
 
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
+            context.setEventId("RECAG012_EVENT_ID");
 
             when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
                     .thenReturn(Mono.just(paperTrackings));
