@@ -48,7 +48,8 @@ public class OcrUtility {
 
         if (Objects.nonNull(ocrStatusEnum) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             log.info("OCR validation enabled for trackingId={}", paperTracking.getTrackingId());
-            return sendMessageToOcr(event, attachmentList, paperTracking, ocrStatusEnum);
+            return sendMessageToOcr(event, attachmentList, paperTracking, ocrStatusEnum)
+                    .flatMap(sentToOcr -> OcrStatusEnum.DRY.equals(ocrStatusEnum) ? Mono.just(false) : Mono.just(sentToOcr));
         } else {
             log.info("OCR validation disabled for trackingId={}", paperTracking.getTrackingId());
             return paperTrackingsDAO.updateItem(paperTracking.getTrackingId(), getPaperTrackingsToUpdate(OcrStatusEnum.DISABLED, false, event, null))
@@ -154,7 +155,7 @@ public class OcrUtility {
         paperTracking.getValidationConfig().setOcrEnabled(ocrStatusEnum);
         paperTracking.getValidationFlow().setOcrRequests(ocrRequests != null ? ocrRequests : List.of());
 
-        if(isSentToOcr) {
+        if(isSentToOcr && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
             TrackerUtility.setNewStatus(paperTracking, event.getStatusCode(), BusinessState.AWAITING_OCR, PaperTrackingsState.AWAITING_OCR);
         } else {
             TrackerUtility.setDematValidationTimestamp(paperTracking, event.getStatusCode());

@@ -259,8 +259,8 @@ class RECAG012EventCheckerTest {
         ArgumentCaptor<OcrEvent> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrEvent.class);
         verify(ocrMomProducer, times(2)).push(ocrEventArgumentCaptor.capture());
         List<OcrEvent> pushedEvents = ocrEventArgumentCaptor.getAllValues();
-        OcrDataPayloadDTO firstPushedEventPayload = pushedEvents.getFirst().getPayload();
-        OcrDataPayloadDTO secondPushedEventPayload = pushedEvents.getLast().getPayload();
+        OcrDataPayloadDTO secondPushedEventPayload = pushedEvents.getFirst().getPayload();
+        OcrDataPayloadDTO firstPushedEventPayload = pushedEvents.getLast().getPayload();
         assertEquals("trackingId#eventIdRECAG012#ARCAD", firstPushedEventPayload.getCommandId());
         assertEquals("presigned-url-1", firstPushedEventPayload.getData().getDetails().getAttachment());
         assertEquals("RL123", firstPushedEventPayload.getData().getDetails().getRegisteredLetterCode());
@@ -286,13 +286,13 @@ class RECAG012EventCheckerTest {
         assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
         assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getUri());
-        assertEquals("ARCAD", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
+        assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
 
         assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getAttachmentEventId());
         assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getFinalEventId());
         assertEquals("uri.pdf", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getUri());
-        assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getDocumentType());
+        assertEquals("ARCAD", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getDocumentType());
         assertNotNull(updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getRequestTimestamp());
 
         assertFalse(context.isNeedToSendRECAG012A());
@@ -346,12 +346,103 @@ class RECAG012EventCheckerTest {
         assertFalse(context.isNeedToSendRECAG012A());
     }
 
+    @Test
+    void notSendToOCRForInvalidStateWhenReceiveIntermediateStockEvent() {
+        //Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().setState(PaperTrackingsState.DONE);
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
+        context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECAG012", null, "eventIdRECAG012"),
+                getEvent("RECAG007B", DocumentTypeEnum._23L.getValue(), "eventIdRECAG007B")
+        ));
+        context.setEventId("eventIdRECAG007B");
+        //Act
+        StepVerifier.create(recag012EventChecker.execute(context))
+                .verifyComplete();
+
+        //Assert
+        verifyNoInteractions(safeStorageClient);
+        verifyNoInteractions(ocrMomProducer);
+        assertFalse(context.isNeedToSendRECAG012A());
+    }
+
+    @Test
+    void notSendToOCRForInvalidStateWhenReceiveRECAG012Event() {
+        //Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().setState(PaperTrackingsState.AWAITING_OCR);
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
+        context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECAG012", null, "eventIdRECAG012"),
+                getEvent("RECAG007B", DocumentTypeEnum._23L.getValue(), "eventIdRECAG007B")
+        ));
+        context.setEventId("eventIdRECAG012");
+        //Act
+        StepVerifier.create(recag012EventChecker.execute(context))
+                .verifyComplete();
+
+        //Assert
+        verifyNoInteractions(safeStorageClient);
+        verifyNoInteractions(ocrMomProducer);
+        assertFalse(context.isNeedToSendRECAG012A());
+    }
+
+    @Test
+    void sendToOCROnlyLastAttachmentsForDocumentType() {
+        //Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
+        when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+        context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue(), DocumentTypeEnum.PLICO.getValue()));
+        context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.PLICO.getValue()));
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECAG012", null, "eventIdRECAG012"),
+                getEvent("RECAG007B", DocumentTypeEnum._23L.getValue(), "eventIdRECAG007B"),
+                getEvent("RECAG011B", DocumentTypeEnum.PLICO.getValue(), "eventIdRECAG011B"),
+                getEvent("RECAG007B", DocumentTypeEnum.INDAGINE.getValue(), "eventIdRECAG007B2")
+        ));
+        context.setEventId("eventIdRECAG011B2");
+
+        //Act
+        StepVerifier.create(recag012EventChecker.execute(context))
+                .verifyComplete();
+
+        //Assert
+        verify(safeStorageClient, times(3)).getSafeStoragePresignedUrl("uri.pdf");
+
+        verify(ocrMomProducer, times(3)).push(any(OcrEvent.class));
+
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTracking = paperTrackingsArgumentCaptor.getValue();
+        assertEquals(OcrStatusEnum.RUN, updatedPaperTracking.getValidationConfig().getOcrEnabled());
+        assertEquals(PaperTrackingsState.AWAITING_OCR, updatedPaperTracking.getState());
+        assertEquals(3, updatedPaperTracking.getValidationFlow().getOcrRequests().size());
+
+        assertEquals("eventIdRECAG007B", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
+        assertEquals("23L", updatedPaperTracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
+        assertEquals("eventIdRECAG011B", updatedPaperTracking.getValidationFlow().getOcrRequests().get(1).getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().get(1).getFinalEventId());
+        assertEquals("Plico", updatedPaperTracking.getValidationFlow().getOcrRequests().get(1).getDocumentType());
+        assertEquals("eventIdRECAG007B2", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getAttachmentEventId());
+        assertEquals("eventIdRECAG012", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getFinalEventId());
+        assertEquals("ARCAD", updatedPaperTracking.getValidationFlow().getOcrRequests().getLast().getDocumentType());
+
+        assertFalse(context.isNeedToSendRECAG012A());
+    }
+
     private Event getEvent(String statusCode, String documentType, String eventId) {
         Event event = new Event();
         event.setStatusCode(statusCode);
         event.setProductType(ProductType._890.getValue());
         event.setId(eventId);
         event.setRegisteredLetterCode("RL123");
+        event.setCreatedAt(Instant.now());
         event.setStatusTimestamp(Instant.now());
         if (StringUtils.hasText(documentType)) {
             Attachment attachment = new Attachment();

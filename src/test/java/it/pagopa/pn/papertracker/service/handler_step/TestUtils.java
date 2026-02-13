@@ -98,7 +98,7 @@ public class TestUtils {
                 .documentType(type)
                 .sha256("sha256")
                 .id("id-" + token)
-                .uri("https://example.com/" + token)
+                .uri("https://example.com/" + token + ".pdf")
                 .date(OffsetDateTime.now())
                 .build()).toList();
     }

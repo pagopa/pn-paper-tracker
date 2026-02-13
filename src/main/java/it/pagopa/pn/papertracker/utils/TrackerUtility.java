@@ -114,6 +114,11 @@ public class TrackerUtility {
         }
     }
 
+    public static boolean isInvalidStateForSendToOCRInRECAG012Checker(HandlerContext ctx) {
+        PaperTrackingsState state = ctx.getPaperTrackings().getState();
+        return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
+    }
+
     private static boolean isStock890SequenceStatusCodes(String statusCode) {
         SequenceConfig config005 = SequenceConfiguration.getConfig(RECAG005C.name());
         SequenceConfig config006 = SequenceConfiguration.getConfig(RECAG006C.name());
