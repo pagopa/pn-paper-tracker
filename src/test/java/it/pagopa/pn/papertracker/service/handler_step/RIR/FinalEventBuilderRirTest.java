@@ -145,6 +145,52 @@ class FinalEventBuilderRirTest {
         Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
     }
 
+    @Test
+    void buildRIRFinalEvent_withRECRI004C_andM02_shouldSetOkStatus() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI004C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        Event event = new Event();
+        event.setStatusCode(RECRI004C.name());
+        event.setStatusTimestamp(Instant.now());
+        event.setRequestTimestamp(Instant.now());
+        event.setId(EVENT_ID);
+        handlerContext.getPaperTrackings().setEvents(List.of(event));
+        handlerContext.getPaperTrackings().getPaperStatus().setDeliveryFailureCause("M02");
+        // Act
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .verifyComplete();
+        // Assert
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+        Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        String expectedStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRI004C.name(), RECRI004C.name(), handlerContext.getPaperTrackings()).name();
+        Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
+    }
+
+    @Test
+    void buildRIRFinalEvent_withRECRI004C_andM06_shouldSetKoStatus() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI004C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        Event event = new Event();
+        event.setStatusCode(RECRI004C.name());
+        event.setStatusTimestamp(Instant.now());
+        event.setRequestTimestamp(Instant.now());
+        event.setId(EVENT_ID);
+        handlerContext.getPaperTrackings().setEvents(List.of(event));
+        handlerContext.getPaperTrackings().getPaperStatus().setDeliveryFailureCause("M06");
+        // Act
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .verifyComplete();
+        // Assert
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+        Assertions.assertEquals(StatusCodeEnum.KO, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        String expectedStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRI004C.name(), RECRI004C.name(), handlerContext.getPaperTrackings()).name();
+        Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
+    }
+
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
         PaperProgressStatusEvent finalEvent = new PaperProgressStatusEvent();
         finalEvent.setStatusCode(statusCode);

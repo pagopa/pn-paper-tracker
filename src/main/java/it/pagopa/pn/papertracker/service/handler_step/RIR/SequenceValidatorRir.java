@@ -49,7 +49,7 @@ public class SequenceValidatorRir extends GenericSequenceValidator implements Ha
                 return Mono.just(event);
             }
 
-            //TODO: aggiornare con additionalDetail dopo marge
+            //TODO: aggiornare con additionalDetail dopo merge
 
             // Se valorizzata ma non tra le allowed, errore/warning
             return getErrorOrSaveWarning(
