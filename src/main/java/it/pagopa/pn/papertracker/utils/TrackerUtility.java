@@ -162,11 +162,15 @@ public class TrackerUtility {
     }
 
     public static String getStatusCodeFromEventId(PaperTrackings paperTrackings, String eventId) {
+        Event event = getEventFromEventId(paperTrackings, eventId);
+        return event != null ? event.getStatusCode() : null;
+    }
+
+    public static Event getEventFromEventId(PaperTrackings paperTrackings, String eventId) {
         if(!CollectionUtils.isEmpty(paperTrackings.getEvents())) {
             return paperTrackings.getEvents().stream()
                     .filter(event -> event.getId().equalsIgnoreCase(eventId))
                     .findFirst()
-                    .map(Event::getStatusCode)
                     .orElse(null);
         }
         return null;

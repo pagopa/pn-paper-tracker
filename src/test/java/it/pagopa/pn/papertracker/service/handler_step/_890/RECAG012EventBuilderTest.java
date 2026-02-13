@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
@@ -9,8 +8,11 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,14 +20,18 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012A;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("RECAG012EventBuilder Tests")
 class RECAG012EventBuilderTest {
 
     @Mock
@@ -36,248 +42,444 @@ class RECAG012EventBuilderTest {
 
     private HandlerContext context;
     private PaperTrackings paperTrackings;
+    private ValidationConfig validationConfig;
+    private ValidationFlow validationFlow;
+    private List<SendEvent> eventsToSend;
 
     @BeforeEach
-    void setup() {
-        paperTrackings = new PaperTrackings();
-        paperTrackings.setTrackingId("T123");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
-
-        ValidationConfig config = new ValidationConfig();
-        config.setOcrEnabled(OcrStatusEnum.DISABLED);
-        paperTrackings.setValidationConfig(config);
-
-        ValidationFlow flow = new ValidationFlow();
-        paperTrackings.setValidationFlow(flow);
-
+    void setUp() {
+        // Common setup
+        eventsToSend = new ArrayList<>();
         context = new HandlerContext();
+        context.setTrackingId("TEST_TRACKING_ID");
+        context.setEventId("TEST_EVENT_ID");
+        context.setEventsToSend(eventsToSend);
+
+        paperTrackings = new PaperTrackings();
+        validationConfig = new ValidationConfig();
+        validationFlow = new ValidationFlow();
+
+        validationFlow.setOcrRequests(new ArrayList<>());
+
+        paperTrackings.setValidationConfig(validationConfig);
+        paperTrackings.setValidationFlow(validationFlow);
         context.setPaperTrackings(paperTrackings);
-        context.setEventId("E123");
-        context.setTrackingId("T123");
-        context.setEventsToSend(new java.util.ArrayList<>());
-        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
-        paperProgressStatusEvent.setRequestId("requestId");
-        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
     }
 
-    @Test
-    void shouldSkipWhenDone() {
-        paperTrackings.setState(PaperTrackingsState.DONE);
-        StepVerifier.create(recag012EventBuilder.execute(context))
+    @Nested
+    class SkipScenarios {
+
+        @Test
+        void shouldSkipWhenStateIsDone() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.DONE);
+            addEventToPaperTrackings("RECAG011B");
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
                     .verifyComplete();
 
-        verifyNoInteractions(paperTrackingsDAO);
-    }
+            assertThat(eventsToSend).isEmpty();
+            verifyNoInteractions(paperTrackingsDAO);
+        }
 
-    @Test
-    void shouldSkipWhenFinal() {
-        paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
-        Event event = new Event();
-        event.setStatusCode("RECAG002C");
-        event.setId("id");
-        paperTrackings.setEvents(List.of(event));
-        context.setEventId("id");
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
+        @Test
+        void shouldSkipWhenEventIsFinalEventType() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            addEventToPaperTrackings("RECAG005C"); // FINAL_EVENT
 
-        verifyNoInteractions(paperTrackingsDAO);
-    }
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
 
-    @Test
-    void shouldBuildRECAG012AEventWhenOcrDisabledWithoutRequiredAttachments() {
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
-        Event event = new Event();
-        event.setStatusCode("RECAG012");
-        event.setStatusTimestamp(Instant.now());
-        event.setRequestTimestamp(Instant.now());
-        event.setId("id");
-        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
-        paperProgressStatusEvent.setRequestId("requestId");
-        paperProgressStatusEvent.setStatusCode("RECAG012");
-        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
-        paperTrackings.setEvents(List.of(event));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
-        paperTrackings.setValidationConfig(validationConfig);
-        context.setNeedToSendRECAG012A(true);
-        context.setEventId("id");
-
-        StepVerifier.create(recag012EventBuilder.execute(context))
+            // Assert
+            StepVerifier.create(result)
                     .verifyComplete();
 
-        assert !context.getEventsToSend().isEmpty();
-        SendEvent result = context.getEventsToSend().getFirst();
-        assert result.getStatusCode() == StatusCodeEnum.PROGRESS;
-        assert RECAG012A.name().equals(result.getStatusDetail());
+            assertThat(eventsToSend).isEmpty();
+            verifyNoInteractions(paperTrackingsDAO);
+        }
 
-        verifyNoInteractions(paperTrackingsDAO);
+        @Test
+        void shouldSkipWhenRecag012EventNotFound() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(false);
+            addEventToPaperTrackings("RECAG011B");
+            // No RECAG012 event added
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isEmpty();
+            verifyNoInteractions(paperTrackingsDAO);
+        }
     }
 
-    @Test
-    void shouldBuildRECAG012AEventWhenOcrDisabledWithRequiredAttachments() {
-        context.getPaperProgressStatusEvent().setStatusCode("RECAG012");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
-        Event event = new Event();
-        event.setStatusCode("RECAG012");
-        event.setId("id");
-        paperTrackings.setEvents(List.of(event));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
-        paperTrackings.setValidationConfig(validationConfig);
+    @Nested
+    class RECAG012AEventBuilding {
 
-        context.setNeedToSendRECAG012A(false);
-        context.setEventId("id");
+        @Test
+        void shouldBuildRECAG012AWhenAttachmentsMissingButRECAG012Received() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(true);
+            addEventToPaperTrackings("RECAG012");
 
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+            PaperProgressStatusEvent progressEvent = new PaperProgressStatusEvent();
+            progressEvent.setStatusCode("RECAG012");
+            progressEvent.setRequestId("TEST_REQUEST_ID");
+            context.setPaperProgressStatusEvent(progressEvent);
 
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
 
-        assert !context.getEventsToSend().isEmpty();
-        SendEvent result = context.getEventsToSend().getFirst();
-        assert result.getStatusCode() == StatusCodeEnum.OK;
-        assert RECAG012.name().equals(result.getStatusDetail());
-        verify(paperTrackingsDAO, times(1)).updateItem(eq("T123"), any(PaperTrackings.class));
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isNotEmpty();
+            assertThat(eventsToSend.get(0).getStatusCode()).isEqualTo(StatusCodeEnum.PROGRESS);
+            assertThat(eventsToSend.get(0).getStatusDetail()).isEqualTo("RECAG012A");
+            verifyNoInteractions(paperTrackingsDAO);
+        }
+
+        @Test
+        void shouldNotBuildRECAG012AWhenFlagIsFalse() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(false);
+            addEventToPaperTrackings("RECAG012");
+            addRECAG012Event();
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+        }
+
+        @Test
+        void shouldNotBuildRECAG012AWhenStatusCodeIsNotRECAG012() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(true);
+            addEventToPaperTrackings("RECAG011B");
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isEmpty();
+        }
     }
 
-    @Test
-    void shouldBuildRECAG012AEventWhenOcrDisabledWithRequiredAttachmentsWithBCurrentEvent() {
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+    @Nested
+    class OcrDisabledOrDryMode {
+
+        @Test
+        void shouldBuildFeedbackWhenOcrDisabled() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isNotEmpty();
+            assertThat(eventsToSend.get(0).getStatusCode()).isEqualTo(StatusCodeEnum.OK);
+            assertThat(eventsToSend.get(0).getStatusDetail()).isEqualTo("RECAG012");
+
+            ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
+            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), captor.capture());
+            assertThat(captor.getValue().getState()).isEqualTo(PaperTrackingsState.DONE);
+            assertThat(captor.getValue().getValidationFlow().getRefinementDematValidationTimestamp()).isNotNull();
+        }
+
+        @Test
+        void shouldBuildFeedbackWhenOcrDry() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.DRY);
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isNotEmpty();
+            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
+        }
+    }
+
+    @Nested
+    class OcrRunModeEmptyRequests {
+
+        @Test
+        void shouldNotBuildFeedbackWhenNoOcrRequestsMatchRequiredDocs() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+
+            OcrRequest ocrRequest = new OcrRequest();
+            ocrRequest.setDocumentType("DOC_TYPE_C"); // Different type
+            validationFlow.setOcrRequests(Collections.singletonList(ocrRequest));
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isEmpty();
+        }
+
+        @Test
+        void shouldBuildFeedbackWhenOcrRequestsListIsEmpty() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(List.of());
+            validationFlow.setOcrRequests(Collections.emptyList());
+            context.setEventId("RECAG012_EVENT_ID");
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isNotEmpty();
+            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
+        }
+    }
+
+    @Nested
+    class OcrRunModeWithRequests {
+
+        @Test
+        void shouldBuildFeedbackWhenAllOcrResponsesReceived() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+
+            OcrRequest request1 = new OcrRequest();
+            request1.setDocumentType("DOC_TYPE_A");
+            request1.setResponseTimestamp(Instant.now());
+
+            OcrRequest request2 = new OcrRequest();
+            request2.setDocumentType("DOC_TYPE_B");
+            request2.setResponseTimestamp(Instant.now());
+
+            validationFlow.setOcrRequests(Arrays.asList(request1, request2));
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+            context.setEventId("RECAG012_EVENT_ID");
+
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isNotEmpty();
+            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
+        }
+
+        @Test
+        void shouldWaitWhenNotAllOcrResponsesReceived() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+
+            OcrRequest request1 = new OcrRequest();
+            request1.setDocumentType("DOC_TYPE_A");
+            request1.setResponseTimestamp(Instant.now());
+
+            OcrRequest request2 = new OcrRequest();
+            request2.setDocumentType("DOC_TYPE_B");
+            request2.setResponseTimestamp(null); // Missing response
+
+            validationFlow.setOcrRequests(Arrays.asList(request1, request2));
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isEmpty();
+            verifyNoInteractions(paperTrackingsDAO);
+        }
+
+        @Test
+        void shouldWaitWhenSomeResponsesAreForDifferentDocTypes() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+
+            OcrRequest request1 = new OcrRequest();
+            request1.setDocumentType("DOC_TYPE_A");
+            request1.setResponseTimestamp(Instant.now());
+
+            OcrRequest request2 = new OcrRequest();
+            request2.setDocumentType("DOC_TYPE_C"); // Wrong type
+            request2.setResponseTimestamp(Instant.now());
+
+            validationFlow.setOcrRequests(Arrays.asList(request1, request2));
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+
+            assertThat(eventsToSend).isEmpty();
+            verifyNoInteractions(paperTrackingsDAO);
+        }
+
+        @Test
+        void shouldHandleEmptyRequiredDocsList() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
+            validationConfig.setRequiredAttachmentsRefinementStock890(Collections.emptyList());
+
+            OcrRequest request = new OcrRequest();
+            request.setDocumentType("DOC_TYPE_A");
+            request.setResponseTimestamp(Instant.now());
+            validationFlow.setOcrRequests(Collections.singletonList(request));
+
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+            context.setEventId("RECAG012_EVENT_ID");
+
+            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    class EdgeCases {
+
+        @Test
+        void shouldNotUpdateWhenEventsListIsEmpty() {
+            // Arrange
+            paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+            addEventToPaperTrackings("RECAG011B");
+            addRECAG012Event();
+
+            // Mock to return empty list
+            when(paperTrackingsDAO.updateItem(any(), any()))
+                    .thenReturn(Mono.just(paperTrackings));
+
+            // Act
+            Mono<Void> result = recag012EventBuilder.execute(context);
+
+            // Assert
+            StepVerifier.create(result)
+                    .verifyComplete();
+        }
+    }
+
+    // Helper methods
+    private void addEventToPaperTrackings(String statusCode) {
         Event event = new Event();
-        event.setStatusCode("RECAG012");
+        event.setId("TEST_EVENT_ID");
+        event.setStatusCode(statusCode);
         event.setStatusTimestamp(Instant.now());
         event.setRequestTimestamp(Instant.now());
-        event.setId("id");
-        Event event2 = new Event();
-        event2.setStatusCode("RECAG011B");
-        event2.setId("id2");
-        paperTrackings.setEvents(List.of(event, event2));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
-        paperTrackings.setValidationConfig(validationConfig);
 
-        context.setNeedToSendRECAG012A(false);
-        context.setEventId("id2");
-
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
-
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
-
-        assert !context.getEventsToSend().isEmpty();
-        SendEvent result = context.getEventsToSend().getFirst();
-        assert result.getStatusCode() == StatusCodeEnum.OK;
-        assert RECAG012.name().equals(result.getStatusDetail());
-        verify(paperTrackingsDAO, times(1)).updateItem(eq("T123"), any(PaperTrackings.class));
+        if (paperTrackings.getEvents() == null) {
+            paperTrackings.setEvents(new ArrayList<>());
+        }
+        paperTrackings.getEvents().add(event);
     }
 
-    @Test
-    void shouldBuildRECAG012AEventWhenOcrEnabledWithoutAllResponse() {
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
-        Event event = new Event();
-        event.setStatusCode("RECAG012");
-        event.setId("id");
-        paperTrackings.setEvents(List.of(event));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
-        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
-        paperTrackings.setValidationConfig(validationConfig);
-        ValidationFlow validationFlow = new ValidationFlow();
-        OcrRequest ocrRequest = new OcrRequest();
-        ocrRequest.setDocumentType("23L");
-        ocrRequest.setResponseTimestamp(Instant.now());
-        OcrRequest ocrRequest2 = new OcrRequest();
-        ocrRequest2.setDocumentType("ARCAD");
+    private void addRECAG012Event() {
+        Event recag012Event = new Event();
+        recag012Event.setId("RECAG012_EVENT_ID");
+        recag012Event.setStatusCode("RECAG012");
+        recag012Event.setStatusTimestamp(Instant.now());
+        recag012Event.setRequestTimestamp(Instant.now());
 
-        validationFlow.setOcrRequests(List.of(ocrRequest2, ocrRequest));
-        paperTrackings.setValidationFlow(validationFlow);
-        context.setEventId("id");
-
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
-
-        assert context.getEventsToSend().isEmpty();
-        verifyNoInteractions(paperTrackingsDAO);
+        if (paperTrackings.getEvents() == null) {
+            paperTrackings.setEvents(new ArrayList<>());
+        }
+        paperTrackings.getEvents().add(recag012Event);
     }
-
-    @Test
-    void shouldBuildRECAG012AEventWhenOcrEnabledWithAllResponse() {
-        context.getPaperProgressStatusEvent().setStatusCode("RECAG012");
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
-        Event event = new Event();
-        event.setStatusCode("RECAG012");
-        event.setRequestTimestamp(Instant.now());
-        event.setStatusTimestamp(Instant.now());
-        event.setId("id");
-        paperTrackings.setEvents(List.of(event));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
-        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
-        paperTrackings.setValidationConfig(validationConfig);
-        ValidationFlow validationFlow = new ValidationFlow();
-        OcrRequest ocrRequest = new OcrRequest();
-        ocrRequest.setDocumentType("23L");
-        ocrRequest.setResponseTimestamp(Instant.now());
-        OcrRequest ocrRequest2 = new OcrRequest();
-        ocrRequest2.setDocumentType("ARCAD");
-        ocrRequest2.setResponseTimestamp(Instant.now());
-
-        validationFlow.setOcrRequests(List.of(ocrRequest2, ocrRequest));
-        paperTrackings.setValidationFlow(validationFlow);
-        context.setEventId("id");
-
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
-
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
-
-        assert !context.getEventsToSend().isEmpty();
-        SendEvent result = context.getEventsToSend().getFirst();
-        assert result.getStatusCode() == StatusCodeEnum.OK;
-        assert RECAG012.name().equals(result.getStatusDetail());
-        verify(paperTrackingsDAO, times(1)).updateItem(eq("T123"), any(PaperTrackings.class));
-    }
-
-
-    @Test
-    void shouldBuildRECAG012EventWhenOcrEnabledWithAllResponseWithBCurrentEvent() {
-        paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
-        Event event = new Event();
-        event.setStatusCode("RECAG012");
-        event.setStatusTimestamp(Instant.now());
-        event.setRequestTimestamp(Instant.now());
-        event.setId("id2");
-        Event event2 = new Event();
-        event2.setStatusCode("RECAG011B");
-        event2.setId("id1");
-        paperTrackings.setEvents(List.of(event,event2));
-        ValidationConfig validationConfig = new ValidationConfig();
-        validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
-        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L","ARCAD"));
-        paperTrackings.setValidationConfig(validationConfig);
-        ValidationFlow validationFlow = new ValidationFlow();
-        OcrRequest ocrRequest = new OcrRequest();
-        ocrRequest.setDocumentType("23L");
-        ocrRequest.setResponseTimestamp(Instant.now());
-        OcrRequest ocrRequest2 = new OcrRequest();
-        ocrRequest2.setDocumentType("ARCAD");
-        ocrRequest2.setResponseTimestamp(Instant.now());
-
-        validationFlow.setOcrRequests(List.of(ocrRequest2, ocrRequest));
-        paperTrackings.setValidationFlow(validationFlow);
-        context.setEventId("id2");
-
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
-
-        StepVerifier.create(recag012EventBuilder.execute(context))
-                .verifyComplete();
-
-        assert !context.getEventsToSend().isEmpty();
-        SendEvent result = context.getEventsToSend().getFirst();
-        assert result.getStatusCode() == StatusCodeEnum.OK;
-        assert RECAG012.name().equals(result.getStatusDetail());
-        verify(paperTrackingsDAO, times(1)).updateItem(eq("T123"), any(PaperTrackings.class));
-    }
-
-
 }

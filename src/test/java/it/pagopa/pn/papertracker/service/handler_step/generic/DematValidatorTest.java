@@ -24,6 +24,8 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -109,6 +111,7 @@ class DematValidatorTest {
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        assertTrue(context.isStopExecution());
     }
 
     @Test
@@ -130,6 +133,7 @@ class DematValidatorTest {
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        assertTrue(context.isStopExecution());
     }
 
     @Test
@@ -148,6 +152,7 @@ class DematValidatorTest {
         verifyNoInteractions(safeStorageClient);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        assertFalse(context.isStopExecution());
     }
 
     @Test
@@ -171,6 +176,26 @@ class DematValidatorTest {
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void validateDemat_OcrEnabled_EmptyAttachmentList_Stock890() {
+        // Arrange
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECAG005C", null, "eventId1"), getEvent("RECAG005A", null, "eventId2"), getEvent("RECAG005B", "Plico", "eventId3")));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+
+        // Act
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .verifyComplete();
+
+        // Assert
+        verify(safeStorageClient, never()).getSafeStoragePresignedUrl(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        assertFalse(context.isStopExecution());
     }
 
 }
