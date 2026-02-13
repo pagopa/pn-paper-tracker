@@ -188,7 +188,7 @@ public class RECAG012EventBuilder implements HandlerStep {
         PaperTrackings tracking = context.getPaperTrackings();
         ValidationConfig config = tracking.getValidationConfig();
 
-        List<String> requiredDocs = Optional.ofNullable(config.getRequiredAttachmentsRefinementStock890()).orElse(List.of());
+        List<String> requiredDocs = Optional.ofNullable(config.getSendOcrAttachmentsRefinementStock890()).orElse(List.of());
 
         if (requiredDocs.isEmpty()) {return true;}
 
