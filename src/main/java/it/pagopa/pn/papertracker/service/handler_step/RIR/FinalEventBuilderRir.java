@@ -24,7 +24,6 @@ public class FinalEventBuilderRir extends GenericFinalEventBuilder implements Ha
      * Se l'evento che ha innescato il flusso è un evento finale, viene estratto l'evento dal contesto,
      * viene valutato lo status code e determinato lo stato dell'evento secondo le regole di business.
      * Infine, l'evento viene aggiunto alla lista degli eventi da inviare.
-     *
      * Viene utilizzato il metodo di utility evaluateStatusCodeAndRetrieveStatus perché tutti i casi non gestiti esplicitamente (M01, M03, M04)
      * e il caso della deliveryFailureCause = null ricadono comunque nel ramo di default, che restituisce il valore KO previsto dall’enum.
      *
