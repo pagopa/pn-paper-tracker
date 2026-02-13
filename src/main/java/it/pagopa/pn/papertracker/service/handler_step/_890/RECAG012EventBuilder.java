@@ -21,7 +21,6 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -182,13 +181,20 @@ public class RECAG012EventBuilder implements HandlerStep {
     }
 
     private boolean checkAllOcrResponse(HandlerContext context) {
-        ValidationConfig config = context.getPaperTrackings().getValidationConfig();
-        List<String> requiredDocs = config.getRequiredAttachmentsRefinementStock890();
-        List<OcrRequest> ocrRequests = context.getPaperTrackings().getValidationFlow().getOcrRequests();
+        PaperTrackings tracking = context.getPaperTrackings();
+        ValidationConfig config = tracking.getValidationConfig();
+
+        List<String> requiredDocs = Optional.ofNullable(config.getRequiredAttachmentsRefinementStock890()).orElse(List.of());
+
+        if (requiredDocs.isEmpty()) {return true;}
+
+        ValidationFlow flow = Optional.ofNullable(tracking.getValidationFlow()).orElse(new ValidationFlow());
+
+        List<OcrRequest> ocrRequests = Optional.ofNullable(flow.getOcrRequests()).orElse(List.of());
 
         Set<String> completedDocs = ocrRequests.stream()
                 .filter(req -> requiredDocs.contains(req.getDocumentType()))
-                .filter(req -> Objects.nonNull(req.getResponseTimestamp()))
+                .filter(req -> req.getResponseTimestamp() != null)
                 .map(OcrRequest::getDocumentType)
                 .collect(Collectors.toSet());
 
