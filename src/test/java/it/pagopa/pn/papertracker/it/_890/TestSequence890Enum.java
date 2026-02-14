@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step._890;
+package it.pagopa.pn.papertracker.it._890;
 
 import lombok.Getter;
 

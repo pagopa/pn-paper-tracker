@@ -1,0 +1,251 @@
+{
+  "name": "OK_RETRY_RIR",
+  "productType": "RIR",
+  "initialTracking": {
+    "productType": "RIR",
+    "pcRetry": "PCRETRY_0",
+    "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+    "unifiedDeliveryDriver": "POSTE"
+  },
+  "events": [
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON080",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:00Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON020",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [
+          {
+            "documentType": "7Z",
+            "sha256": "sha256",
+            "id": "id",
+            "uri": "uri",
+            "date": "2024-01-01T10:00:01Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2024-01-01T10:00:01Z",
+        "statusDateTime": "2024-01-01T10:00:01Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI005",
+        "statusDescription": "desc",
+        "deliveryFailureCause": "F01",
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:02Z",
+        "statusDateTime": "2024-01-01T10:00:02Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON080",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:01:00Z",
+        "statusDateTime": "2024-01-01T10:01:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON020",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [
+          {
+            "documentType": "7Z",
+            "sha256": "sha256",
+            "id": "id",
+            "uri": "uri",
+            "date": "2024-01-01T10:01:01Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2024-01-01T10:01:01Z",
+        "statusDateTime": "2024-01-01T10:01:01Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI001",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:01:02Z",
+        "statusDateTime": "2024-01-01T10:01:02Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI002",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:01:03Z",
+        "statusDateTime": "2024-01-01T10:01:03Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI003A",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:01:04Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI003B",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [
+          {
+            "documentType": "AR",
+            "sha256": "sha256",
+            "id": "id",
+            "uri": "uri",
+            "date": "2024-01-01T10:01:05Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2024-01-01T10:01:05Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI003C",
+        "statusDescription": "desc",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:01:06Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    }
+  ],
+  "expected": {
+    "errors": [
+    ],
+    "outputs": [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON080",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON020",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI005",
+        "deliveryFailureCause": "F01"
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON080",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON020",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI001",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI002",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI003A",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI003B",
+        "attachments": [
+          {
+            "documentType": "AR",
+            "sha256": "sha256",
+            "id": "id",
+            "uri": "https://example.com/RECRI003B-AR.pdf",
+            "date": "2024-01-01T10:00:05Z"
+          }
+        ],
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "OK",
+        "statusDetail": "RECRI003C",
+        "deliveryFailureCause": null
+      }
+    ]
+  }
+}

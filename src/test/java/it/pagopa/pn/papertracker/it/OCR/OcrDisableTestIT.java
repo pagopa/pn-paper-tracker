@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.generic;
+package it.pagopa.pn.papertracker.it.OCR;
 
 
 import it.pagopa.pn.papertracker.BaseTest;
@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.CollectionUtils;

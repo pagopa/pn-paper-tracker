@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step.AR;
+package it.pagopa.pn.papertracker.it.AR;
 
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.*;
-import static it.pagopa.pn.papertracker.service.handler_step.AR.TestSequenceAREnum.*;
+import static it.pagopa.pn.papertracker.it.AR.TestSequenceAREnum.*;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;

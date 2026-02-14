@@ -1,0 +1,198 @@
+{
+  "name": "OK_PCRETRY_CON996_RIR",
+  "productType": "RIR",
+  "initialTracking": {
+    "productType": "RIR",
+    "pcRetry": "PCRETRY_0",
+    "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+    "unifiedDeliveryDriver": "POSTE"
+  },
+  "events": [
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON996",
+        "statusDescription": "CON996 description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:00Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON080",
+        "statusDescription": "CON080 description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:00Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "CON020",
+        "statusDescription": "CON020 description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:00Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI001",
+        "statusDescription": "RECRI001 description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:02Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI002",
+        "statusDescription": "RECRI002 description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:03Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI004A",
+        "statusDescription": "RECRI004A description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:04Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI004B",
+        "statusDescription": "RECRI004B description",
+        "deliveryFailureCause": null,
+        "attachments": [
+          {
+            "documentType": "Plico",
+            "sha256": "sha256",
+            "id": "id-RECRI003B-Plico",
+            "uri": "https://example.com/RECRI003B-AR.pdf",
+            "date": "2024-01-01T10:00:05Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2024-01-01T10:00:05Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    },
+    {
+      "analogMail": {
+        "requestId": "{{REQUEST_ID_RETRY}}",
+        "iun": "{{RANDOM_IUN}}",
+        "productType": "RIR",
+        "registeredLetterCode": "1234567891011",
+        "statusCode": "RECRI004C",
+        "statusDescription": "RECRI004C description",
+        "deliveryFailureCause": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2024-01-01T10:00:06Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
+      }
+    }
+  ],
+  "expected": {
+    "errors": [
+    ],
+    "outputs": [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON996",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON080",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "CON020",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI001",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI002",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI004A",
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "PROGRESS",
+        "statusDetail": "RECRI004B",
+        "attachments": [
+          {
+            "documentType": "Plico",
+            "sha256": "sha256",
+            "id": "id-RECRI003B-Plico",
+            "uri": "https://example.com/RECRI003B-AR.pdf",
+            "date": "2024-01-01T10:00:05Z"
+          }
+        ],
+        "deliveryFailureCause": null
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "statusCode": "KO",
+        "statusDetail": "RECRI004C",
+        "deliveryFailureCause": null
+      }
+    ]
+  }
+}

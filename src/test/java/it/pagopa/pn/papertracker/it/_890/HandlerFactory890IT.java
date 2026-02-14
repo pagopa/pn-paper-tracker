@@ -1,4 +1,4 @@
-package it.pagopa.pn.papertracker.service.handler_step._890;
+package it.pagopa.pn.papertracker.it._890;
 
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -33,7 +33,7 @@ import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTracki
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.assertNoAttach;
-import static it.pagopa.pn.papertracker.service.handler_step._890.TestSequence890Enum.*;
+import static it.pagopa.pn.papertracker.it._890.TestSequence890Enum.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
