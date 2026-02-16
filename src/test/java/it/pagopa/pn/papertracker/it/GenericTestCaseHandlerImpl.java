@@ -4,6 +4,10 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.mode
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
+import it.pagopa.pn.papertracker.it.model.TestEvent;
+import it.pagopa.pn.papertracker.it.validator.ErrorValidator;
+import it.pagopa.pn.papertracker.it.validator.OutputValidator;
+import it.pagopa.pn.papertracker.it.validator.TrackingValidator;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
@@ -12,6 +16,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -93,6 +98,11 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                     }
                 }
             });
+            if(Objects.nonNull(scenario.getExpected().getOcrResultPayload())){
+                scenario.getExpected().getOcrResultPayload().setCommandId(scenario.getExpected().getOcrResultPayload().getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
+                        .replace("{{REQUEST_ID_RETRY_2}}", secondRetryRequestId)
+                        .replace("{{REQUEST_ID}}", requestId));
+            }
         }
 
         resolvePcRetryResponse(scenario);
@@ -101,14 +111,14 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     private static void resolvePcRetryResponse(ProductTestCase scenario) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             scenario.getEvents().stream()
-                    .map(SingleStatusUpdate::getAnalogMail)
+                    .map(TestEvent::getAnalogMail)
                     .filter(Objects::nonNull)
                     .filter(item -> item.getRequestId().endsWith("PCRETRY_1"))
                     .findFirst()
                     .ifPresent(item -> scenario.getFirstPcRetryResponse().setRequestId(item.getRequestId()));
 
             scenario.getEvents().stream()
-                    .map(SingleStatusUpdate::getAnalogMail)
+                    .map(TestEvent::getAnalogMail)
                     .filter(Objects::nonNull)
                     .filter(item -> item.getRequestId().endsWith("PCRETRY_2"))
                     .findFirst()
@@ -119,20 +129,21 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     @Override
     public void sendEvents(ProductTestCase scenario) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
-            scenario.getEvents().forEach(event ->
-                    externalChannelHandler.handleExternalChannelMessage(
-                            event,
-                            true,
-                            null,
-                            UUID.randomUUID().toString(),
-                            null
-                    )
-            );
+            scenario.getEvents().forEach(event -> {
+                SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
+                singleStatusUpdate.setAnalogMail(event.getAnalogMail());
+                externalChannelHandler.handleExternalChannelMessage(
+                        singleStatusUpdate,
+                        true,
+                        null,
+                        event.getMessageId(),
+                        null);
+            });
         }
     }
 
     @Override
-    public void afterSendEvents(ProductTestCase scenario) {
+    public void afterSendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, boolean strictValidation) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             Set<String> requestIds = scenario.getEvents().stream()
                     .collect(groupingBy(event -> {
@@ -143,14 +154,14 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
 
             List<PaperTrackingsErrors> errors = new ArrayList<>();
             requestIds.forEach(requestId -> errors.addAll(Objects.requireNonNull(paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block())));
-            ExpectedValidator.verifyErrors(scenario, errors);
+            ErrorValidator.verifyErrors(scenario, errors);
 
             List<PaperTrackerDryRunOutputs> outputs = new ArrayList<>();
             requestIds.forEach(requestId -> outputs.addAll(Objects.requireNonNull(paperTrackerDryRunOutputsDao.retrieveOutputEvents(requestId).collectList().block())));
-            ExpectedValidator.verifyOutputs(scenario, outputs);
+            OutputValidator.verifyOutputs(scenario, outputs);
 
             List<PaperTrackings> trackings = paperTrackingsDAO.retrieveAllByTrackingIds(requestIds.stream().toList()).collectList().block();
-            ExpectedValidator.verifyTrackingEntities(scenario, trackings);
+            TrackingValidator.verifyTrackingEntities(scenario, trackings, ocrStatusEnum, strictValidation);
         }
     }
 
@@ -166,7 +177,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
 
             scenario.getEvents().stream()
-                    .map(SingleStatusUpdate::getAnalogMail)
+                    .map(TestEvent::getAnalogMail)
                     .filter(Objects::nonNull)
                     .filter(item -> item.getRequestId().endsWith("PCRETRY_1"))
                     .findFirst()
@@ -175,7 +186,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                     });
 
             scenario.getEvents().stream()
-                    .map(SingleStatusUpdate::getAnalogMail)
+                    .map(TestEvent::getAnalogMail)
                     .filter(Objects::nonNull)
                     .filter(item -> item.getRequestId().endsWith("PCRETRY_2"))
                     .findFirst()

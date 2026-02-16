@@ -132,6 +132,7 @@
         "processingMode": "DRY",
         "productType": "AR"
       }
-    ]
+    ],
+    "sentToOcr": 0
   }
 }

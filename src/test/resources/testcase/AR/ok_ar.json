@@ -176,6 +176,18 @@
         "processingMode": "DRY",
         "productType": "AR"
       }
-    ]
+    ],
+    "ocrResultPayload": {
+      "commandId": "{{REQUEST_ID}}#{{MESSAGE_ID}}#AR",
+      "version": "v1",
+      "commandType": "postal",
+      "data": {
+        "validationStatus": "OK",
+        "description": "OK",
+        "predictedRefinementType": null,
+        "validationType": "ai"
+      }
+    },
+    "sentToOcr": 1
   }
 }

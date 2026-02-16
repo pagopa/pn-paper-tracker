@@ -1,5 +1,5 @@
 {
-  "name": "OK_AR_TIMESTAMP_ERR",
+  "name": "OK_AR_INCONSISTENT_STATE",
   "productType": "AR",
   "initialTracking": {
     "productType": "AR",
@@ -71,7 +71,7 @@
         "statusDescription": "RECRN001A description",
         "deliveryFailureCause": null,
         "attachments": [],
-        "clientRequestTimeStamp": "2024-01-01T10:00:00Z",
+        "clientRequestTimeStamp": "2024-01-01T10:00:03Z",
         "statusDateTime": "2024-01-01T10:00:00Z"
       }
     },
@@ -85,7 +85,7 @@
         "statusDescription": "RECRN001A description",
         "deliveryFailureCause": null,
         "attachments": [],
-        "clientRequestTimeStamp": "2024-01-01T11:00:00Z",
+        "clientRequestTimeStamp": "2024-01-01T10:00:03Z",
         "statusDateTime": "2024-01-01T11:00:00Z"
       }
     },
@@ -104,11 +104,11 @@
             "sha256": "sha256",
             "id": "id-RECRN001B-AR",
             "uri": "https://example.com/RECRN001B-AR.pdf",
-            "date": "2024-01-01T09:00:04Z"
+            "date": "2024-01-01T10:00:04Z"
           }
         ],
-        "clientRequestTimeStamp": "2024-01-01T09:00:00Z",
-        "statusDateTime": "2024-01-01T09:00:00Z"
+        "clientRequestTimeStamp": "2024-01-01T10:00:04Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
       }
     },
 
@@ -122,8 +122,8 @@
         "statusDescription": "RECRN001C description",
         "deliveryFailureCause": null,
         "attachments": [],
-        "clientRequestTimeStamp": "2024-01-01T09:00:00Z",
-        "statusDateTime": "2024-01-01T09:00:00Z"
+        "clientRequestTimeStamp": "2024-01-01T10:00:05Z",
+        "statusDateTime": "2024-01-01T10:00:00Z"
       }
     },
 
@@ -145,8 +145,8 @@
             "date": "2024-01-01T10:00:04Z"
           }
         ],
-        "clientRequestTimeStamp": "2024-01-01T11:00:00Z",
-        "statusDateTime": "2024-01-01T11:00:00Z"
+        "clientRequestTimeStamp": "2023-01-01T10:00:04Z",
+        "statusDateTime": "2023-01-01T11:00:00Z"
       }
     },
 
@@ -160,8 +160,8 @@
         "statusDescription": "RECRN001C description",
         "deliveryFailureCause": null,
         "attachments": [],
-        "clientRequestTimeStamp": "2024-01-01T11:00:00Z",
-        "statusDateTime": "2024-01-01T11:00:00Z"
+        "clientRequestTimeStamp": "2023-01-01T10:00:05Z",
+        "statusDateTime": "2023-01-01T11:00:00Z"
       }
     }
 
@@ -170,14 +170,26 @@
     "errors": [
       {
         "trackingId": "{{REQUEST_ID}}",
-        "errorCategory": "DATE_ERROR",
-        "flowThrow": "SEQUENCE_VALIDATION",
-        "type": "ERROR",
+        "errorCategory": "INCONSISTENT_STATE",
+        "flowThrow": "CHECK_TRACKING_STATE",
+        "type": "WARNING",
+        "productType": "AR",
+        "eventThrow": "RECRN001B",
+        "details": {
+          "cause": null,
+          "message": "Tracking in state"
+        }
+      },
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "INCONSISTENT_STATE",
+        "flowThrow": "CHECK_TRACKING_STATE",
+        "type": "WARNING",
         "productType": "AR",
         "eventThrow": "RECRN001C",
         "details": {
           "cause": null,
-          "message": "Invalid business timestamps"
+          "message": "Tracking in state"
         }
       }
     ],
@@ -232,21 +244,6 @@
       },
       {
         "trackingId": "{{REQUEST_ID}}",
-        "statusCode": "PROGRESS",
-        "statusDetail": "RECRN001B",
-        "attachments": [
-          {
-            "documentType": "AR",
-            "sha256": "sha256",
-            "id": "id-RECRN001B-AR",
-            "uri": "https://example.com/RECRN001B-AR.pdf",
-            "date": "2024-01-01T10:00:04Z"
-          }
-        ],
-        "deliveryFailureCause": null
-      },
-      {
-        "trackingId": "{{REQUEST_ID}}",
         "statusCode": "OK",
         "statusDetail": "RECRN001C",
         "deliveryFailureCause": null
@@ -259,7 +256,13 @@
         "state": "DONE",
         "businessState": "DONE",
         "processingMode": "DRY",
-        "productType": "AR"
+        "productType": "AR",
+        "validationFlow": {
+          "ocrRequests":[{
+            "finalEventId": "{{MESSAGE_ID}}",
+            "documentType": "AR"
+          }]
+        }
       }
     ],
     "ocrResultPayload": {

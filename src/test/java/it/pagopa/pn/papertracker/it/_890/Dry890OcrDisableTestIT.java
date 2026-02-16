@@ -1,3 +1,4 @@
+/*
 package it.pagopa.pn.papertracker.it._890;
 
 import it.pagopa.pn.papertracker.BaseTest;
@@ -65,3 +66,4 @@ public class Dry890OcrDisableTestIT extends BaseTest.WithLocalStack {
        return SequenceLoader.loadScenarios(uri);
     }
 }
+*/

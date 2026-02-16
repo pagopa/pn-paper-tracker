@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.it.SequenceLoader;
 import it.pagopa.pn.papertracker.it.SequenceRunner;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -40,7 +41,7 @@ public class DryAROcrDisableTestIT extends BaseTest.WithLocalStack {
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
             checkPcRetry(scenario);
-            scenarioRunner.run(scenario);
+            scenarioRunner.run(scenario, OcrStatusEnum.DISABLED);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
             //per consentire il riaccodamento del messaggio e il successivo reprocess degli eventi,

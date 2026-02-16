@@ -2,12 +2,15 @@ package it.pagopa.pn.papertracker.it;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
+import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -16,8 +19,9 @@ public class SequenceRunner {
 
     private final List<GenericTestCaseHandler> handlers;
     private final PaperTrackerTrackingService paperTrackerTrackingService;
+    private final OcrEventHandler ocrEventHandler;
 
-    public void run(ProductTestCase scenario) throws InterruptedException {
+    public void run(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) throws InterruptedException {
         GenericTestCaseHandler handler = handlers.stream()
                 .filter(h -> h.getProductType()
                         .equalsIgnoreCase(scenario.getProductType()))
@@ -40,8 +44,21 @@ public class SequenceRunner {
 
         handler.afterInit(scenario, scenario.getInitialTracking());
         handler.sendEvents(scenario);
+        if(Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)){
+            receiveOcrResponse(scenario);
+        }
+        boolean strictValidation = false;
+        if(scenario.getProductType().equalsIgnoreCase("890")){
+            strictValidation = true;
+        }
         Thread.sleep(5000); //wait for events to be processed
-        handler.afterSendEvents(scenario);
+        handler.afterSendEvents(scenario, ocrStatusEnum, strictValidation);
+    }
+
+    private void receiveOcrResponse(ProductTestCase scenario) {
+        ocrEventHandler.handleOcrMessage(
+                scenario.getExpected().getOcrResultPayload()
+        );
     }
 
     private void initPaperTrackings(ProductTestCase scenario) {
