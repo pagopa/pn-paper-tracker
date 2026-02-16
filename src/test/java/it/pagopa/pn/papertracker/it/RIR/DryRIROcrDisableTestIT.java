@@ -2,11 +2,9 @@ package it.pagopa.pn.papertracker.it.RIR;
 
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
-import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.it.SequenceLoader;
 import it.pagopa.pn.papertracker.it.SequenceRunner;
+import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -23,13 +21,13 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static it.pagopa.pn.papertracker.it.GenericTestCaseHandlerImpl.getPcRetryResponse;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-dry.properties")
-public class DryRIRTestIT extends BaseTest.WithLocalStack {
+@TestPropertySource(locations = "classpath:application.test-ocr-disable.properties")
+public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
 
     @Autowired
     private SequenceRunner scenarioRunner;
@@ -38,7 +36,7 @@ public class DryRIRTestIT extends BaseTest.WithLocalStack {
     private PaperChannelClient paperChannelClient;
 
     @ParameterizedTest(name = "{0}")
-    @MethodSource("loadScenarios")
+    @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
             checkPcRetry(scenario);
@@ -54,41 +52,16 @@ public class DryRIRTestIT extends BaseTest.WithLocalStack {
     }
 
     private void checkPcRetry(ProductTestCase scenario) {
-        PcRetryResponse response = new PcRetryResponse();
-        response.setRetryFound(true);
-        response.setPcRetry("PCRETRY_1");
-
-        PcRetryResponse response2 = new PcRetryResponse();
-        response2.setRetryFound(true);
-        response2.setPcRetry("PCRETRY_2");
-
-        scenario.getEvents().stream()
-                .map(SingleStatusUpdate::getAnalogMail)
-                .filter(Objects::nonNull)
-                .filter(item -> item.getRequestId().endsWith("PCRETRY_1"))
-                .findFirst()
-                .ifPresent(item -> {
-                    response.setRequestId(item.getRequestId());
-                });
-
-        scenario.getEvents().stream()
-                .map(SingleStatusUpdate::getAnalogMail)
-                .filter(Objects::nonNull)
-                .filter(item -> item.getRequestId().endsWith("PCRETRY_2"))
-                .findFirst()
-                .ifPresent(item -> {
-                    response2.setRequestId(item.getRequestId());
-                });
-
+        getPcRetryResponse(scenario);
         switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(response));
+            case "OK_RETRY_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
             case "FAIL_CON996_PC_RETRY_FURTO_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
-                    .thenReturn(Mono.just(response))
-                    .thenReturn(Mono.just(response2));
+                    .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
+                    .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
         }
     }
 
-    Stream<Arguments> loadScenarios() throws Exception {
+    Stream<Arguments> loadTestCases() throws Exception {
         URI uri = Objects.requireNonNull(Thread.currentThread()
                 .getContextClassLoader()
                 .getResource("testcase/RIR")).toURI();

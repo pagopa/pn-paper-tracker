@@ -1,0 +1,10 @@
+{
+  "name": "OK_AR_TIMESTAMP_ERR",
+  "productType": "AR",
+  "initialTracking": {
+    "productType": "AR",
+    "pcRetry": "PCRETRY_0",
+    "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+    "unifiedDeliveryDriver": "POSTE"
+  }
+}

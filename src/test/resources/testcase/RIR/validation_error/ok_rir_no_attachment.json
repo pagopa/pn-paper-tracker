@@ -167,6 +167,16 @@
         "statusDetail": "RECRI003A",
         "deliveryFailureCause": null
       }
+    ],
+    "trackings":  [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "unifiedDeliveryDriver": "POSTE",
+        "state": "KO",
+        "businessState": "KO",
+        "processingMode": "DRY",
+        "productType": "RIR"
+      }
     ]
   }
 }

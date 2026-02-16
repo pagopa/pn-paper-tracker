@@ -7,33 +7,36 @@ import org.junit.jupiter.params.provider.Arguments;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class SequenceLoader {
 
-    public static Stream<Arguments> loadScenarios(URI... uriList) throws Exception {
+    public static Stream<Arguments> loadScenarios(URI uri) throws Exception {
 
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
-        return Stream.of(uriList)
-                .flatMap(uri -> {
-                    try {
-                        Path dir = Path.of(uri);
-                        return Files.walk(dir)
-                                .filter(p -> p.toString().endsWith(".json"))
-                                .sorted()
-                                .map(path -> {
-                                    try {
-                                        String raw = Files.readString(path);
-                                        ProductTestCase scenario = mapper.readValue(raw, ProductTestCase.class);
-                                        return Arguments.of(path.getFileName().toString(), scenario);
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                });
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+        List<Arguments> result = new ArrayList<>();
+
+        Path dir = Path.of(uri);
+        try (Stream<Path> paths = Files.walk(dir)) {
+            List<Path> jsonFiles = paths
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.toString().endsWith(".json"))
+                    .sorted()
+                    .toList();
+            for (Path path : jsonFiles) {
+                String raw = Files.readString(path);
+                ProductTestCase scenario = mapper.readValue(raw, ProductTestCase.class);
+                result.add(Arguments.of(path.toAbsolutePath().toString(), scenario));
+            }
+        }
+
+        if (result.isEmpty()) {
+            throw new IllegalStateException("No scenarios found!");
+        }
+
+        return result.stream();
     }
 }

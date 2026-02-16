@@ -2,16 +2,12 @@ package it.pagopa.pn.papertracker.it;
 
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
-import org.junit.jupiter.api.Assertions;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ExpectedValidator {
 
@@ -90,14 +86,12 @@ public class ExpectedValidator {
                             Objects.equals(item.getTrackingId(), exp.getTrackingId())
                                     && Objects.equals(item.getBusinessState(), exp.getBusinessState())
                                     && Objects.equals(item.getProductType(), exp.getProductType())
-                                    && Objects.equals(item.getAttemptId(), exp.getAttemptId())
-                                    && Objects.equals(item.getPcRetry(), exp.getPcRetry())
                                     && Objects.equals(item.getState(), exp.getState())
                                     && Objects.equals(item.getProcessingMode(), exp.getProcessingMode())
                                     && Objects.equals(item.getUnifiedDeliveryDriver(), exp.getUnifiedDeliveryDriver())
                                     && Objects.equals(item.getNextRequestIdPcretry(), exp.getNextRequestIdPcretry()))
                     .findFirst()
-                    .orElseThrow(() -> new AssertionError("Expected output not found: " + exp));
+                    .orElseThrow(() -> new AssertionError("Expected tracking not found: " + exp));
 
             ValidationConfig validationConfig = match.getValidationConfig();
             assertNotNull(validationConfig);

@@ -2,10 +2,10 @@ package it.pagopa.pn.papertracker.it;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +16,6 @@ public class SequenceRunner {
 
     private final List<GenericTestCaseHandler> handlers;
     private final PaperTrackerTrackingService paperTrackerTrackingService;
-    private final PaperTrackingsErrorsDAO paperTrackingsErrorsDao;
 
     public void run(ProductTestCase scenario) throws InterruptedException {
         GenericTestCaseHandler handler = handlers.stream()
@@ -47,23 +46,23 @@ public class SequenceRunner {
 
     private void initPaperTrackings(ProductTestCase scenario) {
         paperTrackerTrackingService.insertPaperTrackings(scenario.getInitialTracking()).block();
+        if(!CollectionUtils.isEmpty(scenario.getEvents())) {
 
+            if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
+                assert singleStatusUpdate.getAnalogMail() != null;
+                return singleStatusUpdate.getAnalogMail()
+                        .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY}}");
+            })) {
+                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_1")).block();
+            }
 
-
-        if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
-            assert singleStatusUpdate.getAnalogMail() != null;
-            return singleStatusUpdate.getAnalogMail()
-                    .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY}}");
-        })) {
-            paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_1")).block();
-        }
-
-        if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
-            assert singleStatusUpdate.getAnalogMail() != null;
-            return singleStatusUpdate.getAnalogMail()
-                    .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY_2}}");
-        })) {
-            paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_2")).block();
+            if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
+                assert singleStatusUpdate.getAnalogMail() != null;
+                return singleStatusUpdate.getAnalogMail()
+                        .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY_2}}");
+            })) {
+                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_2")).block();
+            }
         }
     }
 

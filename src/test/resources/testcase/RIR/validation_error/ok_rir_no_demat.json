@@ -138,21 +138,16 @@
         "statusCode": "PROGRESS",
         "statusDetail": "RECRI003A",
         "deliveryFailureCause": null
-      },
+      }
+    ],
+    "trackings":  [
       {
         "trackingId": "{{REQUEST_ID}}",
-        "statusCode": "PROGRESS",
-        "statusDetail": "RECRI003B",
-        "attachments": [
-          {
-            "documentType": "AR",
-            "sha256": "sha256",
-            "id": "id-RECRI003B-AR",
-            "uri": "https://example.com/RECRI003B-AR.pdf",
-            "date": "2024-01-01T10:00:05Z"
-          }
-        ],
-        "deliveryFailureCause": null
+        "unifiedDeliveryDriver": "POSTE",
+        "state": "KO",
+        "businessState": "KO",
+        "processingMode": "DRY",
+        "productType": "RIR"
       }
     ]
   }

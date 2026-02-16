@@ -246,6 +246,25 @@
         "statusDetail": "RECRI003C",
         "deliveryFailureCause": null
       }
+    ],
+    "trackings":  [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "unifiedDeliveryDriver": "POSTE",
+        "state": "DONE",
+        "businessState": "DONE",
+        "nextRequestIdPcretry": "{{REQUEST_ID_RETRY}}",
+        "processingMode": "DRY",
+        "productType": "RIR"
+      },
+      {
+        "trackingId": "{{REQUEST_ID_RETRY}}",
+        "unifiedDeliveryDriver": "POSTE",
+        "state": "DONE",
+        "businessState": "DONE",
+        "processingMode": "DRY",
+        "productType": "RIR"
+      }
     ]
   }
 }

@@ -223,6 +223,16 @@
         "statusDetail": "RECRI003C",
         "deliveryFailureCause": null
       }
+    ],
+    "trackings":  [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "unifiedDeliveryDriver": "POSTE",
+        "state": "DONE",
+        "businessState": "DONE",
+        "processingMode": "DRY",
+        "productType": "RIR"
+      }
     ]
   }
 }
