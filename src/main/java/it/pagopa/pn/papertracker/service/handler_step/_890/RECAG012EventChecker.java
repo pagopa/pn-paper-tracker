@@ -9,17 +9,14 @@ import it.pagopa.pn.papertracker.utils.OcrUtility;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.papertracker.utils.TrackerUtility.checkIfIsFinalDemat;
-import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.*;
 
 @Component
 @RequiredArgsConstructor
@@ -62,25 +59,48 @@ public class RECAG012EventChecker implements HandlerStep {
             return Mono.empty();
         }
 
+        if (isInvalidStateForSendToOCRInRECAG012Checker(context)) {
+            log.info("Tracking is in invalid state for sending to OCR for trackingId {}", context.getTrackingId());
+            return Mono.empty();
+        }
+
         PaperStatus paperStatus = context.getPaperTrackings().getPaperStatus();
 
-        Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
+        List<Event> events = context.getPaperTrackings().getEvents();
+
+        List<Event> filteredEvent = events.stream()
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
                 .peek(event -> {
                     // Popola il registeredLetterCode perchè non presente prima del SequenceValidator890
-                    if(checkIfIsFinalDemat(event.getStatusCode()))
+                    if (checkIfIsFinalDemat(event.getStatusCode()))
                         paperStatus.setRegisteredLetterCode(event.getRegisteredLetterCode());
                 })
-                .map(event -> Map.entry(
-                            event.getId(),
-                            event.getAttachments().stream()
-                                    .filter(att -> ocrAttachments.contains(att.getDocumentType()))
-                                    .toList()
-                    ))
-                .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .filter(event -> event.getAttachments().stream()
+                        .anyMatch(attachment -> ocrAttachments.contains(attachment.getDocumentType())))
+                .sorted(Comparator.comparing(Event::getCreatedAt))
+                .toList();
 
-        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context).then();
+        Map<String, List<Attachment>> attachmentsToSend = getAttachmentsToSend(filteredEvent, ocrAttachments);
+
+        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachmentsToSend, context).then();
+    }
+
+    private static Map<String, List<Attachment>> getAttachmentsToSend(List<Event> filteredEvent, List<String> ocrAttachments) {
+        return filteredEvent.stream()
+                .flatMap(event -> event.getAttachments().stream()
+                        .map(Attachment::getDocumentType)
+                        .filter(ocrAttachments::contains)
+                        .map(documentType -> Map.entry(documentType, event)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> replacement))
+                .entrySet().stream()
+                .flatMap(entry -> {
+                    String documentType = entry.getKey();
+                    Event event = entry.getValue();
+                    return event.getAttachments().stream()
+                            .filter(a -> documentType.equals(a.getDocumentType()))
+                            .map(a -> Map.entry(event.getId(), a));
+                })
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 
     private boolean hasRequiredAttachments(HandlerContext context, List<String> requiredAttachments) {
