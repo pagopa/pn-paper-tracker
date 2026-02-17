@@ -65,7 +65,7 @@ public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
     Stream<Arguments> loadTestCases() throws Exception {
         URI uri = Objects.requireNonNull(Thread.currentThread()
                 .getContextClassLoader()
-                .getResource("testcase/tmp")).toURI();
+                .getResource("testcase/RIR")).toURI();
        return SequenceLoader.loadScenarios(uri);
     }
 }

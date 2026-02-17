@@ -384,6 +384,8 @@
 
       {
         "trackingId": "{{REQUEST_ID_RETRY}}",
+        "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+        "pcRetry": "PCRETRY_1",
         "unifiedDeliveryDriver": "POSTE",
         "processingMode": "DRY",
         "productType": "RIR",
@@ -442,7 +444,7 @@
           {
             "statusCode": "RECRI003A",
             "statusDescription": "desc",
-            "statusTimestamp": "2024-01-01T10:01:04Z",
+            "statusTimestamp": "2024-01-01T10:00:00Z",
             "requestTimestamp": "2024-01-01T10:01:04Z",
             "registeredLetterCode": "1234567891011",
             "iun": "{{RANDOM_IUN}}",
@@ -452,7 +454,7 @@
           {
             "statusCode": "RECRI003B",
             "statusDescription": "desc",
-            "statusTimestamp": "2024-01-01T10:01:05Z",
+            "statusTimestamp": "2024-01-01T10:00:00Z",
             "requestTimestamp": "2024-01-01T10:01:05Z",
             "registeredLetterCode": "1234567891011",
             "iun": "{{RANDOM_IUN}}",
@@ -470,7 +472,7 @@
           {
             "statusCode": "RECRI003C",
             "statusDescription": "desc",
-            "statusTimestamp": "2024-01-01T10:01:06Z",
+            "statusTimestamp": "2024-01-01T10:00:00Z",
             "requestTimestamp": "2024-01-01T10:01:06Z",
             "registeredLetterCode": "1234567891011",
             "iun": "{{RANDOM_IUN}}",
@@ -495,13 +497,11 @@
           "registeredLetterCode": "1234567891011",
           "finalStatusCode": "RECRI003C",
           "validatedEvents": [
-            "e1a2b3c4-d5f6-4789-9abc-0d1e2f3a4b05",
-            "f2b3c4d5-e6a7-4890-abcd-1e2f3a4b5c06",
-            "a3c4d5e6-f7b8-4901-bcde-2f3a4b5c6d07",
-            "b4d5e6f7-a8c9-4012-cdef-3a4b5c6d7e08",
+            "e7a8b9c0-d1f2-4345-f012-6d7e8f9a0b11",
             "c5e6f7a8-b9d0-4123-def0-4b5c6d7e8f09",
             "d6f7a8b9-c0e1-4234-ef01-5c6d7e8f9a10",
-            "e7a8b9c0-d1f2-4345-f012-6d7e8f9a0b11"
+            "a3c4d5e6-f7b8-4901-bcde-2f3a4b5c6d07",
+            "b4d5e6f7-a8c9-4012-cdef-3a4b5c6d7e08"
           ],
           "finalDematFound": true
         }
