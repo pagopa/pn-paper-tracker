@@ -50,7 +50,7 @@ components:
           type: string
           description: Version of the schema
           example: "1.0.0"
-        commandId:
+        CommandId:
           type: string
           description: Command unique ID
           example: "1234567890"
