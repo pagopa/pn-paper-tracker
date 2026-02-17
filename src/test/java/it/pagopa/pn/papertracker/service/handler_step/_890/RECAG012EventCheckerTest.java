@@ -137,7 +137,7 @@ class RECAG012EventCheckerTest {
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTracking = paperTrackingsArgumentCaptor.getValue();
         assertEquals(OcrStatusEnum.DISABLED, updatedPaperTracking.getValidationConfig().getOcrEnabled());
-        assertNull(updatedPaperTracking.getValidationFlow().getOcrRequests());
+        assertTrue(updatedPaperTracking.getValidationFlow().getOcrRequests().isEmpty());
         assertNotNull(updatedPaperTracking.getValidationFlow().getRefinementDematValidationTimestamp());
 
         assertFalse(context.isNeedToSendRECAG012A());

@@ -92,7 +92,10 @@ public class TrackerUtility {
 
 
     public static void setDematValidationTimestamp(PaperTrackings paperTrackingsToUpdate, String statusCode) {
-        ValidationFlow validationFlow = new ValidationFlow();
+        ValidationFlow validationFlow = paperTrackingsToUpdate.getValidationFlow();
+        if(Objects.isNull(validationFlow)){
+            validationFlow = new ValidationFlow();
+        }
         if (RECAG012.name().equalsIgnoreCase(statusCode)) {
             validationFlow.setRefinementDematValidationTimestamp(Instant.now());
         } else if (TrackerUtility.isStockStatus890(statusCode)) {
@@ -101,7 +104,6 @@ public class TrackerUtility {
             validationFlow.setRefinementDematValidationTimestamp(Instant.now());
             validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
         }
-        paperTrackingsToUpdate.setValidationFlow(validationFlow);
     }
 
     public static boolean isInvalidState(HandlerContext ctx, String statusCode) {

@@ -12,6 +12,7 @@ import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -66,8 +68,9 @@ class OcrUtilityTest {
         Attachment att = new Attachment();
         att.setUri("uri.pdf");
         att.setDocumentType("ARCAD");
-        attachments.put("eventId", List.of(att));
+        attachments.put("attachmentEventId", List.of(att));
         Event event = new Event();
+        event.setId("finalEventId");
         event.setStatusCode(RECAG012.name());
         event.setStatusTimestamp(Instant.now());
         when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
@@ -81,7 +84,13 @@ class OcrUtilityTest {
 
         // Assert
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+        assertEquals(1, updatedPaperTrackings.getValidationFlow().getOcrRequests().size());
+        assertEquals("attachmentEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("finalEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
+        assertEquals("ARCAD", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
     }
 
     @Test
@@ -100,7 +109,10 @@ class OcrUtilityTest {
 
         // Assert
         verifyNoInteractions(ocrMomProducer);
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+        assertTrue(updatedPaperTrackings.getValidationFlow().getOcrRequests().isEmpty());
     }
 
     @Test
@@ -124,7 +136,10 @@ class OcrUtilityTest {
 
         // Assert
         verifyNoInteractions(ocrMomProducer);
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+        assertTrue(updatedPaperTrackings.getValidationFlow().getOcrRequests().isEmpty());
     }
 
     @Test
@@ -143,7 +158,43 @@ class OcrUtilityTest {
 
         // Assert
         verifyNoInteractions(ocrMomProducer);
-        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+        assertTrue(updatedPaperTrackings.getValidationFlow().getOcrRequests().isEmpty());
+    }
+
+    @Test
+    void checkAndSendToOcr_OcrDry_ValidAttachments() {
+        // Arrange
+        paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.DRY);
+        Map<String, List<Attachment>> attachments = new HashMap<>();
+        Attachment att = new Attachment();
+        att.setUri("uri.pdf");
+        att.setDocumentType("ARCAD");
+        attachments.put("attachmentEventId", List.of(att));
+        Event event = new Event();
+        event.setId("finalEventId");
+        event.setStatusCode(RECAG012.name());
+        event.setStatusTimestamp(Instant.now());
+        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
+        when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
+        // Act
+        StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
+                .expectNext(false)
+                .verifyComplete();
+
+        // Assert
+        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+        assertEquals(1, updatedPaperTrackings.getValidationFlow().getOcrRequests().size());
+        assertEquals("attachmentEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
+        assertEquals("finalEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
+        assertEquals("ARCAD", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
     }
 
 }
