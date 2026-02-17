@@ -99,7 +99,7 @@ public class OcrDryTestIT extends BaseTest.WithLocalStack {
         await().pollDelay(Duration.ofSeconds(1)).until(() -> true);
 
         ocrEventHandler.handleOcrMessage(OcrDataResultPayload.builder()
-                .CommandId(paperTrackings.getTrackingId() + "#" + messageIdForFinalEvent + "#" + "23L")
+                .commandId(paperTrackings.getTrackingId() + "#" + messageIdForFinalEvent + "#" + "23L")
                 .data(Data.builder()
                         .description("ok")
                         .validationStatus(Data.ValidationStatus.OK)
