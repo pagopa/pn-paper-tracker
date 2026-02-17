@@ -186,7 +186,7 @@ public class OcrUtility {
         OcrDataPayloadDTO ocrDataPayload = OcrDataPayloadDTO.builder()
                 .version("v1")
                 .commandType(OcrDataPayloadDTO.CommandType.POSTAL)
-                .commandId(ocrRequestId)
+                .CommandId(ocrRequestId)
                 .data(DataDTO.builder()
                         .documentType(DataDTO.DocumentType.valueOf(documentType.name()))
                         .productType(getProductType(paperTracking))
