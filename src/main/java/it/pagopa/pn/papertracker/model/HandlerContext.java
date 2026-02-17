@@ -22,9 +22,8 @@ public class HandlerContext {
     private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
-    private boolean needToSendRECAG012A;
+    private boolean needToSendRECAG012A = false;
     private String reworkId;
     private OcrDataResultPayload ocrDataResultPayload;
     private boolean isRedrive;
-
 }

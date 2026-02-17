@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
@@ -12,13 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static it.pagopa.pn.papertracker.utils.TrackerUtility.findRECAG012Event;
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.*;
 
 @Component
 @RequiredArgsConstructor
@@ -47,30 +45,62 @@ public class RECAG012EventChecker implements HandlerStep {
         Optional<Event> recag012Event = findRECAG012Event(context.getPaperTrackings());
         List<String> requiredAttachments = context.getPaperTrackings().getValidationConfig().getRequiredAttachmentsRefinementStock890();
         List<String> ocrAttachments = context.getPaperTrackings().getValidationConfig().getSendOcrAttachmentsRefinementStock890();
+        context.setNeedToSendRECAG012A(false);
 
         if(recag012Event.isEmpty()){
             log.info("RECAG012 event not found for trackingId {}", context.getTrackingId());
             return Mono.empty();
         }
 
+        // Non ha tutti gli allegati richiesti al refinement ma è arrivato il RECAG012
         if (!hasRequiredAttachments(context, requiredAttachments)) {
             log.info("Missing required attachments for trackingId {}", context.getTrackingId());
             context.setNeedToSendRECAG012A(true);
             return Mono.empty();
         }
 
-        Map<String, List<Attachment>> attachments = context.getPaperTrackings().getEvents().stream()
-                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
-                .map(event -> Map.entry(
-                        event.getId(),
-                        event.getAttachments().stream()
-                                .filter(att -> ocrAttachments.contains(att.getDocumentType()))
-                                .toList()
-                ))
-                .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (isInvalidStateForSendToOCRInRECAG012Checker(context)) {
+            log.info("Tracking is in invalid state for sending to OCR for trackingId {}", context.getTrackingId());
+            return Mono.empty();
+        }
 
-        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachments, context).then();
+        PaperStatus paperStatus = context.getPaperTrackings().getPaperStatus();
+
+        List<Event> events = context.getPaperTrackings().getEvents();
+
+        List<Event> filteredEvent = events.stream()
+                .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
+                .peek(event -> {
+                    // Popola il registeredLetterCode perchè non presente prima del SequenceValidator890
+                    if (checkIfIsFinalDemat(event.getStatusCode()))
+                        paperStatus.setRegisteredLetterCode(event.getRegisteredLetterCode());
+                })
+                .filter(event -> event.getAttachments().stream()
+                        .anyMatch(attachment -> ocrAttachments.contains(attachment.getDocumentType())))
+                .sorted(Comparator.comparing(Event::getCreatedAt))
+                .toList();
+
+        Map<String, List<Attachment>> attachmentsToSend = getAttachmentsToSend(filteredEvent, ocrAttachments);
+
+        return ocrUtility.checkAndSendToOcr(recag012Event.get(), attachmentsToSend, context).then();
+    }
+
+    private static Map<String, List<Attachment>> getAttachmentsToSend(List<Event> filteredEvent, List<String> ocrAttachments) {
+        return filteredEvent.stream()
+                .flatMap(event -> event.getAttachments().stream()
+                        .map(Attachment::getDocumentType)
+                        .filter(ocrAttachments::contains)
+                        .map(documentType -> Map.entry(documentType, event)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> replacement))
+                .entrySet().stream()
+                .flatMap(entry -> {
+                    String documentType = entry.getKey();
+                    Event event = entry.getValue();
+                    return event.getAttachments().stream()
+                            .filter(a -> documentType.equals(a.getDocumentType()))
+                            .map(a -> Map.entry(event.getId(), a));
+                })
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 
     private boolean hasRequiredAttachments(HandlerContext context, List<String> requiredAttachments) {

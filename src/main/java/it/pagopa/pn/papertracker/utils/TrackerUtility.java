@@ -114,6 +114,11 @@ public class TrackerUtility {
         }
     }
 
+    public static boolean isInvalidStateForSendToOCRInRECAG012Checker(HandlerContext ctx) {
+        PaperTrackingsState state = ctx.getPaperTrackings().getState();
+        return state == PaperTrackingsState.DONE || state == PaperTrackingsState.AWAITING_OCR;
+    }
+
     private static boolean isStock890SequenceStatusCodes(String statusCode) {
         SequenceConfig config005 = SequenceConfiguration.getConfig(RECAG005C.name());
         SequenceConfig config006 = SequenceConfiguration.getConfig(RECAG006C.name());
@@ -162,11 +167,15 @@ public class TrackerUtility {
     }
 
     public static String getStatusCodeFromEventId(PaperTrackings paperTrackings, String eventId) {
+        Event event = getEventFromEventId(paperTrackings, eventId);
+        return event != null ? event.getStatusCode() : null;
+    }
+
+    public static Event getEventFromEventId(PaperTrackings paperTrackings, String eventId) {
         if(!CollectionUtils.isEmpty(paperTrackings.getEvents())) {
             return paperTrackings.getEvents().stream()
                     .filter(event -> event.getId().equalsIgnoreCase(eventId))
                     .findFirst()
-                    .map(Event::getStatusCode)
                     .orElse(null);
         }
         return null;
