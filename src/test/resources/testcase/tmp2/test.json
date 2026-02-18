@@ -1,0 +1,386 @@
+{
+  "name": "TEST",
+  "productType": "890",
+  "initialTracking": {
+    "productType": "890",
+    "pcRetry": "PCRETRY_0",
+    "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+    "unifiedDeliveryDriver": "POSTE"
+  },
+  "events": [
+    {
+      "messageId": "7bfafb39-f05b-4255-b246-13170f9e9beb",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "productType": "890",
+        "statusCode": "P000",
+        "statusDescription": null,
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:42:21Z",
+        "statusDateTime": "2026-02-18T09:42:21Z"
+      }
+    },
+    {
+      "messageId": "67d24a5f-1f84-4db7-a50c-b732656e1e7a",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "CON080",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:42:26.288443300Z",
+        "statusDateTime": "2026-02-18T09:42:26Z"
+      }
+    },
+    {
+      "messageId": "ad29882e-255b-4542-82f1-e8dae4c934b7",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG010",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:42:40.351908200Z",
+        "statusDateTime": "2026-02-18T09:42:40Z"
+      }
+    },
+    {
+      "messageId": "3325d540-ad7b-458e-803a-41d6e63ee3ec",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG011A",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:42:45.785767600Z",
+        "statusDateTime": "2026-02-18T09:42:45Z"
+      }
+    },
+    {
+      "messageId": "58dd8638-9d48-4931-9d71-8de4ddc1bfc9",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "CON020",
+        "statusDescription": "Mock status",
+        "attachments": [
+          {
+            "documentType": "Copia Conforme AAR",
+            "sha256": "Q2jrqhX5gXcwkaLn+5bc4HLeNkedMJxoUII+JiGUgvU=",
+            "id": "0",
+            "uri": "safestorage://PN_PRINTED-9baa7bc8a5d7407b88877898792d3298.pdf",
+            "date": "2026-02-18T09:42:38.806193514Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2026-02-18T09:42:35.207358616Z",
+        "statusDateTime": "2026-02-18T09:42:31Z"
+      }
+    },
+    {
+      "messageId": "97786b9c-2920-486c-bc67-3f7328c23fec",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG012",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:43:16.004606700Z",
+        "statusDateTime": "2026-02-18T09:43:16Z"
+      }
+    },
+    {
+      "messageId": "46937ef1-c2d3-4827-b416-224b926c0cc3",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG006A",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:43:21.361890Z",
+        "statusDateTime": "2026-02-18T09:43:21Z"
+      }
+    },
+    {
+      "messageId": "9c37acde-f620-4f13-a54a-f33de12269c2",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG006B",
+        "statusDescription": "Mock status",
+        "attachments": [
+          {
+            "documentType": "ARCAD",
+            "sha256": "UaMdYj7cAVO6EZTC9ddUBD7pbkG6zdEZ0LaL/3cmphU=",
+            "id": "0",
+            "uri": "safestorage://PN_EXTERNAL_LEGAL_FACTS-48233c7598e4b4eba73e9b13abb69b3.pdf",
+            "date": "2026-02-18T09:43:21.361881Z"
+          },
+          {
+            "documentType": "23L",
+            "sha256": "UaMdYj7cAVO6EZTC9ddUBD7pbkG6zdEZ0LaL/3cmphU=",
+            "id": "1",
+            "uri": "safestorage://PN_EXTERNAL_LEGAL_FACTS-8276a425e8074a6b90c6d100ca26f136.pdf",
+            "date": "2026-02-18T09:43:21.361881Z"
+          }
+        ],
+        "clientRequestTimeStamp": "2026-02-18T09:43:26.716297400Z",
+        "statusDateTime": "2026-02-18T09:43:21Z"
+      }
+    },
+    {
+      "messageId": "4d1b3f2b-7dd7-4960-9353-3f8d5a506e69",
+      "analogMail": {
+        "requestId": "{{REQUEST_ID}}",
+        "iun": "XWUD-TAQU-MZEY-202602-X-1",
+        "productType": "890",
+        "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+        "statusCode": "RECAG006C",
+        "statusDescription": "Mock status",
+        "attachments": [],
+        "clientRequestTimeStamp": "2026-02-18T09:43:32.481162800Z",
+        "statusDateTime": "2026-02-18T09:43:21Z"
+      }
+    }
+  ],
+
+  "expected": {
+    "errors": [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "ATTACHMENTS_ERROR",
+        "flowThrow": "SEQUENCE_VALIDATION",
+        "type": "ERROR",
+        "productType": "AR",
+        "eventThrow": "RECRN001C",
+        "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
+        "details": {
+          "cause": null,
+          "message": "Event RECRN001B contains invalid attachments: [Plico]"
+        }
+      }
+    ],
+    "outputs": [
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON080", "statusDescription": "CON080 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:00Z", "attachments": [] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON020", "statusDescription": "CON020 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:01Z", "attachments": [ { "documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z" } ] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRN001A", "statusDescription": "RECRN001A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:03Z", "attachments": [] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRN001B", "statusDescription": "RECRN001B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": [ { "documentType": "Plico", "sha256": "sha256", "id": "id-RECRN001B-Plico", "uri": "https://example.com/RECRN001B-AR.pdf", "date": "2024-01-01T10:00:04Z" } ] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRN001B", "statusDescription": "RECRN001B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": [ { "documentType": "AR", "sha256": "sha256", "id": "id-RECRN001B-AR", "uri": "https://example.com/RECRN001B-AR.pdf", "date": "2024-01-01T10:00:04Z" } ] }
+    ],
+    "trackings": [
+      {
+        "trackingId": "PREPARE_ANALOG_DOMICILE.IUN_XWUD-TAQU-MZEY-202602-X-1.RECINDEX_0.ATTEMPT_0.PCRETRY_0",
+        "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_XWUD-TAQU-MZEY-202602-X-1.RECINDEX_0.ATTEMPT_0",
+        "businessState": "DONE",
+        "createdAt": "2026-02-18T09:38:15.484299667Z",
+        "events": [
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:42:23.513859093Z",
+            "dryRun": false,
+            "id": "7bfafb39-f05b-4255-b246-13170f9e9beb",
+            "productType": "890",
+            "statusCode": "P000",
+            "statusTimestamp": "2026-02-18T09:42:21Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:42:28.821685324Z",
+            "dryRun": false,
+            "id": "67d24a5f-1f84-4db7-a50c-b732656e1e7a",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:42:26.288443300Z",
+            "statusCode": "CON080",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:42:26Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:42:42.841304588Z",
+            "dryRun": false,
+            "id": "ad29882e-255b-4542-82f1-e8dae4c934b7",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:42:40.351908200Z",
+            "statusCode": "RECAG010",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:42:40Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:42:48.222903702Z",
+            "dryRun": false,
+            "id": "3325d540-ad7b-458e-803a-41d6e63ee3ec",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:42:45.785767600Z",
+            "statusCode": "RECAG011A",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:42:45Z"
+          },
+          {
+            "attachments": [
+              {
+                "date": "2026-02-18T09:42:38.806193514Z",
+                "documentType": "Copia Conforme AAR",
+                "id": "0",
+                "sha256": "Q2jrqhX5gXcwkaLn+5bc4HLeNkedMJxoUII+JiGUgvU=",
+                "uri": "safestorage://PN_PRINTED-9baa7bc8a5d7407b88877898792d3298.pdf"
+              }
+            ],
+            "createdAt": "2026-02-18T09:42:55.595553943Z",
+            "dryRun": false,
+            "id": "58dd8638-9d48-4931-9d71-8de4ddc1bfc9",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:42:35.207358616Z",
+            "statusCode": "CON020",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:42:31Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:43:18.466904569Z",
+            "dryRun": false,
+            "id": "97786b9c-2920-486c-bc67-3f7328c23fec",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:43:16.004606700Z",
+            "statusCode": "RECAG012",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:43:16Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:43:23.829369604Z",
+            "dryRun": false,
+            "id": "46937ef1-c2d3-4827-b416-224b926c0cc3",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:43:21.361890Z",
+            "statusCode": "RECAG006A",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:43:21Z"
+          },
+          {
+            "attachments": [
+              {
+                "date": "2026-02-18T09:43:21.361881Z",
+                "documentType": "ARCAD",
+                "id": "0",
+                "sha256": "UaMdYj7cAVO6EZTC9ddUBD7pbkG6zdEZ0LaL/3cmphU=",
+                "uri": "safestorage://PN_EXTERNAL_LEGAL_FACTS-48233c7598e4b4eba73e9b13abb69b3.pdf"
+              },
+              {
+                "date": "2026-02-18T09:43:21.361881Z",
+                "documentType": "23L",
+                "id": "1",
+                "sha256": "UaMdYj7cAVO6EZTC9ddUBD7pbkG6zdEZ0LaL/3cmphU=",
+                "uri": "safestorage://PN_EXTERNAL_LEGAL_FACTS-8276a425e8074a6b90c6d100ca26f136.pdf"
+              }
+            ],
+            "createdAt": "2026-02-18T09:43:29.578256349Z",
+            "dryRun": false,
+            "id": "9c37acde-f620-4f13-a54a-f33de12269c2",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:43:26.716297400Z",
+            "statusCode": "RECAG006B",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:43:21Z"
+          },
+          {
+            "attachments": [
+            ],
+            "createdAt": "2026-02-18T09:43:34.937955955Z",
+            "dryRun": false,
+            "id": "4d1b3f2b-7dd7-4960-9353-3f8d5a506e69",
+            "iun": "XWUD-TAQU-MZEY-202602-X-1",
+            "productType": "890",
+            "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+            "requestTimestamp": "2026-02-18T09:43:32.481162800Z",
+            "statusCode": "RECAG006C",
+            "statusDescription": "Mock status",
+            "statusTimestamp": "2026-02-18T09:43:21Z"
+          }
+        ],
+        "paperStatus": {
+          "finalDematFound": true,
+          "finalStatusCode": "RECAG006C",
+          "paperDeliveryTimestamp": "2026-02-18T09:42:21Z",
+          "registeredLetterCode": "53c095bb0d064f189a8b45d5ca5093fd",
+          "validatedEvents": [
+            "4d1b3f2b-7dd7-4960-9353-3f8d5a506e69",
+            "9c37acde-f620-4f13-a54a-f33de12269c2",
+            "46937ef1-c2d3-4827-b416-224b926c0cc3",
+            "97786b9c-2920-486c-bc67-3f7328c23fec",
+            "3325d540-ad7b-458e-803a-41d6e63ee3ec",
+            "ad29882e-255b-4542-82f1-e8dae4c934b7"
+          ],
+          "validatedSequenceTimestamp": "2026-02-18T09:43:21Z"
+        },
+        "pcRetry": "PCRETRY_0",
+        "processingMode": "RUN",
+        "productType": "890",
+        "state": "DONE",
+        "ttl": 2086767495,
+        "unifiedDeliveryDriver": "POSTE",
+        "updatedAt": "2026-02-18T09:43:35.016562359Z",
+        "validationConfig": {
+          "ocrEnabled": "DRY",
+          "requiredAttachmentsRefinementStock890": [
+            "23L"
+          ],
+          "sendOcrAttachmentsFinalValidation": [
+            "Plico",
+            "AR",
+            "23L"
+          ],
+          "sendOcrAttachmentsFinalValidationStock890": [
+          ],
+          "sendOcrAttachmentsRefinementStock890": [
+            "23L"
+          ],
+          "strictFinalValidationStock890": false
+        },
+        "validationFlow": {
+          "finalEventBuilderTimestamp": "2026-02-18T09:43:35.001345973Z",
+          "finalEventDematValidationTimestamp": "2026-02-18T09:43:34.993923450Z",
+          "ocrRequests": [
+          ],
+          "recag012StatusTimestamp": "2026-02-18T09:43:18.466904569Z",
+          "refinementDematValidationTimestamp": "2026-02-18T09:43:29.690319247Z",
+          "sequencesValidationTimestamp": "2026-02-18T09:43:34.982026367Z"
+        }
+      }
+    ],
+    "sentToOcr": 0
+  }
+}

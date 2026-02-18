@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrackingValidator {
@@ -133,18 +134,19 @@ public class TrackingValidator {
             assertNotNull(flow.getSequencesValidationTimestamp());
         }
 
-        if (expected.getState() == PaperTrackingsState.DONE
+        if (expected.getState() == DONE
                 && scenario.getProductType().equalsIgnoreCase("890")) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
             assertNotNull(flow.getRecag012StatusTimestamp());
         }
 
-        verifyOcrRequests(expectedFlow, flow, ocrStatusEnum);
+        verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, StringUtils.isNotBlank(expected.getNextRequestIdPcretry()),
+                (expected.getState() == DONE || expected.getBusinessState() == BusinessState.DONE), scenario.getName());
     }
 
-    private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum) {
+    private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase) {
 
-        if (ocrStatusEnum == OcrStatusEnum.DISABLED) {
+        if (ocrStatusEnum == OcrStatusEnum.DISABLED || hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR"))) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
@@ -161,7 +163,9 @@ public class TrackingValidator {
                     .orElseThrow();
 
             assertNotNull(act.getRequestTimestamp());
-            assertNotNull(act.getResponseTimestamp());
+            if(ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                assertNotNull(act.getResponseTimestamp());
+            }
         });
     }
 

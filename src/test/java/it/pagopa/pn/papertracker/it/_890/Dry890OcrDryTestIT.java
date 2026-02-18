@@ -6,6 +6,8 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.it.SequenceLoader;
 import it.pagopa.pn.papertracker.it.SequenceRunner;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
@@ -26,6 +28,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static it.pagopa.pn.papertracker.it.GenericTestCaseHandlerImpl.getPcRetryResponse;
+import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DRY;
 import static org.mockito.ArgumentMatchers.any;
 import static reactor.core.publisher.Mono.when;
 
@@ -50,10 +53,10 @@ public class Dry890OcrDryTestIT extends BaseTest.WithLocalStack {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            checkPcRetry(scenario);
-            when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
-            Mockito.doNothing().when(producer).push(any(OcrEvent.class));
-            scenarioRunner.run(scenario);
+            mockPcRetry(scenario);
+            mockSendToOcr(scenario);
+            scenarioRunner.run(scenario, DRY);
+            Mockito.verify(producer, Mockito.times(scenario.getExpected().getSentToOcr())).push(any(OcrEvent.class));
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
             //per consentire il riaccodamento del messaggio e il successivo reprocess degli eventi,
@@ -64,18 +67,28 @@ public class Dry890OcrDryTestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    private void checkPcRetry(ProductTestCase scenario) {
+    private void mockSendToOcr(ProductTestCase scenario) {
+        if(scenario.getName().equalsIgnoreCase("TEST")) {
+            Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
+            Mockito.doNothing().when(producer).push(any(OcrEvent.class));
+        }
+    }
+
+    private void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
         switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_890", "OK_NONRENDICONTABILE_890" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
+            case "OK_RETRY_AR", "OK_RETRY_AR_2", "OK_CAUSA_FORZA_MAGGIORE_AR", "OK_NON_RENDICONTABILE_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
+            case "FAIL_CON996_PC_RETRY_FURTO_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
+                    .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
+                    .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
         }
     }
 
     Stream<Arguments> loadTestCases() throws Exception {
         URI uri = Objects.requireNonNull(Thread.currentThread()
                 .getContextClassLoader()
-                .getResource("testcase/AR")).toURI();
-       return SequenceLoader.loadScenarios(uri);
+                .getResource("testcase/tmp2")).toURI();
+        return SequenceLoader.loadScenarios(uri);
     }
 }
 */

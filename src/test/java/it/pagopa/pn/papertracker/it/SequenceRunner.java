@@ -51,7 +51,7 @@ public class SequenceRunner {
         if(scenario.getProductType().equalsIgnoreCase("890")){
             strictValidation = true;
         }
-        Thread.sleep(5000); //wait for events to be processed
+       // Thread.sleep(1000); //wait for events to be processed
         handler.afterSendEvents(scenario, ocrStatusEnum, strictValidation);
     }
 
