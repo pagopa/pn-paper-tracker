@@ -18,6 +18,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public abstract class AbstractHandlersFactory implements HandlersFactory {
     protected final MetadataUpserter metadataUpserter;
+    protected final CheckTrackingProduct checkTrackingProduct;
     protected final DeliveryPushSender deliveryPushSender;
     protected final GenericFinalEventBuilder finalEventBuilder;
     protected final IntermediateEventsBuilder intermediateEventsBuilder;
@@ -73,6 +74,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         sequenceValidator,
                         dematValidator,
@@ -97,6 +99,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         intermediateEventsBuilder,
@@ -123,6 +126,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
@@ -147,6 +151,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         notRetryableErrorInserting,
@@ -180,7 +185,8 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     public Handler buildSaveOnlyEventHandler(HandlerContext context) {
         return new HandlerImpl(
                 List.of(
-                        metadataUpserter
+                        metadataUpserter,
+                        checkTrackingProduct
                 ));
     }
 
@@ -203,6 +209,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         retrySenderCON996,
