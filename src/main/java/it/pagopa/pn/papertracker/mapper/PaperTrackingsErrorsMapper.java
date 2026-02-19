@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsErrorsMapper {
@@ -15,6 +16,7 @@ public class PaperTrackingsErrorsMapper {
                                                                 ErrorCategory errorCategory,
                                                                 ErrorCause errorCause,
                                                                 String errorMessage,
+                                                                Map<String, Object> additionalDetails,
                                                                 FlowThrow flowThrow,
                                                                 ErrorType errorType,
                                                                 String eventIdThrow) {
@@ -25,6 +27,7 @@ public class PaperTrackingsErrorsMapper {
                 .details(ErrorDetails.builder()
                         .cause(errorCause)
                         .message(errorMessage)
+                        .additionalDetails(additionalDetails)
                         .build())
                 .flowThrow(flowThrow)
                 .eventThrow(statusCode)

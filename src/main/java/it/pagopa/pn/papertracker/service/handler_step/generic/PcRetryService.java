@@ -51,6 +51,7 @@ public class PcRetryService {
                 ErrorCategory.MAX_RETRY_REACHED_ERROR,
                 null,
                 "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
+                null,
                 FlowThrow.RETRY_PHASE,
                 ErrorType.ERROR,
                 context.getEventId());
@@ -63,6 +64,7 @@ public class PcRetryService {
                 ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,
                 null,
                 EventStatusCodeEnum.fromKey(statusCode).getStatusCodeDescription(),
+                null,
                 FlowThrow.NOT_RETRYABLE_EVENT_HANDLER,
                 ErrorType.WARNING,
                 context.getEventId());

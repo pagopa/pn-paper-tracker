@@ -13,7 +13,11 @@ public enum ErrorCause {
     OCR_KO( "Errore nella validazione dell'OCR"),
     OCR_UNSUPPORTED_PRODUCT("Prodotto non supportato per la validazione OCR"),
     STOCK_890_REFINEMENT_MISSING("Spedizione 890 non perfezionata"),
-    STOCK_890_REFINEMENT_ERROR("Errore nel perfezionamento della spedizione 890"),;
+    STOCK_890_REFINEMENT_ERROR("Errore nel perfezionamento della spedizione 890"),
+    VALUE_AFTER_REFINEMENT("Evento arrivato dopo la conclusione della spedizione o mentre si stava aspettando l’OCR (DONE o AWAITING_OCR)"),
+    VALUES_NOT_MATCHING("Errore nella validazione degli allegati della sequenza: mancano degli allegati"),
+    INVALID_VALUES("Errore nella validazione"),
+    VALUES_NOT_FOUND("Errore nella validazione dei statusCode della sequenza: non sono presenti tutti gli statusCode previsti dalla macchina a stati");
 
     private final String description;
 

@@ -29,6 +29,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCause.VALUES_NOT_MATCHING;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.AWAITING_REFINEMENT;
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static it.pagopa.pn.papertracker.service.handler_step.TestUtils.*;
@@ -443,7 +444,7 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                 assertEquals(1, errs.size());
                 PaperTrackingsErrors errors = errs.getFirst();
                 assertEquals(ErrorCategory.ATTACHMENTS_ERROR, errors.getErrorCategory());
-                assertNull(errors.getDetails().getCause());
+                assertEquals(VALUES_NOT_MATCHING,errors.getDetails().getCause());
                 assertEquals(FlowThrow.SEQUENCE_VALIDATION, errors.getFlowThrow());
                 assertEquals("RECAG007C", errors.getEventThrow());
                 assertEquals(ErrorType.ERROR, errors.getType());
