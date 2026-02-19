@@ -59,13 +59,19 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
 
     @ParameterizedTest
     @EnumSource(value = TestSequenceAREnum.class)
-    void testARSequence(TestSequenceAREnum seq) throws InterruptedException {
+    void testARSequence(TestSequenceAREnum seq) {
         //Arrange
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
         paperTrackingsDAO.putIfAbsent(getPaperTrackings(requestId, it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.AR)).block();
         List<SingleStatusUpdate> eventsToSend = prepareTest(seq, requestId);
+        if(seq.equals(FAIL_AR_ERROR_CAUSE)){
+            eventsToSend.forEach(singleStatusUpdate -> {
+                assertNotNull(singleStatusUpdate.getAnalogMail());
+                singleStatusUpdate.getAnalogMail().setDeliveryFailureCause(null);
+            });
+        }
 
         PcRetryResponse r1 = buildPcRetryResponse(requestId, iun, 1);
         PcRetryResponse r2 = buildPcRetryResponse(r1.getRequestId(), iun, 2);
@@ -751,6 +757,8 @@ public class HandlerFactoryArIT extends BaseTest.WithLocalStack {
                  FAIL_COMPIUTA_GIACENZA_AR -> assertEquals(0, errs.size());
             case OK_AR_NOT_ORDERED ->
                     assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN001A");
+            case FAIL_AR_ERROR_CAUSE ->
+                    assertSingleError(errs, ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR, FlowThrow.SEQUENCE_VALIDATION, "Invalid deliveryFailureCause:");
             case OK_GIACENZA_AR_2 ->
                     assertSingleWarning(errs, ErrorCategory.DUPLICATED_EVENT, FlowThrow.DUPLICATED_EVENT_VALIDATION, "RECRN010");
             case OK_GIACENZA_AR_3 ->

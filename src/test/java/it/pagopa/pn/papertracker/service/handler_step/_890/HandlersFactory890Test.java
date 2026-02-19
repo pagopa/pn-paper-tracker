@@ -24,6 +24,9 @@ class HandlersFactory890Test {
     private MetadataUpserter metadataUpserter;
 
     @Mock
+    private CheckTrackingProduct checkTrackingProduct;
+
+    @Mock
     private DeliveryPushSender deliveryPushSender;
 
     @Mock
@@ -71,6 +74,7 @@ class HandlersFactory890Test {
     void setUp() {
         handlersFactory = new HandlersFactory890(
                 metadataUpserter,
+                checkTrackingProduct,
                 deliveryPushSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,

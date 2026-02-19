@@ -562,6 +562,9 @@ components:
               type: string
             message:
               type: string
+            additionalDetails:
+              type: object
+              additionalProperties: true
         flowThrow:
           type: string
           enum:

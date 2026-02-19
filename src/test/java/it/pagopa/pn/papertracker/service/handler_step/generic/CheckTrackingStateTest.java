@@ -14,6 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.test.StepVerifier;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+
 @ExtendWith(MockitoExtension.class)
 class CheckTrackingStateTest {
 
@@ -25,6 +28,7 @@ class CheckTrackingStateTest {
     @BeforeEach
     void setUp() {
         PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
+        paperProgressStatusEvent.setStatusDateTime(OffsetDateTime.now());
         PaperTrackings paperTrackings = new PaperTrackings();
         Event event = new Event();
         event.setId("id");
