@@ -283,29 +283,25 @@ public abstract class GenericSequenceValidator implements HandlerStep {
             return Mono.just(event);
         }
 
-                    List<Map<String,String>> affectedEventsList = events.stream()
-                        .map(ev -> Map.of(
-                            "statusCode", Optional.ofNullable(ev.getStatusCode()).orElse(""),
-                            "statusTimestamp", Objects.nonNull(ev.getStatusTimestamp()) ? ev.getStatusTimestamp().toString() : "",
-                            "deliveryFailureCause", Optional.ofNullable(ev.getDeliveryFailureCause()).orElse("")
-                        ))
-                        .toList();
+        Map<String, String> affectedEvents = Map.of(
+                "statusCode", Optional.ofNullable(event.getStatusCode()).orElse(""),
+                "statusTimestamp", Objects.nonNull(event.getStatusTimestamp()) ? event.getStatusTimestamp().toString() : "",
+                "deliveryFailureCause", Optional.ofNullable(event.getDeliveryFailureCause()).orElse("")
+        );
 
-                    Map<String, Object> additionalDetails = Map.of(
-                        "affectedEvents", affectedEventsList
-                    );
-                    return getErrorOrSaveWarning(
-                            "Invalid deliveryFailureCause: " + deliveryFailureCause,
-                            context,
-                            paperTrackings,
-                            ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
-                            ErrorCause.VALUES_NOT_MATCHING,
-                            additionalDetails,
-                            strictFinalEventValidation,
-                            event
-                    );
-                })
-                .collectList();
+        Map<String, Object> additionalDetails = Map.of(
+                "affectedEvents", affectedEvents
+        );
+        return getErrorOrSaveWarning(
+                "Invalid deliveryFailureCause: " + deliveryFailureCause,
+                context,
+                paperTrackings,
+                ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
+                ErrorCause.VALUES_NOT_MATCHING,
+                additionalDetails,
+                strictFinalEventValidation,
+                event
+        );
     }
 
     /**

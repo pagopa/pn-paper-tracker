@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.RIR;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCause;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
@@ -16,6 +17,9 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRI004A;
 
@@ -49,7 +53,15 @@ public class SequenceValidatorRir extends GenericSequenceValidator implements Ha
                 return Mono.just(event);
             }
 
-            //TODO: aggiornare con additionalDetail dopo merge
+            Map<String, String> affectedEvents = Map.of(
+                    "statusCode", Optional.ofNullable(event.getStatusCode()).orElse(""),
+                    "statusTimestamp", Objects.nonNull(event.getStatusTimestamp()) ? event.getStatusTimestamp().toString() : "",
+                    "deliveryFailureCause", Optional.ofNullable(event.getDeliveryFailureCause()).orElse("")
+            );
+
+            Map<String, Object> additionalDetails = Map.of(
+                    "affectedEvents", affectedEvents
+            );
 
             // Se valorizzata ma non tra le allowed, errore/warning
             return getErrorOrSaveWarning(
@@ -57,6 +69,8 @@ public class SequenceValidatorRir extends GenericSequenceValidator implements Ha
                     context,
                     paperTrackings,
                     ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
+                    ErrorCause.VALUES_NOT_MATCHING,
+                    additionalDetails,
                     strictFinalEventValidation,
                     event
             );
