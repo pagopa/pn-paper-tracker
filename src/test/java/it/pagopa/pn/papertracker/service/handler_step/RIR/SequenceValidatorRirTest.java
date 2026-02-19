@@ -230,6 +230,74 @@ class SequenceValidatorRirTest {
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
                 .verify();
     }
+
+    @Test
+    void validateSequenceValidRECRI004A() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+        ));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidatorRir.execute(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void validateSequenceValidRECRI004AWithFailureCause() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "M01", null),
+                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+        ));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidatorRir.execute(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void validateSequenceValidRECRI004AWithInvalidFailureCause() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "INVALID", null),
+                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+        ));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorRir.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Invalid deliveryFailureCause: INVALID"))
+                .verify();
+    }
     
     private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
         Event event = new Event();

@@ -40,7 +40,6 @@ public class CheckTrackingProduct implements HandlerStep {
         Map<String, Object> additionalDetails = Map.of("statusCode", statusCode,
                 "statusTimestamp", Objects.toString(context.getPaperProgressStatusEvent().getStatusDateTime(), null)
         );
-        //TODO: aggiornare dopo il merge del branch 18163
         return Mono.error(new PnPaperTrackerValidationException(
                 errorMsg,
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
@@ -49,6 +48,7 @@ public class CheckTrackingProduct implements HandlerStep {
                         ErrorCategory.INCONSISTENT_STATE,
                         ErrorCause.VALUES_NOT_MATCHING,
                         errorMsg,
+                        additionalDetails,
                         FlowThrow.SEQUENCE_VALIDATION,
                         ErrorType.ERROR,
                         context.getEventId()

@@ -257,43 +257,51 @@ public abstract class GenericSequenceValidator implements HandlerStep {
      */
     private Mono<List<Event>> validateDeliveryFailureCause(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Boolean strictFinalEventValidation) {
         log.info("Beginning validation for delivery failure cause for events : {}", events);
+
         return Flux.fromIterable(events)
-                .flatMap(event -> {
-                    String deliveryFailureCause = event.getDeliveryFailureCause();
-                    EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
-                    List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
-
-                    boolean isSkipValidation = allowedCauses.contains(DeliveryFailureCauseEnum.SKIP_VALIDATION);
-                    boolean isEmptyAllowedAndNoCause = CollectionUtils.isEmpty(allowedCauses) && !StringUtils.hasText(deliveryFailureCause);
-                    boolean isValidCause = allowedCauses.contains(DeliveryFailureCauseEnum.fromValue(deliveryFailureCause));
-
-                    if (isSkipValidation || isEmptyAllowedAndNoCause || isValidCause) {
-                        return Mono.just(event);
-                    }
-
-                    List<Map<String,String>> affectedEventsList = events.stream()
-                        .map(ev -> Map.of(
-                            "statusCode", Optional.ofNullable(ev.getStatusCode()).orElse(""),
-                            "statusTimestamp", Objects.nonNull(ev.getStatusTimestamp()) ? ev.getStatusTimestamp().toString() : "",
-                            "deliveryFailureCause", Optional.ofNullable(ev.getDeliveryFailureCause()).orElse("")
-                        ))
-                        .toList();
-
-                    Map<String, Object> additionalDetails = Map.of(
-                        "affectedEvents", affectedEventsList
-                    );
-                    return getErrorOrSaveWarning(
-                            "Invalid deliveryFailureCause: " + deliveryFailureCause,
-                            context,
-                            paperTrackings,
-                            ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
-                            ErrorCause.VALUES_NOT_MATCHING,
-                            additionalDetails,
-                            strictFinalEventValidation,
-                            event
-                    );
-                })
+                .flatMap(event -> validateSingleDeliveryFailureCause(
+                        event, paperTrackings, context, strictFinalEventValidation))
                 .collectList();
+    }
+
+    protected Mono<Event> validateSingleDeliveryFailureCause(Event event,
+                                                             PaperTrackings paperTrackings,
+                                                             HandlerContext context,
+                                                             Boolean strictFinalEventValidation) {
+
+        String deliveryFailureCause = event.getDeliveryFailureCause();
+        EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
+        List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
+
+        boolean isSkipValidation = allowedCauses.contains(DeliveryFailureCauseEnum.SKIP_VALIDATION);
+        boolean isEmptyAllowedAndNoCause = CollectionUtils.isEmpty(allowedCauses)
+                && !StringUtils.hasText(deliveryFailureCause);
+        boolean isValidCause = allowedCauses.contains(
+                DeliveryFailureCauseEnum.fromValue(deliveryFailureCause));
+
+        if (isSkipValidation || isEmptyAllowedAndNoCause || isValidCause) {
+            return Mono.just(event);
+        }
+
+        Map<String, String> affectedEvents = Map.of(
+                "statusCode", Optional.ofNullable(event.getStatusCode()).orElse(""),
+                "statusTimestamp", Objects.nonNull(event.getStatusTimestamp()) ? event.getStatusTimestamp().toString() : "",
+                "deliveryFailureCause", Optional.ofNullable(event.getDeliveryFailureCause()).orElse("")
+        );
+
+        Map<String, Object> additionalDetails = Map.of(
+                "affectedEvents", affectedEvents
+        );
+        return getErrorOrSaveWarning(
+                "Invalid deliveryFailureCause: " + deliveryFailureCause,
+                context,
+                paperTrackings,
+                ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
+                ErrorCause.VALUES_NOT_MATCHING,
+                additionalDetails,
+                strictFinalEventValidation,
+                event
+        );
     }
 
     /**
@@ -449,7 +457,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         return timestamps.size() <= 1 || timestamps.stream().allMatch(t -> t.equals(timestamps.getFirst()));
     }
 
-    private <T> Mono<T> getErrorOrSaveWarning(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, ErrorCause errorCause, Map<String, Object> additionalDetails, Boolean strictFinalEventValidation, T returnValue) {
+    protected <T> Mono<T> getErrorOrSaveWarning(String message, HandlerContext context, PaperTrackings paperTrackings, ErrorCategory errorCategory, ErrorCause errorCause, Map<String, Object> additionalDetails, Boolean strictFinalEventValidation, T returnValue) {
         log.info("getErrorOrSaveWarning for trackingId {}: {} | strictFinalEventValidation: {}", context.getTrackingId(), message, strictFinalEventValidation);
 
         var error = PaperTrackingsErrorsMapper.buildPaperTrackingsError(
