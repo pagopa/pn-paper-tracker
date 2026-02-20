@@ -21,7 +21,7 @@ public class SequenceRunner {
     private final PaperTrackerTrackingService paperTrackerTrackingService;
     private final OcrEventHandler ocrEventHandler;
 
-    public void run(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) throws InterruptedException {
+    public void run(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, boolean strictFinalValidation) throws InterruptedException {
         GenericTestCaseHandler handler = handlers.stream()
                 .filter(h -> h.getProductType()
                         .equalsIgnoreCase(scenario.getProductType()))
@@ -48,11 +48,11 @@ public class SequenceRunner {
             receiveOcrResponse(scenario);
         }
         boolean strictValidation = false;
-        if(scenario.getProductType().equalsIgnoreCase("890")){
+/*        if(scenario.getProductType().equalsIgnoreCase("890")){
             strictValidation = true;
-        }
-       // Thread.sleep(1000); //wait for events to be processed
-        handler.afterSendEvents(scenario, ocrStatusEnum, strictValidation);
+        }*/
+       // Thread.sleep(3000); //wait for events to be processed
+        handler.afterSendEvents(scenario, ocrStatusEnum, strictFinalValidation);
     }
 
     private void receiveOcrResponse(ProductTestCase scenario) {

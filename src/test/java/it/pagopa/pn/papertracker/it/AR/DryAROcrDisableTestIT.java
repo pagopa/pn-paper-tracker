@@ -28,20 +28,17 @@ import static org.mockito.ArgumentMatchers.any;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @TestPropertySource(locations = "classpath:application.test-ocr-disable.properties")
-public class DryAROcrDisableTestIT extends BaseTest.WithLocalStack {
+public class DryAROcrDisableTestIT extends AbstractARTestIT {
 
     @Autowired
     private SequenceRunner scenarioRunner;
-
-    @MockitoBean
-    private PaperChannelClient paperChannelClient;
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            checkPcRetry(scenario);
-            scenarioRunner.run(scenario, OcrStatusEnum.DISABLED);
+            super.mockPcRetry(scenario);
+            scenarioRunner.run(scenario, OcrStatusEnum.DISABLED, false);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
             //per consentire il riaccodamento del messaggio e il successivo reprocess degli eventi,
@@ -52,20 +49,7 @@ public class DryAROcrDisableTestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    private void checkPcRetry(ProductTestCase scenario) {
-        getPcRetryResponse(scenario);
-        switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_AR", "OK_RETRY_AR_2", "OK_CAUSA_FORZA_MAGGIORE_AR", "OK_NON_RENDICONTABILE_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
-            case "FAIL_CON996_PC_RETRY_FURTO_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
-                    .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
-                    .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
-        }
-    }
-
     Stream<Arguments> loadTestCases() throws Exception {
-        URI uri = Objects.requireNonNull(Thread.currentThread()
-                .getContextClassLoader()
-                .getResource("testcase/AR")).toURI();
-       return SequenceLoader.loadScenarios(uri);
+        return super.loadTestCases("AR");
     }
 }

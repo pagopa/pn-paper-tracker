@@ -14,6 +14,7 @@ public class ProductTestCase {
     private String productType;
     private TrackingCreationRequest initialTracking;
     private List<TestEvent> events;
+    private boolean createAttempt1;
     private Expected expected;
     private PcRetryResponse firstPcRetryResponse;
     private PcRetryResponse secondPcRetryResponse;

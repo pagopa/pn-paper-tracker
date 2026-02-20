@@ -1,0 +1,28 @@
+{
+  "name": "OK_GIACENZA_DELEGATO_GT10_23L_890",
+  "productType": "890",
+  "initialTracking": {
+    "productType": "890",
+    "pcRetry": "PCRETRY_0",
+    "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
+    "unifiedDeliveryDriver": "POSTE"
+  },
+  "events": [],
+  "expected": {
+    "errors": [],
+    "outputs": [],
+    "trackings": [],
+    "ocrResultPayload": {
+      "commandId": "{{REQUEST_ID}}#7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76#AR",
+      "version": "v1",
+      "commandType": "postal",
+      "data": {
+        "validationStatus": "OK",
+        "description": "OK",
+        "predictedRefinementType": null,
+        "validationType": "ai"
+      }
+    },
+    "sentToOcr": 1
+  }
+}

@@ -34,13 +34,10 @@ import static reactor.core.publisher.Mono.when;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @TestPropertySource(locations = "classpath:application.test-ocr-dry.properties")
-public class DryAROcrDryTestIT extends BaseTest.WithLocalStack {
+public class DryAROcrDryTestIT extends AbstractARTestIT {
 
     @Autowired
     private SequenceRunner scenarioRunner;
-
-    @MockitoBean
-    private PaperChannelClient paperChannelClient;
 
     @MockitoBean
     private SafeStorageClient safeStorageClient;
@@ -52,9 +49,9 @@ public class DryAROcrDryTestIT extends BaseTest.WithLocalStack {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            mockPcRetry(scenario);
+            super.mockPcRetry(scenario);
             mockSendToOcr(scenario);
-            scenarioRunner.run(scenario, DRY);
+            scenarioRunner.run(scenario, DRY,false);
             Mockito.verify(producer, Mockito.times(scenario.getExpected().getSentToOcr())).push(any(OcrEvent.class));
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
@@ -74,20 +71,8 @@ public class DryAROcrDryTestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    private void mockPcRetry(ProductTestCase scenario) {
-        getPcRetryResponse(scenario);
-        switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_AR", "OK_RETRY_AR_2", "OK_CAUSA_FORZA_MAGGIORE_AR", "OK_NON_RENDICONTABILE_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
-            case "FAIL_CON996_PC_RETRY_FURTO_AR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
-                    .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
-                    .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
-        }
-    }
 
     Stream<Arguments> loadTestCases() throws Exception {
-        URI uri = Objects.requireNonNull(Thread.currentThread()
-                .getContextClassLoader()
-                .getResource("testcase/AR")).toURI();
-       return SequenceLoader.loadScenarios(uri);
+        return super.loadTestCases("AR");
     }
 }

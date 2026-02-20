@@ -141,6 +141,7 @@ public class RECAG012EventBuilder implements HandlerStep {
                         recag012Event.getStatusTimestamp().atOffset(ZoneOffset.UTC)
                 )
                 .doOnNext(context.getEventsToSend()::add)
+                .doOnNext(sendEvent -> context.setFinalStatusCode(recag012Event.getStatusCode()))
                 .collectList()
                 .filter(sendEvents -> !CollectionUtils.isEmpty(sendEvents))
                 .flatMap(list ->

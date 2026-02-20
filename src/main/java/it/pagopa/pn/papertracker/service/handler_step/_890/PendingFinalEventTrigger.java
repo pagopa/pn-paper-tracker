@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 
 @Component
@@ -23,6 +25,7 @@ public class PendingFinalEventTrigger implements HandlerStep {
         Event event = TrackerUtility.extractEventFromContext(context);
         if(RECAG012.name().equalsIgnoreCase(event.getStatusCode()) && context.getPaperTrackings().getBusinessState().equals(BusinessState.AWAITING_REFINEMENT_OCR)) {
             context.setEventId(context.getPaperTrackings().getPendingFinalEventId());
+            context.setEventsToSend(new ArrayList<>());
         }else{
             context.setStopExecution(true);
         }
