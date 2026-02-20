@@ -158,7 +158,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
 
             List<PaperTrackerDryRunOutputs> outputs = new ArrayList<>();
             requestIds.forEach(requestId -> outputs.addAll(Objects.requireNonNull(paperTrackerDryRunOutputsDao.retrieveOutputEvents(requestId).collectList().block())));
-            OutputValidator.verifyOutputs(scenario, outputs);
+            OutputValidator.verifyOutputs(scenario, ocrStatusEnum, outputs);
 
             List<PaperTrackings> trackings = paperTrackingsDAO.retrieveAllByTrackingIds(requestIds.stream().toList()).collectList().block();
             TrackingValidator.verifyTrackingEntities(scenario, trackings, ocrStatusEnum, strictValidation);
