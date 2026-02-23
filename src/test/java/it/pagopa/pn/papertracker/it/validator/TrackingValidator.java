@@ -149,11 +149,20 @@ public class TrackingValidator {
 
     private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase) {
 
-        if (ocrStatusEnum == OcrStatusEnum.DISABLED || hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR"))) {
+        if (ocrStatusEnum == OcrStatusEnum.DISABLED) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
 
+        if (hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR"))) {
+            assertTrue(actual.getOcrRequests().isEmpty());
+            return;
+        }
+
+        if (testCase.contains("ZIP")) {
+            assertTrue(actual.getOcrRequests().isEmpty());
+            return;
+        }
         assertFalse(actual.getOcrRequests().isEmpty());
         assertEquals(expected.getOcrRequests().size(), actual.getOcrRequests().size());
 

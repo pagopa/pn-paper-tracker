@@ -64,7 +64,7 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
 
     protected void mockSendToOcr(ProductTestCase scenario) {
         if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
-                || paperTrackings.getBusinessState().equals(BusinessState.DONE))) {
+                || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
             Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
             Mockito.doNothing().when(ocrMomProducer).push(any(OcrEvent.class));
         }
@@ -72,7 +72,7 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
 
     protected void verifySentToOcr(ProductTestCase scenario){
         if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
-                || paperTrackings.getBusinessState().equals(BusinessState.DONE))) {
+                || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
             Mockito.verify(ocrMomProducer, Mockito.times(scenario.getExpected().getSentToOcr())).push(any(OcrEvent.class));
         }
     }

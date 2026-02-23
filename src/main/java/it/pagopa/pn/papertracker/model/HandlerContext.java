@@ -26,4 +26,5 @@ public class HandlerContext {
     private String reworkId;
     private OcrDataResultPayload ocrDataResultPayload;
     private boolean isRedrive;
+    private String nextRequestIdPcRetry;
 }

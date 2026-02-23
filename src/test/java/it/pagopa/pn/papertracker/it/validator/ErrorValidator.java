@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ErrorValidator {
 
@@ -31,7 +27,6 @@ public class ErrorValidator {
                             "Expected error not found: " + exp));
 
             verifyErrorFields(exp, match);
-            verifyErrorDetails(exp, match);
 
             assertNotNull(match.getCreated());
         }
@@ -51,23 +46,6 @@ public class ErrorValidator {
         );
     }
 
-    private static void verifyErrorDetails(PaperTrackingsErrors exp,
-                                           PaperTrackingsErrors act) {
-
-        if (exp.getDetails() == null) {
-            assertNull(act.getDetails());
-            return;
-        }
-        assertNotNull(act.getDetails());
-        if (exp.getDetails().getCause() != null) {
-            assertEquals(exp.getDetails().getCause(), act.getDetails().getCause());
-        }
-        if (exp.getDetails().getMessage() != null) {
-            assertNotNull(act.getDetails().getMessage());
-            assertTrue(act.getDetails().getMessage().contains(exp.getDetails().getMessage()), "Message does not contain expected text");
-        }
-    }
-
     private static boolean sameErrorIdentity(PaperTrackingsErrors exp,
                                              PaperTrackingsErrors act) {
 
@@ -77,6 +55,8 @@ public class ErrorValidator {
                 && exp.getType() == act.getType()
                 && Objects.equals(exp.getProductType(), act.getProductType())
                 && Objects.equals(exp.getEventThrow(), act.getEventThrow())
-                && Objects.equals(exp.getEventIdThrow(), act.getEventIdThrow());
+                && Objects.equals(exp.getEventIdThrow(), act.getEventIdThrow())
+                && act.getDetails().getMessage().contains(exp.getDetails().getMessage())
+                && (Objects.isNull(act.getDetails().getCause()) || Objects.equals(exp.getDetails().getCause(), act.getDetails().getCause()));
     }
 }

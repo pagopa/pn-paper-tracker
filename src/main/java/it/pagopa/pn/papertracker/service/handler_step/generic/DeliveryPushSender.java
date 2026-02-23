@@ -65,8 +65,8 @@ public class DeliveryPushSender implements HandlerStep {
         return Flux.fromIterable(filteredEvent)
                 .concatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
                 .collectList()
-                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getPaperTrackings().getNextRequestIdPcretry()))
-                .map(sendEvent -> getPaperTrackingsDone(context.getPaperTrackings(), context.getFinalStatusCode(), context.getEventId()))
+                .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getNextRequestIdPcRetry()))
+                .map(sendEvent -> getPaperTrackingsDone(context.getNextRequestIdPcRetry(), context.getFinalStatusCode()))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
                 .doOnNext(context::setPaperTrackings)
                 .then();
@@ -107,16 +107,15 @@ public class DeliveryPushSender implements HandlerStep {
                 .thenReturn(event);
     }
 
-    private PaperTrackings getPaperTrackingsDone(PaperTrackings contextPaperTrackings, String finalStatusCode, String eventId) {
+    private PaperTrackings getPaperTrackingsDone(String nextRequestIdPcRetry, String finalStatusCode) {
         PaperTrackings paperTrackings = new PaperTrackings();
-        String statusCode = TrackerUtility.getStatusCodeFromEventId(contextPaperTrackings, eventId);
         setNewStatus(paperTrackings, finalStatusCode, BusinessState.DONE, PaperTrackingsState.DONE);
-        if(StringUtils.hasText(contextPaperTrackings.getNextRequestIdPcretry())){
-            paperTrackings.setNextRequestIdPcretry(contextPaperTrackings.getNextRequestIdPcretry());
+        if(StringUtils.hasText(nextRequestIdPcRetry)){
+            paperTrackings.setNextRequestIdPcretry(nextRequestIdPcRetry);
         }
         if(StringUtils.hasText(finalStatusCode)){
             PaperStatus paperStatus = new PaperStatus();
-            paperStatus.setFinalStatusCode(statusCode);
+            paperStatus.setFinalStatusCode(finalStatusCode);
             paperTrackings.setPaperStatus(paperStatus);
         }
         return paperTrackings;

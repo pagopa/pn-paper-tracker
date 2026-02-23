@@ -144,23 +144,17 @@ public class RECAG012EventBuilder implements HandlerStep {
                 .doOnNext(sendEvent -> context.setFinalStatusCode(recag012Event.getStatusCode()))
                 .collectList()
                 .filter(sendEvents -> !CollectionUtils.isEmpty(sendEvents))
-                .flatMap(list ->
-                        paperTrackingsDAO.updateItem(
-                                context.getTrackingId(),
-                                getPaperTrackingsToUpdate()
-                        )
-                )
+                .doOnNext(list -> updateContextPaperTrackings(context))
                 .then();
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate() {
-        ValidationFlow validationFlow = new ValidationFlow();
+    private void updateContextPaperTrackings(HandlerContext context) {
+        PaperTrackings paperTrackings = context.getPaperTrackings();
+        ValidationFlow validationFlow = Optional.ofNullable(paperTrackings.getValidationFlow())
+                .orElse(new ValidationFlow());
         validationFlow.setRefinementDematValidationTimestamp(Instant.now());
-
-        PaperTrackings update = new PaperTrackings();
-        update.setState(PaperTrackingsState.DONE);
-        update.setValidationFlow(validationFlow);
-        return update;
+        paperTrackings.setValidationFlow(validationFlow);
+        paperTrackings.setState(PaperTrackingsState.DONE);
     }
 
     private Mono<Void> sendRecag012A(HandlerContext context) {

@@ -1,5 +1,5 @@
 {
-  "name": "DUPLICATE_FINAL_EVENT_890",
+  "name": "OK_TWO_DIFFERENT_FINAL_EVENT_890",
   "productType": "890",
   "initialTracking": {
     "productType": "890",
@@ -34,7 +34,7 @@
     },
     {
       "messageId": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c77",
-      "analogMail": {"requestId": "{{REQUEST_ID}}", "iun": "{{RANDOM_IUN}}", "productType": "890", "registeredLetterCode": "1234567891011", "statusCode": "RECAG001C", "statusDescription": "RECAG001C description", "attachments": [], "clientRequestTimeStamp": "2024-01-01T10:00:05Z", "statusDateTime": "2024-01-01T10:00:00Z"}
+      "analogMail": {"requestId": "{{REQUEST_ID}}", "iun": "{{RANDOM_IUN}}", "productType": "890", "registeredLetterCode": "1234567891011", "statusCode": "RECAG001C", "statusDescription": "RECAG001C description", "attachments": [], "clientRequestTimeStamp": "2024-01-01T10:00:05Z", "statusDateTime": "2024-01-01T11:00:00Z"}
     }
   ],
   "expected": {
@@ -78,7 +78,7 @@
           {"id": "4c8f1a6d-5b3e-4f2a-8d55-4d9e3b7c6a43", "statusCode": "RECAG001A", "statusDescription": "RECAG001A description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:03Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "890", "attachments": []},
           {"id": "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d65", "statusCode": "RECAG001B", "statusDescription": "RECAG001B description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:04Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "890", "attachments": [{"documentType": "23L", "sha256": "sha256", "id": "id-RECAG001B-23L", "uri": "https://example.com/RECAG001B-23L.pdf", "date": "2024-01-01T10:00:04Z"}]},
           {"id": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76", "statusCode": "RECAG001C", "statusDescription": "RECAG001C description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:05Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "890", "attachments": []},
-          {"id": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c77", "statusCode": "RECAG001C", "statusDescription": "RECAG001C description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:05Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "890", "attachments": []}
+          {"id": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c77", "statusCode": "RECAG001C", "statusDescription": "RECAG001C description", "statusTimestamp": "2024-01-01T11:00:00Z", "requestTimestamp": "2024-01-01T10:00:05Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "890", "attachments": []}
         ],
 
         "validationConfig": {

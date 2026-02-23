@@ -4,22 +4,37 @@ import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+@Component
 public class OutputValidator {
+
+    private static Map<String, List<SwapRule>> swapRules = new HashMap<>();
+
+    public OutputValidator() {
+        swapRules.put("OK_GIACENZA_GT10_890", List.of(new SwapRule("RECAG005A", "RECAG012")));
+        swapRules.put("OK_GIACENZA_DELEGATO_GT10_890", List.of(new SwapRule("RECAG006A", "RECAG012")));
+        swapRules.put("OK_COMPIUTA_GIACENZA_890", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
+        swapRules.put("OK_COMPIUTA_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
+        swapRules.put("OK_COMPIUTA_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG008A", "RECAG012")));
+        swapRules.put("FAIL_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012")));
+        swapRules.put("FAIL_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007A", "RECAG007B")));
+        swapRules.put("OK_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
+        swapRules.put("OK_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
+        swapRules.put("OK_GIACENZA_DELEGATO_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
+        swapRules.put("OK_GIACENZA_DELEGATO_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG006A", "RECAG012"), new SwapRule("RECAG006A", "RECAG006B")));
+    }
 
     public static void verifyOutputs(ProductTestCase scenario,
                                      OcrStatusEnum ocrStatusEnum,
                                      List<PaperTrackerDryRunOutputs> actualOutputs) {
+
 
         List<PaperTrackerDryRunOutputs> expected = scenario.getExpected().getOutputs();
         if (expected == null) return;
@@ -48,26 +63,51 @@ public class OutputValidator {
         }
     }
 
+    private static int extractPcRetry(String requestId) {
+        int index = requestId.lastIndexOf("PCRETRY_");
+        if (index == -1) {
+            return Integer.MAX_VALUE; // fallback: manda in fondo se malformato
+        }
+        return Integer.parseInt(requestId.substring(index + 8));
+    }
+
+    // questo metodo è stato inserito in quanto in caso di OCR in modalità RUN l'evento di refinement viene ricevuto a seguito
+    // della risposta dell'ocr che nel test è inviata dopo la ricezione di tutti gli eventi previsti dallo scenario
     private static List<PaperTrackerDryRunOutputs> sortIfNeeded(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, List<PaperTrackerDryRunOutputs> actualOutputs) {
-        List<PaperTrackerDryRunOutputs> sorted = actualOutputs.stream()
+
+        List<PaperTrackerDryRunOutputs> sortedByRetry = actualOutputs.stream()
+                .sorted(Comparator.comparingInt(o -> extractPcRetry(o.getTrackingId())))
+                .toList();
+
+        if (ocrStatusEnum != OcrStatusEnum.RUN) {
+            return sortedByRetry;
+        }
+
+        List<PaperTrackerDryRunOutputs> sorted = sortedByRetry.stream()
                 .sorted(Comparator.comparing(PaperTrackerDryRunOutputs::getCreated))
                 .toList();
-        Map<String, String> sequenceToSwap = new HashMap<>();
-        sequenceToSwap.put("OK_GIACENZA_GT10_890", "RECAG005A");
-        sequenceToSwap.put("OK_GIACENZA_DELEGATO_GT10_890", "RECAG006A");
 
-        if(Optional.ofNullable(sequenceToSwap.get(scenario.getName())).isPresent() && OcrStatusEnum.RUN.equals(ocrStatusEnum)){
-            List<PaperTrackerDryRunOutputs> copy = new ArrayList<>(sorted);
-
-            int indexY = findIndexByStatus(copy, sequenceToSwap.get(scenario.getName()));
-            int indexZ = findIndexByStatus(copy, "RECAG012");
-
-            if (indexY != -1 && indexZ != -1) {
-                Collections.swap(copy, indexY, indexZ);
-            }
-            return copy;
+        var rules = swapRules.get(scenario.getName());
+        if (rules == null) {
+            return sorted;
         }
-        return sorted;
+        var result = new ArrayList<>(sorted);
+        rules.forEach(rule -> swapIfPresent(result, rule));
+        return result;
+    }
+
+    private static void swapIfPresent(List<PaperTrackerDryRunOutputs> list,
+                                      SwapRule rule) {
+
+        int index1 = findIndexByStatus(list, rule.first());
+        int index2 = findIndexByStatus(list, rule.second());
+
+        if (index1 != -1 && index2 != -1) {
+            Collections.swap(list, index1, index2);
+        }
+    }
+
+    private record SwapRule(String first, String second) {
     }
 
     private static int findIndexByStatus(List<PaperTrackerDryRunOutputs> list, String status) {
