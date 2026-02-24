@@ -27,7 +27,12 @@ import static org.mockito.ArgumentMatchers.any;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-disable.properties")
+@TestPropertySource(
+        locations = "classpath:application.test-IT.properties",
+        properties = {
+                "pn.paper-tracker.enable-ocr-validation-for="
+        }
+)
 public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
 
     @Autowired

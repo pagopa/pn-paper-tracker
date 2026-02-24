@@ -33,7 +33,12 @@ import static reactor.core.publisher.Mono.when;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-dry.properties")
+@TestPropertySource(
+        locations = "classpath:application.test-IT.properties",
+        properties = {
+                "pn.paper-tracker.enable-ocr-validation-for=AR:DRY,890:DRY"
+        }
+)
 public class DryAROcrDryTestIT extends AbstractARTestIT {
 
     @Autowired

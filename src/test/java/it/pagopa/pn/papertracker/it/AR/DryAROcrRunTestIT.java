@@ -26,7 +26,12 @@ import static org.mockito.ArgumentMatchers.any;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-run.properties")
+@TestPropertySource(
+        locations = "classpath:application.test-IT.properties",
+        properties = {
+                "pn.paper-tracker.enable-ocr-validation-for=AR:RUN,890:RUN"
+        }
+)
 public class DryAROcrRunTestIT extends AbstractARTestIT {
 
     @Autowired

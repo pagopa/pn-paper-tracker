@@ -43,7 +43,7 @@ public class Dry890OcrDryTestIT extends Abstract890TestIT {
     }
 
     Stream<Arguments> loadTestCases() throws Exception {
-        return super.loadTestCases("tmp2");
+        return super.loadTestCases("_890");
     }
 }
 

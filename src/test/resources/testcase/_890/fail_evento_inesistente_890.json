@@ -37,10 +37,10 @@
     "errors": [
     ],
     "outputs": [
-      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON080", "statusDescription": "CON080 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:00Z", "attachments": [] },
-      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON020", "statusDescription": "CON020 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:01Z", "attachments": [ { "documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z" } ] },
-      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECAG001A", "statusDescription": "RECAG001A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:03Z", "attachments": [] },
-      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECAG001B", "statusDescription": "RECAG001B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": [ { "documentType": "23L", "sha256": "sha256", "id": "id-RECAG001B-23L", "uri": "https://example.com/RECAG001B-23L.pdf", "date": "2024-01-01T10:00:04Z" } ] }
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON080", "statusDescription": "890 - CON080 - CON080 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:00Z", "attachments": [] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON020", "statusDescription": "890 - CON020 - CON020 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:01Z", "attachments": [ { "documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z" } ] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECAG001A", "statusDescription": "890 - RECAG001A - RECAG001A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:03Z", "attachments": [] },
+      { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECAG001B", "statusDescription": "890 - RECAG001B - RECAG001B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": [ { "documentType": "23L", "sha256": "sha256", "id": "id-RECAG001B-23L", "uri": "https://example.com/RECAG001B-23L.pdf", "date": "2024-01-01T10:00:04Z" } ] }
     ],
 
     "trackings": [
@@ -81,13 +81,6 @@
           ]
         },
         "paperStatus": {
-          "registeredLetterCode": "1234567891011",
-          "finalStatusCode": "RECAG001C",
-          "validatedEvents": [
-            "4c8f1a6d-5b3e-4f2a-8d55-4d9e3b7c6a43",
-            "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d65",
-            "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76"
-          ],
           "finalDematFound": true
         }
       }

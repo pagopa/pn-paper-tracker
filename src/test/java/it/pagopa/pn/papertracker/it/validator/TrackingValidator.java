@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -144,18 +145,18 @@ public class TrackingValidator {
             assertNull(flow.getSequencesValidationTimestamp());
         }
 
-        if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
-            if (scenario.getEvents().stream().anyMatch(testEvent -> testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
-                assertNotNull(flow.getRecag012StatusTimestamp());
-            }
+        if (scenario.getEvents().stream().anyMatch(testEvent -> testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
+            assertNotNull(flow.getRecag012StatusTimestamp());
+        } else {
             assertNull(flow.getRecag012StatusTimestamp());
+        }
+
+        if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else {
-            assertNull(flow.getRecag012StatusTimestamp());
             assertNull(flow.getRefinementDematValidationTimestamp());
-
         }
 
         verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, StringUtils.isNotBlank(expected.getNextRequestIdPcretry()),
@@ -198,6 +199,24 @@ public class TrackingValidator {
 
     private static void verifyPaperStatus(String testCase, PaperStatus exp, PaperStatus act, List<Event> events, PaperTrackings expectedTracking, List<PaperTrackingsErrors> expectedErrors) {
 
+        boolean isDone = BusinessState.DONE.equals(expectedTracking.getBusinessState());
+        boolean isFailCompiutaGiacenzaAr = "FAIL_COMPIUTA_GIACENZA_AR".equalsIgnoreCase(testCase);
+        boolean isOkTimestampError890 = "OK_TIMESTAMPERROR_890".equalsIgnoreCase(testCase);
+
+        boolean isProduct890 = "890".equalsIgnoreCase(expectedTracking.getProductType());
+        boolean isStrictFinalValidation890False =
+                Objects.nonNull(expectedTracking.getValidationConfig().getStrictFinalValidationStock890()) &&
+                        !expectedTracking.getValidationConfig().getStrictFinalValidationStock890();
+
+        boolean hasDateError =
+                !CollectionUtils.isEmpty(expectedErrors) &&
+                        expectedErrors.stream()
+                                .anyMatch(error -> ErrorCategory.DATE_ERROR.equals(error.getErrorCategory()));
+
+        boolean hasP000Event =
+                events.stream()
+                        .anyMatch(e -> "P000".equalsIgnoreCase(e.getStatusCode()));
+
         assertAll("PaperStatus",
                 () -> assertEquals(exp.getRegisteredLetterCode(), act.getRegisteredLetterCode()),
                 () -> assertEquals(exp.getDeliveryFailureCause(), act.getDeliveryFailureCause()),
@@ -205,27 +224,39 @@ public class TrackingValidator {
                 () -> assertEquals(exp.getFinalStatusCode(), act.getFinalStatusCode()),
                 () -> assertEquals(exp.getFinalDematFound(), act.getFinalDematFound()),
                 () -> assertEquals(exp.getPredictedRefinementType(), act.getPredictedRefinementType()),
+
+                // validatedSequenceTimestamp
                 () -> {
-                    if (expectedTracking.getBusinessState().equals(BusinessState.KO) && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+                    if (!isDone && !isFailCompiutaGiacenzaAr) {
+                        assertNull(act.getValidatedSequenceTimestamp());
+                    } else if (isOkTimestampError890) {
+                        assertNotNull(act.getValidatedSequenceTimestamp());
+                    } else if (isProduct890
+                            && isStrictFinalValidation890False
+                            && hasDateError) {
                         assertNull(act.getValidatedSequenceTimestamp());
                     } else {
                         assertNotNull(act.getValidatedSequenceTimestamp());
                     }
                 },
+
+                // paperDeliveryTimestamp
                 () -> {
-                    if (events.stream().anyMatch(e -> e.getStatusCode().equalsIgnoreCase("P000"))) {
+                    if (hasP000Event) {
                         assertNotNull(act.getPaperDeliveryTimestamp());
                     } else {
                         assertNull(act.getPaperDeliveryTimestamp());
                     }
                 },
+
+                // validatedEvents
                 () -> assertEquals(
                         Optional.ofNullable(exp.getValidatedEvents())
                                 .map(HashSet::new)
-                                .orElse(new HashSet<>()),
+                                .orElseGet(HashSet::new),
                         Optional.ofNullable(act.getValidatedEvents())
                                 .map(HashSet::new)
-                                .orElse(new HashSet<>())
+                                .orElseGet(HashSet::new)
                 )
         );
     }

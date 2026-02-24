@@ -25,10 +25,9 @@ public class OutputValidator {
         swapRules.put("OK_COMPIUTA_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG008A", "RECAG012")));
         swapRules.put("FAIL_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012")));
         swapRules.put("FAIL_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007A", "RECAG007B")));
-        swapRules.put("OK_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
-        swapRules.put("OK_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
+        swapRules.put("FAIL_GIACENZA_GT10_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007B", "RECAG007A")));
         swapRules.put("OK_GIACENZA_DELEGATO_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
-        swapRules.put("OK_GIACENZA_DELEGATO_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG006A", "RECAG012"), new SwapRule("RECAG006A", "RECAG006B")));
+        swapRules.put("FAIL_GIACENZA_LTE10_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007A", "RECAG007B")));
     }
 
     public static void verifyOutputs(ProductTestCase scenario,
