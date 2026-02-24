@@ -6,9 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,8 +34,8 @@ public class TrackingValidator {
         verifyValidationConfig(expected.getValidationConfig(), actual.getValidationConfig(),
                 ocrStatusEnum, strictFinalValidationStock890);
         verifyValidationFlow(scenario, expected, actual, ocrStatusEnum);
-        if (StringUtils.isBlank(expected.getNextRequestIdPcretry()) && expected.getBusinessState() == BusinessState.DONE) {
-            verifyPaperStatus(expected.getPaperStatus(), actual.getPaperStatus(), expected.getEvents());
+        if (StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
+            verifyPaperStatus(scenario.getName(), expected.getPaperStatus(), actual.getPaperStatus(), expected.getEvents(), expected, scenario.getExpected().getErrors());
         }
 
         assertNotNull(actual.getCreatedAt());
@@ -47,6 +45,7 @@ public class TrackingValidator {
     private static void verifyTrackingFields(PaperTrackings exp, PaperTrackings act) {
         assertAll("Tracking fields",
                 () -> assertEquals(exp.getBusinessState(), act.getBusinessState()),
+                () -> assertEquals(exp.getAttemptId(), act.getAttemptId()),
                 () -> assertEquals(exp.getProductType(), act.getProductType()),
                 () -> assertEquals(exp.getState(), act.getState()),
                 () -> assertEquals(exp.getProcessingMode(), act.getProcessingMode()),
@@ -86,6 +85,7 @@ public class TrackingValidator {
                     () -> assertEquals(expEvent.getDeliveryFailureCause(), actEvent.getDeliveryFailureCause()),
                     () -> assertEquals(expEvent.getRegisteredLetterCode(), actEvent.getRegisteredLetterCode()),
                     () -> assertEquals(expEvent.getNotificationReworkId(), actEvent.getNotificationReworkId()),
+                    () -> assertEquals(expEvent.getAnonymizedDiscoveredAddressId(), actEvent.getAnonymizedDiscoveredAddressId()),
                     () -> assertNotNull(actEvent.getCreatedAt())
             );
 
@@ -130,17 +130,32 @@ public class TrackingValidator {
         ValidationFlow flow = actual.getValidationFlow();
         ValidationFlow expectedFlow = expected.getValidationFlow();
 
-        if (expected.getBusinessState() == BusinessState.DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
+        if ((expected.getBusinessState() == BusinessState.DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
+        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+            assertNotNull(flow.getFinalEventDematValidationTimestamp());
+            assertNotNull(flow.getSequencesValidationTimestamp());
+            assertNull(flow.getFinalEventBuilderTimestamp());
+        } else {
+            assertNull(flow.getFinalEventBuilderTimestamp());
+            assertNull(flow.getFinalEventDematValidationTimestamp());
+            assertNull(flow.getSequencesValidationTimestamp());
         }
 
         if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             if (scenario.getEvents().stream().anyMatch(testEvent -> testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
                 assertNotNull(flow.getRecag012StatusTimestamp());
             }
+            assertNull(flow.getRecag012StatusTimestamp());
             assertNotNull(flow.getRefinementDematValidationTimestamp());
+        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+            assertNotNull(flow.getRefinementDematValidationTimestamp());
+        } else {
+            assertNull(flow.getRecag012StatusTimestamp());
+            assertNull(flow.getRefinementDematValidationTimestamp());
+
         }
 
         verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, StringUtils.isNotBlank(expected.getNextRequestIdPcretry()),
@@ -181,7 +196,7 @@ public class TrackingValidator {
         });
     }
 
-    private static void verifyPaperStatus(PaperStatus exp, PaperStatus act, List<Event> events) {
+    private static void verifyPaperStatus(String testCase, PaperStatus exp, PaperStatus act, List<Event> events, PaperTrackings expectedTracking, List<PaperTrackingsErrors> expectedErrors) {
 
         assertAll("PaperStatus",
                 () -> assertEquals(exp.getRegisteredLetterCode(), act.getRegisteredLetterCode()),
@@ -189,7 +204,14 @@ public class TrackingValidator {
                 () -> assertEquals(exp.getAnonymizedDiscoveredAddress(), act.getAnonymizedDiscoveredAddress()),
                 () -> assertEquals(exp.getFinalStatusCode(), act.getFinalStatusCode()),
                 () -> assertEquals(exp.getFinalDematFound(), act.getFinalDematFound()),
-                () -> assertNotNull(act.getValidatedSequenceTimestamp()),
+                () -> assertEquals(exp.getPredictedRefinementType(), act.getPredictedRefinementType()),
+                () -> {
+                    if (expectedTracking.getBusinessState().equals(BusinessState.KO) && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+                        assertNull(act.getValidatedSequenceTimestamp());
+                    } else {
+                        assertNotNull(act.getValidatedSequenceTimestamp());
+                    }
+                },
                 () -> {
                     if (events.stream().anyMatch(e -> e.getStatusCode().equalsIgnoreCase("P000"))) {
                         assertNotNull(act.getPaperDeliveryTimestamp());
@@ -197,8 +219,14 @@ public class TrackingValidator {
                         assertNull(act.getPaperDeliveryTimestamp());
                     }
                 },
-                () -> assertEquals(Set.copyOf(exp.getValidatedEvents()),
-                        Set.copyOf(act.getValidatedEvents()))
+                () -> assertEquals(
+                        Optional.ofNullable(exp.getValidatedEvents())
+                                .map(HashSet::new)
+                                .orElse(new HashSet<>()),
+                        Optional.ofNullable(act.getValidatedEvents())
+                                .map(HashSet::new)
+                                .orElse(new HashSet<>())
+                )
         );
     }
 }

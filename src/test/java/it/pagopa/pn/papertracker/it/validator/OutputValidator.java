@@ -53,6 +53,7 @@ public class OutputValidator {
                     () -> assertEquals(exp.getRegisteredLetterCode(), act.getRegisteredLetterCode()),
                     () -> assertEquals(exp.getStatusCode(), act.getStatusCode()),
                     () -> assertEquals(exp.getStatusDetail(), act.getStatusDetail()),
+                    () -> assertEquals(exp.getStatusDescription(), act.getStatusDescription()),
                     () -> assertEquals(OffsetDateTime.parse(exp.getStatusDateTime()), OffsetDateTime.parse(act.getStatusDateTime())),
                     () -> assertEquals(exp.getDeliveryFailureCause(), act.getDeliveryFailureCause()),
                     () -> assertEquals(exp.getAnonymizedDiscoveredAddressId(), act.getAnonymizedDiscoveredAddressId()),

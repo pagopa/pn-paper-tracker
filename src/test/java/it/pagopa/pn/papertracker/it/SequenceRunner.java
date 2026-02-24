@@ -38,6 +38,14 @@ public class SequenceRunner {
                         .replace("{{RANDOM_IUN}}", randomIun)
         );
 
+        scenario.getEvents().forEach(testEvent -> testEvent.getAnalogMail().setRequestId(
+                testEvent.getAnalogMail().getRequestId().replace("{{RANDOM_IUN}}", randomIun)));
+
+        scenario.getExpected().getTrackings().forEach(out -> {
+            out.setTrackingId(out.getTrackingId().replace("{{RANDOM_IUN}}", randomIun));
+            out.setAttemptId(out.getAttemptId().replace("{{RANDOM_IUN}}", randomIun));
+        });
+
         handler.beforeInit(scenario);
 
         initPaperTrackings(scenario);

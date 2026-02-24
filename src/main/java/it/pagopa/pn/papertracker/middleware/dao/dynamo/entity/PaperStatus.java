@@ -21,7 +21,6 @@ public class PaperStatus {
     public static final String COL_VALIDATED_EVENTS = "validatedEvents";
     public static final String COL_FINAL_DEMAT_FOUND = "finalDematFound";
     public static final String COL_PAPER_DELIVERY_TIMESTAMP = "paperDeliveryTimestamp";
-    public static final String COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP = "actualPaperDeliveryTimestamp";
     public static final String COL_PREDICTED_REFINEMENT_TYPE = "predictedRefinementType";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
