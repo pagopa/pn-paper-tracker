@@ -15,9 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Component
 public class OutputValidator {
 
-    private static Map<String, List<SwapRule>> swapRules = new HashMap<>();
+    private static final Map<String, List<SwapRule>> swapRules = new HashMap<>();
+    private static final Map<String, ReorderRule> reorderRules = new HashMap<>();
 
     public OutputValidator() {
+
+        // -------- SWAP RULES --------
         swapRules.put("OK_GIACENZA_GT10_890", List.of(new SwapRule("RECAG005A", "RECAG012")));
         swapRules.put("OK_GIACENZA_DELEGATO_GT10_890", List.of(new SwapRule("RECAG006A", "RECAG012")));
         swapRules.put("OK_COMPIUTA_GIACENZA_890", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
@@ -27,20 +30,25 @@ public class OutputValidator {
         swapRules.put("FAIL_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007A", "RECAG007B")));
         swapRules.put("FAIL_GIACENZA_GT10_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007B", "RECAG007A")));
         swapRules.put("OK_GIACENZA_DELEGATO_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG005A", "RECAG012"), new SwapRule("RECAG005A", "RECAG005B")));
-        swapRules.put("FAIL_GIACENZA_LTE10_890", List.of(new SwapRule("RECAG007A", "RECAG012"), new SwapRule("RECAG007A", "RECAG007B")));
+
+        // -------- REORDER RULE (scenario con 2 eventi B) --------
+        //FIX
+        reorderRules.put("FAIL_GIACENZA_LTE10_890", new ReorderRule("RECAG012", 5));
     }
+
 
     public static void verifyOutputs(ProductTestCase scenario,
                                      OcrStatusEnum ocrStatusEnum,
                                      List<PaperTrackerDryRunOutputs> actualOutputs) {
-
 
         List<PaperTrackerDryRunOutputs> expected = scenario.getExpected().getOutputs();
         if (expected == null) return;
 
         assertEquals(expected.size(), actualOutputs.size(), "Mismatch output count");
 
-        List<PaperTrackerDryRunOutputs> sortedActual = sortIfNeeded(scenario, ocrStatusEnum, actualOutputs);
+        List<PaperTrackerDryRunOutputs> sortedActual =
+                sortIfNeeded(scenario, ocrStatusEnum, actualOutputs);
+
         for (int i = 0; i < expected.size(); i++) {
 
             PaperTrackerDryRunOutputs exp = expected.get(i);
@@ -53,28 +61,29 @@ public class OutputValidator {
                     () -> assertEquals(exp.getStatusCode(), act.getStatusCode()),
                     () -> assertEquals(exp.getStatusDetail(), act.getStatusDetail()),
                     () -> assertEquals(exp.getStatusDescription(), act.getStatusDescription()),
-                    () -> assertEquals(OffsetDateTime.parse(exp.getStatusDateTime()), OffsetDateTime.parse(act.getStatusDateTime())),
+                    () -> assertEquals(
+                            OffsetDateTime.parse(exp.getStatusDateTime()),
+                            OffsetDateTime.parse(act.getStatusDateTime())
+                    ),
                     () -> assertEquals(exp.getDeliveryFailureCause(), act.getDeliveryFailureCause()),
-                    () -> assertEquals(exp.getAnonymizedDiscoveredAddressId(), act.getAnonymizedDiscoveredAddressId()),
-                    () -> assertEquals(OffsetDateTime.parse(exp.getClientRequestTimestamp()), OffsetDateTime.parse(act.getClientRequestTimestamp()))
+                    () -> assertEquals(exp.getAnonymizedDiscoveredAddressId(),
+                            act.getAnonymizedDiscoveredAddressId()),
+                    () -> assertEquals(
+                            OffsetDateTime.parse(exp.getClientRequestTimestamp()),
+                            OffsetDateTime.parse(act.getClientRequestTimestamp())
+                    )
             );
 
             verifyOutputAttachments(exp.getAttachments(), act.getAttachments(), i);
         }
     }
 
-    private static int extractPcRetry(String requestId) {
-        int index = requestId.lastIndexOf("PCRETRY_");
-        if (index == -1) {
-            return Integer.MAX_VALUE; // fallback: manda in fondo se malformato
-        }
-        return Integer.parseInt(requestId.substring(index + 8));
-    }
+    private static List<PaperTrackerDryRunOutputs> sortIfNeeded(
+            ProductTestCase scenario,
+            OcrStatusEnum ocrStatusEnum,
+            List<PaperTrackerDryRunOutputs> actualOutputs) {
 
-    // questo metodo è stato inserito in quanto in caso di OCR in modalità RUN l'evento di refinement viene ricevuto a seguito
-    // della risposta dell'ocr che nel test è inviata dopo la ricezione di tutti gli eventi previsti dallo scenario
-    private static List<PaperTrackerDryRunOutputs> sortIfNeeded(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, List<PaperTrackerDryRunOutputs> actualOutputs) {
-
+        // 1️⃣ sempre ordinamento per retry
         List<PaperTrackerDryRunOutputs> sortedByRetry = actualOutputs.stream()
                 .sorted(Comparator.comparingInt(o -> extractPcRetry(o.getTrackingId())))
                 .toList();
@@ -83,21 +92,46 @@ public class OutputValidator {
             return sortedByRetry;
         }
 
+        // 2️⃣ in RUN ordino per created
         List<PaperTrackerDryRunOutputs> sorted = sortedByRetry.stream()
                 .sorted(Comparator.comparing(PaperTrackerDryRunOutputs::getCreated))
                 .toList();
 
+        // 3️⃣ PRIORITY REORDER (gestisce duplicati in modo stabile)
+        var reorder = reorderRules.get(scenario.getName());
+        if (reorder != null) {
+
+            var result = new ArrayList<>(sorted);
+            int index = findIndexByStatus(result, reorder.statusCode);
+
+            if (index != -1 && result.size() >= 2) {
+                PaperTrackerDryRunOutputs element = result.remove(index);
+                result.add(reorder.position, element);
+            }
+
+            return result;
+        }
+
+        // 4️⃣ SWAP RULES (logica legacy)
         var rules = swapRules.get(scenario.getName());
         if (rules == null) {
             return sorted;
         }
+
         var result = new ArrayList<>(sorted);
         rules.forEach(rule -> swapIfPresent(result, rule));
         return result;
     }
 
-    private static void swapIfPresent(List<PaperTrackerDryRunOutputs> list,
-                                      SwapRule rule) {
+    private static int extractPcRetry(String requestId) {
+        int index = requestId.lastIndexOf("PCRETRY_");
+        if (index == -1) {
+            return Integer.MAX_VALUE;
+        }
+        return Integer.parseInt(requestId.substring(index + 8));
+    }
+
+    private static void swapIfPresent(List<PaperTrackerDryRunOutputs> list, SwapRule rule) {
 
         int index1 = findIndexByStatus(list, rule.first());
         int index2 = findIndexByStatus(list, rule.second());
@@ -107,10 +141,9 @@ public class OutputValidator {
         }
     }
 
-    private record SwapRule(String first, String second) {
-    }
+    private static int findIndexByStatus(List<PaperTrackerDryRunOutputs> list,
+                                         String status) {
 
-    private static int findIndexByStatus(List<PaperTrackerDryRunOutputs> list, String status) {
         for (int i = 0; i < list.size(); i++) {
             if (status.equals(list.get(i).getStatusDetail())) {
                 return i;
@@ -118,6 +151,7 @@ public class OutputValidator {
         }
         return -1;
     }
+
 
     private static void verifyOutputAttachments(List<Attachment> expected,
                                                 List<Attachment> actual,
@@ -141,4 +175,7 @@ public class OutputValidator {
             );
         }
     }
+
+    private record SwapRule(String first, String second) {}
+    private record ReorderRule(String statusCode, Integer position) {}
 }

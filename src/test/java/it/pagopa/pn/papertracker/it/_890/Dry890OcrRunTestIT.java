@@ -17,7 +17,12 @@ import static it.pagopa.pn.papertracker.model.OcrStatusEnum.RUN;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-run.properties")
+@TestPropertySource(
+        locations = "classpath:application.test-IT.properties",
+        properties = {
+                "pn.paper-tracker.enable-ocr-validation-for=AR:RUN,890:RUN"
+        }
+)
 public class Dry890OcrRunTestIT extends Abstract890TestIT {
 
     @Autowired

@@ -16,7 +16,12 @@ import java.util.stream.Stream;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application.test-ocr-disable.properties")
+@TestPropertySource(
+        locations = "classpath:application.test-IT.properties",
+        properties = {
+                "pn.paper-tracker.enable-ocr-validation-for="
+        }
+)
 public class Dry890OcrDisableTestIT extends Abstract890TestIT {
 
     @Autowired

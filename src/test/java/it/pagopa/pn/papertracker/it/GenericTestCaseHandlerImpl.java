@@ -11,10 +11,7 @@ import it.pagopa.pn.papertracker.it.validator.TrackingValidator;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +38,31 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     }
 
     @Override
-    public void beforeInit(ProductTestCase scenario) {
+    public void beforeInit(ProductTestCase scenario, boolean strictFinalValidation) {
+        String randomIun = UUID.randomUUID().toString();
+
+        scenario.getInitialTracking().setAttemptId(
+                scenario.getInitialTracking().getAttemptId()
+                        .replace("{{RANDOM_IUN}}", randomIun)
+        );
+
+        scenario.getEvents().forEach(testEvent -> testEvent.getAnalogMail().setRequestId(
+                testEvent.getAnalogMail().getRequestId().replace("{{RANDOM_IUN}}", randomIun)));
+
+        scenario.getExpected().getTrackings().forEach(out -> {
+            out.setTrackingId(out.getTrackingId().replace("{{RANDOM_IUN}}", randomIun));
+            out.setAttemptId(out.getAttemptId().replace("{{RANDOM_IUN}}", randomIun));
+        });
+
+        if(strictFinalValidation){
+            scenario.getExpected().getErrors().stream()
+                    .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
+                    .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
+            if(scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow()
+                    .equals(FlowThrow.SEQUENCE_VALIDATION))){
+                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.setBusinessState(BusinessState.KO));
+            }
+        }
 
     }
 

@@ -2,6 +2,8 @@ package it.pagopa.pn.papertracker.it;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
@@ -31,35 +33,13 @@ public class SequenceRunner {
                                 "No handler for product " + scenario.getProductType())
                 );
 
-        String randomIun = UUID.randomUUID().toString();
-
-        scenario.getInitialTracking().setAttemptId(
-                scenario.getInitialTracking().getAttemptId()
-                        .replace("{{RANDOM_IUN}}", randomIun)
-        );
-
-        scenario.getEvents().forEach(testEvent -> testEvent.getAnalogMail().setRequestId(
-                testEvent.getAnalogMail().getRequestId().replace("{{RANDOM_IUN}}", randomIun)));
-
-        scenario.getExpected().getTrackings().forEach(out -> {
-            out.setTrackingId(out.getTrackingId().replace("{{RANDOM_IUN}}", randomIun));
-            out.setAttemptId(out.getAttemptId().replace("{{RANDOM_IUN}}", randomIun));
-        });
-
-        handler.beforeInit(scenario);
-
+        handler.beforeInit(scenario, strictFinalValidation);
         initPaperTrackings(scenario);
-
         handler.afterInit(scenario, scenario.getInitialTracking());
         handler.sendEvents(scenario);
         if(Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)){
             receiveOcrResponse(scenario);
         }
-        boolean strictValidation = false;
-/*        if(scenario.getProductType().equalsIgnoreCase("890")){
-            strictValidation = true;
-        }*/
-       // Thread.sleep(3000); //wait for events to be processed
         handler.afterSendEvents(scenario, ocrStatusEnum, strictFinalValidation);
     }
 
