@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -231,6 +232,58 @@ public class TrackerConfigUtilsTest {
                 ConfigNotFound.class,
                 () -> utils.getActualProductsProcessingModes(startDate)
         );
+    }
+
+    @Test
+    void returnsOcrFilterTemporalActiveInactive() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterTemporal("* * 09-11,16-18 * * WED");
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean resultActive = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T17:45:00Z"));
+        boolean resultInactive = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T19:45:00Z"));
+        boolean resultDisabled = utils.isOcrFilterTemporalDisabled();
+
+        assertTrue(resultActive);
+        assertFalse(resultInactive);
+        assertFalse(resultDisabled);
+    }
+
+    @Test
+    void returnsOcrFilterTemporalDisabled() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterTemporal("DISABLED");
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean result = utils.isOcrFilterTemporalDisabled();
+
+        assertTrue(result);
+    }
+
+    @Test
+    void returnsOcrFilterDriverActiveInactive() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterUnifiedDeliveryDriver(List.of("DRIVER1", "DRIVER2"));
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean resultActive = utils.isOcrFilterDriverActive("DRIVER1");
+        boolean resultInactive = utils.isOcrFilterDriverActive("DRIVER3");
+        boolean resultDisabled = utils.isOcrFilterDriverDisabled();
+
+        assertTrue(resultActive);
+        assertFalse(resultInactive);
+        assertFalse(resultDisabled);
+    }
+
+    @Test
+    void returnsOcrFilterDriverDisabled() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterUnifiedDeliveryDriver(List.of("DISABLED"));
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean result = utils.isOcrFilterDriverDisabled();
+
+        assertTrue(result);
     }
 
 }
