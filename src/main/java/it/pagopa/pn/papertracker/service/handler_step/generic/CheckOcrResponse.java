@@ -131,6 +131,7 @@ public class CheckOcrResponse implements HandlerStep {
         PaperStatus paperStatus = new PaperStatus();
         paperStatus.setPredictedRefinementType(Objects.nonNull(payload.getData().getPredictedRefinementType()) ?
                 payload.getData().getPredictedRefinementType().getValue() : null);
+        paperTrackings.setPaperStatus(paperStatus);
         return paperTrackings;
     }
 
