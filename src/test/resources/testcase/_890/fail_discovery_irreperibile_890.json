@@ -116,6 +116,23 @@
         "validationType": "ai"
       }
     },
+    "ocrDataPayload": {
+      "commandId": "{{REQUEST_ID}}#d65d149f-2634-48ab-8d83-599a30898708#Plico",
+      "commandType": "postal",
+      "data": {
+        "documentType": "Plico",
+        "productType": "890",
+        "unifiedDeliveryDriver": "Poste",
+        "details": {
+          "deliveryDetailCode": "RECAG003F",
+          "notificationDate": "2025-11-28T08:30:47Z",
+          "registeredLetterCode": "8578eebefab7488d96295e716cc26fb0",
+          "deliveryFailureCause": "M03",
+          "attachment": "Uri",
+          "deliveryAttemptDate": null
+        }
+      }
+    },
     "sentToOcr": 1
   }
 }

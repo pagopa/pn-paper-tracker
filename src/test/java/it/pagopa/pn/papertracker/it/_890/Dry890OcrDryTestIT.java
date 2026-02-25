@@ -3,10 +3,12 @@ package it.pagopa.pn.papertracker.it._890;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.it.SequenceRunner;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
+import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -33,10 +35,11 @@ public class Dry890OcrDryTestIT extends Abstract890TestIT {
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
             mockPcRetry(scenario);
-            mockSendToOcr(scenario);
+            ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
+            mockSendToOcr(scenario, ocrEventCaptor);
             mockDataVault(scenario);
             scenarioRunner.run(scenario, DRY,false);
-            verifySentToOcr(scenario);
+            verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
             //per consentire il riaccodamento del messaggio e il successivo reprocess degli eventi,

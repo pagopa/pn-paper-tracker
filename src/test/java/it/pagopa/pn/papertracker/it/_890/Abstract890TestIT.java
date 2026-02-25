@@ -1,5 +1,7 @@
 package it.pagopa.pn.papertracker.it._890;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.DataDTO;
+import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.it.SequenceLoader;
@@ -11,8 +13,10 @@ import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
@@ -62,18 +66,36 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    protected void mockSendToOcr(ProductTestCase scenario) {
+    protected void mockSendToOcr(ProductTestCase scenario, ArgumentCaptor<OcrEvent> ocrEventCaptor) {
+
         if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
                 || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
             Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
-            Mockito.doNothing().when(ocrMomProducer).push(any(OcrEvent.class));
+            Mockito.doNothing().when(ocrMomProducer).push(ocrEventCaptor.capture());
         }
     }
 
-    protected void verifySentToOcr(ProductTestCase scenario){
+    protected void verifySentToOcr(ProductTestCase scenario, ArgumentCaptor<OcrEvent> ocrEventCaptor){
         if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
                 || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
-            Mockito.verify(ocrMomProducer, Mockito.times(scenario.getExpected().getSentToOcr())).push(any(OcrEvent.class));
+            OcrDataPayloadDTO payloadDTO = scenario.getExpected().getOcrDataPayload();
+            Mockito.verify(ocrMomProducer, Mockito.times(scenario.getExpected().getSentToOcr())).push(ocrEventCaptor.capture());
+            OcrEvent ocrEvent = ocrEventCaptor.getValue();
+            Assertions.assertEquals(payloadDTO.getCommandId(), ocrEvent.getPayload().getCommandId());
+            Assertions.assertEquals(payloadDTO.getCommandType(), ocrEvent.getPayload().getCommandType());
+            Assertions.assertNotNull(ocrEvent.getPayload().getData());
+            DataDTO exp = payloadDTO.getData();
+            DataDTO act = ocrEvent.getPayload().getData();
+            Assertions.assertEquals(exp.getDocumentType(), act.getDocumentType());
+            Assertions.assertEquals(exp.getProductType(), act.getProductType());
+            Assertions.assertEquals(exp.getUnifiedDeliveryDriver(), act.getUnifiedDeliveryDriver());
+            Assertions.assertNotNull(act.getDetails());
+            Assertions.assertEquals(exp.getDetails().getDeliveryDetailCode(), act.getDetails().getDeliveryDetailCode());
+            Assertions.assertEquals(exp.getDetails().getRegisteredLetterCode(), act.getDetails().getRegisteredLetterCode());
+            Assertions.assertEquals(exp.getDetails().getAttachment(), act.getDetails().getAttachment());
+            Assertions.assertEquals(exp.getDetails().getNotificationDate(), act.getDetails().getNotificationDate());
+            Assertions.assertEquals(exp.getDetails().getDeliveryFailureCause(), act.getDetails().getDeliveryFailureCause());
+            Assertions.assertEquals(exp.getDetails().getDeliveryAttemptDate(), act.getDetails().getDeliveryAttemptDate());
         }
     }
 

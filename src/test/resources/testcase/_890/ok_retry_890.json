@@ -175,6 +175,23 @@
         "validationType": "ai"
       }
     },
+    "ocrDataPayload": {
+      "commandId": "{{REQUEST_ID_RETRY}}#be44bcac-cf28-4ad2-8f25-49fa69031b82#23L",
+      "commandType": "postal",
+      "data": {
+        "documentType": "23L",
+        "productType": "890",
+        "unifiedDeliveryDriver": "Poste",
+        "details": {
+          "deliveryDetailCode": "RECAG001C",
+          "notificationDate": "2025-11-28T08:29:10",
+          "registeredLetterCode": "cb59ee05f21145818afc7d03582f84c7",
+          "deliveryFailureCause": null,
+          "attachment": "Uri",
+          "deliveryAttemptDate": null
+        }
+      }
+    },
     "sentToOcr": 1
   }
 }
