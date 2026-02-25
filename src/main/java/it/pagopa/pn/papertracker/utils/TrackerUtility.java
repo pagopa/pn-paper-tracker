@@ -104,6 +104,7 @@ public class TrackerUtility {
             validationFlow.setRefinementDematValidationTimestamp(Instant.now());
             validationFlow.setFinalEventDematValidationTimestamp(Instant.now());
         }
+        paperTrackingsToUpdate.setValidationFlow(validationFlow);
     }
 
     public static boolean isInvalidState(HandlerContext ctx, String statusCode) {
