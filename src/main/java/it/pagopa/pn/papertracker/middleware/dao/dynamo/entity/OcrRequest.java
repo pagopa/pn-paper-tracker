@@ -17,6 +17,7 @@ public class OcrRequest {
     public static final String COL_FINAL_EVENT_ID = "finalEventId";
     public static final String COL_ATTACHMENT_EVENT_ID = "attachmentEventId";
     public static final String COL_URI = "uri";
+    public static final String COL_RESPONSE_STATUS = "responseStatus";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DOCUMENT_TYPE)}))
     private String documentType;
@@ -35,4 +36,7 @@ public class OcrRequest {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_URI)}))
     private String uri;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_RESPONSE_STATUS)}))
+    private String responseStatus;
 }

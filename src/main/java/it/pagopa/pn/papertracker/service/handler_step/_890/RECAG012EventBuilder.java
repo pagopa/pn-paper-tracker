@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
@@ -90,7 +91,7 @@ public class RECAG012EventBuilder implements HandlerStep {
 
         boolean isRecag012 = RECAG012.name().equalsIgnoreCase(currentStatusCode);
         boolean ocrDisabled = isOcrDisabledOrDry(tracking);
-        boolean allOcrCompleted = checkAllOcrResponse(context);
+        boolean allOcrCompleted = TrackerUtility.isOcrResponseCompleted(context, RECAG012.name());
 
         // isNeedToSendRECAG012A true se è arrivato RECAG012 e non ci sono tutti gli allegati
         // false se il RECAG012 non è ancora arrivato
@@ -176,27 +177,6 @@ public class RECAG012EventBuilder implements HandlerStep {
                 .filter(e -> RECAG012.name().equalsIgnoreCase(e.getStatusCode()))
                 .findFirst()
                 .orElse(null);
-    }
-
-    private boolean checkAllOcrResponse(HandlerContext context) {
-        PaperTrackings tracking = context.getPaperTrackings();
-        ValidationConfig config = tracking.getValidationConfig();
-
-        List<String> requiredDocs = Optional.ofNullable(config.getSendOcrAttachmentsRefinementStock890()).orElse(List.of());
-
-        if (requiredDocs.isEmpty()) {return true;}
-
-        ValidationFlow flow = Optional.ofNullable(tracking.getValidationFlow()).orElse(new ValidationFlow());
-
-        List<OcrRequest> ocrRequests = Optional.ofNullable(flow.getOcrRequests()).orElse(List.of());
-
-        Set<String> completedDocs = ocrRequests.stream()
-                .filter(req -> requiredDocs.contains(req.getDocumentType()))
-                .filter(req -> req.getResponseTimestamp() != null)
-                .map(OcrRequest::getDocumentType)
-                .collect(Collectors.toSet());
-
-        return TrackerUtility.hasRequiredAttachmentsRefinementStock890(requiredDocs, completedDocs);
     }
 
 }

@@ -137,7 +137,7 @@ class SequenceValidator890Test {
         paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
         context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
