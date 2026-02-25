@@ -2,9 +2,6 @@ package it.pagopa.pn.papertracker.it;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
-import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +10,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -35,7 +31,7 @@ public class SequenceRunner {
         handler.beforeInit(scenario, strictFinalValidation);
         initPaperTrackings(scenario);
         handler.afterInit(scenario, scenario.getInitialTracking());
-        handler.sendEvents(scenario, ocrStatusEnum);
+        handler.sendEventsAndOcrResponse(scenario, ocrStatusEnum);
         handler.afterSendEvents(scenario, ocrStatusEnum, strictFinalValidation);
     }
 

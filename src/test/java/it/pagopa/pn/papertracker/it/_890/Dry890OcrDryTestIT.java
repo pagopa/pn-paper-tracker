@@ -36,7 +36,7 @@ public class Dry890OcrDryTestIT extends Abstract890TestIT {
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
             ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-            mockData(scenario, RUN, ocrEventCaptor);
+            mockData(scenario, RUN);
             scenarioRunner.run(scenario, DRY,false);
             verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){

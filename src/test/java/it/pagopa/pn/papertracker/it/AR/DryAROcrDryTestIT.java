@@ -36,7 +36,7 @@ public class DryAROcrDryTestIT extends AbstractARTestIT {
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
             ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-            mockData(scenario, DRY, ocrEventCaptor);
+            mockData(scenario, DRY);
             scenarioRunner.run(scenario, DRY,false);
             verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){

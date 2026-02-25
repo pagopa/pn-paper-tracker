@@ -43,6 +43,66 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     public void beforeInit(ProductTestCase scenario, boolean strictFinalValidation) {
         String randomIun = UUID.randomUUID().toString();
 
+        replaceIun(scenario, randomIun);
+
+        //se è attiva a la strict validation per lo stock890,
+        // in caso di errori di sequence validation vengono convertiti in errori bloccanti e vengono rimossi tutti gli eventi di output con status detail
+        // che termina con C (l'evento finale non sale in timeline come progress)
+        //poichè la validazione non è andata a buon fine deve essere aggiornato il paperStatus rimuovendo i valdiatedEvent, il registeredLetterCode e
+        //la deliveryFailureCause e impostando come finalStatusCode il "RECAG012"
+        if (strictFinalValidation) {
+            List<PaperTrackingsErrors> expErrors = scenario.getExpected().getErrors();
+            List<PaperTrackings> expTrackings = scenario.getExpected().getTrackings();
+            List<PaperTrackerDryRunOutputs> expOutputs = scenario.getExpected().getOutputs();
+
+            if (expErrors.stream().anyMatch(paperTrackingsErrors ->
+                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")) {
+
+                replaceOutputsFields(scenario, expOutputs);
+                replaceTrackingsFields(scenario, expTrackings);
+            }
+
+            replaceErrorsFields(scenario, expErrors);
+        }
+
+    }
+
+    private static void replaceErrorsFields(ProductTestCase scenario, List<PaperTrackingsErrors> expErrors) {
+        scenario.getExpected().getErrors().stream()
+                .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
+                .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
+
+        if (scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")) {
+            scenario.getExpected().setErrors(expErrors.stream()
+                    .filter(paperTrackingsErrors -> paperTrackingsErrors.getErrorCategory().equals(ErrorCategory.DATE_ERROR))
+                    .toList());
+        }
+        if (scenario.getName().contains("INVALID_ATTACHMENT")) {
+            scenario.getExpected().setErrors(expErrors.stream()
+                    .filter(paperTrackingsErrors -> paperTrackingsErrors.getDetails().getMessage().startsWith("Missed required attachments"))
+                    .toList());
+        }
+    }
+
+    private static void replaceOutputsFields(ProductTestCase scenario, List<PaperTrackerDryRunOutputs> expOutputs) {
+        scenario.getExpected().setOutputs(expOutputs.stream()
+                .filter(paperTrackerDryRunOutputs -> !paperTrackerDryRunOutputs.getStatusDetail().endsWith("C")).toList());
+    }
+
+    private static void replaceTrackingsFields(ProductTestCase scenario, List<PaperTrackings> expTrackings) {
+        expTrackings.forEach(paperTrackings -> {
+            paperTrackings.setBusinessState(BusinessState.KO);
+            paperTrackings.getPaperStatus().setValidatedEvents(new ArrayList<>());
+            paperTrackings.getPaperStatus().setRegisteredLetterCode(null);
+            paperTrackings.getPaperStatus().setDeliveryFailureCause(null);
+        });
+
+        if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> Objects.nonNull(paperTrackings.getPaperStatus().getFinalStatusCode()))) {
+            scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setFinalStatusCode("RECAG012"));
+        }
+    }
+
+    private static void replaceIun(ProductTestCase scenario, String randomIun) {
         scenario.getInitialTracking().setAttemptId(
                 scenario.getInitialTracking().getAttemptId()
                         .replace("{{RANDOM_IUN}}", randomIun)
@@ -57,41 +117,6 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
             out.setTrackingId(out.getTrackingId().replace("{{RANDOM_IUN}}", randomIun));
             out.setAttemptId(out.getAttemptId().replace("{{RANDOM_IUN}}", randomIun));
         });
-
-        //se è attiva a la strict validation per lo stock890,
-        // in caso di errori di sequence validation vengono convertiti in errori bloccanti e vengono rimossi tutti gli eventi di output con status detail
-        // che termina con C (l'evento finale non sale in timeline come progress)
-        //poichè la validazione non è andata a buon fine deve essere aggiornato il paperStatus rimuovendo i valdiatedEvent, il registeredLetterCode e
-        //la deliveryFailureCause e impostando come finalStatusCode il "RECAG012"
-        if (strictFinalValidation) {
-            scenario.getExpected().getErrors().stream()
-                    .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
-                    .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
-            if (scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors ->
-                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")) {
-                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.setBusinessState(BusinessState.KO));
-                scenario.getExpected().setOutputs(scenario.getExpected().getOutputs()
-                        .stream().filter(paperTrackerDryRunOutputs -> !paperTrackerDryRunOutputs.getStatusDetail().endsWith("C")).toList());
-                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setValidatedEvents(new ArrayList<>()));
-                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setRegisteredLetterCode(null));
-                if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings ->
-                        Objects.nonNull(paperTrackings.getPaperStatus().getFinalStatusCode()))) {
-                    scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setFinalStatusCode("RECAG012"));
-                }
-                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setDeliveryFailureCause(null));
-            }
-            if (scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")) {
-                scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
-                        .filter(paperTrackingsErrors -> paperTrackingsErrors.getErrorCategory().equals(ErrorCategory.DATE_ERROR))
-                        .toList());
-            }
-            if (scenario.getName().contains("INVALID_ATTACHMENT")) {
-                scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
-                        .filter(paperTrackingsErrors -> paperTrackingsErrors.getDetails().getMessage().startsWith("Missed required attachments"))
-                        .toList());
-            }
-        }
-
     }
 
     @Override
@@ -100,6 +125,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         String requestId = String.join(".", request.getAttemptId(), request.getPcRetry());
         String retryRequestId = requestId.replace("PCRETRY_0", "PCRETRY_1");
         String secondRetryRequestId = requestId.replace("PCRETRY_0", "PCRETRY_2");
+
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             scenario.getEvents()
                     .stream().filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
@@ -181,14 +207,9 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     }
 
     @Override
-    public void sendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) {
+    public void sendEventsAndOcrResponse(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             scenario.getEvents().forEach(event -> {
-                if (event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")
-                        && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
-                    receiveOcrResponse(scenario, event.getOcrResponseIdx());
-                }
-
                 if (!event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")) {
                     SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
                     singleStatusUpdate.setAnalogMail(event.getAnalogMail());
@@ -198,17 +219,15 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                             null,
                             event.getMessageId(),
                             null);
+                }else if(ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                    ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(event.getOcrResponseIdx() - 1));
                 }
             });
         }
         if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
                 && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
-            receiveOcrResponse(scenario, 1);
+            ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
         }
-    }
-
-    private void receiveOcrResponse(ProductTestCase scenario, Integer index) {
-        ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(index - 1));
     }
 
     @Override

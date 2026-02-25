@@ -34,7 +34,7 @@ public class Dry890OcrDisableStrictTestIT extends Abstract890TestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            mockData(scenario, DISABLED, null);
+            mockData(scenario, DISABLED);
             scenarioRunner.run(scenario, OcrStatusEnum.DISABLED, true);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione

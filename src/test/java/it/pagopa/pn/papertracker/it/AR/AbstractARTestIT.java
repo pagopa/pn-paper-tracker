@@ -6,8 +6,6 @@ import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.it.SequenceLoader;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
@@ -18,7 +16,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
@@ -47,11 +44,6 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
             "FAIL_CON996_PC_RETRY_FURTO_AR"
     );
 
-    private static final Set<String> FORCE_OCR_SCENARIOS = Set.of(
-            "FAIL_COMPIUTA_GIACENZA_AR",
-            "FAIL_COMPIUTA_GIACENZA_AR_2"
-    );
-
     @MockitoBean
     protected PaperChannelClient paperChannelClient;
 
@@ -64,11 +56,11 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
     @MockitoBean
     protected DataVaultClient dataVaultClient;
 
-    protected void mockData(ProductTestCase productTestCase, OcrStatusEnum ocrStatusEnum, ArgumentCaptor<OcrEvent> argumentCaptor){
+    protected void mockData(ProductTestCase productTestCase, OcrStatusEnum ocrStatusEnum){
         mockPcRetry(productTestCase);
         mockDataVault(productTestCase);
         if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
-            mockSendToOcr(productTestCase, ocrStatusEnum);
+            mockSendToOcr(productTestCase);
         }
     }
 
@@ -112,7 +104,7 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
         return SequenceLoader.loadScenarios(uri);
     }
 
-    protected void mockSendToOcr(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) {
+    protected void mockSendToOcr(ProductTestCase scenario) {
         if (Objects.nonNull(scenario.getExpected().getOcrDataPayload())) {
             Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
             Mockito.doNothing().when(ocrMomProducer).push(any(OcrEvent.class));

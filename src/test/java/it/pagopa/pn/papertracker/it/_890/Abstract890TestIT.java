@@ -44,7 +44,7 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
     @MockitoBean
     protected OcrMomProducer ocrMomProducer;
 
-    protected void mockData(ProductTestCase productTestCase, OcrStatusEnum ocrStatusEnum, ArgumentCaptor<OcrEvent> argumentCaptor){
+    protected void mockData(ProductTestCase productTestCase, OcrStatusEnum ocrStatusEnum){
         mockPcRetry(productTestCase);
         mockDataVault(productTestCase);
         if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {

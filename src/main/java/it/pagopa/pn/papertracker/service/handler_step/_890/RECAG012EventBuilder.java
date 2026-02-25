@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;

@@ -33,10 +33,10 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
         SequenceConfig sequenceConfig;
         boolean isStock890;
-        if (Objects.nonNull(context.getPaperProgressStatusEvent())) {
+        if(Objects.nonNull(context.getPaperProgressStatusEvent())) {
             isStock890 = TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode());
             sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
-        } else {
+        }else{
             Event event = TrackerUtility.extractEventFromContext(context);
             isStock890 = TrackerUtility.isStockStatus890(event.getStatusCode());
             sequenceConfig = SequenceConfiguration.getConfig(event.getStatusCode());

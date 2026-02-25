@@ -34,7 +34,7 @@ public class Dry890OcrDisableTestIT extends Abstract890TestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            mockData(scenario, DISABLED, null);
+            mockData(scenario, DISABLED);
             scenarioRunner.run(scenario, OcrStatusEnum.DISABLED, false);
 
         }catch (PnPaperTrackerValidationException e){
