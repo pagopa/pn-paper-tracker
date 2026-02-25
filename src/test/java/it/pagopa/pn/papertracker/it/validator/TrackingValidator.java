@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.it.validator;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
@@ -135,7 +134,8 @@ public class TrackingValidator {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
-        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") ||
+                scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2")) {
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
             assertNull(flow.getFinalEventBuilderTimestamp());
@@ -153,7 +153,8 @@ public class TrackingValidator {
 
         if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
-        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")) {
+        } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")
+                || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2")) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else {
             assertNull(flow.getRefinementDematValidationTimestamp());
@@ -170,7 +171,7 @@ public class TrackingValidator {
             return;
         }
 
-        if (hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR"))) {
+        if (hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2"))) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
@@ -200,7 +201,7 @@ public class TrackingValidator {
     private static void verifyPaperStatus(String testCase, PaperStatus exp, PaperStatus act, List<Event> events, PaperTrackings expectedTracking, List<PaperTrackingsErrors> expectedErrors) {
 
         boolean isDone = BusinessState.DONE.equals(expectedTracking.getBusinessState());
-        boolean isFailCompiutaGiacenzaAr = "FAIL_COMPIUTA_GIACENZA_AR".equalsIgnoreCase(testCase);
+        boolean isFailCompiutaGiacenzaAr = "FAIL_COMPIUTA_GIACENZA_AR".equalsIgnoreCase(testCase) || "FAIL_COMPIUTA_GIACENZA_AR_2".equalsIgnoreCase(testCase);
         boolean isOkTimestampError890 = "OK_TIMESTAMPERROR_890".equalsIgnoreCase(testCase);
 
         boolean isProduct890 = "890".equalsIgnoreCase(expectedTracking.getProductType());

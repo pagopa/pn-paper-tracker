@@ -158,6 +158,23 @@
         "validationType": "ai"
       }
     },
+    "ocrDataPayload": {
+      "commandId": "{{REQUEST_ID_RETRY}}#a010dd11-ee12-4f13-9a14-778899001122#AR",
+      "commandType": "postal",
+      "data": {
+        "documentType": "AR",
+        "productType": "AR",
+        "unifiedDeliveryDriver": "Poste",
+        "details": {
+          "deliveryDetailCode": "RECRN001C",
+          "notificationDate": "2024-01-01T10:00:00Z",
+          "registeredLetterCode": "1234567891011",
+          "deliveryFailureCause": null,
+          "attachment": "Uri",
+          "deliveryAttemptDate": null
+        }
+      }
+    },
     "sentToOcr": 1
   }
 }

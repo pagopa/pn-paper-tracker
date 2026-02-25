@@ -147,6 +147,9 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                 scenario.getExpected().getOcrResultPayload().setCommandId(scenario.getExpected().getOcrResultPayload().getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
                         .replace("{{REQUEST_ID_RETRY_2}}", secondRetryRequestId)
                         .replace("{{REQUEST_ID}}", requestId));
+                scenario.getExpected().getOcrDataPayload().setCommandId(scenario.getExpected().getOcrDataPayload().getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
+                        .replace("{{REQUEST_ID_RETRY_2}}", secondRetryRequestId)
+                        .replace("{{REQUEST_ID}}", requestId));
             }
         }
 

@@ -5,7 +5,7 @@
     "productType": "AR",
     "pcRetry": "PCRETRY_0",
     "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
-    "unifiedDeliveryDriver": "POSTE"
+    "unifiedDeliveryDriver": "Poste"
   },
   "events": [
     {
@@ -43,7 +43,7 @@
         "trackingId": "{{REQUEST_ID}}",
         "attemptId": "PREPARE_ANALOG_DOMICILE.IUN_{{RANDOM_IUN}}.ATTEMPT_0",
         "pcRetry": "PCRETRY_0",
-        "unifiedDeliveryDriver": "POSTE",
+        "unifiedDeliveryDriver": "Poste",
         "processingMode": "DRY",
         "productType": "AR",
         "state": "DONE",
@@ -96,6 +96,23 @@
         "description": "OK",
         "predictedRefinementType": null,
         "validationType": "ai"
+      }
+    },
+    "ocrDataPayload": {
+      "commandId": "{{REQUEST_ID}}#f6a7b8c9-6666-4f7a-9b8c-6d7e8f9a0b16#Plico",
+      "commandType": "postal",
+      "data": {
+        "documentType": "Plico",
+        "productType": "AR",
+        "unifiedDeliveryDriver": "Poste",
+        "details": {
+          "deliveryDetailCode": "RECRN002C",
+          "notificationDate": "2024-01-01T10:00:00Z",
+          "registeredLetterCode": "1234567891011",
+          "deliveryFailureCause": "M02",
+          "attachment": "Uri",
+          "deliveryAttemptDate": null
+        }
       }
     },
     "sentToOcr": 1
