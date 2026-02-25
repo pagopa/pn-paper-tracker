@@ -120,18 +120,20 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         String updateExpr = "SET ";
 
-        List<OcrRequest> ocrRequests =  Optional.ofNullable(paperTrackings.getValidationFlow())
-                .map(ValidationFlow::getOcrRequests)
-                .orElse(List.of());
+        Optional.ofNullable(paperTrackings.getValidationFlow())
+                .ifPresent(flow -> {
+                    List<OcrRequest> requests = flow.getOcrRequests();
+                    if (!CollectionUtils.isEmpty(requests)) {
+                        expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
+                        expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
+                        expressionAttributeValues.put(":requests", AttributeValue.builder()
+                                .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("validationFlow").m().get("ocrRequests").l()).build());
+                        updateExpressions.add("#validationFlow.#ocr = list_append(#validationFlow.#ocr, :requests) ");
+                    }
 
-        if(!CollectionUtils.isEmpty(ocrRequests)){
-            expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
-            expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
-            expressionAttributeValues.put(":requests", AttributeValue.builder()
-                    .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("validationFlow").m().get("ocrRequests").l()).build());
-            updateExpr += "#validationFlow.#ocr = list_append(#validationFlow.#ocr, :requests), ";
-            paperTrackings.getValidationFlow().setOcrRequests(null);
-        }
+                    flow.setOcrRequests(null);
+                });
+
 
         Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
         AtomicInteger counter = new AtomicInteger(0);
