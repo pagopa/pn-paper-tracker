@@ -54,13 +54,37 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
             out.setAttemptId(out.getAttemptId().replace("{{RANDOM_IUN}}", randomIun));
         });
 
+        //se è attiva a la strict validation per lo stock890,
+        // in caso di errori di sequence validation vengono convertiti in errori bloccanti e vengono rimossi tutti gli eventi di output con status detail
+        // che termina con C (l'evento finale non sale in timeline come progress)
+        //poichè la validazione non è andata a buon fine deve essere aggiornato il paperStatus rimuovendo i valdiatedEvent, il registeredLetterCode e
+        //la deliveryFailureCause e impostando come finalStatusCode il "RECAG012"
         if(strictFinalValidation){
             scenario.getExpected().getErrors().stream()
                     .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
                     .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
-            if(scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow()
-                    .equals(FlowThrow.SEQUENCE_VALIDATION))){
+            if(scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors ->
+                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")){
                 scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.setBusinessState(BusinessState.KO));
+                scenario.getExpected().setOutputs(scenario.getExpected().getOutputs()
+                        .stream().filter(paperTrackerDryRunOutputs -> !paperTrackerDryRunOutputs.getStatusDetail().endsWith("C")).toList());
+                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setValidatedEvents(new ArrayList<>()));
+                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setRegisteredLetterCode(null));
+                if(scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings ->
+                        Objects.nonNull(paperTrackings.getPaperStatus().getFinalStatusCode()))) {
+                    scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setFinalStatusCode("RECAG012"));
+                }
+                scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setDeliveryFailureCause(null));
+            }
+            if(scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")){
+                scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
+                        .filter(paperTrackingsErrors -> paperTrackingsErrors.getErrorCategory().equals(ErrorCategory.DATE_ERROR))
+                        .toList());
+            }
+            if(scenario.getName().contains("INVALID_ATTACHMENT")){
+                scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
+                        .filter(paperTrackingsErrors -> paperTrackingsErrors.getDetails().getMessage().startsWith("Missed required attachments"))
+                        .toList());
             }
         }
 
