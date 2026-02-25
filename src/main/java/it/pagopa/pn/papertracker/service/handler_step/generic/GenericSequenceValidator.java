@@ -77,7 +77,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .flatMap(events -> validateAttachments(events, paperTrackings, context, sequenceConfig.validAttachments(), sequenceConfig.requiredAttachments(),strictFinalEventValidation))
                 .flatMap(events -> validateRegisteredLetterCode(events, paperTrackings, paperTrackingsToUpdate, context,strictFinalEventValidation))
                 .flatMap(events -> validateDeliveryFailureCause(events, paperTrackings, context,strictFinalEventValidation))
-                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, context.getPaperProgressStatusEvent().getStatusCode()))
+                .flatMap(events -> enrichPaperTrackingToUpdateWithAddressAndFailureCause(events, paperTrackingsToUpdate, TrackerUtility.extractEventFromContext(context).getStatusCode()))
                 .flatMap(events -> paperTrackingsDAO.updateItem(paperTrackings.getTrackingId(), enrichWithSequenceValidationTimestamp(events, paperTrackingsToUpdate)));
     }
 

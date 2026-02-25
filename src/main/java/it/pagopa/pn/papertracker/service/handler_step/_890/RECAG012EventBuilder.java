@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
@@ -70,8 +69,6 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012A;
 @RequiredArgsConstructor
 @Slf4j
 public class RECAG012EventBuilder implements HandlerStep {
-
-    private final PaperTrackingsDAO paperTrackingsDAO;
 
 
     @Override
@@ -141,25 +138,20 @@ public class RECAG012EventBuilder implements HandlerStep {
                         recag012Event.getStatusTimestamp().atOffset(ZoneOffset.UTC)
                 )
                 .doOnNext(context.getEventsToSend()::add)
+                .doOnNext(sendEvent -> context.setFinalStatusCode(recag012Event.getStatusCode()))
                 .collectList()
                 .filter(sendEvents -> !CollectionUtils.isEmpty(sendEvents))
-                .flatMap(list ->
-                        paperTrackingsDAO.updateItem(
-                                context.getTrackingId(),
-                                getPaperTrackingsToUpdate()
-                        )
-                )
+                .doOnNext(list -> updateContextPaperTrackings(context))
                 .then();
     }
 
-    private PaperTrackings getPaperTrackingsToUpdate() {
-        ValidationFlow validationFlow = new ValidationFlow();
+    private void updateContextPaperTrackings(HandlerContext context) {
+        PaperTrackings paperTrackings = context.getPaperTrackings();
+        ValidationFlow validationFlow = Optional.ofNullable(paperTrackings.getValidationFlow())
+                .orElse(new ValidationFlow());
         validationFlow.setRefinementDematValidationTimestamp(Instant.now());
-
-        PaperTrackings update = new PaperTrackings();
-        update.setState(PaperTrackingsState.DONE);
-        update.setValidationFlow(validationFlow);
-        return update;
+        paperTrackings.setValidationFlow(validationFlow);
+        paperTrackings.setState(PaperTrackingsState.DONE);
     }
 
     private Mono<Void> sendRecag012A(HandlerContext context) {

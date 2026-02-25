@@ -551,7 +551,6 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                 assertNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
                 assertNull(pt.getValidationFlow().getFinalEventBuilderTimestamp());
                 assertNull(pt.getPaperStatus().getRegisteredLetterCode());
-                assertNull(pt.getPaperStatus().getFinalStatusCode());
                 assertNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
                 assertNotNull(pt.getPaperStatus().getPaperDeliveryTimestamp());
                 Assertions.assertNotNull(pt.getValidationFlow().getRefinementDematValidationTimestamp());
@@ -564,7 +563,6 @@ public class HandlerFactory890IT extends BaseTest.WithLocalStack {
                 assertNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
                 assertNull(pt.getValidationFlow().getFinalEventBuilderTimestamp());
                 assertNull(pt.getPaperStatus().getRegisteredLetterCode());
-                assertNull(pt.getPaperStatus().getFinalStatusCode());
                 assertNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
                 assertNotNull(pt.getPaperStatus().getPaperDeliveryTimestamp());
                 Assertions.assertNotNull(pt.getValidationFlow().getRefinementDematValidationTimestamp());

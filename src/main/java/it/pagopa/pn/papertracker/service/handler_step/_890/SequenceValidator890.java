@@ -32,15 +32,18 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
     public Mono<Void> execute(HandlerContext context) {
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
         SequenceConfig sequenceConfig;
-        boolean isStock890 = TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode());
-        Boolean strictFinalValidationStock890 = context.getPaperTrackings().getValidationConfig().getStrictFinalValidationStock890();
-
-        if(Objects.nonNull(context.getPaperProgressStatusEvent())){
+        boolean isStock890;
+        if(Objects.nonNull(context.getPaperProgressStatusEvent())) {
+            isStock890 = TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode());
             sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
         }else{
-            String finalEventStatusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), context.getEventId());
-            sequenceConfig = SequenceConfiguration.getConfig(finalEventStatusCode);
+            Event event = TrackerUtility.extractEventFromContext(context);
+            isStock890 = TrackerUtility.isStockStatus890(event.getStatusCode());
+            sequenceConfig = SequenceConfiguration.getConfig(event.getStatusCode());
+
         }
+        Boolean strictFinalValidationStock890 = context.getPaperTrackings().getValidationConfig().getStrictFinalValidationStock890();
+
         return Mono.just(context.getPaperTrackings())
                 .filter(paperTrackings -> !isStock890 || checkState(context))
                 .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig,
