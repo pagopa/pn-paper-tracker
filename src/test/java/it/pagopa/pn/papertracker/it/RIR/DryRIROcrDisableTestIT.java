@@ -45,7 +45,7 @@ public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            checkPcRetry(scenario);
+            mockPcRetry(scenario);
             scenarioRunner.run(scenario, OcrStatusEnum.DISABLED, false);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
@@ -57,7 +57,7 @@ public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    private void checkPcRetry(ProductTestCase scenario) {
+    private void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
         switch (scenario.getName().toUpperCase()) {
             case "OK_RETRY_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));

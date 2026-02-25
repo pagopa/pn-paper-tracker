@@ -187,7 +187,9 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                 if (event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")
                         && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
                     receiveOcrResponse(scenario, event.getOcrResponseIdx());
-                } else {
+                }
+
+                if (!event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")) {
                     SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
                     singleStatusUpdate.setAnalogMail(event.getAnalogMail());
                     externalChannelHandler.handleExternalChannelMessage(
@@ -214,20 +216,20 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             Set<String> requestIds = scenario.getEvents().stream()
                     .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
-                    .collect(groupingBy(event -> {
-                        return event.getAnalogMail().getRequestId();
-                    }))
+                    .collect(groupingBy(event -> event.getAnalogMail().getRequestId()))
                     .keySet();
 
             List<PaperTrackingsErrors> errors = new ArrayList<>();
+            List<PaperTrackerDryRunOutputs> outputs = new ArrayList<>();
+            List<PaperTrackings> trackings = paperTrackingsDAO.retrieveAllByTrackingIds(requestIds.stream().toList()).collectList().block();
+
+
             requestIds.forEach(requestId -> errors.addAll(Objects.requireNonNull(paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block())));
             ErrorValidator.verifyErrors(scenario, errors);
 
-            List<PaperTrackerDryRunOutputs> outputs = new ArrayList<>();
             requestIds.forEach(requestId -> outputs.addAll(Objects.requireNonNull(paperTrackerDryRunOutputsDao.retrieveOutputEvents(requestId).collectList().block())));
             OutputValidator.verifyOutputs(scenario, ocrStatusEnum, outputs);
 
-            List<PaperTrackings> trackings = paperTrackingsDAO.retrieveAllByTrackingIds(requestIds.stream().toList()).collectList().block();
             TrackingValidator.verifyTrackingEntities(scenario, trackings, ocrStatusEnum, strictValidation);
         }
     }

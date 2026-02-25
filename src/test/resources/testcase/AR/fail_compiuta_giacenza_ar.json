@@ -135,10 +135,10 @@
         "productType": "AR",
         "unifiedDeliveryDriver": "Poste",
         "details": {
-          "deliveryDetailCode": "RECRN002C",
+          "deliveryDetailCode": "RECRN005C",
           "notificationDate": "2024-01-01T10:00:00Z",
           "registeredLetterCode": "1234567891011",
-          "deliveryFailureCause": "M02",
+          "deliveryFailureCause": null,
           "attachment": "Uri",
           "deliveryAttemptDate": "2024-01-01T09:00:00Z"
         }

@@ -34,10 +34,8 @@ public class Dry890OcrRunTestIT extends Abstract890TestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            mockPcRetry(scenario);
             ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-            mockSendToOcr(scenario, ocrEventCaptor);
-            mockDataVault(scenario);
+            mockData(scenario, RUN, ocrEventCaptor);
             scenarioRunner.run(scenario, RUN,false);
             verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){
@@ -51,7 +49,7 @@ public class Dry890OcrRunTestIT extends Abstract890TestIT {
     }
 
     Stream<Arguments> loadTestCases() throws Exception {
-        return super.loadTestCases("tmp2");
+        return super.loadTestCases("_890");
     }
 }
 

@@ -6,13 +6,12 @@ import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.it.SequenceLoader;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,11 +21,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import static it.pagopa.pn.papertracker.it.GenericTestCaseHandlerImpl.getPcRetryResponse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
@@ -42,6 +43,14 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
 
     @MockitoBean
     protected OcrMomProducer ocrMomProducer;
+
+    protected void mockData(ProductTestCase productTestCase, OcrStatusEnum ocrStatusEnum, ArgumentCaptor<OcrEvent> argumentCaptor){
+        mockPcRetry(productTestCase);
+        mockDataVault(productTestCase);
+        if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
+            mockSendToOcr(productTestCase);
+        }
+    }
 
     protected void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
@@ -66,42 +75,39 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    protected void mockSendToOcr(ProductTestCase scenario, ArgumentCaptor<OcrEvent> ocrEventCaptor) {
-
-        if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
-                || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
+    protected void mockSendToOcr(ProductTestCase scenario) {
+        if (Objects.nonNull(scenario.getExpected().getOcrDataPayload())) {
             Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
-            Mockito.doNothing().when(ocrMomProducer).push(ocrEventCaptor.capture());
-        }
-
-        if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.KO))) {
-            Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
-            Mockito.doNothing().when(ocrMomProducer).push(ocrEventCaptor.capture());
+            Mockito.doNothing().when(ocrMomProducer).push(any(OcrEvent.class));
         }
     }
 
     protected void verifySentToOcr(ProductTestCase scenario, ArgumentCaptor<OcrEvent> ocrEventCaptor){
-      /*  if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings -> paperTrackings.getState().equals(PaperTrackingsState.DONE)
-                || paperTrackings.getBusinessState().equals(BusinessState.DONE)) && !scenario.getName().contains("ZIP")) {
-            OcrDataPayloadDTO payloadDTO = scenario.getExpected().getOcrDataPayload();
-            Mockito.verify(ocrMomProducer, Mockito.times(scenario.getExpected().getSentToOcr())).push(ocrEventCaptor.capture());
-            OcrEvent ocrEvent = ocrEventCaptor.getValue();
-            Assertions.assertEquals(payloadDTO.getCommandId(), ocrEvent.getPayload().getCommandId());
-            Assertions.assertEquals(payloadDTO.getCommandType(), ocrEvent.getPayload().getCommandType());
-            Assertions.assertNotNull(ocrEvent.getPayload().getData());
-            DataDTO exp = payloadDTO.getData();
-            DataDTO act = ocrEvent.getPayload().getData();
-            Assertions.assertEquals(exp.getDocumentType(), act.getDocumentType());
-            Assertions.assertEquals(exp.getProductType(), act.getProductType());
-            Assertions.assertEquals(exp.getUnifiedDeliveryDriver(), act.getUnifiedDeliveryDriver());
-            Assertions.assertNotNull(act.getDetails());
-            Assertions.assertEquals(exp.getDetails().getDeliveryDetailCode(), act.getDetails().getDeliveryDetailCode());
-            Assertions.assertEquals(exp.getDetails().getRegisteredLetterCode(), act.getDetails().getRegisteredLetterCode());
-            Assertions.assertEquals(exp.getDetails().getAttachment(), act.getDetails().getAttachment());
-            Assertions.assertEquals(exp.getDetails().getNotificationDate(), act.getDetails().getNotificationDate());
-            Assertions.assertEquals(exp.getDetails().getDeliveryFailureCause(), act.getDetails().getDeliveryFailureCause());
-            Assertions.assertEquals(exp.getDetails().getDeliveryAttemptDate(), act.getDetails().getDeliveryAttemptDate());
-        }*/
+        Mockito.verify(ocrMomProducer, times(scenario.getExpected().getSentToOcr())).push(ocrEventCaptor.capture());
+        List<OcrDataPayloadDTO> ocrEvents = ocrEventCaptor.getAllValues().stream().map(OcrEvent::getPayload).toList();
+        List<OcrDataPayloadDTO> expected = scenario.getExpected().getOcrDataPayload();
+        if(Objects.nonNull(expected)) {
+            Assertions.assertEquals(expected.size(), ocrEvents.size());
+            for (int i = 0; i < expected.size(); i++) {
+                OcrDataPayloadDTO exp = expected.get(i);
+                OcrDataPayloadDTO act = ocrEvents.get(i);
+                Assertions.assertEquals(exp.getCommandId(), act.getCommandId());
+                Assertions.assertEquals(exp.getCommandType(), act.getCommandType());
+                Assertions.assertNotNull(act.getData());
+                DataDTO expData = exp.getData();
+                DataDTO actData = act.getData();
+                Assertions.assertEquals(expData.getDocumentType(), actData.getDocumentType());
+                Assertions.assertEquals(expData.getProductType(), actData.getProductType());
+                Assertions.assertEquals(expData.getUnifiedDeliveryDriver(), actData.getUnifiedDeliveryDriver());
+                Assertions.assertNotNull(actData.getDetails());
+                Assertions.assertEquals(expData.getDetails().getDeliveryDetailCode(), actData.getDetails().getDeliveryDetailCode());
+                Assertions.assertEquals(expData.getDetails().getRegisteredLetterCode(), actData.getDetails().getRegisteredLetterCode());
+                Assertions.assertEquals(expData.getDetails().getAttachment(), actData.getDetails().getAttachment());
+                Assertions.assertEquals(expData.getDetails().getNotificationDate(), actData.getDetails().getNotificationDate());
+                Assertions.assertEquals(expData.getDetails().getDeliveryFailureCause(), actData.getDetails().getDeliveryFailureCause());
+                Assertions.assertEquals(expData.getDetails().getDeliveryAttemptDate(), actData.getDetails().getDeliveryAttemptDate());
+            }
+        }
     }
 
     protected Stream<Arguments> loadTestCases(String folder) throws Exception {

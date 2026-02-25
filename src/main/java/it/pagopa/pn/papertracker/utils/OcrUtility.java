@@ -226,6 +226,7 @@ public class OcrUtility {
     private Instant getDeliveryAttemptDate(PaperTrackings paperTrackings) {
         return paperTrackings.getEvents().stream()
                 .filter(event -> RECRN010.name().equals(event.getStatusCode()))
+                .sorted(Comparator.comparing(Event::getRequestTimestamp).reversed())
                 .map(Event::getStatusTimestamp)
                 .findFirst()
                 .orElse(null);

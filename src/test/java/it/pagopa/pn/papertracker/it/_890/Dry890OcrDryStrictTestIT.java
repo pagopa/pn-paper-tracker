@@ -16,6 +16,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.stream.Stream;
 
 import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DRY;
+import static it.pagopa.pn.papertracker.model.OcrStatusEnum.RUN;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
@@ -35,10 +36,8 @@ public class Dry890OcrDryStrictTestIT extends Abstract890TestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            mockPcRetry(scenario);
             ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-            mockSendToOcr(scenario, ocrEventCaptor);
-            mockDataVault(scenario);
+            mockData(scenario, RUN, ocrEventCaptor);
             scenarioRunner.run(scenario, DRY,true);
             verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){

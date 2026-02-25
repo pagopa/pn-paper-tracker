@@ -15,6 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.util.stream.Stream;
 
+import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DISABLED;
 import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DRY;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,9 +35,8 @@ public class DryAROcrDryTestIT extends AbstractARTestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            super.mockPcRetry(scenario);
             ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-            mockSendToOcr(scenario, ocrEventCaptor);
+            mockData(scenario, DRY, ocrEventCaptor);
             scenarioRunner.run(scenario, DRY,false);
             verifySentToOcr(scenario, ocrEventCaptor);
         }catch (PnPaperTrackerValidationException e){

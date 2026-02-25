@@ -14,6 +14,8 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.util.stream.Stream;
 
+import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DISABLED;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 @TestPropertySource(
@@ -31,7 +33,7 @@ public class DryAROcrDisableTestIT extends AbstractARTestIT {
     @MethodSource("loadTestCases")
     void runScenario(String fileName, ProductTestCase scenario) throws InterruptedException {
         try {
-            super.mockPcRetry(scenario);
+            mockData(scenario, DISABLED, null);
             scenarioRunner.run(scenario, OcrStatusEnum.DISABLED, false);
         }catch (PnPaperTrackerValidationException e){
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
