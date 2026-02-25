@@ -91,7 +91,7 @@
       }
     ],
 
-    "ocrResultPayload": {
+    "ocrResultPayload": [{
       "commandId": "{{REQUEST_ID}}#f6a7b8c9-6666-4f7a-9b8c-6d7e8f9a0b16#Plico",
       "version": "v1",
       "commandType": "postal",
@@ -101,8 +101,8 @@
         "predictedRefinementType": null,
         "validationType": "ai"
       }
-    },
-    "ocrDataPayload": {
+    }],
+    "ocrDataPayload": [{
       "commandId": "{{REQUEST_ID}}#f6a7b8c9-6666-4f7a-9b8c-6d7e8f9a0b16#Plico",
       "commandType": "postal",
       "data": {
@@ -118,7 +118,7 @@
           "deliveryAttemptDate": null
         }
       }
-    },
+    }],
     "sentToOcr": 1
   }
 }

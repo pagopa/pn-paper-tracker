@@ -147,7 +147,7 @@
       }
     ],
 
-    "ocrResultPayload": {
+    "ocrResultPayload": [{
       "commandId": "{{REQUEST_ID_RETRY}}#a010dd11-ee12-4f13-9a14-778899001122#AR",
       "version": "v1",
       "commandType": "postal",
@@ -157,8 +157,8 @@
         "predictedRefinementType": null,
         "validationType": "ai"
       }
-    },
-    "ocrDataPayload": {
+    }],
+    "ocrDataPayload": [{
       "commandId": "{{REQUEST_ID_RETRY}}#a010dd11-ee12-4f13-9a14-778899001122#AR",
       "commandType": "postal",
       "data": {
@@ -174,7 +174,7 @@
           "deliveryAttemptDate": null
         }
       }
-    },
+    }],
     "sentToOcr": 1
   }
 }

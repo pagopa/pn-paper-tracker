@@ -21,7 +21,6 @@ public class SequenceRunner {
 
     private final List<GenericTestCaseHandler> handlers;
     private final PaperTrackerTrackingService paperTrackerTrackingService;
-    private final OcrEventHandler ocrEventHandler;
 
     public void run(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, boolean strictFinalValidation) throws InterruptedException {
         GenericTestCaseHandler handler = handlers.stream()
@@ -36,36 +35,25 @@ public class SequenceRunner {
         handler.beforeInit(scenario, strictFinalValidation);
         initPaperTrackings(scenario);
         handler.afterInit(scenario, scenario.getInitialTracking());
-        handler.sendEvents(scenario);
-        if(Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)){
-            receiveOcrResponse(scenario);
-        }
+        handler.sendEvents(scenario, ocrStatusEnum);
         handler.afterSendEvents(scenario, ocrStatusEnum, strictFinalValidation);
-    }
-
-    private void receiveOcrResponse(ProductTestCase scenario) {
-        ocrEventHandler.handleOcrMessage(
-                scenario.getExpected().getOcrResultPayload()
-        );
     }
 
     private void initPaperTrackings(ProductTestCase scenario) {
         paperTrackerTrackingService.insertPaperTrackings(scenario.getInitialTracking()).block();
         if(!CollectionUtils.isEmpty(scenario.getEvents())) {
 
-            if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
-                assert singleStatusUpdate.getAnalogMail() != null;
-                return singleStatusUpdate.getAnalogMail()
-                        .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY}}");
-            })) {
+            if (scenario.getEvents().stream()
+                    .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
+                    .anyMatch(singleStatusUpdate -> singleStatusUpdate.getAnalogMail()
+                            .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY}}"))) {
                 paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_1")).block();
             }
 
-            if (scenario.getEvents().stream().anyMatch(singleStatusUpdate -> {
-                assert singleStatusUpdate.getAnalogMail() != null;
-                return singleStatusUpdate.getAnalogMail()
-                        .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY_2}}");
-            })) {
+            if (scenario.getEvents().stream()
+                    .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
+                    .anyMatch(singleStatusUpdate -> singleStatusUpdate.getAnalogMail()
+                            .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY_2}}"))) {
                 paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_2")).block();
             }
         }

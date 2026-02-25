@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
+import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     private final PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDao;
     private final PaperTrackingsDAO paperTrackingsDAO;
+    private final OcrEventHandler ocrEventHandler;
 
     @Override
     public String getProductType() {
@@ -46,7 +48,9 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                         .replace("{{RANDOM_IUN}}", randomIun)
         );
 
-        scenario.getEvents().forEach(testEvent -> testEvent.getAnalogMail().setRequestId(
+        scenario.getEvents()
+                .stream().filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
+                .forEach(testEvent -> testEvent.getAnalogMail().setRequestId(
                 testEvent.getAnalogMail().getRequestId().replace("{{RANDOM_IUN}}", randomIun)));
 
         scenario.getExpected().getTrackings().forEach(out -> {
@@ -59,29 +63,29 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         // che termina con C (l'evento finale non sale in timeline come progress)
         //poichè la validazione non è andata a buon fine deve essere aggiornato il paperStatus rimuovendo i valdiatedEvent, il registeredLetterCode e
         //la deliveryFailureCause e impostando come finalStatusCode il "RECAG012"
-        if(strictFinalValidation){
+        if (strictFinalValidation) {
             scenario.getExpected().getErrors().stream()
                     .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
                     .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
-            if(scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors ->
-                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")){
+            if (scenario.getExpected().getErrors().stream().anyMatch(paperTrackingsErrors ->
+                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")) {
                 scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.setBusinessState(BusinessState.KO));
                 scenario.getExpected().setOutputs(scenario.getExpected().getOutputs()
                         .stream().filter(paperTrackerDryRunOutputs -> !paperTrackerDryRunOutputs.getStatusDetail().endsWith("C")).toList());
                 scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setValidatedEvents(new ArrayList<>()));
                 scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setRegisteredLetterCode(null));
-                if(scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings ->
+                if (scenario.getExpected().getTrackings().stream().anyMatch(paperTrackings ->
                         Objects.nonNull(paperTrackings.getPaperStatus().getFinalStatusCode()))) {
                     scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setFinalStatusCode("RECAG012"));
                 }
                 scenario.getExpected().getTrackings().forEach(paperTrackings -> paperTrackings.getPaperStatus().setDeliveryFailureCause(null));
             }
-            if(scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")){
+            if (scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")) {
                 scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
                         .filter(paperTrackingsErrors -> paperTrackingsErrors.getErrorCategory().equals(ErrorCategory.DATE_ERROR))
                         .toList());
             }
-            if(scenario.getName().contains("INVALID_ATTACHMENT")){
+            if (scenario.getName().contains("INVALID_ATTACHMENT")) {
                 scenario.getExpected().setErrors(scenario.getExpected().getErrors().stream()
                         .filter(paperTrackingsErrors -> paperTrackingsErrors.getDetails().getMessage().startsWith("Missed required attachments"))
                         .toList());
@@ -97,8 +101,9 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         String retryRequestId = requestId.replace("PCRETRY_0", "PCRETRY_1");
         String secondRetryRequestId = requestId.replace("PCRETRY_0", "PCRETRY_2");
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
-            scenario.getEvents().forEach(event -> {
-                assert event.getAnalogMail() != null;
+            scenario.getEvents()
+                    .stream().filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
+                    .forEach(event -> {
                 String original = event.getAnalogMail().getRequestId();
                 if (original.contains("{{REQUEST_ID_RETRY}}")) {
                     event.getAnalogMail().setRequestId(retryRequestId);
@@ -143,13 +148,14 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                     }
                 }
             });
-            if(Objects.nonNull(scenario.getExpected().getOcrResultPayload())){
-                scenario.getExpected().getOcrResultPayload().setCommandId(scenario.getExpected().getOcrResultPayload().getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
+            if (Objects.nonNull(scenario.getExpected().getOcrResultPayload())) {
+                scenario.getExpected().getOcrResultPayload().forEach(ocrDataResultPayload ->
+                        ocrDataResultPayload.setCommandId(ocrDataResultPayload.getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
                         .replace("{{REQUEST_ID_RETRY_2}}", secondRetryRequestId)
-                        .replace("{{REQUEST_ID}}", requestId));
-                scenario.getExpected().getOcrDataPayload().setCommandId(scenario.getExpected().getOcrDataPayload().getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
+                        .replace("{{REQUEST_ID}}", requestId)));
+                scenario.getExpected().getOcrDataPayload().forEach(ocrDataResultPayload -> ocrDataResultPayload.setCommandId(ocrDataResultPayload.getCommandId().replace("{{REQUEST_ID_RETRY}}", retryRequestId)
                         .replace("{{REQUEST_ID_RETRY_2}}", secondRetryRequestId)
-                        .replace("{{REQUEST_ID}}", requestId));
+                        .replace("{{REQUEST_ID}}", requestId)));
             }
         }
 
@@ -175,27 +181,40 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     }
 
     @Override
-    public void sendEvents(ProductTestCase scenario) {
+    public void sendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             scenario.getEvents().forEach(event -> {
-                SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
-                singleStatusUpdate.setAnalogMail(event.getAnalogMail());
-                externalChannelHandler.handleExternalChannelMessage(
-                        singleStatusUpdate,
-                        true,
-                        null,
-                        event.getMessageId(),
-                        null);
+                if (event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")
+                        && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                    receiveOcrResponse(scenario, event.getOcrResponseIdx());
+                } else {
+                    SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
+                    singleStatusUpdate.setAnalogMail(event.getAnalogMail());
+                    externalChannelHandler.handleExternalChannelMessage(
+                            singleStatusUpdate,
+                            true,
+                            null,
+                            event.getMessageId(),
+                            null);
+                }
             });
         }
+        if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
+                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+            receiveOcrResponse(scenario, 1);
+        }
+    }
+
+    private void receiveOcrResponse(ProductTestCase scenario, Integer index) {
+        ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(index - 1));
     }
 
     @Override
     public void afterSendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, boolean strictValidation) {
         if (!CollectionUtils.isEmpty(scenario.getEvents())) {
             Set<String> requestIds = scenario.getEvents().stream()
+                    .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
                     .collect(groupingBy(event -> {
-                        assert event.getAnalogMail() != null;
                         return event.getAnalogMail().getRequestId();
                     }))
                     .keySet();

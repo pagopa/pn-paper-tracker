@@ -12,7 +12,7 @@ public interface GenericTestCaseHandler {
 
     void afterInit(ProductTestCase scenario, TrackingCreationRequest request);
 
-    void sendEvents(ProductTestCase scenario);
+    void sendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum);
 
     void afterSendEvents(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum, boolean strictValidation);
 

@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.it.validator;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
@@ -9,6 +10,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.KO;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrackingValidator {
@@ -145,7 +147,8 @@ public class TrackingValidator {
             assertNull(flow.getSequencesValidationTimestamp());
         }
 
-        if (scenario.getEvents().stream().anyMatch(testEvent -> testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
+        if (scenario.getEvents().stream().anyMatch(testEvent -> Objects.nonNull(testEvent.getAnalogMail())
+                && testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
             assertNotNull(flow.getRecag012StatusTimestamp());
         } else {
             assertNull(flow.getRecag012StatusTimestamp());
@@ -154,7 +157,8 @@ public class TrackingValidator {
         if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else if (scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")
-                || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2")) {
+                || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2")
+                || scenario.getName().equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890")) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else {
             assertNull(flow.getRefinementDematValidationTimestamp());
@@ -171,7 +175,9 @@ public class TrackingValidator {
             return;
         }
 
-        if (hasNextRequestIdPcretry || (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2"))) {
+        if (hasNextRequestIdPcretry ||
+                (!isDone && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") && !testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2")
+                        && !testCase.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890"))) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
@@ -192,8 +198,11 @@ public class TrackingValidator {
                     .orElseThrow();
 
             assertNotNull(act.getRequestTimestamp());
-            if (ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+            if (ocrStatusEnum.equals(OcrStatusEnum.RUN) && !testCase.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890")
+                    && !Data.ValidationStatus.KO.getValue().equalsIgnoreCase(act.getResponseStatus())) {
                 assertNotNull(act.getResponseTimestamp());
+            } else {
+                assertNull(act.getResponseTimestamp());
             }
         });
     }

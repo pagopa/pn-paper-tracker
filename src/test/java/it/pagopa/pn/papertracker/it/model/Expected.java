@@ -17,6 +17,6 @@ public class Expected {
     private List<PaperTrackerDryRunOutputs> outputs;
     private List<PaperTrackings> trackings;
     private Integer sentToOcr;
-    private OcrDataResultPayload ocrResultPayload;
-    private OcrDataPayloadDTO ocrDataPayload;
+    private List<OcrDataResultPayload> ocrResultPayload;
+    private List<OcrDataPayloadDTO> ocrDataPayload;
 }

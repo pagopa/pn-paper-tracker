@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 public class TestEvent {
     private String messageId;
+    private Integer ocrResponseIdx;
     private PaperProgressStatusEvent analogMail;
 }
