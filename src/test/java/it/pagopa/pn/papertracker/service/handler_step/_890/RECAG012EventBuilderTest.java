@@ -158,8 +158,6 @@ class RECAG012EventBuilderTest {
             context.setNeedToSendRECAG012A(false);
             addEventToPaperTrackings("RECAG012");
             addRECAG012Event();
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
 
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
@@ -199,9 +197,6 @@ class RECAG012EventBuilderTest {
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -212,11 +207,6 @@ class RECAG012EventBuilderTest {
             assertThat(eventsToSend).isNotEmpty();
             assertThat(eventsToSend.get(0).getStatusCode()).isEqualTo(StatusCodeEnum.OK);
             assertThat(eventsToSend.get(0).getStatusDetail()).isEqualTo("RECAG012");
-
-            ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
-            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), captor.capture());
-            assertThat(captor.getValue().getState()).isEqualTo(PaperTrackingsState.DONE);
-            assertThat(captor.getValue().getValidationFlow().getRefinementDematValidationTimestamp()).isNotNull();
         }
 
         @Test
@@ -228,9 +218,6 @@ class RECAG012EventBuilderTest {
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -239,7 +226,6 @@ class RECAG012EventBuilderTest {
                     .verifyComplete();
 
             assertThat(eventsToSend).isNotEmpty();
-            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
         }
     }
 
@@ -285,9 +271,6 @@ class RECAG012EventBuilderTest {
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -296,7 +279,6 @@ class RECAG012EventBuilderTest {
                     .verifyComplete();
 
             assertThat(eventsToSend).isNotEmpty();
-            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
         }
     }
 
@@ -325,9 +307,6 @@ class RECAG012EventBuilderTest {
             addRECAG012Event();
             context.setEventId("RECAG012_EVENT_ID");
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -336,7 +315,6 @@ class RECAG012EventBuilderTest {
                     .verifyComplete();
 
             assertThat(eventsToSend).isNotEmpty();
-            verify(paperTrackingsDAO).updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class));
         }
 
         @Test
@@ -422,9 +400,6 @@ class RECAG012EventBuilderTest {
             addRECAG012Event();
             context.setEventId("RECAG012_EVENT_ID");
 
-            when(paperTrackingsDAO.updateItem(eq("TEST_TRACKING_ID"), any(PaperTrackings.class)))
-                    .thenReturn(Mono.just(paperTrackings));
-
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);
 
@@ -445,10 +420,6 @@ class RECAG012EventBuilderTest {
             validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
             addEventToPaperTrackings("RECAG011B");
             addRECAG012Event();
-
-            // Mock to return empty list
-            when(paperTrackingsDAO.updateItem(any(), any()))
-                    .thenReturn(Mono.just(paperTrackings));
 
             // Act
             Mono<Void> result = recag012EventBuilder.execute(context);

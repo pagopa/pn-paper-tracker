@@ -3,7 +3,6 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.SendEventMapper;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.EventTypeEnum;
@@ -70,8 +69,6 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012A;
 @RequiredArgsConstructor
 @Slf4j
 public class RECAG012EventBuilder implements HandlerStep {
-
-    private final PaperTrackingsDAO paperTrackingsDAO;
 
 
     @Override
