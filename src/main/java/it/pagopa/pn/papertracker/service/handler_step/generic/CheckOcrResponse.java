@@ -78,19 +78,30 @@ public class CheckOcrResponse implements HandlerStep {
 
     private Mono<Void> handleValidationStatus(Data.ValidationStatus status, PaperTrackings paperTrackings,
                                               Event event, OcrDataResultPayload ocrResultMessage, HandlerContext context) {
+        String[] parsedOcrCommandId = TrackerUtility.getParsedOcrCommandId(ocrResultMessage.getCommandId());
+        String docType = parsedOcrCommandId[2];
+        String trackingId = parsedOcrCommandId[0];
+
+        Integer index = TrackerUtility.getOcrRequestIndexByEventIdAndDocType(paperTrackings, context.getEventId(), docType);
+
         return switch (status) {
-            case KO -> Mono.error(new PnPaperTrackerValidationException(
-                    "Error in OCR validation for requestId: " + ocrResultMessage.getCommandId(),
-                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(
-                            paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
-                            ErrorCause.OCR_KO, ocrResultMessage.getData().getDescription(),
-                            FlowThrow.DEMAT_VALIDATION, ErrorType.ERROR, event.getId()
-                    )
-            ));
+            case KO -> {
+                log.info("OCR validation KO for requestId: {}", ocrResultMessage.getCommandId());
+                yield paperTrackingsDAO.updateOcrRequests(index, trackingId, Data.ValidationStatus.KO)
+                        .doOnNext(context::setPaperTrackings)
+                        .then(Mono.error(new PnPaperTrackerValidationException(
+                                "Error in OCR validation for requestId: " + ocrResultMessage.getCommandId(),
+                                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                                        paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
+                                        ErrorCause.OCR_KO, ocrResultMessage.getData().getDescription(),
+                                        FlowThrow.DEMAT_VALIDATION, ErrorType.ERROR, event.getId()
+                                )
+                        )));
+            }
 
             case OK -> {
                 log.info("OCR validation successful for requestId: {}", ocrResultMessage.getCommandId());
-                yield handleOkStatus(paperTrackings, event, ocrResultMessage, context);
+                yield handleOkStatus(paperTrackings, event, ocrResultMessage, context, index);
             }
 
             case PENDING -> {
@@ -101,21 +112,15 @@ public class CheckOcrResponse implements HandlerStep {
         };
     }
 
-    private Mono<Void> handleOkStatus(PaperTrackings tracking, Event event, OcrDataResultPayload payload, HandlerContext context) {
-
-        String[] parsedOcrCommandId = TrackerUtility.getParsedOcrCommandId(payload.getCommandId());
-        String docType = parsedOcrCommandId[2];
-        String trackingId = parsedOcrCommandId[0];
-
-        Integer index = TrackerUtility.getOcrRequestIndexByEventIdAndDocType(tracking, context.getEventId(), docType);
-
-        return paperTrackingsDAO.updateOcrRequests(index, trackingId)
+    private Mono<Void> handleOkStatus(PaperTrackings tracking, Event event, OcrDataResultPayload payload, HandlerContext context, Integer index) {
+        String trackingId = tracking.getTrackingId();
+        return paperTrackingsDAO.updateOcrRequests(index, trackingId, Data.ValidationStatus.OK)
                 .doOnNext(context::setPaperTrackings)
-                .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(paperTrackings.getValidationFlow(), paperTrackings.getValidationConfig(), event.getStatusCode()))
+                .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(context, event.getStatusCode()))
                 .flatMap(ocrResponseCompleted -> {
-                    if(ocrResponseCompleted){
+                    if (ocrResponseCompleted) {
                         log.info("All OCR validations completed for trackingId: {}", context.getTrackingId());
-                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate( event.getStatusCode(), payload))
+                        return paperTrackingsDAO.updateItem(trackingId, getPaperTrackingsToUpdate(event.getStatusCode(), payload))
                                 .doOnNext(context::setPaperTrackings)
                                 .then();
                     }

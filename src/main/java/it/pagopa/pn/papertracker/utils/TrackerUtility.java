@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.utils;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.*;
@@ -11,7 +12,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -143,23 +147,45 @@ public class TrackerUtility {
         }
     }
 
-    public static boolean isOcrResponseCompleted(ValidationFlow validationFlow, ValidationConfig validationConfig, String statusCode) {
+    public static boolean isOcrResponseCompleted(HandlerContext context, String statusCode) {
+        ValidationConfig validationConfig = context.getPaperTrackings().getValidationConfig();
+        ValidationFlow validationFlow = context.getPaperTrackings().getValidationFlow();
         if(RECAG012.name().equalsIgnoreCase(statusCode)){
-            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsRefinementStock890();
-            return validationFlow.getOcrRequests().stream()
-                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
-                    .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
+            List<String> requiredDocs = Optional.ofNullable(validationConfig.getSendOcrAttachmentsRefinementStock890()).orElse(List.of());
+            return checkAllOcrResponse(context, requiredDocs);
         }else if(TrackerUtility.isStockStatus890(statusCode)){
-            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsFinalValidationStock890();
+            List<String> requiredDocs = validationConfig.getSendOcrAttachmentsFinalValidationStock890();
             return validationFlow.getOcrRequests().stream()
-                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
+                    .filter(ocrRequest -> Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
+                    .filter(ocrRequest -> requiredDocs.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }else{
-            List<String> requiredAttachments = validationConfig.getSendOcrAttachmentsFinalValidation();
+            List<String> requiredDocs = validationConfig.getSendOcrAttachmentsFinalValidation();
             return validationFlow.getOcrRequests().stream()
-                    .filter(ocrRequest -> requiredAttachments.contains(ocrRequest.getDocumentType()))
+                    .filter(ocrRequest -> Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
+                    .filter(ocrRequest -> requiredDocs.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }
+    }
+
+
+    private static boolean checkAllOcrResponse(HandlerContext context, List<String> requiredDocs) {
+        PaperTrackings tracking = context.getPaperTrackings();
+
+        if (requiredDocs.isEmpty()) {return true;}
+
+        ValidationFlow flow = Optional.ofNullable(tracking.getValidationFlow()).orElse(new ValidationFlow());
+
+        List<OcrRequest> ocrRequests = Optional.ofNullable(flow.getOcrRequests()).orElse(List.of());
+
+        Set<String> completedDocs = ocrRequests.stream()
+                .filter(ocrRequest -> !Data.ValidationStatus.KO.getValue().equals(ocrRequest.getResponseStatus()))
+                .filter(req -> requiredDocs.contains(req.getDocumentType()))
+                .filter(req -> req.getResponseTimestamp() != null)
+                .map(OcrRequest::getDocumentType)
+                .collect(Collectors.toSet());
+
+        return TrackerUtility.hasRequiredAttachmentsRefinementStock890(requiredDocs, completedDocs);
     }
 
     public static Event extractEventFromContext(HandlerContext context) {
@@ -198,10 +224,10 @@ public class TrackerUtility {
         if(CollectionUtils.isEmpty(ocrRequests)){
             return null;
         }
-        return IntStream.range(0, tracking.getValidationFlow().getOcrRequests().size())
-                        .filter(index -> ocrRequests.get(index).getFinalEventId().equalsIgnoreCase(eventId) && ocrRequests.get(index).getDocumentType().equalsIgnoreCase(docType))
-                        .findFirst()
-                        .orElse(-1);
+        return IntStream.iterate(ocrRequests.size() - 1, i -> i >= 0, i -> i - 1)
+                .filter(i -> ocrRequests.get(i).getFinalEventId().equalsIgnoreCase(eventId) && ocrRequests.get(i).getDocumentType().equalsIgnoreCase(docType))
+                .findFirst()
+                .orElse(-1);
     }
 
     public static Attachment getAttachmentFromEventIdAndDocType(PaperTrackings tracking, String eventId, String docType) {

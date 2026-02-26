@@ -33,10 +33,10 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
         log.info("SequenceValidator890 execute for trackingId: {}", context.getTrackingId());
         SequenceConfig sequenceConfig;
         boolean isStock890;
-        if(Objects.nonNull(context.getPaperProgressStatusEvent())) {
+        if (Objects.nonNull(context.getPaperProgressStatusEvent())) {
             isStock890 = TrackerUtility.isStockStatus890(context.getPaperProgressStatusEvent().getStatusCode());
             sequenceConfig = SequenceConfiguration.getConfig(context.getPaperProgressStatusEvent().getStatusCode());
-        }else{
+        } else {
             Event event = TrackerUtility.extractEventFromContext(context);
             isStock890 = TrackerUtility.isStockStatus890(event.getStatusCode());
             sequenceConfig = SequenceConfiguration.getConfig(event.getStatusCode());
@@ -45,19 +45,25 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
         Boolean strictFinalValidationStock890 = context.getPaperTrackings().getValidationConfig().getStrictFinalValidationStock890();
 
         return Mono.just(context.getPaperTrackings())
-                .filter(paperTrackings -> !isStock890 || checkState(context))
-                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig,
-                        isStock890 ? strictFinalValidationStock890 : true))
+                .flatMap(paperTrackings -> {
+                    if (!isStock890) {
+                        return Mono.just(paperTrackings);
+                    }
+                   return checkState(context)
+                            .filter(Boolean::booleanValue)
+                            .map(ignored -> paperTrackings);
+                })
+                .flatMap(paperTrackings -> validateSequence(paperTrackings, context, sequenceConfig, isStock890 ? strictFinalValidationStock890 : true))
                 .doOnNext(context::setPaperTrackings)
                 .then();
     }
 
-    private boolean checkState(HandlerContext context) {
+    private Mono<Boolean> checkState(HandlerContext context) {
         PaperTrackingsState state = context.getPaperTrackings().getState();
         log.info("Current state for trackingId {}: {}", context.getTrackingId(), state);
         return switch (state) {
-            case DONE -> true;
-            case AWAITING_REFINEMENT, AWAITING_REWORK_EVENTS -> throw new PnPaperTrackerValidationException(
+            case DONE -> Mono.just(true);
+            case AWAITING_REFINEMENT, AWAITING_REWORK_EVENTS -> Mono.error( new PnPaperTrackerValidationException(
                     "invalid AWAITING_REFINEMENT state for stock 890",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),
@@ -69,14 +75,14 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorType.ERROR,
                             context.getEventId()
                     )
-            );
+            ));
             case AWAITING_OCR -> {
                 log.info("Awaiting OCR response for refinement, updating business state to AWAITING_REFINEMENT_OCR for trackingId: {}", context.getTrackingId());
-                paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate(context.getEventId()));
-                context.setStopExecution(true);
-                yield false;
+                yield paperTrackingsDAO.updateItem(context.getTrackingId(), getPaperTrackingsToUpdate(context.getEventId()))
+                        .doOnNext(paperTrackings -> context.setStopExecution(true))
+                        .thenReturn(false);
             }
-            case KO -> throw new PnPaperTrackerValidationException(
+            case KO -> Mono.error(new PnPaperTrackerValidationException(
                     "Refinement process reached KO state, cannot proceed with final event validation",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),
@@ -88,19 +94,19 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorType.ERROR,
                             context.getEventId()
                     )
-            );
-            case AWAITING_FINAL_STATUS_CODE -> throw new PnPaperTrackerValidationException(
+            ));
+            case AWAITING_FINAL_STATUS_CODE -> Mono.error(new PnPaperTrackerValidationException(
                     "Invalid state for processing stock 890 final event",
                     PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                             context.getPaperTrackings(),
                             context.getPaperProgressStatusEvent().getStatusCode(),
                             ErrorCategory.INVALID_STATE_FOR_STOCK_890,
                             ErrorCause.STOCK_890_REFINEMENT_ERROR,
-                            String.format("Invalid state %s for processing stock 890 final event",state),
+                            String.format("Invalid state %s for processing stock 890 final event", state),
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()
-                    ));
+                    )));
         };
     }
 
