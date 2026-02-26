@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +24,7 @@ public class PaperTrackingsMapper {
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, TrackerConfigUtils trackerConfigUtils) {
         ProductType productType = ProductType.fromValue(trackingCreationRequest.getProductType());
         Instant now = Instant.now();
+        LocalDate localDate = LocalDate.now(ZoneId.of("Europe/Rome"));
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId(String.join(".",trackingCreationRequest.getAttemptId(), trackingCreationRequest.getPcRetry()));
         paperTrackings.setUnifiedDeliveryDriver(trackingCreationRequest.getUnifiedDeliveryDriver());
@@ -33,7 +34,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setAttemptId(trackingCreationRequest.getAttemptId());
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
-        paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModes(LocalDate.ofInstant(now, ZoneOffset.UTC)).get(productType));
+        paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModes(localDate).get(productType));
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();
@@ -41,11 +42,11 @@ public class PaperTrackingsMapper {
         paperTrackings.setValidationFlow(validationFlow);
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType));
-        validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
-        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
+        validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(localDate));
+        validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(localDate));
+        validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(localDate));
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(localDate));
+        validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890(localDate));
         paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
