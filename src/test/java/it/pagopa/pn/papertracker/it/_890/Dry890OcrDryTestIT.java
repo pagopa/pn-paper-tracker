@@ -50,7 +50,7 @@ public class Dry890OcrDryTestIT extends Abstract890TestIT {
     }
 
     Stream<Arguments> loadTestCases() throws Exception {
-        return super.loadTestCases("_890");
+        return super.loadTestCases("_890", "/giacenza/multiple_ocr_request/run");
     }
 }
 

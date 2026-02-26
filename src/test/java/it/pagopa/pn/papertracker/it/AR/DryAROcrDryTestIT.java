@@ -50,6 +50,6 @@ public class DryAROcrDryTestIT extends AbstractARTestIT {
     }
 
     Stream<Arguments> loadTestCases() throws Exception {
-        return super.loadTestCases("AR");
+        return super.loadTestCases("AR", "/multiple_ocr_request/run");
     }
 }

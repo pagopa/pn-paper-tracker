@@ -17,7 +17,9 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.provider.Arguments;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -110,11 +112,13 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
         }
     }
 
-    protected Stream<Arguments> loadTestCases(String folder) throws Exception {
-        URI uri = Objects.requireNonNull(Thread.currentThread()
-                        .getContextClassLoader()
-                        .getResource("testcase/" + folder))
-                .toURI();
-        return SequenceLoader.loadScenarios(uri);
+    protected Stream<Arguments> loadTestCases(String folder, String exclude) throws Exception {
+        ClassPathResource classPathResource = new ClassPathResource("testcase/" + folder);
+        URI excludeURI = null;
+        if(StringUtils.hasText(exclude)) {
+            ClassPathResource classPathResourceExclude = new ClassPathResource("testcase/" + folder + exclude);
+            excludeURI = classPathResourceExclude.getURI();
+        }
+        return SequenceLoader.loadScenarios(classPathResource.getURI(),excludeURI);
     }
 }
