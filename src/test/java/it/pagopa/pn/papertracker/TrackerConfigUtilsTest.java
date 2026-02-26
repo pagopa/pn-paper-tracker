@@ -240,12 +240,53 @@ public class TrackerConfigUtilsTest {
         cfg.setOcrFilterTemporal("* * 09-11,16-18 * * WED");
         TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
 
-        boolean resultActive = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T17:45:00Z"));
-        boolean resultInactive = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T19:45:00Z"));
+        boolean resultActive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T17:45:00Z"));
+        boolean resultActive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T17:59:59Z"));
+        boolean resultActive3 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T15:00:00Z"));
+        boolean resultActive4 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T15:00:01Z"));
+        boolean resultActive5 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T08:00:00Z"));
+        boolean resultActive6 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T10:59:59Z"));
+        boolean resultInactive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T19:45:00Z"));
+        boolean resultInactive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T14:59:59Z"));
+        boolean resultInactive3 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T07:59:59Z"));
+        boolean resultInactive4 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T11:00:00Z"));
+        boolean resultInactive5 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T14:59:59Z"));
+        boolean resultInactive6 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-25T18:00:00Z"));
         boolean resultDisabled = utils.isOcrFilterTemporalDisabled();
 
-        assertTrue(resultActive);
-        assertFalse(resultInactive);
+        assertTrue(resultActive1);
+        assertTrue(resultActive2);
+        assertTrue(resultActive3);
+        assertTrue(resultActive4);
+        assertTrue(resultActive5);
+        assertTrue(resultActive6);
+        assertFalse(resultInactive1);
+        assertFalse(resultInactive2);
+        assertFalse(resultInactive3);
+        assertFalse(resultInactive4);
+        assertFalse(resultInactive5);
+        assertFalse(resultInactive6);
+        assertFalse(resultDisabled);
+    }
+
+    @Test
+    void returnsOcrFilterTemporalActiveInactiveAllDay(){
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterTemporal("* * * * * MON");
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean resultInactive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T22:59:59Z"));
+        boolean resultInactive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-23T23:00:00Z"));
+        boolean resultActive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:00Z"));
+        boolean resultActive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:01Z"));
+        boolean resultActive3 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-23T22:59:59Z"));
+        boolean resultDisabled = utils.isOcrFilterTemporalDisabled();
+
+        assertFalse(resultInactive1);
+        assertFalse(resultInactive2);
+        assertTrue(resultActive1);
+        assertTrue(resultActive2);
+        assertTrue(resultActive3);
         assertFalse(resultDisabled);
     }
 

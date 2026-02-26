@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,19 +125,22 @@ public class TrackerConfigUtils {
             }
         }
 
-        public boolean isActive(Instant now, ZoneId zoneId) {
+        public boolean isActive(Instant now) {
             if (!isValidConfig || isDisabled) {
                 return false;
             }
 
-            ZonedDateTime zdtNow = now.atZone(zoneId);
+            ZonedDateTime zdtNow = now.atZone(ZoneId.of("Europe/Rome"));
             log.info("Current time in ZonedDateTime: {}", zdtNow);
 
-            ZonedDateTime nextExecution = cronExpression.next(zdtNow);
-            log.info("Next execution of cron: {}", nextExecution);
+            // Sottraiamo un secondo per includere l'istante attuale
+            ZonedDateTime justBefore = zdtNow.minusSeconds(1);
 
-            return Objects.nonNull(nextExecution) &&
-                    zdtNow.truncatedTo(ChronoUnit.MINUTES).isEqual(nextExecution.truncatedTo(ChronoUnit.MINUTES));
+            ZonedDateTime nextExecution = cronExpression.next(zdtNow); //Lasciata per loggare la prossima esecuzione corretta
+            log.info("Next execution of cron: {}", nextExecution);
+            nextExecution = cronExpression.next(justBefore);
+
+            return Objects.nonNull(nextExecution) && zdtNow.isEqual(nextExecution);
         }
     }
 
@@ -291,7 +293,7 @@ public class TrackerConfigUtils {
     }
 
     public boolean isOcrFilterTemporalActive(Instant now) {
-        return ocrFilterTemporalConfig.isActive(now, ZoneOffset.UTC);
+        return ocrFilterTemporalConfig.isActive(now);
     }
 
     public boolean isOcrFilterTemporalDisabled() {
