@@ -130,6 +130,9 @@ public class PaperTrackingsMapperTest {
         validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD"));
         validationConfig.setSendOcrAttachmentsFinalValidation(List.of("23L","ARCAD"));
         validationConfig.setStrictFinalValidationStock890(true);
+        validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrFilterTemporal("* * 9-18 * * MON");
+        validationConfig.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
         paperTrackings.setValidationConfig(validationConfig);
 
         paperTrackings.setNextRequestIdPcretry("nextRequestId123");
@@ -203,6 +206,9 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(validationConfig.getRequiredAttachmentsRefinementStock890(), tracking.getValidationConfig().getRequiredAttachmentsRefinementStock890());
         Assertions.assertEquals(validationConfig.getSendOcrAttachmentsFinalValidationStock890(), tracking.getValidationConfig().getSendOcrAttachmentsFinalValidationStock890());
         Assertions.assertEquals(validationConfig.getStrictFinalValidationStock890(), tracking.getValidationConfig().getStrictFinalValidationStock890());
+        Assertions.assertEquals(validationConfig.getSendOcrAttachmentsRefinementStock890(), tracking.getValidationConfig().getSendOcrAttachmentsRefinementStock890());
+        Assertions.assertEquals(validationConfig.getOcrFilterTemporal(), tracking.getValidationConfig().getOcrFilterTemporal());
+        Assertions.assertEquals(validationConfig.getOcrFilterUnifiedDeliveryDriver(), tracking.getValidationConfig().getOcrFilterUnifiedDeliveryDriver());
 
         Assertions.assertEquals(paperTrackings.getNextRequestIdPcretry(), tracking.getNextRequestIdPcretry());
         Assertions.assertEquals(paperTrackings.getState().name(), tracking.getState().name());

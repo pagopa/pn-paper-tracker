@@ -496,6 +496,12 @@ components:
             - RUN
             - DRY
             - DISABLED
+        ocrFilterTemporal:
+          type: string
+        ocrFilterUnifiedDeliveryDriver:
+          type: array
+          items:
+            type: string
     PaperStatus:
       type: object
       properties:
