@@ -156,13 +156,13 @@ public class TrackerUtility {
         }else if(TrackerUtility.isStockStatus890(statusCode)){
             List<String> requiredDocs = validationConfig.getSendOcrAttachmentsFinalValidationStock890();
             return validationFlow.getOcrRequests().stream()
-                    .filter(ocrRequest -> Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
+                    .filter(ocrRequest -> !Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
                     .filter(ocrRequest -> requiredDocs.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }else{
             List<String> requiredDocs = validationConfig.getSendOcrAttachmentsFinalValidation();
             return validationFlow.getOcrRequests().stream()
-                    .filter(ocrRequest -> Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
+                    .filter(ocrRequest -> !Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
                     .filter(ocrRequest -> requiredDocs.contains(ocrRequest.getDocumentType()))
                     .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
         }

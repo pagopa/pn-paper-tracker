@@ -29,7 +29,6 @@ public class PaperTrackings {
     public static final String COL_STATE = "state";
     public static final String COL_BUSINESS_STATE = "businessState";
     public static final String COL_TTL = "ttl";
-    public static final String COL_REFINED = "refined";
     public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
     public static final String COL_PENDING_FINAL_EVENT_ID = "pendingFinalEventId";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
