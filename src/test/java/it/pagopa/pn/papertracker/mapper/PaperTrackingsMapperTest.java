@@ -38,7 +38,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request,trackerConfigUtils);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request,trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -61,7 +61,293 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(new PnPaperTrackerConfigs());
 
         //ACT & ASSERT
-        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils));
+        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, new PnPaperTrackerConfigs(), Instant.now()));
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothDisabled() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("DISABLED");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("disabled")); //controllo sul minuscolo
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledAndActive() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,FRI");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledTemporalActive() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,FRI");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("Sailpost"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledDriverActive() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,TUE");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledTemporalDisabledDriverActive() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("DISABLED");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledDriverDisabledTemporalActive() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("DISABLED"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledDRYmode() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:DRY","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+    }
+
+    @Test
+    void toPaperTrackingsOCRfiltersBothEnabledDisabledMode() {
+        //ARRANGE
+        TrackingCreationRequest request = new TrackingCreationRequest();
+        request.setAttemptId("request123");
+        request.setPcRetry("PCRETRY_0");
+        request.setUnifiedDeliveryDriver("POSTE");
+        request.setProductType("AR");
+
+        PnPaperTrackerConfigs pnPaperTrackerConfigs = new PnPaperTrackerConfigs();
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidationStock890(List.of("1970-01-01;ARCAD"));
+        pnPaperTrackerConfigs.setRequiredAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
+        pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
+        pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
+        pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
+
+        TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
+        Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
+
+        //ACT
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+
+        //ASSERT
+        Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
+        Assertions.assertEquals("request123", paperTrackings.getAttemptId());
+        Assertions.assertEquals("PCRETRY_0", paperTrackings.getPcRetry());
+        Assertions.assertEquals("POSTE", paperTrackings.getUnifiedDeliveryDriver());
+        Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
+        Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(OcrStatusEnum.DISABLED, paperTrackings.getValidationConfig().getOcrEnabled());
     }
 
     @Test

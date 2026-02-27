@@ -89,7 +89,7 @@ public class TrackerConfigUtils {
 
     public record OcrFilterUnifiedDeliveryDriverConfigRecord(List<String> drivers, boolean isDisabled) {
         public OcrFilterUnifiedDeliveryDriverConfigRecord(List<String> drivers) {
-            this(drivers, drivers.contains(OCR_FILTER_DISABLED));
+            this(drivers, drivers.stream().anyMatch(OCR_FILTER_DISABLED::equalsIgnoreCase));
         }
     }
 
@@ -141,6 +141,7 @@ public class TrackerConfigUtils {
 
             // Calcolo la prossima esecuzione partendo da "un secondo fa"
             ZonedDateTime nextExecution = cronExpression.next(currentSecond.minusSeconds(1));
+            log.debug("Next execution time according to cron: {}", nextExecution);
 
             // Se la prossima esecuzione rispetto a un secondo fa è proprio adesso,
             // significa che il pattern cron include il secondo corrente (è ATTIVO).
