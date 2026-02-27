@@ -135,14 +135,13 @@ public class TrackerConfigUtils {
 
             // Converto l'Instant nel fuso orario corretto
             ZonedDateTime currentZdt = now.atZone(zoneId);
-            log.info("Current time: {}", currentZdt);
 
             // Tronco al secondo spaccato (i cron non gestiscono i millisecondi)
             ZonedDateTime currentSecond = currentZdt.truncatedTo(ChronoUnit.SECONDS);
 
             // Calcolo la prossima esecuzione partendo da "un secondo fa"
             ZonedDateTime nextExecution = cronExpression.next(currentSecond.minusSeconds(1));
-            log.info("Next execution time according to cron: {}", nextExecution);
+            log.debug("Next execution time according to cron: {}", nextExecution);
 
             // Se la prossima esecuzione rispetto a un secondo fa è proprio adesso,
             // significa che il pattern cron include il secondo corrente (è ATTIVO).
