@@ -98,8 +98,8 @@ class DematValidatorTest {
         context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
+        context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -120,8 +120,8 @@ class DematValidatorTest {
         context.getPaperTrackings().setEvents(List.of(getEvent("RECRN002F", null, "eventId1"), getEvent("RECRN002D", null, "eventId2"), getEvent("RECRN002E", "AR", "eventId3")));
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
@@ -159,7 +159,7 @@ class DematValidatorTest {
     void validateDemat_UpdateItemThrowsError_PropagatesError() {
         // Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
+        context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
         context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));

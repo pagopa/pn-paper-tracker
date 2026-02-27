@@ -64,6 +64,7 @@ class OcrUtilityTest {
     void checkAndSendToOcr_OcrEnabled_ValidAttachments() {
         // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        paperTrackings.getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Attachment att = new Attachment();
         att.setUri("uri.pdf");
@@ -73,7 +74,6 @@ class OcrUtilityTest {
         event.setId("finalEventId");
         event.setStatusCode(RECAG012.name());
         event.setStatusTimestamp(Instant.now());
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
@@ -119,6 +119,7 @@ class OcrUtilityTest {
     void checkAndSendToOcr_OcrEnabled_NoValidAttachments() {
         // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        paperTrackings.getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Attachment att = new Attachment();
         att.setUri("uri.txt");
@@ -126,7 +127,6 @@ class OcrUtilityTest {
         attachments.put("eventId", List.of(att));
         Event event = new Event();
         event.setStatusCode(RECAG012.name());
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         // Act
@@ -168,6 +168,7 @@ class OcrUtilityTest {
     void checkAndSendToOcr_OcrDry_ValidAttachments() {
         // Arrange
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.DRY);
+        paperTrackings.getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
         Map<String, List<Attachment>> attachments = new HashMap<>();
         Attachment att = new Attachment();
         att.setUri("uri.pdf");
@@ -177,7 +178,6 @@ class OcrUtilityTest {
         event.setId("finalEventId");
         event.setStatusCode(RECAG012.name());
         event.setStatusTimestamp(Instant.now());
-        when(cfg.getEnableOcrValidationForFile()).thenReturn(List.of(FileType.PDF));
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 

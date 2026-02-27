@@ -79,11 +79,12 @@ public class OcrUtility {
                                            PaperTrackings paperTracking,
                                            OcrStatusEnum ocrStatusEnum) {
         Instant now = Instant.now();
+        List<String> ocrFileTypes = paperTracking.getValidationConfig().getOcrFileTypes();
         Map<String, List<Attachment>> validAttachmentList = attachmentList.entrySet().stream()
                 .filter(entry -> entry.getValue().stream()
                         .map(Attachment::getUri)
-                        .map(this::retrieveFileType)
-                        .anyMatch(ext -> cfg.getEnableOcrValidationForFile().contains(FileType.fromValue(ext))))
+                        .map(OcrUtility::retrieveFileType)
+                        .anyMatch(ocrFileTypes::contains))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 
@@ -141,8 +142,8 @@ public class OcrUtility {
         return ocrRequest;
     }
 
-    private String retrieveFileType(String uri) {
-        return FilenameUtils.getExtension(uri);
+    static public String retrieveFileType(String uri) {
+        return FilenameUtils.getExtension(uri).toLowerCase(Locale.ROOT);
     }
 
     private PaperTrackings getPaperTrackingsToUpdate(OcrStatusEnum ocrStatusEnum,

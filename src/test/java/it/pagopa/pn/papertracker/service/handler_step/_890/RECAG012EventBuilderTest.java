@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
@@ -240,6 +241,7 @@ class RECAG012EventBuilderTest {
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
             validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("DOC_TYPE_A"));
+            validationConfig.setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
             OcrRequest ocrRequest = new OcrRequest();
             ocrRequest.setDocumentType("DOC_TYPE_C"); // Different type
@@ -325,13 +327,16 @@ class RECAG012EventBuilderTest {
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
             validationConfig.setSendOcrAttachmentsRefinementStock890(Arrays.asList("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
             OcrRequest request1 = new OcrRequest();
             request1.setDocumentType("DOC_TYPE_A");
+            request1.setUri("DOC_TYPE_A.pdf");
             request1.setResponseTimestamp(Instant.now());
 
             OcrRequest request2 = new OcrRequest();
             request2.setDocumentType("DOC_TYPE_B");
+            request2.setUri("DOC_TYPE_B.pdf");
             request2.setResponseTimestamp(null); // Missing response
 
             validationFlow.setOcrRequests(Arrays.asList(request1, request2));
@@ -358,13 +363,16 @@ class RECAG012EventBuilderTest {
             validationConfig.setOcrEnabled(OcrStatusEnum.RUN);
             validationConfig.setRequiredAttachmentsRefinementStock890(List.of("DOC_TYPE_A", "DOC_TYPE_B"));
             validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("DOC_TYPE_A", "DOC_TYPE_B"));
+            validationConfig.setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
             OcrRequest request1 = new OcrRequest();
             request1.setDocumentType("DOC_TYPE_A");
+            request1.setUri("DOC_TYPE_A.pdf");
             request1.setResponseTimestamp(Instant.now());
 
             OcrRequest request2 = new OcrRequest();
             request2.setDocumentType("DOC_TYPE_C"); // Wrong type
+            request2.setUri("DOC_TYPE_C.pdf");
             request2.setResponseTimestamp(Instant.now());
 
             validationFlow.setOcrRequests(Arrays.asList(request1, request2));

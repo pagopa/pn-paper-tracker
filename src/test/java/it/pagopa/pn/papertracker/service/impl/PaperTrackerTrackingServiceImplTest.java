@@ -50,7 +50,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
         when(pnPaperTrackerConfigs.getProductsProcessingModes()).thenReturn(List.of("1970-01-01;AR:RUN;RS:DRY"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO, trackerConfigUtils, pnPaperTrackerConfigs);
     }
 
     @Test

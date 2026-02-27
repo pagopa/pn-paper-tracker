@@ -1,9 +1,11 @@
 package it.pagopa.pn.papertracker.mapper;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +23,10 @@ public class PaperTrackingsMapper {
         return SmartMapper.mapToClass(paperTrackings, Tracking.class);
     }
 
-    public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest, TrackerConfigUtils trackerConfigUtils) {
+    public static PaperTrackings toPaperTrackings(
+            TrackingCreationRequest trackingCreationRequest,
+            TrackerConfigUtils trackerConfigUtils,
+            PnPaperTrackerConfigs trackerConfigs) {
         ProductType productType = ProductType.fromValue(trackingCreationRequest.getProductType());
         Instant now = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
@@ -41,6 +46,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setValidationFlow(validationFlow);
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType));
+        validationConfig.setOcrFileTypes(trackerConfigs.getEnableOcrValidationForFile().stream().map(FileType::getValue).toList());
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(LocalDate.ofInstant(now, ZoneOffset.UTC)));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(LocalDate.ofInstant(now, ZoneOffset.UTC)));
