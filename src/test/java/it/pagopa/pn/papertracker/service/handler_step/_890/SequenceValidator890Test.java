@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
@@ -56,15 +57,17 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusFalse() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         Attachment attach = new Attachment();
         attach.setDocumentType("23L");
         paperTrackings.setState(DONE);
-        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005","RECAG002")));
+        paperTrackings.getEvents().forEach(event -> event.setStatusCode(event.getStatusCode().replaceAll("RECAG005", "RECAG002")));
         context.getPaperProgressStatusEvent().setStatusCode("RECAG002C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .verifyComplete();
@@ -76,7 +79,8 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusTrueAndStateDONE() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.setState(DONE);
         Attachment attach = new Attachment();
         attach.setDocumentType("23L");
@@ -88,9 +92,9 @@ class SequenceValidator890Test {
                     event.setAttachments(List.of(attach, attach2));
                     return event;
                 });
-        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
-        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
-        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+        Event event1 = buildEvent(UUID.randomUUID().toString(), "RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent(UUID.randomUUID().toString(), "RECAG011A", Instant.now(), Instant.now(), null);
+        Event event3 = buildEvent(UUID.randomUUID().toString(), "RECAG012", Instant.now(), Instant.now(), null);
 
         List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
         tmpList.add(event1);
@@ -98,9 +102,10 @@ class SequenceValidator890Test {
         tmpList.add(event3);
         paperTrackings.setEvents(tmpList);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.setEventId(eventId);
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .verifyComplete();
@@ -112,11 +117,12 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusTrueAndStateAWAITING_REFINEMENT() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.setState(PaperTrackingsState.AWAITING_REFINEMENT);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
-
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException)
@@ -129,12 +135,13 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusTrueAndStateAWAITING_OCR() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .verifyComplete();
@@ -149,11 +156,12 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusTrueAndStateKO() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.setState(PaperTrackingsState.KO);
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
-
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException)
@@ -166,7 +174,8 @@ class SequenceValidator890Test {
     @Test
     void executeWithStockStatusFalseStrictFinalValidationStock890FalseSaveFourErrors() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.getValidationConfig().setStrictFinalValidationStock890(Boolean.FALSE);
         paperTrackings.setState(DONE);
         paperTrackings.setEvents(paperTrackings.getEvents()
@@ -179,7 +188,7 @@ class SequenceValidator890Test {
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
         when(paperTrackingsErrorsDAO.insertError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
-
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .verifyComplete();
@@ -198,7 +207,8 @@ class SequenceValidator890Test {
     @Test
     void executeWithDifferentRegisteredLetterCodeForRECAG012() {
         // Arrange
-        PaperTrackings paperTrackings = getPaperTrackings();
+        String eventId = UUID.randomUUID().toString();
+        PaperTrackings paperTrackings = getPaperTrackings(eventId);
         paperTrackings.setState(DONE);
         Attachment attach = new Attachment();
         attach.setDocumentType("ARCAD");
@@ -208,9 +218,9 @@ class SequenceValidator890Test {
                     event.getAttachments().add(attach);
                     return event;
                 });
-        Event event1 = buildEvent("RECAG010", Instant.now(), Instant.now(), null);
-        Event event2 = buildEvent("RECAG011A", Instant.now(), Instant.now(),null);
-        Event event3 = buildEvent("RECAG012", Instant.now(), Instant.now(),null);
+        Event event1 = buildEvent(UUID.randomUUID().toString(), "RECAG010", Instant.now(), Instant.now(), null);
+        Event event2 = buildEvent(UUID.randomUUID().toString(), "RECAG011A", Instant.now(), Instant.now(), null);
+        Event event3 = buildEvent(UUID.randomUUID().toString(), "RECAG012", Instant.now(), Instant.now(), null);
         event3.setRegisteredLetterCode("REG999");
 
         List<Event> tmpList = new ArrayList<>(paperTrackings.getEvents());
@@ -221,7 +231,7 @@ class SequenceValidator890Test {
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-
+        context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
                 .verifyComplete();
@@ -232,31 +242,32 @@ class SequenceValidator890Test {
         assertEquals("REG123", paperTrackingsArgumentCaptor.getValue().getPaperStatus().getRegisteredLetterCode());
     }
 
-    private PaperTrackings getPaperTrackings() {
+    private PaperTrackings getPaperTrackings(String eventId) {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
         paperTrackings.setEvents(List.of(
-                buildEvent("RECAG005A", timestamp, businessTimestamp, null),
-                buildEvent("RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
-                buildEvent("RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
+                buildEvent(UUID.randomUUID().toString(), "RECAG005A", timestamp, businessTimestamp, null),
+                buildEvent(UUID.randomUUID().toString(), "RECAG005B", timestamp, businessTimestamp.plusSeconds(1), List.of(DocumentTypeEnum._23L.getValue())),
+                buildEvent(eventId, "RECAG005C", timestamp, businessTimestamp.plusSeconds(2), null)
         ));
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
-        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
-        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD", "CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico", "AR", "23L"));
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
 
-    private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, List<String> attachmentTypes) {
+    private Event buildEvent(String id, String statusCode, Instant statusTimestamp, Instant requestTimestamp, List<String> attachmentTypes) {
         Event event = new Event();
         event.setAttachments(new ArrayList<>());
         event.setStatusCode(statusCode);
+        event.setId(id);
         event.setRegisteredLetterCode("REG123");
         event.setStatusTimestamp(statusTimestamp);
         event.setRequestTimestamp(requestTimestamp);

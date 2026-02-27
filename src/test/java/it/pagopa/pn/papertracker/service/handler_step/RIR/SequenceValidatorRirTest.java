@@ -19,6 +19,7 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
@@ -59,22 +60,24 @@ class SequenceValidatorRirTest {
         //Arrange
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "REG1", "", null),
-                buildEvent("RECRI002", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "REG1", "", null),
-                buildEvent("RECRI001", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "REG1", "", null),
-                buildEvent("RECRI002", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "REG1", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "REG1", "", null),
-                buildEvent("RECRI003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "REG1", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "REG1", "", null),
-                buildEvent("RECRI003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "REG1", "", null),
-                buildEvent("RECRI003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "REG1", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "REG1", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(1), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp.plusSeconds(3), businessTimestamp.plusSeconds(2), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(3), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(4), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(5), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(6), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp.plusSeconds(4), businessTimestamp.plusSeconds(7), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(8), "REG1", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(9), "REG1", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(finalEventId, "RECRI003C", timestamp.plusSeconds(5), businessTimestamp.plusSeconds(11), "REG1", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
@@ -87,17 +90,19 @@ class SequenceValidatorRirTest {
         //Arrange
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(finalEventId, "RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
@@ -112,16 +117,18 @@ class SequenceValidatorRirTest {
         context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
         // Act
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .verifyComplete();
 
@@ -137,15 +144,17 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "", "", null),
-                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "F01", List.of(DocumentTypeEnum.INDAGINE.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "F01", List.of(DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
         // Act & Assert
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Missed required attachments for the sequence validation: [Plico]"))
@@ -156,11 +165,13 @@ class SequenceValidatorRirTest {
     @Test
     void validateSequenceInvalidEventCount() {
         // Arrange
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI003A", Instant.now(), Instant.now(), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", Instant.now(), Instant.now(), "REG123", "", null)
         ));
 
         // Act & Assert
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
@@ -173,15 +184,17 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003B", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(finalEventId, "RECRI003C", timestamp.plusSeconds(2), businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
         // Act & Assert
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Invalid business timestamps"))
@@ -196,13 +209,15 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003B", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp, "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp, "REG123", "", null)
         ));
 
         // Act & Assert
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Necessary status code not found in events"))
@@ -216,15 +231,17 @@ class SequenceValidatorRirTest {
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
 
+        String finalEventId = UUID.randomUUID().toString();
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG444", "", List.of(DocumentTypeEnum.AR.getValue())),
-                buildEvent("RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI003B", timestamp, businessTimestamp.plusSeconds(1), "REG444", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(finalEventId, "RECRI003C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
 
         // Act & Assert
+       context.setEventId(finalEventId);
         StepVerifier.create(sequenceValidatorRir.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Registered letter codes do not match in sequence"))
@@ -299,10 +316,11 @@ class SequenceValidatorRirTest {
                 .verify();
     }
     
-    private Event buildEvent(String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
+    private Event buildEvent(String id, String statusCode, Instant statusTimestamp, Instant requestTimestamp, String registeredLetterCode, String deliveryFailureCause, List<String> attachmentTypes) {
         Event event = new Event();
         event.setAttachments(new ArrayList<>());
         event.setStatusCode(statusCode);
+        event.setId(id);
         event.setRegisteredLetterCode(registeredLetterCode);
         event.setStatusTimestamp(statusTimestamp);
         event.setRequestTimestamp(requestTimestamp);
