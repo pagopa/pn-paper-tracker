@@ -254,12 +254,14 @@ class SequenceValidatorRirTest {
         context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
+        context.setEventId(finalEventId);
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
@@ -277,12 +279,14 @@ class SequenceValidatorRirTest {
         context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
+        context.setEventId(finalEventId);
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "M01", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004A", timestamp, businessTimestamp, "REG123", "M01", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 
@@ -300,12 +304,14 @@ class SequenceValidatorRirTest {
         context.getPaperProgressStatusEvent().setStatusCode("RECRI004C");
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
+        String finalEventId = UUID.randomUUID().toString();
+        context.setEventId(finalEventId);
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent("RECRI001", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI002", timestamp, businessTimestamp, "REG123", "", null),
-                buildEvent("RECRI004A", timestamp, businessTimestamp, "REG123", "INVALID", null),
-                buildEvent("RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent("RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRI001", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI002", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004A", timestamp, businessTimestamp, "REG123", "INVALID", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRI004B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(finalEventId, "RECRI004C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
 

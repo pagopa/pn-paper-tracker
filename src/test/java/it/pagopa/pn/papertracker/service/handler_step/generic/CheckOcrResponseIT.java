@@ -33,7 +33,7 @@ public class CheckOcrResponseIT extends BaseTest.WithLocalStack {
     @Test
     void checkOcrResponseHandler(){
         OcrDataResultPayload payload = OcrDataResultPayload.builder()
-                .CommandId("PREPARE#id1#TEST")
+                .commandId("PREPARE#id1#TEST")
                 .data(Data.builder().description("description").predictedRefinementType(Data.PredictedRefinementType.POST10)
                         .validationType(Data.ValidationType.AI).validationStatus(Data.ValidationStatus.KO).build())
                 .version("version")
