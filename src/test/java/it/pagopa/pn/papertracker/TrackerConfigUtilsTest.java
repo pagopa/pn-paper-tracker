@@ -291,6 +291,39 @@ public class TrackerConfigUtilsTest {
     }
 
     @Test
+    void returnsOcrFilterTemporalActiveInactiveAllDay2(){
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterTemporal("* * * * * MON");
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean resultInactive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T22:59:59Z"));
+        boolean resultInactive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T22:59:59.333Z"));
+        boolean resultActive1 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:00.333Z"));
+        boolean resultActive2 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:01Z"));
+        boolean resultActive3 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:01.333Z"));
+        boolean resultActive4 = utils.isOcrFilterTemporalActive(Instant.parse("2026-02-22T23:00:02.333Z"));
+
+        assertFalse(resultInactive1);
+        assertFalse(resultInactive2);
+        assertTrue(resultActive1);
+        assertTrue(resultActive2);
+        assertTrue(resultActive3);
+        assertTrue(resultActive4);
+    }
+
+    @Test
+    void returnsOcrFilterTemporalActiveInactiveAllDay3(){
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setOcrFilterTemporal("* * * * * *");
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        boolean resultActive1 = utils.isOcrFilterTemporalActive(Instant.now());
+
+        assertTrue(resultActive1);
+
+    }
+
+    @Test
     void returnsOcrFilterTemporalDisabled() {
         PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
         cfg.setOcrFilterTemporal("DISABLED");

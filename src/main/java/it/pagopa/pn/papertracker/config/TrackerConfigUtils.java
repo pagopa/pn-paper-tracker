@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -126,21 +127,24 @@ public class TrackerConfigUtils {
         }
 
         public boolean isActive(Instant now) {
-            if (!isValidConfig || isDisabled) {
+            if (!isValidConfig || isDisabled || cronExpression == null) {
                 return false;
             }
 
-            ZonedDateTime zdtNow = now.atZone(ZoneId.of("Europe/Rome"));
-            log.info("Current time in ZonedDateTime: {}", zdtNow);
+            ZoneId zoneId = ZoneId.of("Europe/Rome");
 
-            // Sottraiamo un secondo per includere l'istante attuale
-            ZonedDateTime justBefore = zdtNow.minusSeconds(1);
+            // Converto l'Instant nel fuso orario corretto
+            ZonedDateTime currentZdt = now.atZone(zoneId);
 
-            ZonedDateTime nextExecution = cronExpression.next(zdtNow); //Lasciata per loggare la prossima esecuzione corretta
-            log.info("Next execution of cron: {}", nextExecution);
-            nextExecution = cronExpression.next(justBefore);
+            // Tronco al secondo spaccato (i cron non gestiscono i millisecondi)
+            ZonedDateTime currentSecond = currentZdt.truncatedTo(ChronoUnit.SECONDS);
 
-            return Objects.nonNull(nextExecution) && zdtNow.isEqual(nextExecution);
+            // Calcolo la prossima esecuzione partendo da "un secondo fa"
+            ZonedDateTime nextExecution = cronExpression.next(currentSecond.minusSeconds(1));
+
+            // Se la prossima esecuzione rispetto a un secondo fa è proprio adesso,
+            // significa che il pattern cron include il secondo corrente (è ATTIVO).
+            return currentSecond.equals(nextExecution);
         }
     }
 
