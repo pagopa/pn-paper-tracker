@@ -23,7 +23,7 @@ import static it.pagopa.pn.papertracker.model.OcrStatusEnum.RUN;
 @TestPropertySource(
         locations = "classpath:application.test-IT.properties",
         properties = {
-                "pn.paper-tracker.enable-ocr-validation-for=AR:DRY,890:DRY"
+                "pn.paper-tracker.enable-ocr-validation-for=1970-01-01;AR:DRY;890:DRY"
         }
 )
 public class Dry890OcrDryTestIT extends Abstract890TestIT {

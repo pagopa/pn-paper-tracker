@@ -21,7 +21,7 @@ import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DISABLED;
 @TestPropertySource(
         locations = "classpath:application.test-IT.properties",
         properties = {
-                "pn.paper-tracker.enable-ocr-validation-for=",
+                "pn.paper-tracker.enable-ocr-validation-for=1970-01-01;",
                 "pn.paper-tracker.strict-final-validation-stock890=1970-01-01;true"
         }
 )

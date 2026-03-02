@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 @TestPropertySource(
         locations = "classpath:application.test-IT.properties",
         properties = {
-                "pn.paper-tracker.enable-ocr-validation-for="
+                "pn.paper-tracker.enable-ocr-validation-for=1970-01-01;"
         }
 )
 public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
