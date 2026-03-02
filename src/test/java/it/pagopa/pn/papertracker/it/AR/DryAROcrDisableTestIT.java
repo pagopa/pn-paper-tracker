@@ -21,7 +21,7 @@ import static it.pagopa.pn.papertracker.model.OcrStatusEnum.DISABLED;
 @TestPropertySource(
         locations = "classpath:application.test-IT.properties",
         properties = {
-                "pn.paper-tracker.enable-ocr-validation-for="
+                "pn.paper-tracker.enable-ocr-validation-for=1970-01-01;"
         }
 )
 public class DryAROcrDisableTestIT extends AbstractARTestIT {
