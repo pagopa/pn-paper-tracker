@@ -32,7 +32,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
 
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
@@ -79,7 +79,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("DISABLED");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("disabled")); //controllo sul minuscolo
@@ -114,7 +114,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,FRI");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
@@ -150,7 +150,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,FRI");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("Sailpost"));
@@ -186,7 +186,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 14,16-18 * * MON,TUE");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
@@ -222,7 +222,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("DISABLED");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
@@ -257,7 +257,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:RUN","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("DISABLED"));
@@ -293,7 +293,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("AR:DRY","RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;AR:DRY;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));
@@ -329,7 +329,7 @@ public class PaperTrackingsMapperTest {
         pnPaperTrackerConfigs.setSendOcrAttachmentsRefinementStock890(List.of("1970-01-01;23L"));
         pnPaperTrackerConfigs.setSendOcrAttachmentsFinalValidation(List.of("1970-01-01;Plico;AR;23L"));
         pnPaperTrackerConfigs.setStrictFinalValidationStock890(List.of("1970-01-01;true"));
-        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("RIR:RUN","890:RUN"));
+        pnPaperTrackerConfigs.setEnableOcrValidationFor(List.of("1970-01-01;RIR:RUN;890:RUN"));
         pnPaperTrackerConfigs.setProductsProcessingModes(List.of("1970-01-01;AR:RUN;RS:DRY"));
         pnPaperTrackerConfigs.setOcrFilterTemporal("* * 16-20 * * FRI");
         pnPaperTrackerConfigs.setOcrFilterUnifiedDeliveryDriver(List.of("POSTE"));

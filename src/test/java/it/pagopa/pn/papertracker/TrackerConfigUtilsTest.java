@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.exception.ConfigNotFound;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -358,6 +359,48 @@ public class TrackerConfigUtilsTest {
         boolean result = utils.isOcrFilterDriverDisabled();
 
         assertTrue(result);
+    }
+
+    @Test
+    void returnsEnableOcrValidationFor() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setEnableOcrValidationFor(List.of("1970-01-01;AR:RUN;RIR:RUN", "2026-02-02;AR:RUN;RIR:RUN;890:DRY"));
+        Map<ProductType, OcrStatusEnum> resultExpected = Map.of(
+                ProductType.AR, OcrStatusEnum.RUN,
+                ProductType.RIR, OcrStatusEnum.RUN
+        );
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        Map<ProductType, OcrStatusEnum> result = utils.getActualEnableOcrValidationFor(startDate);
+
+        assertEquals(resultExpected, result);
+    }
+
+    @Test
+    void returnsEnableOcrValidationForStartDateEqualToConfigDate() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setEnableOcrValidationFor(List.of("2026-08-19;AR:RUN", "2025-03-02;AR:DRY;RIR:RUN;890:RUN"));
+        Map<ProductType, OcrStatusEnum> resultExpected = Map.of(
+                ProductType.AR, OcrStatusEnum.DRY,
+                ProductType.RIR, OcrStatusEnum.RUN,
+                ProductType._890, OcrStatusEnum.RUN
+        );
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+
+        Map<ProductType, OcrStatusEnum> result = utils.getActualEnableOcrValidationFor(startDate);
+
+        assertEquals(resultExpected, result);
+    }
+
+    @Test
+    void returnsEnableOcrValidationForEmpty() {
+        PnPaperTrackerConfigs cfg = new PnPaperTrackerConfigs();
+        cfg.setEnableOcrValidationFor(List.of());
+        TrackerConfigUtils utils = new TrackerConfigUtils(cfg);
+        assertThrows(
+                ConfigNotFound.class,
+                () -> utils.getActualEnableOcrValidationFor(startDate)
+        );
     }
 
 }
