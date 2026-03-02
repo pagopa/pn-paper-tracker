@@ -87,6 +87,24 @@ public class TrackerConfigUtils {
         }
     }
 
+    public static final class OcrActivationModeConfig
+            extends ConfigWithDate<Map<ProductType, OcrStatusEnum>> {
+
+        public OcrActivationModeConfig(String configWithDate) {
+            super(configWithDate);
+        }
+
+        @Override
+        public Map<ProductType, OcrStatusEnum> getConfig() {
+            return stringConfigs.stream()
+                    .map(pm -> pm.split(":"))
+                    .collect(Collectors.toUnmodifiableMap(
+                            pm -> ProductType.fromValue(pm[0]),
+                            pm -> OcrStatusEnum.valueOf(pm[1])
+                    ));
+        }
+    }
+
     public record OcrFilterUnifiedDeliveryDriverConfigRecord(List<String> drivers, boolean isDisabled) {
         public OcrFilterUnifiedDeliveryDriverConfigRecord(List<String> drivers) {
             this(drivers, drivers.stream().anyMatch(OCR_FILTER_DISABLED::equalsIgnoreCase));
@@ -155,6 +173,7 @@ public class TrackerConfigUtils {
     private final List<ListStringConfig> sendOcrAttachmentsFinalValidationConfigs;
     private final List<BooleanConfig> strictFinalValidationStock890Config;
     private final List<ActivationModeConfig> productsProcessingModesConfig;
+    private final List<OcrActivationModeConfig> enableOcrValidationForConfig;
     private final CronTemporalConfig ocrFilterTemporalConfig;
     private final OcrFilterUnifiedDeliveryDriverConfigRecord ocrFilterUnifiedDeliveryDriverConfig;
     private final PnPaperTrackerConfigs cfg;
@@ -166,6 +185,7 @@ public class TrackerConfigUtils {
         this.sendOcrAttachmentsFinalValidationStock890Configs = buildListStringConfig(cfg.getSendOcrAttachmentsFinalValidationStock890());
         this.strictFinalValidationStock890Config = buildListBooleanConfig(cfg.getStrictFinalValidationStock890());
         this.productsProcessingModesConfig = buildListActivationModeConfig(cfg.getProductsProcessingModes());
+        this.enableOcrValidationForConfig = buildListOcrActivationModeConfig(cfg.getEnableOcrValidationFor());
         this.ocrFilterTemporalConfig = buildOcrFilterTemporalConfig(cfg.getOcrFilterTemporal());
         this.ocrFilterUnifiedDeliveryDriverConfig = new OcrFilterUnifiedDeliveryDriverConfigRecord(cfg.getOcrFilterUnifiedDeliveryDriver());
         this.cfg = cfg;
@@ -215,6 +235,14 @@ public class TrackerConfigUtils {
                 .orElse(List.of())
                 .stream()
                 .map(ActivationModeConfig::new)
+                .toList();
+    }
+
+    public List<OcrActivationModeConfig> buildListOcrActivationModeConfig(List<String> configList) {
+        return Optional.ofNullable(configList)
+                .orElse(List.of())
+                .stream()
+                .map(OcrActivationModeConfig::new)
                 .toList();
     }
 
@@ -288,13 +316,12 @@ public class TrackerConfigUtils {
         );
     }
 
-    public Map<ProductType, OcrStatusEnum> getEnableOcrValidationFor() {
-        return cfg.getEnableOcrValidationFor().stream()
-                .map(config -> {
-                    String[] splittedConfig = config.split(":");
-                    return Map.entry(ProductType.fromValue(splittedConfig[0]), splittedConfig[1]);
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> OcrStatusEnum.valueOf(entry.getValue())));
+    public Map<ProductType, OcrStatusEnum> getActualEnableOcrValidationFor(LocalDate date) {
+        return getActualConfig(
+                enableOcrValidationForConfig,
+                date,
+                "EnableOcrValidationFor"
+        );
     }
 
     public boolean isOcrFilterTemporalActive(Instant now) {

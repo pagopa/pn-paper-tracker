@@ -48,7 +48,7 @@ public class PaperTrackingsMapper {
         ValidationConfig validationConfig = new ValidationConfig();
         validationConfig.setOcrFilterTemporal(pnPaperTrackerConfigs.getOcrFilterTemporal());
         validationConfig.setOcrFilterUnifiedDeliveryDriver(pnPaperTrackerConfigs.getOcrFilterUnifiedDeliveryDriver());
-        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType, now, trackingCreationRequest));
+        validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType, now, trackingCreationRequest, localDate));
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(localDate));
         validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(localDate));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(localDate));
@@ -61,9 +61,10 @@ public class PaperTrackingsMapper {
     private static OcrStatusEnum evaluateIfOcrIsEnabled(TrackerConfigUtils trackerConfigUtils,
                                                         ProductType productType,
                                                         Instant now,
-                                                        TrackingCreationRequest trackingCreationRequest) {
+                                                        TrackingCreationRequest trackingCreationRequest,
+                                                        LocalDate localDate) {
 
-        OcrStatusEnum ocrStatusEnum = trackerConfigUtils.getEnableOcrValidationFor().get(productType);
+        OcrStatusEnum ocrStatusEnum = trackerConfigUtils.getActualEnableOcrValidationFor(localDate).get(productType);
 
         if (Objects.isNull(ocrStatusEnum) || OcrStatusEnum.DISABLED.equals(ocrStatusEnum)) {
             return OcrStatusEnum.DISABLED;
