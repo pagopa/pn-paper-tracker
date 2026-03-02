@@ -52,6 +52,7 @@ class SequenceValidatorArTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setValidationConfig(new ValidationConfig());
         return paperTrackings;
     }
 
@@ -476,6 +477,7 @@ class SequenceValidatorArTest {
     void validateSequenceInvalidNullDeliveryFailureCause() {
         // Arrange
         context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
+        context.getPaperTrackings().getValidationConfig().setStrictDeliveryFailureCause(false);
 
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();
@@ -492,7 +494,79 @@ class SequenceValidatorArTest {
         // Act & Assert
         StepVerifier.create(sequenceValidatorAr.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Invalid deliveryFailureCause: "))
+                        throwable.getMessage().contains("Missing deliveryFailureCause"))
+                .verify();
+    }
+
+    @Test
+    void validateSequenceDifferentDeliveryFailureCause() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        String eventIdC = UUID.randomUUID().toString();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent(UUID.randomUUID().toString(), "RECRN002A", timestamp, businessTimestamp, "REG123", "M02", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "m02", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(eventIdC, "RECRN002C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "M03", null)
+        ));
+
+        context.setEventId(eventIdC);
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Invalid deliveryFailureCause on events: "))
+                .verify();
+    }
+
+    @Test
+    void validateSequenceCorrectDeliveryFailureCause() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        String eventIdC = UUID.randomUUID().toString();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent(UUID.randomUUID().toString(), "RECRN002A", timestamp, businessTimestamp, "REG123", "M02", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M02", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(eventIdC, "RECRN002C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "M02", null)
+        ));
+
+        context.setEventId(eventIdC);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .verifyComplete();
+    }
+
+    @Test
+    void validateSequenceStrictDeliveryFailureCause() {
+        // Arrange
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
+
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        String eventIdC = UUID.randomUUID().toString();
+        context.getPaperTrackings().getValidationConfig().setStrictDeliveryFailureCause(true);
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent(UUID.randomUUID().toString(), "RECRN002A", timestamp, businessTimestamp, "REG123", "M02", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "M02", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(eventIdC, "RECRN002C", timestamp, businessTimestamp.plusSeconds(2), "REG123", null, null)
+        ));
+
+        context.setEventId(eventIdC);
+        // Act & Assert
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Missing deliveryFailureCause"))
                 .verify();
     }
 
@@ -500,6 +574,7 @@ class SequenceValidatorArTest {
     void validateSequenceInvalidDeliveryFailureCause() {
         // Arrange
         context.getPaperProgressStatusEvent().setStatusCode("RECRN002C");
+        context.getPaperTrackings().getValidationConfig().setStrictDeliveryFailureCause(false);
 
         Instant timestamp = Instant.now();
         Instant businessTimestamp = Instant.now();

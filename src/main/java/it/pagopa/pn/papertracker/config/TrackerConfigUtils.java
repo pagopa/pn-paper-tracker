@@ -172,6 +172,7 @@ public class TrackerConfigUtils {
     private final List<ListStringConfig> sendOcrAttachmentsFinalValidationStock890Configs;
     private final List<ListStringConfig> sendOcrAttachmentsFinalValidationConfigs;
     private final List<BooleanConfig> strictFinalValidationStock890Config;
+    private final List<BooleanConfig> strictDeliveryFailureCauseConfig;
     private final List<ActivationModeConfig> productsProcessingModesConfig;
     private final List<OcrActivationModeConfig> enableOcrValidationForConfig;
     private final CronTemporalConfig ocrFilterTemporalConfig;
@@ -184,6 +185,7 @@ public class TrackerConfigUtils {
         this.sendOcrAttachmentsFinalValidationConfigs = buildListStringConfig(cfg.getSendOcrAttachmentsFinalValidation());
         this.sendOcrAttachmentsFinalValidationStock890Configs = buildListStringConfig(cfg.getSendOcrAttachmentsFinalValidationStock890());
         this.strictFinalValidationStock890Config = buildListBooleanConfig(cfg.getStrictFinalValidationStock890());
+        this.strictDeliveryFailureCauseConfig = buildListBooleanConfig(cfg.getStrictDeliveryFailureCause());
         this.productsProcessingModesConfig = buildListActivationModeConfig(cfg.getProductsProcessingModes());
         this.enableOcrValidationForConfig = buildListOcrActivationModeConfig(cfg.getEnableOcrValidationFor());
         this.ocrFilterTemporalConfig = buildOcrFilterTemporalConfig(cfg.getOcrFilterTemporal());
@@ -305,6 +307,14 @@ public class TrackerConfigUtils {
                 strictFinalValidationStock890Config,
                 date,
                 "StrictFinalValidationStock890"
+        );
+    }
+
+    public Boolean getActualStrictDeliveryFailureCause(LocalDate date) {
+        return getActualConfig(
+                strictDeliveryFailureCauseConfig,
+                date,
+                "StrictDeliveryFailureCause"
         );
     }
 

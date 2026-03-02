@@ -54,6 +54,7 @@ public class PaperTrackingsMapper {
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(localDate));
         validationConfig.setSendOcrAttachmentsFinalValidationStock890(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidationStock890(localDate));
         validationConfig.setStrictFinalValidationStock890(trackerConfigUtils.getActualStrictFinalValidationStock890(localDate));
+        validationConfig.setStrictDeliveryFailureCause(trackerConfigUtils.getActualStrictDeliveryFailureCause(localDate));
         paperTrackings.setValidationConfig(validationConfig);
         return paperTrackings;
     }
