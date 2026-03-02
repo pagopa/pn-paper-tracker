@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
@@ -221,7 +222,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
 
         paperTrackingsDAO.putIfAbsent(paperTrackings).block();
 
-        paperTrackingsDAO.updateOcrRequests(0, requestId).block();
+        paperTrackingsDAO.updateOcrRequests(0, requestId, Data.ValidationStatus.OK).block();
 
         //Assert
         PaperTrackings fisrtResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
@@ -229,7 +230,7 @@ public class PaperTrackingsDaoIT extends BaseTest.WithLocalStack {
         Assertions.assertNotNull(fisrtResponse.getUpdatedAt());
         Assertions.assertNotNull(fisrtResponse.getValidationFlow().getOcrRequests().getFirst().getResponseTimestamp());
 
-        paperTrackingsDAO.updateOcrRequests(1, requestId).block();
+        paperTrackingsDAO.updateOcrRequests(1, requestId, Data.ValidationStatus.OK).block();
 
         PaperTrackings secondeResponse = paperTrackingsDAO.retrieveEntityByTrackingId(requestId).block();
         Assertions.assertNotNull(secondeResponse);

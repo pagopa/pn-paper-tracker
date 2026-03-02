@@ -146,7 +146,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     private Mono<List<Event>> verifyRequiredAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Set<String> requiredAttachments, Set<String> allDocs, Boolean strictFinalEventValidation) {
         var missingDocs = new HashSet<>(requiredAttachments);
         missingDocs.removeAll(allDocs);
-        if (missingDocs.isEmpty() || isPresentArcadOrCadForStock890(missingDocs)) {
+
+        if (allDocs.contains(CAD.getValue()) || allDocs.contains(ARCAD.getValue())) {
+            missingDocs.remove(CAD.getValue());
+            missingDocs.remove(ARCAD.getValue());
+        }
+
+        if (missingDocs.isEmpty()) {
             return Mono.just(events);
         }
         return getErrorOrSaveWarning("Missed required attachments for the sequence validation: " + missingDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, strictFinalEventValidation, events);
@@ -300,13 +306,13 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         if (filteredEvents.stream().anyMatch(event -> !StringUtils.hasText(event.getRegisteredLetterCode()))) {
             return getErrorOrSaveWarning("Registered letter code is null or empty in one or more events: "
                             + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, filteredEvents);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_NOT_FOUND, strictFinalEventValidation, events);
         }
 
         if (filteredEvents.stream().anyMatch(event -> !event.getRegisteredLetterCode().equals(firstRegisteredLetterCode))) {
             return getErrorOrSaveWarning("Registered letter codes do not match in sequence: "
                             + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, filteredEvents);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, strictFinalEventValidation, events);
         }
 
         paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);
@@ -410,7 +416,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
 
         var error = PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                 paperTrackings,
-                context.getPaperProgressStatusEvent().getStatusCode(),
+                TrackerUtility.getStatusCodeFromEventId(paperTrackings, context.getEventId()),
                 errorCategory,
                 null,
                 message,
