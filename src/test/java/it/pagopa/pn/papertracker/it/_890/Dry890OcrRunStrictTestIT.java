@@ -22,7 +22,7 @@ import static it.pagopa.pn.papertracker.model.OcrStatusEnum.RUN;
 @TestPropertySource(
         locations = "classpath:application.test-IT.properties",
         properties = {
-                "pn.paper-tracker.enable-ocr-validation-for=AR:RUN,890:RUN",
+                "pn.paper-tracker.enable-ocr-validation-for=1970-01-01;AR:RUN;890:RUN",
                 "pn.paper-tracker.strict-final-validation-stock890=1970-01-01;true"
         }
 )
