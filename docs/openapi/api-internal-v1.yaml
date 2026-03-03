@@ -502,6 +502,10 @@ components:
           type: array
           items:
             type: string
+        ocrFileTypes:
+          type: array
+          items:
+            type: string
     PaperStatus:
       type: object
       properties:
