@@ -48,7 +48,12 @@
         "eventThrow": "RECAG001C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c77",
         "details": {
-          "message": "Tracking in state"
+          "cause": "VALUE_AFTER_REFINEMENT",
+          "message": "Tracking in state",
+          "additionalDetails": {
+            "statusCode":"RECAG001C",
+            "statusTimestamp": "2024-01-01T11:00:00Z"
+          }
         }
       }
     ],

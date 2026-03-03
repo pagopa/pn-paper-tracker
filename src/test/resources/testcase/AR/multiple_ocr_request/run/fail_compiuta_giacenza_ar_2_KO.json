@@ -54,7 +54,15 @@
         "eventIdThrow": "77a8b9c0-7777-4a8b-8c9d-7e8f9a0b1c27",
         "details": {
           "cause": "OCR_KO",
-          "message": "Invalid demat"
+          "message": "Invalid demat",
+          "additionalDetails": {
+            "ocrDataResultPayload": {
+              "validationStatus": "KO",
+              "description": "Invalid demat",
+              "predictedRefinementType": "",
+              "validationType": "ai"
+            }
+          }
         }
       }
     ],

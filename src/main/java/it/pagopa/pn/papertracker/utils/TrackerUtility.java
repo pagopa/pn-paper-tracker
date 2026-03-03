@@ -12,10 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -141,6 +138,12 @@ public class TrackerUtility {
                 config008.sequenceStatusCodes().contains(statusCode);
     }
 
+    public static boolean idRECRI004XEvent(Event event) {
+        return RECRI004C.name().equals(event.getStatusCode())
+                || RECRI004A.name().equals(event.getStatusCode())
+                || RECRI004B.name().equals(event.getStatusCode());
+    }
+
     public static boolean isInInvalidStateForOcr(PaperTrackings paperTrackings, String statusCode) {
         if (TrackerUtility.isStockStatus890(statusCode)) {
             BusinessState businessState = paperTrackings.getBusinessState();
@@ -150,6 +153,24 @@ public class TrackerUtility {
             return state != PaperTrackingsState.AWAITING_OCR;
         }
     }
+
+    public static Map<String, Object> createAffectedEventsMap(boolean addDeliveryFailureCause, List<Event> events) {
+        List<?> list;
+        if(addDeliveryFailureCause){
+            list = events.stream()
+                    .map(event -> Map.of("statusCode", event.getStatusCode(),
+                            "statusTimestamp", Optional.ofNullable(event.getStatusTimestamp()).map(Instant::toString).orElse(""),
+                            "deliveryFailureCause", Optional.ofNullable(event.getDeliveryFailureCause()).orElse("")))
+                    .toList();
+        } else {
+            list = events.stream()
+                    .map(event -> Map.of("statusCode", event.getStatusCode(),
+                            "statusTimestamp", Optional.ofNullable(event.getStatusTimestamp()).map(Instant::toString).orElse("")))
+                    .toList();
+        }
+        return Map.of("affectedEvents", list);
+    }
+
 
     public static boolean isOcrResponseCompleted(HandlerContext context, String statusCode) {
         ValidationConfig validationConfig = context.getPaperTrackings().getValidationConfig();
@@ -168,7 +189,7 @@ public class TrackerUtility {
         return validationFlow.getOcrRequests().stream()
                 .filter(ocrRequest -> !Data.ValidationStatus.KO.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()))
                 .filter(ocrRequest -> requiredDocs.contains(ocrRequest.getDocumentType()))
-                .noneMatch(ocrRequest -> Objects.isNull(ocrRequest.getResponseTimestamp()));
+                .allMatch(ocrRequest -> Data.ValidationStatus.OK.getValue().equalsIgnoreCase(ocrRequest.getResponseStatus()));
     }
 
 
@@ -193,9 +214,8 @@ public class TrackerUtility {
                 .collect(Collectors.toSet());
 
         Set<String> completedDocuments = flow.getOcrRequests().stream()
-                .filter(ocrRequest -> !Data.ValidationStatus.KO.getValue().equals(ocrRequest.getResponseStatus()))
                 .filter(req -> requiredDocs.contains(req.getDocumentType()))
-                .filter(req -> req.getResponseTimestamp() != null)
+                .filter(ocrRequest -> Data.ValidationStatus.OK.getValue().equals(ocrRequest.getResponseStatus()))
                 .map(OcrRequest::getDocumentType)
                 .collect(Collectors.toSet());
 

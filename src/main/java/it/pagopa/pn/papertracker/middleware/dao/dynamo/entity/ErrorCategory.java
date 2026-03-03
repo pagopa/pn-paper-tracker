@@ -11,7 +11,6 @@ public enum ErrorCategory {
     DATE_ERROR("Errore nella validazione delle date della sequenza."),
     LAST_EVENT_EXTRACTION_ERROR("Errore nell'estrazione della sequenza dall'ultimo evento."),
     REGISTERED_LETTER_CODE_ERROR("Errore nella validazione del registered letter code"),
-    REGISTERED_LETTER_CODE_NOT_FOUND("Registered letter code non trovato"),
     DELIVERY_FAILURE_CAUSE_ERROR("Errore nella validazione del delivery Failure Cause"),
     ATTACHMENTS_ERROR("Errore nella validazione degli allegati della sequenza"),
     MAX_RETRY_REACHED_ERROR("Numero massimo di retry raggiunto"),
@@ -25,7 +24,8 @@ public enum ErrorCategory {
      * @deprecated Non utilizzare. Campo mantenuto solo per retrocompatibilità.
      */
     @Deprecated
-    STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza.");
+    STATUS_CODE_ERROR("Errore nella validazione della presenza degli elementi della sequenza."),
+    REGISTERED_LETTER_CODE_NOT_FOUND("Registered letter code non trovato");
 
     private final String value;
 

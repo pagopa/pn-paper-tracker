@@ -69,7 +69,15 @@
         "eventIdThrow": "77a8b9c0-7777-4a8b-8c9d-7e8f9a0b1c26",
         "details": {
           "cause": "OCR_KO",
-          "message": "Invalid demat"
+          "message": "Invalid demat",
+          "additionalDetails": {
+            "ocrDataResultPayload": {
+                "validationStatus": "KO",
+                "description": "Invalid demat",
+                "predictedRefinementType": "",
+                "validationType": "ai"
+            }
+          }
         }
       },
       {
@@ -82,7 +90,11 @@
         "eventIdThrow": "77a8b9c0-7777-4a8b-8c9d-7e8f9a0b1c27",
         "details": {
           "cause": "GIACENZA_DATE_ERROR",
-          "message": "RECRN005A getStatusTimestamp: 2024-01-01T10:00:00Z, RECRN010 getStatusTimestamp: 2024-01-01T09:00:00Z"
+          "message": "RECRN005A getStatusTimestamp: 2024-01-01T10:00:00Z, RECRN010 getStatusTimestamp: 2024-01-01T09:00:00Z",
+          "additionalDetails": {
+            "recrn005aTimestamp": "2024-01-01T10:00:00Z",
+            "recrn010Timestamp": "2024-01-01T09:00:00Z"
+          }
         }
       }
     ],

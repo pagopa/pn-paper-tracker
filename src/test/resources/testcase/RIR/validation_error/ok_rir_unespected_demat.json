@@ -52,7 +52,11 @@
         "eventThrow": "RECRI003C",
         "eventIdThrow": "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38",
         "details": {
-          "message": "Event RECRI003B contains invalid attachments: [Plico]"
+          "cause": "INVALID_VALUES",
+          "message": "Event RECRI003B contains invalid attachments",
+          "additionalDetails": {
+            "invalidAttachments": "Plico"
+          }
         }
       }
     ],

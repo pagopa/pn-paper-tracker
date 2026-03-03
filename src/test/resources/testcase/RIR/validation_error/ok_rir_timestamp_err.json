@@ -31,7 +31,32 @@
         "eventThrow": "RECRI003C",
         "eventIdThrow": "i9f8893d-5a6c-4e8f-9d3a-0e1b2c3d4f59",
         "details": {
-          "message": "Invalid business timestamps"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Invalid business timestamps",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusTimestamp":"2024-01-01T12:00:00Z",
+                "statusCode":"RECRI003C"
+              },
+              {
+                "statusTimestamp":"2024-01-01T12:00:00Z",
+                "statusCode":"RECRI003B"
+              },
+              {
+                "statusTimestamp":"2024-01-01T11:00:00Z",
+                "statusCode":"RECRI003A"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECRI002"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECRI001"
+              }
+            ]
+          }
         }
       }
     ],

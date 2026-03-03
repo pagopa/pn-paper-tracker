@@ -219,13 +219,13 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                             null,
                             event.getMessageId(),
                             null);
-                }else if(ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                }else if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
                     ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(event.getOcrResponseIdx() - 1));
                 }
             });
         }
         if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
-                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
         }
     }

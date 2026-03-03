@@ -72,7 +72,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
-    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId, Data.ValidationStatus validationStatus){
+    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId, Data.ValidationStatus validationStatus) {
         log.debug("updateOcrRequests for item with trackingId: {}", trackingId);
         Instant now = Instant.now();
         Map<String, String> expressionAttributeNames = new HashMap<>();
@@ -86,18 +86,13 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(now.toString()).build());
 
-        if(validationStatus.equals(Data.ValidationStatus.KO)){
-            expressionAttributeNames.put("#response", OcrRequest.COL_RESPONSE_STATUS);
-            expressionAttributeValues.put(":responseStatus", AttributeValue.builder().s(validationStatus.getValue()).build());
-            if(Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0){
-                updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#response = :responseStatus";
-            }
-        }else{
-            expressionAttributeNames.put("#response", OcrRequest.COL_RESPONSE_TIMESTAMP);
+        if (Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0) {
+            expressionAttributeNames.put("#responseTimestamp", OcrRequest.COL_RESPONSE_TIMESTAMP);
             expressionAttributeValues.put(":responseTimestamp", AttributeValue.builder().s(now.toString()).build());
-            if(Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0){
-                updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#response = :responseTimestamp";
-            }
+            expressionAttributeNames.put("#responseStatus", OcrRequest.COL_RESPONSE_STATUS);
+            expressionAttributeValues.put(":responseStatus", AttributeValue.builder().s(validationStatus.getValue()).build());
+            updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#responseStatus = :responseStatus, " +
+                    "#validationFlow.#ocr[" + ocrRequestIndex + "].#responseTimestamp = :responseTimestamp";
         }
 
         String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_TRACKING_ID);

@@ -3,10 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ValidationFlow;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
@@ -54,6 +51,7 @@ class GenericSequenceValidatorTest {
         paperTrackings.setTrackingId("track-1");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setValidationConfig(new ValidationConfig());
 
         Instant statusTimestamp = Instant.now();
         Event e1 = new Event();

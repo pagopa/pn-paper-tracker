@@ -66,18 +66,29 @@ public class AdditionalDetailsConverter implements AttributeConverter<Map<String
     }
 
     private Object fromAttr(AttributeValue attributeValue) {
-        if (Objects.nonNull(attributeValue.nul()) && attributeValue.nul()) return null;
-        if (Objects.nonNull(attributeValue.s())) return attributeValue.s();
-        if (Objects.nonNull(attributeValue.n())) return attributeValue.n();
-        if (Objects.nonNull(attributeValue.bool())) return attributeValue.bool();
-        if (Objects.nonNull((attributeValue.m()))) {
-            return attributeValue.m().entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, e -> Optional.ofNullable(fromAttr(e.getValue())).orElse("")));
-        }
-        if (Objects.nonNull(attributeValue.l())) {
-            return attributeValue.l().stream()
-                    .map(this::fromAttr)
-                    .toList();
+        switch (attributeValue.type()) {
+            case S -> {
+                if (Objects.nonNull(attributeValue.s())) return attributeValue.s();
+            }
+            case N -> {
+                if (Objects.nonNull(attributeValue.n())) return attributeValue.n();
+            }
+            case BOOL -> {
+                if (Objects.nonNull(attributeValue.bool())) return attributeValue.bool();
+            }
+            case M -> {
+                if (Objects.nonNull(attributeValue.m())) {
+                    return attributeValue.m().entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, e -> Optional.ofNullable(fromAttr(e.getValue())).orElse("")));
+                }
+            }
+            case L -> {
+                if (Objects.nonNull(attributeValue.l())) {
+                    return attributeValue.l().stream()
+                            .map(this::fromAttr)
+                            .toList();
+                }
+            }
         }
         return null;
     }

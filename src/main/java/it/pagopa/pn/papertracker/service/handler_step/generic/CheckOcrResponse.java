@@ -50,7 +50,8 @@ public class CheckOcrResponse implements HandlerStep {
         return Mono.just(context.getPaperTrackings())
                 .flatMap(paperTrackings -> {
                     Event event = TrackerUtility.extractFinalEventFromOcr(ocrResultMessage.getCommandId(), paperTrackings);
-                    if (TrackerUtility.isInInvalidStateForOcr(paperTrackings, event.getStatusCode())) {
+                    if (TrackerUtility.isInInvalidStateForOcr(paperTrackings, event.getStatusCode())
+                            && OcrStatusEnum.RUN.equals(paperTrackings.getValidationConfig().getOcrEnabled())) {
                         return handleFinalStateError(event, paperTrackings, ocrResultMessage);
                     }
                     updateContext(context, event);
@@ -71,20 +72,15 @@ public class CheckOcrResponse implements HandlerStep {
                 "Error in OCR validation for requestId: " + ocrResultMessage.getCommandId(),
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
-                        cause, "CommandId: " + ocrResultMessage.getCommandId(),
-                        Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
                         ErrorCause.OCR_DUPLICATED_EVENT, "CommandId: " + ocrResultMessage.getCommandId(),
+                        Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
                         FlowThrow.DEMAT_VALIDATION, ErrorType.WARNING, event.getId()
                 )
         ));
     }
 
     private Map<String,Object> transformToMap(Data data) {
-        return  objectMapper.convertValue(
-                    data,
-                    new TypeReference<>() {
-                    }
-            );
+        return  objectMapper.convertValue(data, new TypeReference<>() {});
     }
 
 
@@ -119,8 +115,9 @@ public class CheckOcrResponse implements HandlerStep {
 
             case PENDING -> {
                 log.info("OCR validation pending for requestId: {}", ocrResultMessage.getCommandId());
-                context.setStopExecution(true);
-                yield Mono.empty();
+                yield paperTrackingsDAO.updateOcrRequests(index, trackingId, Data.ValidationStatus.PENDING)
+                        .doOnNext(unused -> context.setStopExecution(true))
+                        .then();
             }
         };
     }
@@ -129,7 +126,15 @@ public class CheckOcrResponse implements HandlerStep {
         String trackingId = tracking.getTrackingId();
         return paperTrackingsDAO.updateOcrRequests(index, trackingId, Data.ValidationStatus.OK)
                 .doOnNext(context::setPaperTrackings)
-                .map(paperTrackings -> TrackerUtility.isOcrResponseCompleted(context, event.getStatusCode()))
+                .flatMap(paperTrackings -> {
+                    if(!OcrStatusEnum.RUN.equals(paperTrackings.getValidationConfig().getOcrEnabled())){
+                        log.info("OCR validation OK but OCR is not enabled for trackingId: {}, stopping execution", context.getTrackingId());
+                        context.setStopExecution(true);
+                        return Mono.empty();
+                    }
+                    log.info("OCR validation OK, checking if all OCR validations are completed for trackingId: {}", context.getTrackingId());
+                    return Mono.just(TrackerUtility.isOcrResponseCompleted(context, event.getStatusCode()));
+                })
                 .flatMap(ocrResponseCompleted -> {
                     if (ocrResponseCompleted) {
                         log.info("All OCR validations completed for trackingId: {}", context.getTrackingId());

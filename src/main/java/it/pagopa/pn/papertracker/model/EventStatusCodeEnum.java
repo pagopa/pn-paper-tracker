@@ -37,7 +37,6 @@ public enum EventStatusCodeEnum {
     PNRN012(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Perfezionamento per decorrenza termini", false),
 
     // RIR
-    //TODO: AGGIORNARE DOPO LO SVILUPPO DEL TASK SULLA DELIVERYFAILURECAUSE PER LA RIR
     RECRI001(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
     RECRI002(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false),
     RECRI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto, smarrimento o deterioramento", false),

@@ -6,12 +6,15 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.createAffectedEventsMap;
 
 
 @Component
@@ -37,9 +40,7 @@ public class CheckTrackingProduct implements HandlerStep {
         }
 
         String errorMsg = String.format("Product type mismatch for trackingId %s: expected %s, but got %s", context.getTrackingId(), paperTrackingProduct, productType);
-        Map<String, Object> additionalDetails = Map.of("statusCode", statusCode,
-                "statusTimestamp", Objects.toString(context.getPaperProgressStatusEvent().getStatusDateTime(), null)
-        );
+        Map<String, Object> additionalDetails = createAffectedEventsMap(false, List.of(TrackerUtility.extractEventFromContext(context)));
         return Mono.error(new PnPaperTrackerValidationException(
                 errorMsg,
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(

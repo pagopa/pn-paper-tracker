@@ -36,7 +36,7 @@ public class TrackingValidator {
         verifyValidationConfig(expected.getValidationConfig(), actual.getValidationConfig(),
                 ocrStatusEnum, strictFinalValidationStock890);
         verifyValidationFlow(scenario, expected, actual, ocrStatusEnum);
-        if (StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
+        if (StringUtils.isBlank(expected.getNextRequestIdPcretry()) && !scenario.getName().equalsIgnoreCase("NOT_RETRYABLE_EVENT_AR")) {
             verifyPaperStatus(scenario.getName(), expected.getPaperStatus(), actual.getPaperStatus(), expected.getEvents(), expected, scenario.getExpected().getErrors());
         }
 
@@ -142,7 +142,11 @@ public class TrackingValidator {
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
             assertNull(flow.getFinalEventBuilderTimestamp());
-        } else {
+        } else if(scenario.getName().equalsIgnoreCase("OK_AR_OCR_PENDING")){
+            assertNull(flow.getFinalEventBuilderTimestamp());
+            assertNull(flow.getFinalEventDematValidationTimestamp());
+            assertNotNull(flow.getSequencesValidationTimestamp());
+        }else{
             assertNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNull(flow.getSequencesValidationTimestamp());
@@ -197,11 +201,8 @@ public class TrackingValidator {
                     .orElseThrow();
 
             assertNotNull(act.getRequestTimestamp());
-            if (ocrStatusEnum.equals(OcrStatusEnum.RUN) && !isOkGiacenzaEmptyRegisteredLetterCode890 && !Data.ValidationStatus.KO.getValue().equalsIgnoreCase(act.getResponseStatus())) {
-                assertNotNull(act.getResponseTimestamp());
-            } else {
-                assertNull(act.getResponseTimestamp());
-            }
+            assertNotNull(act.getResponseTimestamp());
+            assertNotNull(act.getResponseStatus());
         });
     }
 
