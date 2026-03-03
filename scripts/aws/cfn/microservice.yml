@@ -448,7 +448,7 @@ Parameters:
   RIRWhereClause:
     Type: String
     Description: 'Where clause to filter RIR errors in the custom metric query'
-    Default: "errorCategory != 'OCR_VALIDATION'"
+    Default: "errorCategory != 'OCR_VALIDATI'"
 
   RISErrorThreshold:
     Type: Number
