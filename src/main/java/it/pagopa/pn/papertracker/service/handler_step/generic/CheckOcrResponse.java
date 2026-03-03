@@ -46,7 +46,8 @@ public class CheckOcrResponse implements HandlerStep {
         return Mono.just(context.getPaperTrackings())
                 .flatMap(paperTrackings -> {
                     Event event = TrackerUtility.extractFinalEventFromOcr(ocrResultMessage.getCommandId(), paperTrackings);
-                    if (TrackerUtility.isInInvalidStateForOcr(paperTrackings, event.getStatusCode())) {
+                    if (TrackerUtility.isInInvalidStateForOcr(paperTrackings, event.getStatusCode()) &&
+                            OcrStatusEnum.RUN.equals(paperTrackings.getValidationConfig().getOcrEnabled())) {
                         return handleFinalStateError(event, paperTrackings, ocrResultMessage);
                     }
                     updateContext(context, event);
@@ -62,16 +63,13 @@ public class CheckOcrResponse implements HandlerStep {
     }
 
     private Mono<Void> handleFinalStateError(Event event, PaperTrackings paperTrackings, OcrDataResultPayload ocrResultMessage) {
-        boolean isDryRun = OcrStatusEnum.DRY.equals(paperTrackings.getValidationConfig().getOcrEnabled());
-        ErrorCause cause = isDryRun ? ErrorCause.OCR_DRY_RUN_MODE : ErrorCause.OCR_DUPLICATED_EVENT;
-        ErrorType type = isDryRun ? ErrorType.INFO : ErrorType.WARNING;
 
         return Mono.error(new PnPaperTrackerValidationException(
                 "Error in OCR validation for requestId: " + ocrResultMessage.getCommandId(),
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
-                        cause, "CommandId: " + ocrResultMessage.getCommandId(),
-                        FlowThrow.DEMAT_VALIDATION, type, event.getId()
+                        ErrorCause.OCR_DUPLICATED_EVENT, "CommandId: " + ocrResultMessage.getCommandId(),
+                        FlowThrow.DEMAT_VALIDATION, ErrorType.WARNING, event.getId()
                 )
         ));
     }
@@ -101,6 +99,8 @@ public class CheckOcrResponse implements HandlerStep {
 
             case OK -> {
                 log.info("OCR validation successful for requestId: {}", ocrResultMessage.getCommandId());
+                if(OcrStatusEnum.DRY.equals(paperTrackings.getValidationConfig().getOcrEnabled()))
+                    context.setStopExecution(true);
                 yield handleOkStatus(paperTrackings, event, ocrResultMessage, context, index);
             }
 
