@@ -139,8 +139,8 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .collect(Collectors.toSet());
 
         return verifyRequiredAttachments(events, paperTrackings, context, requiredAttachments, allDocs, strictFinalEventValidation)
-                .flatMap(_ -> verifyValidAttachments(events, paperTrackings, context, validAttachments, eventsWithAttachments, strictFinalEventValidation))
-                .doOnNext(_ -> log.info("Attachments validation completed successfully"));
+                .flatMap(unused -> verifyValidAttachments(events, paperTrackings, context, validAttachments, eventsWithAttachments, strictFinalEventValidation))
+                .doOnNext(unused -> log.info("Attachments validation completed successfully"));
     }
 
     private Mono<List<Event>> verifyRequiredAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Set<String> requiredAttachments, Set<String> allDocs, Boolean strictFinalEventValidation) {
@@ -268,7 +268,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     EventStatusCodeEnum statusCodeEnum = EventStatusCodeEnum.fromKey(event.getStatusCode());
                     List<DeliveryFailureCauseEnum> allowedCauses = statusCodeEnum.getDeliveryFailureCauseList();
                     return checkIfIsValidCause(context, paperTrackings, strictFinalEventValidation, allowedCauses, event)
-                            .flatMap(_ -> checkIfStrictValidation(context, paperTrackings, strictFinalEventValidation, allowedCauses, event));
+                            .flatMap(unused -> checkIfStrictValidation(context, paperTrackings, strictFinalEventValidation, allowedCauses, event));
                 })
                 .filter(event -> StringUtils.hasText(event.getDeliveryFailureCause()))
                 .collectList()
