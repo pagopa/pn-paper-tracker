@@ -87,13 +87,7 @@
           "ocrEnabled": "DISABLED"
         },
         "validationFlow": {
-          "ocrRequests": [
-            {
-              "finalEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24",
-              "documentType": "23L",
-              "attachmentEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d25"
-            }
-          ]
+          "ocrRequests": []
         },
         "paperStatus": {
           "registeredLetterCode": "1234567891011",
@@ -110,34 +104,6 @@
         }
       }
     ],
-    "ocrResultPayload": [{
-      "commandId": "{{REQUEST_ID}}#2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24#23L",
-      "version": "v1",
-      "commandType": "postal",
-      "data": {
-        "validationStatus": "OK",
-        "description": "OK",
-        "predictedRefinementType": null,
-        "validationType": "ai"
-      }
-    }],
-    "ocrDataPayload": [{
-      "commandId": "{{REQUEST_ID}}#2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24#23L",
-      "commandType": "postal",
-      "data": {
-        "documentType": "23L",
-        "productType": "890",
-        "unifiedDeliveryDriver": "Poste",
-        "details": {
-          "deliveryDetailCode": "RECAG012",
-          "notificationDate": "2024-01-01T10:00:00Z",
-          "registeredLetterCode": "1234567891011",
-          "deliveryFailureCause": null,
-          "attachment": "Uri",
-          "deliveryAttemptDate": null
-        }
-      }
-    }],
-    "sentToOcr": 1
+    "sentToOcr": 0
   }
 }

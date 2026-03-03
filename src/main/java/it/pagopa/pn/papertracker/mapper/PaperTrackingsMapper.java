@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class PaperTrackingsMapper {
         validationConfig.setOcrFilterTemporal(pnPaperTrackerConfigs.getOcrFilterTemporal());
         validationConfig.setOcrFilterUnifiedDeliveryDriver(pnPaperTrackerConfigs.getOcrFilterUnifiedDeliveryDriver());
         validationConfig.setOcrEnabled(evaluateIfOcrIsEnabled(trackerConfigUtils, productType, now, trackingCreationRequest, localDate));
+        validationConfig.setOcrFileTypes(pnPaperTrackerConfigs.getEnableOcrValidationForFile().stream().map(FileType::getValue).toList());
         validationConfig.setRequiredAttachmentsRefinementStock890(trackerConfigUtils.getActualRequiredAttachmentsRefinementStock890(localDate));
         validationConfig.setSendOcrAttachmentsRefinementStock890(trackerConfigUtils.getActualSendOcrAttachmentsRefinementStock890(localDate));
         validationConfig.setSendOcrAttachmentsFinalValidation(trackerConfigUtils.getActualSendOcrAttachmentsFinalValidation(localDate));
