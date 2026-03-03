@@ -119,7 +119,8 @@ Resources:
               sendOcrAttachmentsFinalValidation:struct<L:array<struct<S:string>>>,
               strictFinalValidationStock890:struct<BOOL:boolean>,
               ocrFilterTemporal:struct<S:string>,
-              ocrFilterUnifiedDeliveryDriver:struct<L:array<struct<S:string>>>
+              ocrFilterUnifiedDeliveryDriver:struct<L:array<struct<S:string>>>,
+              ocrFileTypes:struct<L:array<struct<S:string>>>
             >>,
             nextRequestIdPcretry:struct<S:string>,
             state:struct<S:string>,
