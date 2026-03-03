@@ -21,6 +21,7 @@
     "NotificationReworkInvalidStatusCode": "RECRN006,RECRN013,RECRI005,CON996,RECAG013,RECAG004",
     "EnableLambdaProxyQueueSource": "false",
     "DisableAllConsumers": "false",
-    "MetricFormatType": "EMF"
+    "MetricFormatType": "EMF",
+    "RIRWhereClause": "errorCategory != 'OCR_VALIDATION'"
   }
 }
