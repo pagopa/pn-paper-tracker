@@ -20,6 +20,7 @@ public class ValidationConfig {
     public static final String COL_SEND_OCR_FINAL_VALIDATION_STOCK_890 = "sendOcrAttachmentsFinalValidationStock890";
     public static final String COL_SEND_OCR_FINAL_VALIDATION = "sendOcrAttachmentsFinalValidation";
     public static final String COL_STRICT_FINAL_VALIDATION_STOCK_890 = "strictFinalValidationStock890";
+    public static final String COL_STRICT_DELIVERY_FAILURE_CAUSE = "strictDeliveryFailureCause";
     public static final String COL_OCR_FILTER_TEMPORAL = "ocrFilterTemporal";
     public static final String COL_OCR_FILTER_UNIFIED_DELIVERY_DRIVER = "ocrFilterUnifiedDeliveryDriver";
 
@@ -49,4 +50,7 @@ public class ValidationConfig {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_OCR_FILTER_UNIFIED_DELIVERY_DRIVER)}))
     private List<String> ocrFilterUnifiedDeliveryDriver;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_STRICT_DELIVERY_FAILURE_CAUSE)}))
+    private Boolean strictDeliveryFailureCause;
 }
