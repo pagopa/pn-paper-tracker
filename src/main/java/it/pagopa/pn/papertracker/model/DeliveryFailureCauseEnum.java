@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.model;
 
 import lombok.Getter;
 
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Getter
@@ -27,11 +28,12 @@ public enum DeliveryFailureCauseEnum {
     C05,
     C06,
     UNKNOWN,
-    SKIP_VALIDATION;
+    CHECK_IF_REQUIRED;
 
     public static DeliveryFailureCauseEnum fromValue(String deliveryFailureCause) {
         return Stream.of(values())
-                .filter(value -> value.name().equalsIgnoreCase(deliveryFailureCause))
+                .filter(value -> value.name().equalsIgnoreCase(Optional.ofNullable(deliveryFailureCause)
+                                .map(String::toUpperCase).orElse(null)))
                 .findFirst()
                 .orElse(UNKNOWN);
     }

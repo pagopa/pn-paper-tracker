@@ -51,6 +51,7 @@ class SequenceValidatorRirTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.setValidationFlow(new ValidationFlow());
+        paperTrackings.setValidationConfig(new ValidationConfig());
         return paperTrackings;
     }
 

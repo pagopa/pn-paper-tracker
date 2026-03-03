@@ -48,6 +48,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
+        when(pnPaperTrackerConfigs.getStrictDeliveryFailureCause()).thenReturn(List.of("1970-01-01;false"));
         when(pnPaperTrackerConfigs.getProductsProcessingModes()).thenReturn(List.of("1970-01-01;AR:RUN;RS:DRY"));
         when(pnPaperTrackerConfigs.getEnableOcrValidationFor()).thenReturn(List.of("1970-01-01;AR:RUN;RIR:RUN;"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
