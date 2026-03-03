@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsStat
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import jdk.jshell.EvalException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,7 @@ class DeliveryPushSenderTest {
         // Assert
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verifyNoInteractions(paperTrackingsDAO);
     }
 
     @Test
@@ -80,6 +82,7 @@ class DeliveryPushSenderTest {
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
         verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
+        verifyNoInteractions(paperTrackingsDAO);
     }
 
     @Test
@@ -97,6 +100,7 @@ class DeliveryPushSenderTest {
         ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
         verify(externalChannelOutputsMomProducer).push(captor.capture());
         Assertions.assertEquals(event, captor.getValue().getPayload().getSendEvent());
+        verifyNoInteractions(paperTrackingsDAO);
     }
 
     @Test
@@ -115,21 +119,14 @@ class DeliveryPushSenderTest {
         verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
         verify(paperTrackingsDAO, never()).updateItem(anyString(), any(PaperTrackings.class));
+        verifyNoInteractions(paperTrackingsDAO);
     }
 
     @Test
     void testExecuteFinalStatusCodeNotNull() {
         // Arrange
-        SendEvent event = getSendEvent();
-        HandlerContext context = new HandlerContext();
-        PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
-        paperProgressStatusEvent.setStatusCode("RECRN001C");
-        context.setPaperProgressStatusEvent(paperProgressStatusEvent);
-        context.setFinalStatusCode("RECRN001C");
-        PaperTrackings paperTrackings = new PaperTrackings();
-        context.setPaperTrackings(paperTrackings);
-        context.setEventsToSend(Collections.singletonList(event));
-
+        HandlerContext context = getFinalEventHandlerContext();
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
         // Act
         deliveryPushSender.execute(context).block();
 
@@ -139,6 +136,46 @@ class DeliveryPushSenderTest {
         ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
         Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
+    }
+
+    @Test
+    void testExecuteMextPcRetryNotNull() {
+        // Arrange
+        HandlerContext context = getPcRetryHandlerContext();
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        // Act
+        deliveryPushSender.execute(context).block();
+
+        // Assert
+        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
+        Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
+    }
+
+    private HandlerContext getFinalEventHandlerContext() {
+        SendEvent event = new SendEvent();
+        event.setStatusCode(StatusCodeEnum.OK);
+        event.setStatusDetail("RECRN001C");
+        HandlerContext context = new HandlerContext();
+        context.setFinalStatusCode("RECRN001C");
+        PaperTrackings paperTrackings = new PaperTrackings();
+        context.setPaperTrackings(paperTrackings);
+        context.setEventsToSend(Collections.singletonList(event));
+        return context;
+    }
+
+    private HandlerContext getPcRetryHandlerContext() {
+        SendEvent event = new SendEvent();
+        event.setStatusCode(StatusCodeEnum.PROGRESS);
+        event.setStatusDetail("RECRN006");
+        HandlerContext context = new HandlerContext();
+        context.setNextRequestIdPcRetry("nextRequestIdPcRetry");
+        PaperTrackings paperTrackings = new PaperTrackings();
+        context.setPaperTrackings(paperTrackings);
+        context.setEventsToSend(Collections.singletonList(event));
+        return context;
     }
 
 

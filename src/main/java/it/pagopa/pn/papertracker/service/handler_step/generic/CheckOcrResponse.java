@@ -66,9 +66,6 @@ public class CheckOcrResponse implements HandlerStep {
     }
 
     private Mono<Void> handleFinalStateError(Event event, PaperTrackings paperTrackings, OcrDataResultPayload ocrResultMessage) {
-        boolean isDryRun = OcrStatusEnum.DRY.equals(paperTrackings.getValidationConfig().getOcrEnabled());
-        ErrorCause cause = isDryRun ? ErrorCause.OCR_DRY_RUN_MODE : ErrorCause.OCR_DUPLICATED_EVENT;
-        ErrorType type = isDryRun ? ErrorType.INFO : ErrorType.WARNING;
 
         return Mono.error(new PnPaperTrackerValidationException(
                 "Error in OCR validation for requestId: " + ocrResultMessage.getCommandId(),
@@ -76,7 +73,8 @@ public class CheckOcrResponse implements HandlerStep {
                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                         cause, "CommandId: " + ocrResultMessage.getCommandId(),
                         Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
-                        FlowThrow.DEMAT_VALIDATION, type, event.getId()
+                        ErrorCause.OCR_DUPLICATED_EVENT, "CommandId: " + ocrResultMessage.getCommandId(),
+                        FlowThrow.DEMAT_VALIDATION, ErrorType.WARNING, event.getId()
                 )
         ));
     }

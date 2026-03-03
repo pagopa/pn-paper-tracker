@@ -40,7 +40,10 @@ public class LocalStackTestConfig {
     static {
         localStack.start();
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
-
+        System.setProperty("aws.endpoint", localStack.getEndpointOverride(DYNAMODB).toString());
+        System.setProperty("aws.region", localStack.getRegion());
+        System.setProperty("aws.accessKey", localStack.getAccessKey());
+        System.setProperty("aws.secretKey",  localStack.getSecretKey());
         System.setProperty("spring.cloud.aws.sqs.endpoint", localStack.getEndpointOverride(SQS).toString());
         System.setProperty("spring.cloud.aws.region.static", localStack.getRegion());
         System.setProperty("spring.cloud.aws.credentials.access-key", localStack.getAccessKey());
