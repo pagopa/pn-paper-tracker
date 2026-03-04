@@ -94,7 +94,7 @@ Parameters:
 
   MountEfs:
     Type: String
-    Default: false
+    Default: "false"
     AllowedValues:
       - "true"
       - "false"
@@ -413,7 +413,17 @@ Parameters:
   890ErrorThreshold:
     Type: Number
     Description: 'Threshold for 890 errors to trigger the alarm'
-    Default: 10
+    Default: 300
+
+  890EvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for 890 errors alarm'
+    Default: 12
+
+  890DatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for 890 errors alarm'
+    Default: 1
 
   890WhereClause:
     Type: String
@@ -423,7 +433,17 @@ Parameters:
   ARErrorThreshold:
     Type: Number
     Description: 'Threshold for AR errors to trigger the alarm'
-    Default: 10
+    Default: 300
+
+  AREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for AR errors alarm'
+    Default: 12
+
+  ARDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for AR errors alarm'
+    Default: 1
 
   ARWhereClause:
     Type: String
@@ -433,7 +453,17 @@ Parameters:
   RSErrorThreshold:
     Type: Number
     Description: 'Threshold for RS errors to trigger the alarm'
-    Default: 10
+    Default: 300
+
+  RSEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RS errors alarm'
+    Default: 12
+  
+  RSDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RS errors alarm'
+    Default: 1
   
   RSWhereClause:
     Type: String
@@ -443,8 +473,18 @@ Parameters:
   RIRErrorThreshold:
     Type: Number
     Description: 'Threshold for RIR errors to trigger the alarm'
-    Default: 10
+    Default: 300
   
+  RIREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIR errors alarm'
+    Default: 12
+  
+  RIRDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIR errors alarm'
+    Default: 1
+
   RIRWhereClause:
     Type: String
     Description: 'Where clause to filter RIR errors in the custom metric query'
@@ -453,7 +493,17 @@ Parameters:
   RISErrorThreshold:
     Type: Number
     Description: 'Threshold for RIS errors to trigger the alarm'
-    Default: 10
+    Default: 300
+
+  RISEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIS errors alarm'
+    Default: 12
+
+  RISDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIS errors alarm'
+    Default: 1
 
   RISWhereClause:
     Type: String
@@ -935,8 +985,8 @@ Resources:
         - !Ref AlarmSNSTopicArn
       AlarmActions:
         - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: 6
-      DatapointsToAlarm: 1
+      EvaluationPeriods: !Ref 890EvaluationPeriods
+      DatapointsToAlarm: !Ref 890DatapointsToAlarm
       TreatMissingData: notBreaching
       Metrics:
         - Id: q1
@@ -957,8 +1007,8 @@ Resources:
         - !Ref AlarmSNSTopicArn
       AlarmActions:
         - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: 6
-      DatapointsToAlarm: 1
+      EvaluationPeriods: !Ref RISEvaluationPeriods
+      DatapointsToAlarm: !Ref RISDatapointsToAlarm
       TreatMissingData: notBreaching
       Metrics:
         - Id: q1
@@ -979,8 +1029,8 @@ Resources:
         - !Ref AlarmSNSTopicArn
       AlarmActions:
         - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: 6
-      DatapointsToAlarm: 1
+      EvaluationPeriods: !Ref AREvaluationPeriods
+      DatapointsToAlarm: !Ref ARDatapointsToAlarm
       TreatMissingData: notBreaching
       Metrics:
         - Id: q1
@@ -1001,8 +1051,8 @@ Resources:
         - !Ref AlarmSNSTopicArn
       AlarmActions:
         - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: 6
-      DatapointsToAlarm: 1
+      EvaluationPeriods: !Ref RSEvaluationPeriods
+      DatapointsToAlarm: !Ref RSDatapointsToAlarm
       TreatMissingData: notBreaching
       Metrics:
         - Id: q1
@@ -1023,8 +1073,8 @@ Resources:
         - !Ref AlarmSNSTopicArn
       AlarmActions:
         - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: 6
-      DatapointsToAlarm: 1
+      EvaluationPeriods: !Ref RIREvaluationPeriods
+      DatapointsToAlarm: !Ref RIRDatapointsToAlarm
       TreatMissingData: notBreaching
       Metrics:
         - Id: q1
