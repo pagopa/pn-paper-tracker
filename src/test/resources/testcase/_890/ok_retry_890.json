@@ -155,7 +155,7 @@
         },
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "attachmentEventId": "f93f029f-053d-4333-ab7e-d5702f3ec7c7",
               "documentType": "23L",
               "finalEventId": "be44bcac-cf28-4ad2-8f25-49fa69031b82"

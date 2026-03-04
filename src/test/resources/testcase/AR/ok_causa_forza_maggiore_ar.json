@@ -81,7 +81,7 @@
 
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "8888bb99-cc00-4d11-8e22-334400000008",
               "documentType": "AR",
               "attachmentEventId": "7777aa88-bb99-4c00-9d11-223300000007"

@@ -28,7 +28,13 @@ public enum SequenceAttachments {
     RECAG005B(Set.of("23L","ARCAD","CAD")),
     RECAG006B(Set.of("23L","ARCAD","CAD")),
     RECAG007B(Set.of("23L","ARCAD","CAD","Plico")),
-    RECAG008B(Set.of("Plico"));
+    RECAG008B(Set.of("Plico")),
+    RECRS002B(Set.of("Plico")),
+    RECRS002E(Set.of("Plico")),
+    RECRS004B(Set.of("Plico")),
+    RECRS005B(Set.of("Plico")),
+    RECRSI004B(Set.of("Plico"));
+
 
 
     private final Set<String> attachments;

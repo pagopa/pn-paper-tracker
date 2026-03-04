@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -133,7 +134,12 @@ public class TrackingValidator {
         boolean isFailCompiutaGiacenzaAr = scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")
                 || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
 
-        if ((expected.getBusinessState() == BusinessState.DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+        if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
+                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+            assertNotNull(flow.getFinalEventBuilderTimestamp());
+            assertNull(flow.getFinalEventDematValidationTimestamp());
+            assertNotNull(flow.getSequencesValidationTimestamp());
+        } else if ((expected.getBusinessState() == BusinessState.DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
@@ -159,7 +165,10 @@ public class TrackingValidator {
             assertNull(flow.getRecag012StatusTimestamp());
         }
 
-        if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
+        if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
+                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+            assertNull(flow.getRefinementDematValidationTimestamp());
+        } else if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
         } else if (isFailCompiutaGiacenzaAr || scenario.getName().equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890")) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
@@ -204,6 +213,7 @@ public class TrackingValidator {
             assertNotNull(act.getRequestTimestamp());
             assertNotNull(act.getResponseTimestamp());
             assertNotNull(act.getResponseStatus());
+            Assertions.assertEquals(exp.getResponseStatus(), act.getResponseStatus());
         });
     }
 

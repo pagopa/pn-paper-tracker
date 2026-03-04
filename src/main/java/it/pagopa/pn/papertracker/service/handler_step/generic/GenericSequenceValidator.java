@@ -497,7 +497,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     }
 
     private boolean checkPredictedRefinementTypeIfStock890(PaperTrackings paperTrackings, Instant validFinal) {
-        if (StringUtils.hasText(paperTrackings.getPaperStatus().getPredictedRefinementType())
+        if (Objects.nonNull(paperTrackings.getPaperStatus()) && StringUtils.hasText(paperTrackings.getPaperStatus().getPredictedRefinementType())
                 && paperTrackings.getPaperStatus().getPredictedRefinementType().equalsIgnoreCase(PRE10.name())) {
             Optional<Event> RECAG012Event = TrackerUtility.findRECAG012Event(paperTrackings);
             return RECAG012Event.map(event -> event.getStatusTimestamp().equals(validFinal)).orElse(true);
