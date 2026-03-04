@@ -109,6 +109,7 @@ class CheckOcrResponseTest {
 
     @Test
     void execute_ocrRUN_ocrValidationStatusPENDING() {
+        when(paperTrackingsDAO.updateOcrRequests(any(), any(), eq(Data.ValidationStatus.PENDING))).thenReturn(Mono.just(paperTrackings));
         context.getOcrDataResultPayload().setData(Data.builder().validationStatus(Data.ValidationStatus.PENDING).build());
         StepVerifier.create(checkOcrResponse.execute(context))
                 .verifyComplete();
