@@ -39,13 +39,13 @@
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "OCR_VALIDATION",
         "flowThrow": "DEMAT_VALIDATION",
-        "type": "ERROR",
+        "type": "WARNING",
         "productType": "890",
         "eventThrow": "RECAG001C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
           "cause": "OCR_DUPLICATED_EVENT",
-          "message": "Error in OCR validation for requestId:",
+          "message": "CommandId: PREPARE_ANALOG_DOMICILE",
           "additionalDetails": {
             "ocrDataResultPayload": {
               "validationStatus": "OK",

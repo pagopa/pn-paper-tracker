@@ -28,7 +28,7 @@ public class SequenceRunner {
                                 "No handler for product " + scenario.getProductType())
                 );
 
-        handler.beforeInit(scenario, strictFinalValidation);
+        handler.beforeInit(scenario, strictFinalValidation, ocrStatusEnum);
         initPaperTrackings(scenario);
         handler.afterInit(scenario, scenario.getInitialTracking());
         handler.sendEventsAndOcrResponse(scenario, ocrStatusEnum);

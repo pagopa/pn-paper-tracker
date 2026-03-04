@@ -58,6 +58,7 @@ public class ErrorValidator {
                 && Objects.equals(exp.getEventIdThrow(), act.getEventIdThrow())
                 && act.getDetails().getMessage().contains(exp.getDetails().getMessage())
                 && (Objects.isNull(act.getDetails().getCause()) || Objects.equals(exp.getDetails().getCause(), act.getDetails().getCause()))
-                && (Objects.isNull(act.getDetails().getAdditionalDetails()) || Objects.equals(exp.getDetails().getAdditionalDetails(), act.getDetails().getAdditionalDetails()));
+                && (Objects.isNull(act.getDetails().getAdditionalDetails()) ||
+                Objects.equals(exp.getDetails().getAdditionalDetails(), act.getDetails().getAdditionalDetails()));
     }
 }
