@@ -56,7 +56,11 @@
         "eventThrow": "RECAG008C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "message": "Event RECAG008B contains invalid attachments: [CAD]"
+          "cause": "INVALID_VALUES",
+          "message": "Event RECAG008B contains invalid attachments: [CAD]",
+          "additionalDetails": {
+            "invalidAttachments": "CAD"
+          }
         }
       },
       {
@@ -68,7 +72,11 @@
         "eventThrow": "RECAG008C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "message": "Missed required attachments for the sequence validation: [Plico]"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Missed required attachments for the sequence validation: [Plico]",
+          "additionalDetails": {
+            "missingAttachments":"Plico"
+          }
         }
       }
     ],

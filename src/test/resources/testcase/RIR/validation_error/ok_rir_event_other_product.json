@@ -50,7 +50,7 @@
       {
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "INCONSISTENT_STATE",
-        "flowThrow": "SEQUENCE_VALIDATION",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
         "type": "ERROR",
         "productType": "RIR",
         "eventThrow": "RECRN002A",
@@ -71,7 +71,7 @@
       {
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "INCONSISTENT_STATE",
-        "flowThrow": "SEQUENCE_VALIDATION",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
         "type": "ERROR",
         "productType": "RIR",
         "eventThrow": "RECRN002A",

@@ -52,7 +52,7 @@
           "message": "Tracking in state",
           "additionalDetails": {
             "statusCode": "RECAG001C",
-            "statusTimestamp": "2024-01-01T10:00:00Z"
+            "statusTimestamp": "2024-01-01T10:00Z"
           }
         }
       }

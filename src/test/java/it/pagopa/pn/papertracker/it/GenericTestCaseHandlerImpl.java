@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory.OCR_VALIDATION;
 import static java.util.stream.Collectors.groupingBy;
 
 
@@ -62,16 +63,18 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                 replaceTrackingsFields(scenario, expTrackings);
             }
 
+            if(scenario.getName().equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_890")){
+                scenario.getExpected().setErrors(expErrors.stream()
+                        .filter(paperTrackingsErrors -> !paperTrackingsErrors.getErrorCategory().equals(OCR_VALIDATION))
+                        .toList());
+            }
+
             replaceErrorsFields(scenario, expErrors);
         }
 
     }
 
     private static void replaceErrorsFields(ProductTestCase scenario, List<PaperTrackingsErrors> expErrors) {
-        scenario.getExpected().getErrors().stream()
-                .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
-                .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
-
         if (scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")) {
             scenario.getExpected().setErrors(expErrors.stream()
                     .filter(paperTrackingsErrors -> paperTrackingsErrors.getErrorCategory().equals(ErrorCategory.DATE_ERROR))
@@ -227,6 +230,10 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
                 && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
+            if(scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_AR") ||
+                    scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_890")) {
+                ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
+            }
         }
     }
 

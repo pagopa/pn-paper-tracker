@@ -103,7 +103,8 @@ public class CheckOcrResponse implements HandlerStep {
                                         paperTrackings, event.getStatusCode(), ErrorCategory.OCR_VALIDATION,
                                         ErrorCause.OCR_KO, ocrResultMessage.getData().getDescription(),
                                         Map.of("ocrDataResultPayload", transformToMap(ocrResultMessage.getData())),
-                                        FlowThrow.DEMAT_VALIDATION, ErrorType.ERROR, event.getId()
+                                        FlowThrow.DEMAT_VALIDATION,
+                                        OcrStatusEnum.RUN.equals(paperTrackings.getValidationConfig().getOcrEnabled())? ErrorType.ERROR : ErrorType.WARNING, event.getId()
                                 )
                         )));
             }

@@ -50,7 +50,7 @@ public class CheckTrackingProduct implements HandlerStep {
                         ErrorCause.VALUES_NOT_MATCHING,
                         errorMsg,
                         additionalDetails,
-                        FlowThrow.SEQUENCE_VALIDATION,
+                        FlowThrow.CHECK_TRACKING_PRODUCT,
                         ErrorType.ERROR,
                         context.getEventId()
                 )));

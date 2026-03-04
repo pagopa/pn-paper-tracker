@@ -81,7 +81,6 @@
         },
         "paperStatus": {
           "registeredLetterCode": "1234567891011",
-          "finalStatusCode": "RECRN001C",
           "validatedEvents": [
             "4c8f1a6d-5b3e-4f2a-8d55-4d9e3b7c6a43",
             "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d65",

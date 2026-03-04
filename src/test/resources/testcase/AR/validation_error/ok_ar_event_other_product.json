@@ -47,7 +47,7 @@
       {
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "INCONSISTENT_STATE",
-        "flowThrow": "SEQUENCE_VALIDATION",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
         "type": "ERROR",
         "productType": "AR",
         "eventThrow": "RECAG002A",
@@ -68,7 +68,7 @@
       {
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "INCONSISTENT_STATE",
-        "flowThrow": "SEQUENCE_VALIDATION",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
         "type": "ERROR",
         "productType": "AR",
         "eventThrow": "RECAG002A",

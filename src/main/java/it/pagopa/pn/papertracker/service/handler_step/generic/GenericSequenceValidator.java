@@ -375,7 +375,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     context,
                     paperTrackings,
                     ErrorCategory.DELIVERY_FAILURE_CAUSE_ERROR,
-                    null,
+                    VALUES_NOT_MATCHING,
                     additionalDetails,
                     strictFinalEventValidation,
                     events
@@ -410,7 +410,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
             Map<String, Object> additionalDetails = createAffectedEventsMap(false, events);
             return getErrorOrSaveWarning("Registered letter codes do not match in sequence: "
                             + filteredEvents.stream().map(Event::getRegisteredLetterCode).toList(),
-                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, VALUES_NOT_MATCHING, additionalDetails, strictFinalEventValidation, filteredEvents);
+                    context, paperTrackings, ErrorCategory.REGISTERED_LETTER_CODE_ERROR, VALUES_NOT_MATCHING, additionalDetails, strictFinalEventValidation, events);
         }
 
         paperTrackingsToUpdate.getPaperStatus().setRegisteredLetterCode(firstRegisteredLetterCode);

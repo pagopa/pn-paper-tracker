@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.it.validator;
 
-import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
@@ -10,7 +9,6 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 
 import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.KO;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrackingValidator {
@@ -36,7 +34,8 @@ public class TrackingValidator {
         verifyValidationConfig(expected.getValidationConfig(), actual.getValidationConfig(),
                 ocrStatusEnum, strictFinalValidationStock890);
         verifyValidationFlow(scenario, expected, actual, ocrStatusEnum);
-        if (StringUtils.isBlank(expected.getNextRequestIdPcretry()) && !scenario.getName().equalsIgnoreCase("NOT_RETRYABLE_EVENT_AR")) {
+        if (StringUtils.isBlank(expected.getNextRequestIdPcretry()) && !scenario.getName().equalsIgnoreCase("NOT_RETRYABLE_EVENT_AR")
+                && !scenario.getName().equalsIgnoreCase("NOT_RETRYABLE_EVENT_890")) {
             verifyPaperStatus(scenario.getName(), expected.getPaperStatus(), actual.getPaperStatus(), expected.getEvents(), expected, scenario.getExpected().getErrors());
         }
 
@@ -142,11 +141,12 @@ public class TrackingValidator {
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
             assertNull(flow.getFinalEventBuilderTimestamp());
-        } else if(scenario.getName().equalsIgnoreCase("OK_AR_OCR_PENDING")){
+        } else if (scenario.getName().equalsIgnoreCase("OK_AR_OCR_PENDING") ||
+                scenario.getName().equalsIgnoreCase("OK_890_OCR_PENDING")) {
             assertNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
-        }else{
+        } else {
             assertNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNull(flow.getSequencesValidationTimestamp());
@@ -174,13 +174,14 @@ public class TrackingValidator {
     private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase) {
         boolean isFailCompiutaGiacenzaAr = testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") || testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
         boolean isOkGiacenzaEmptyRegisteredLetterCode890 = testCase.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890");
+        boolean isOcrPending = testCase.equalsIgnoreCase("OK_AR_OCR_PENDING") || testCase.equalsIgnoreCase("OK_890_OCR_PENDING");
 
         if (ocrStatusEnum == OcrStatusEnum.DISABLED) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
 
-        if (hasNextRequestIdPcretry || (!isDone && !isFailCompiutaGiacenzaAr && !isOkGiacenzaEmptyRegisteredLetterCode890)) {
+        if (hasNextRequestIdPcretry || (!isDone && !isFailCompiutaGiacenzaAr && !isOkGiacenzaEmptyRegisteredLetterCode890 && !isOcrPending)) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }
@@ -211,6 +212,7 @@ public class TrackingValidator {
         boolean isDone = BusinessState.DONE.equals(expectedTracking.getBusinessState());
         boolean isFailCompiutaGiacenzaAr = "FAIL_COMPIUTA_GIACENZA_AR".equalsIgnoreCase(testCase) || "FAIL_COMPIUTA_GIACENZA_AR_2".equalsIgnoreCase(testCase);
         boolean isOkTimestampError890 = "OK_TIMESTAMPERROR_890".equalsIgnoreCase(testCase);
+        boolean isOcrPending = "OK_AR_OCR_PENDING".equalsIgnoreCase(testCase) || "OK_890_OCR_PENDING".equalsIgnoreCase(testCase);
 
         boolean isProduct890 = "890".equalsIgnoreCase(expectedTracking.getProductType());
         boolean isStrictFinalValidation890False =
@@ -236,7 +238,7 @@ public class TrackingValidator {
 
                 // validatedSequenceTimestamp
                 () -> {
-                    if (!isDone && !isFailCompiutaGiacenzaAr) {
+                    if (!isDone && !isFailCompiutaGiacenzaAr && !isOcrPending) {
                         assertNull(act.getValidatedSequenceTimestamp());
                     } else if (isOkTimestampError890) {
                         assertNotNull(act.getValidatedSequenceTimestamp());

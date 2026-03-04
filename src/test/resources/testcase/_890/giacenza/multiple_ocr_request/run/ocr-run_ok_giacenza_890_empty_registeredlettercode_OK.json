@@ -1,5 +1,5 @@
 {
-  "name": "OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_890",
+  "name": "OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_OCR_OK_890",
   "productType": "890",
   "initialTracking": {
     "productType": "890",
@@ -71,22 +71,11 @@
           "cause": "OCR_KO",
           "message": "Invalid registered letter code",
           "additionalDetails": {
-            "ocrDataResultPayload": {
-              "commandId": "{{REQUEST_ID}}#2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24#23L",
-              "commandType": "postal",
-              "data": {
-                "documentType": "23L",
-                "productType": "890",
-                "unifiedDeliveryDriver": "Poste",
-                "details": {
-                  "deliveryDetailCode": "RECAG012",
-                  "notificationDate": "2024-01-01T10:00:00Z",
-                  "registeredLetterCode": "",
-                  "deliveryFailureCause": null,
-                  "attachment": "Uri",
-                  "deliveryAttemptDate": null
-                }
-              }
+            "ocrDataResultPayload":  {
+              "validationStatus": "KO",
+              "description": "Invalid registered letter code",
+              "predictedRefinementType": "",
+              "validationType": "ai"
             }
           }
         }

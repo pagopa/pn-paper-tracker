@@ -60,7 +60,7 @@
           "message": "invalid AWAITING_REFINEMENT state for stock 890",
           "additionalDetails": {
             "statusCode": "RECAG008C",
-            "statusTimestamp": "2024-01-01T10:00:00Z"
+            "statusTimestamp": "2024-01-01T10:00Z"
           }
         }
       }

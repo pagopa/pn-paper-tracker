@@ -1,5 +1,5 @@
 {
-  "name": "OK_AR",
+  "name": "OK_DUPLICATE_OCR_RESPONSE_AR",
   "productType": "AR",
   "initialTracking": {
     "productType": "AR",
@@ -34,7 +34,29 @@
     }
   ],
   "expected": {
-    "errors": [],
+    "errors": [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "OCR_VALIDATION",
+        "flowThrow": "DEMAT_VALIDATION",
+        "type": "WARNING",
+        "productType": "AR",
+        "eventThrow": "RECRN001C",
+        "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
+        "details": {
+          "cause": "OCR_DUPLICATED_EVENT",
+          "message": "Error in OCR validation for requestId:",
+          "additionalDetails": {
+            "ocrDataResultPayload": {
+              "validationStatus": "OK",
+              "description": "OK",
+              "predictedRefinementType": "",
+              "validationType": "ai"
+            }
+          }
+        }
+      }
+    ],
     "outputs": [
       { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON080", "statusDescription": "AR - CON080 - CON080 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:00Z", "attachments": [] },
       { "trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON020", "statusDescription": "AR - CON020 - CON020 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:01Z", "attachments": [ { "documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z" } ] },
