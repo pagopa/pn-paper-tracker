@@ -94,7 +94,7 @@ Parameters:
 
   MountEfs:
     Type: String
-    Default: false
+    Default: "false"
     AllowedValues:
       - "true"
       - "false"
@@ -409,6 +409,106 @@ Parameters:
     Type: String
     Description: 'Metric format type'
     Default: 'EMF'
+
+  890ErrorThreshold:
+    Type: Number
+    Description: 'Threshold for 890 errors to trigger the alarm'
+    Default: 300
+
+  890EvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for 890 errors alarm'
+    Default: 12
+
+  890DatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for 890 errors alarm'
+    Default: 1
+
+  890WhereClause:
+    Type: String
+    Description: 'Where clause to filter 890 errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  ARErrorThreshold:
+    Type: Number
+    Description: 'Threshold for AR errors to trigger the alarm'
+    Default: 300
+
+  AREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for AR errors alarm'
+    Default: 12
+
+  ARDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for AR errors alarm'
+    Default: 1
+
+  ARWhereClause:
+    Type: String
+    Description: 'Where clause to filter AR errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+  
+  RSErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RS errors to trigger the alarm'
+    Default: 300
+
+  RSEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RS errors alarm'
+    Default: 12
+  
+  RSDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RS errors alarm'
+    Default: 1
+  
+  RSWhereClause:
+    Type: String
+    Description: 'Where clause to filter RS errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  RIRErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RIR errors to trigger the alarm'
+    Default: 300
+  
+  RIREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIR errors alarm'
+    Default: 12
+  
+  RIRDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIR errors alarm'
+    Default: 1
+
+  RIRWhereClause:
+    Type: String
+    Description: 'Where clause to filter RIR errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  RISErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RIS errors to trigger the alarm'
+    Default: 300
+
+  RISEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIS errors alarm'
+    Default: 12
+
+  RISDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIS errors alarm'
+    Default: 1
+
+  RISWhereClause:
+    Type: String
+    Description: 'Where clause to filter RIS errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
 
 Conditions:
   EnableLambdaProxyQueueSourceCondition: !Equals
@@ -874,3 +974,113 @@ Resources:
               - "SQS:SendMessage"
             Resource:
               - !Ref ExternalChannelToReworkEventValidationQueueARN
+
+  PaperTracker890ErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-890Errors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref 890ErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref 890EvaluationPeriods
+      DatapointsToAlarm: !Ref 890DatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${890WhereClause} AND productType = '890'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRISErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RISErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RISErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RISEvaluationPeriods
+      DatapointsToAlarm: !Ref RISDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RISWhereClause} AND productType = 'RIS'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerARErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-ARErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref ARErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref AREvaluationPeriods
+      DatapointsToAlarm: !Ref ARDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${ARWhereClause} AND productType = 'AR'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRSErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RSErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RSErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RSEvaluationPeriods
+      DatapointsToAlarm: !Ref RSDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RSWhereClause} AND productType = 'RS'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRIRErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RIRErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RIRErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RIREvaluationPeriods
+      DatapointsToAlarm: !Ref RIRDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RIRWhereClause} AND productType = 'RIR'
+          ReturnData: true
+          Period: 600
