@@ -492,8 +492,9 @@ public abstract class GenericSequenceValidator implements HandlerStep {
             return Mono.just(events);
         }
 
-        Map<String, Object> additionalDetails = createAffectedEventsMap(false, events);
-        return getErrorOrSaveWarning("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, VALUES_NOT_MATCHING, additionalDetails,  strictFinalEventValidation, events);
+        Map<String, Object> additionalDetails = createAffectedEventsMap(false, events.stream().filter(event -> finalGroup.contains(event.getStatusCode())
+                || stockGroup.contains(event.getStatusCode())).toList());
+        return getErrorOrSaveWarning("Invalid business timestamps", context, paperTrackings, ErrorCategory.DATE_ERROR, VALUES_NOT_MATCHING, additionalDetails, strictFinalEventValidation, events);
     }
 
     private boolean checkPredictedRefinementTypeIfStock890(PaperTrackings paperTrackings, Instant validFinal) {

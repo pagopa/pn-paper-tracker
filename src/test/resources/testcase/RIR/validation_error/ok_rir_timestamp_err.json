@@ -46,14 +46,6 @@
               {
                 "statusTimestamp":"2024-01-01T11:00:00Z",
                 "statusCode":"RECRI003A"
-              },
-              {
-                "statusTimestamp":"2024-01-01T10:00:00Z",
-                "statusCode":"RECRI002"
-              },
-              {
-                "statusTimestamp":"2024-01-01T10:00:00Z",
-                "statusCode":"RECRI001"
               }
             ]
           }

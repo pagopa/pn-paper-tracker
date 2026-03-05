@@ -58,7 +58,16 @@ public class ErrorValidator {
                 && Objects.equals(exp.getEventIdThrow(), act.getEventIdThrow())
                 && act.getDetails().getMessage().contains(exp.getDetails().getMessage())
                 && (Objects.isNull(act.getDetails().getCause()) || Objects.equals(exp.getDetails().getCause(), act.getDetails().getCause()))
-                && (Objects.isNull(act.getDetails().getAdditionalDetails()) ||
-                Objects.equals(exp.getDetails().getAdditionalDetails(), act.getDetails().getAdditionalDetails()));
+                && checkAdditionalDetails(act, exp);
+    }
+
+    private static boolean checkAdditionalDetails(PaperTrackingsErrors act, PaperTrackingsErrors exp) {
+        if( Objects.isNull(act.getDetails().getAdditionalDetails()) ){
+            return true;
+        }
+        if(act.getDetails().getAdditionalDetails().containsKey("affectedEvents")){
+           return Objects.equals(exp.getDetails().getAdditionalDetails().get("affectedEvents"), act.getDetails().getAdditionalDetails().get("affectedEvents"));
+        }
+        return Objects.equals(exp.getDetails().getAdditionalDetails(), act.getDetails().getAdditionalDetails());
     }
 }

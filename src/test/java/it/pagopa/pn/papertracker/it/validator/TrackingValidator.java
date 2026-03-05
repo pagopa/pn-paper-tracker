@@ -135,7 +135,8 @@ public class TrackingValidator {
                 || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
 
         if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
-                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))
+                || (scenario.getName().equalsIgnoreCase("OK_RETRY_RIS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
@@ -166,7 +167,8 @@ public class TrackingValidator {
         }
 
         if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
-                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))
+                || (scenario.getName().equalsIgnoreCase("OK_RETRY_RIS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
             assertNull(flow.getRefinementDematValidationTimestamp());
         } else if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
