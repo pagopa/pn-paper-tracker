@@ -131,25 +131,34 @@ public class TrackingValidator {
 
         ValidationFlow flow = actual.getValidationFlow();
         ValidationFlow expectedFlow = expected.getValidationFlow();
-        boolean isFailCompiutaGiacenzaAr = scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR")
-                || scenario.getName().equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
+        String scenarioName = scenario.getName();
 
-        if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
-                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))
-                || (scenario.getName().equalsIgnoreCase("OK_RETRY_RIS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+        boolean isOkRs = scenarioName.equalsIgnoreCase("OK_RS");
+        boolean isOkRis = scenarioName.equalsIgnoreCase("OK_RIS");
+        boolean isOkRetryRs = scenarioName.equalsIgnoreCase("OK_RETRY_RS");
+        boolean isOkRetryRis = scenarioName.equalsIgnoreCase("OK_RETRY_RIS");
+        boolean isFailCompiuta = scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") || scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
+        boolean isOcrPending = scenarioName.equalsIgnoreCase("OK_AR_OCR_PENDING") || scenarioName.equalsIgnoreCase("OK_890_OCR_PENDING");
+        boolean isGiacenza890 = scenarioName.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890");
+        boolean noRetry = StringUtils.isBlank(expected.getNextRequestIdPcretry());
+        boolean hasRetry = !noRetry;
+        boolean businessDoneNoRetry = expected.getBusinessState() == BusinessState.DONE && noRetry;
+        boolean stateDoneNoRetry = expected.getState() == DONE && noRetry;
+        boolean isOkRsRis = isOkRs || isOkRis || ((isOkRetryRs || isOkRetryRis) && noRetry);
+
+        if (isOkRsRis) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
-        } else if ((expected.getBusinessState() == BusinessState.DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+        } else if (businessDoneNoRetry) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
-        } else if (isFailCompiutaGiacenzaAr) {
+        } else if (isFailCompiuta) {
+            assertNull(flow.getFinalEventBuilderTimestamp());
             assertNotNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
-            assertNull(flow.getFinalEventBuilderTimestamp());
-        } else if (scenario.getName().equalsIgnoreCase("OK_AR_OCR_PENDING") ||
-                scenario.getName().equalsIgnoreCase("OK_890_OCR_PENDING")) {
+        } else if (isOcrPending) {
             assertNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
@@ -159,27 +168,28 @@ public class TrackingValidator {
             assertNull(flow.getSequencesValidationTimestamp());
         }
 
-        if (scenario.getEvents().stream().anyMatch(testEvent -> Objects.nonNull(testEvent.getAnalogMail())
-                && testEvent.getAnalogMail().getStatusCode().equalsIgnoreCase("RECAG012"))) {
+
+        boolean hasRecag012 = scenario.getEvents().stream().anyMatch(e -> Objects.nonNull(e.getAnalogMail())
+                        && "RECAG012".equalsIgnoreCase(e.getAnalogMail().getStatusCode()));
+
+        if (hasRecag012) {
             assertNotNull(flow.getRecag012StatusTimestamp());
         } else {
             assertNull(flow.getRecag012StatusTimestamp());
         }
 
-        if (scenario.getName().equalsIgnoreCase("OK_RS") || scenario.getName().equalsIgnoreCase("OK_RIS") ||
-                (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))
-                || (scenario.getName().equalsIgnoreCase("OK_RETRY_RIS") && StringUtils.isBlank(expected.getNextRequestIdPcretry()))) {
+        if (isOkRsRis) {
             assertNull(flow.getRefinementDematValidationTimestamp());
-        } else if (expected.getState() == DONE && StringUtils.isBlank(expected.getNextRequestIdPcretry())) {
+
+        } else if (stateDoneNoRetry || isFailCompiuta || isGiacenza890) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
-        } else if (isFailCompiutaGiacenzaAr || scenario.getName().equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890")) {
-            assertNotNull(flow.getRefinementDematValidationTimestamp());
+
         } else {
             assertNull(flow.getRefinementDematValidationTimestamp());
         }
 
-        verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, StringUtils.isNotBlank(expected.getNextRequestIdPcretry()),
-                (expected.getState() == DONE || expected.getBusinessState() == BusinessState.DONE), scenario.getName());
+        verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, hasRetry,
+                expected.getState() == DONE || expected.getBusinessState() == BusinessState.DONE, scenarioName);
     }
 
     private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase) {
