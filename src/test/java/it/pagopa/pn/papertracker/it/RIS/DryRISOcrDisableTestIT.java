@@ -51,7 +51,7 @@ public class DryRISOcrDisableTestIT extends BaseTest.WithLocalStack {
             //se all'arrivo dell'evento C non sono presenti tutti gli statusCode necessari viene fatta salire l'eccezione
             //per consentire il riaccodamento del messaggio e il successivo reprocess degli eventi,
             // in questo modo si simula il comportamento del sistema in caso di eventi arrivati in ordine non corretto
-            if(!e.getError().getDetails().getMessage().equalsIgnoreCase("Necessary status code not found in events: [RECRI003B]")){
+            if(!e.getError().getDetails().getMessage().equalsIgnoreCase("Necessary status code not found in events: [RECRSI004B]")){
                 throw e;
             }
         }
@@ -59,11 +59,8 @@ public class DryRISOcrDisableTestIT extends BaseTest.WithLocalStack {
 
     private void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
-        switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
-            case "FAIL_CON996_PC_RETRY_FURTO_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
-                    .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
-                    .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
+        if (scenario.getName().equalsIgnoreCase("OK_RETRY_RIS")) {
+            Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
         }
     }
 

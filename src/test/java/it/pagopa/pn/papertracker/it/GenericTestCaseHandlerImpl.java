@@ -217,9 +217,15 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
 
     @Override
     public void sendEventsAndOcrResponse(ProductTestCase scenario, OcrStatusEnum ocrStatusEnum) {
-        if (!CollectionUtils.isEmpty(scenario.getEvents())) {
-            scenario.getEvents().forEach(event -> {
-                if (!event.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE")) {
+
+        List<TestEvent> events = scenario.getEvents();
+        boolean ocrEnabled = !OcrStatusEnum.DISABLED.equals(ocrStatusEnum);
+        boolean hasEvents = !CollectionUtils.isEmpty(events);
+
+        if (hasEvents) {
+            for (TestEvent event : events) {
+                boolean isOcrMessage = "SEND_OCR_RESPONSE".equalsIgnoreCase(event.getMessageId());
+                if (!isOcrMessage) {
                     SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
                     singleStatusUpdate.setAnalogMail(event.getAnalogMail());
                     externalChannelHandler.handleExternalChannelMessage(
@@ -227,18 +233,28 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                             true,
                             null,
                             event.getMessageId(),
-                            null);
-                }else if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
-                    ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(event.getOcrResponseIdx() - 1));
+                            null
+                    );
+                } else if (ocrEnabled) {
+                    ocrEventHandler.handleOcrMessage(
+                            scenario.getExpected()
+                                    .getOcrResultPayload()
+                                    .get(event.getOcrResponseIdx() - 1)
+                    );
                 }
-            });
+            }
         }
-        if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
-                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
-            ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
-            if(scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_AR") ||
-                    scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_890")) {
-                ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
+
+        boolean noOcrEventInScenario = hasEvents && events.stream().noneMatch(e -> "SEND_OCR_RESPONSE".equalsIgnoreCase(e.getMessageId()));
+        boolean hasOcrPayload = Objects.nonNull(scenario.getExpected().getOcrResultPayload());
+        if (noOcrEventInScenario && hasOcrPayload && ocrEnabled) {
+            var firstPayload = scenario.getExpected().getOcrResultPayload().getFirst();
+            ocrEventHandler.handleOcrMessage(firstPayload);
+            boolean isDuplicateScenario = scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_AR") ||
+                            scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_890");
+
+            if (isDuplicateScenario) {
+                ocrEventHandler.handleOcrMessage(firstPayload);
             }
         }
     }
