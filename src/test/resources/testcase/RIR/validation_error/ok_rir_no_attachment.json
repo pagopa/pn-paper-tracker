@@ -48,7 +48,11 @@
         "eventThrow": "RECRI003C",
         "eventIdThrow": "g67f9a1c-3e6a-48c2-9b4d-8c0e2f4a1b27",
         "details": {
-          "message": "Missed required attachments for the sequence validation: [AR]"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Missed required attachments for the sequence validation: [AR]",
+          "additionalDetails": {
+            "missingAttachments":"AR"
+        }
         }
       }
     ],

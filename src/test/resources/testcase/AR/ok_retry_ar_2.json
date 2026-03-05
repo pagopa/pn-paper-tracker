@@ -111,7 +111,7 @@
         "businessState": "DONE",
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "attachmentEventId": "9009cc10-dd11-4e12-8f13-667788990010",
               "documentType": "AR",
               "finalEventId": "a010dd11-ee12-4f13-9a14-778899001122"

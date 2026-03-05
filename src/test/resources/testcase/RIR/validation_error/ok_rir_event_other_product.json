@@ -46,7 +46,50 @@
     }
   ],
   "expected": {
-    "errors": [],
+    "errors": [
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "INCONSISTENT_STATE",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
+        "type": "ERROR",
+        "productType": "RIR",
+        "eventThrow": "RECRN002A",
+        "eventIdThrow": "777f9a1c-3e6a-48c2-9b4d-8c0e2f4a1b27",
+        "details": {
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Product type mismatch for trackingId",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECRN002A",
+                "statusTimestamp": "2024-01-01T10:00:00Z"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "INCONSISTENT_STATE",
+        "flowThrow": "CHECK_TRACKING_PRODUCT",
+        "type": "ERROR",
+        "productType": "RIR",
+        "eventThrow": "RECRN002A",
+        "eventIdThrow": "888a1c3e-4f7b-49d3-9c5e-9d1f3a0e2f38",
+        "details": {
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Product type mismatch for trackingId",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECRN002A",
+                "statusTimestamp": "2024-01-01T10:00:00Z"
+              }
+            ]
+          }
+        }
+      }
+    ],
 
     "outputs": [
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON080", "statusDescription": "RIR - CON080 - CON080 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:00Z", "attachments": []},
@@ -55,8 +98,6 @@
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRI002", "statusDescription": "RIR - RECRI002 - RECRI002 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:03Z", "attachments": []},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRI003A", "statusDescription": "RIR - RECRI003A - RECRI003A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": []},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRI003B", "statusDescription": "RIR - RECRI003B - RECRI003B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "AR", "sha256": "sha256", "id": "id-RECRI003B-AR", "uri": "https://example.com/RECRI003B-AR.pdf", "date": "2024-01-01T10:00:05Z"}]},
-      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRN002A", "statusDescription": "RIR - RECRN002A - RECRN002A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [] },
-      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRN002A", "statusDescription": "AR - RECRN002A - RECRN002A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [] },
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "OK", "statusDetail": "RECRI003C", "statusDescription": "RIR - RECRI003C - RECRI003C description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": []}
     ],
 

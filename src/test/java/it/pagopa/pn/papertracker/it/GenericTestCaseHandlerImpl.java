@@ -21,6 +21,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorCategory.OCR_VALIDATION;
 import static java.util.stream.Collectors.groupingBy;
 
 
@@ -40,10 +41,19 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     }
 
     @Override
-    public void beforeInit(ProductTestCase scenario, boolean strictFinalValidation) {
+    public void beforeInit(ProductTestCase scenario, boolean strictFinalValidation, OcrStatusEnum ocrStatusEnum) {
         String randomIun = UUID.randomUUID().toString();
 
         replaceIun(scenario, randomIun);
+
+        List<PaperTrackingsErrors> expErrors = scenario.getExpected().getErrors();
+
+        if(scenario.getName().equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_890")
+        && OcrStatusEnum.DISABLED.equals(ocrStatusEnum)){
+            scenario.getExpected().setErrors(expErrors.stream()
+                    .filter(paperTrackingsErrors -> !paperTrackingsErrors.getErrorCategory().equals(OCR_VALIDATION))
+                    .toList());
+        }
 
         //se è attiva a la strict validation per lo stock890,
         // in caso di errori di sequence validation vengono convertiti in errori bloccanti e vengono rimossi tutti gli eventi di output con status detail
@@ -51,7 +61,6 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         //poichè la validazione non è andata a buon fine deve essere aggiornato il paperStatus rimuovendo i valdiatedEvent, il registeredLetterCode e
         //la deliveryFailureCause e impostando come finalStatusCode il "RECAG012"
         if (strictFinalValidation) {
-            List<PaperTrackingsErrors> expErrors = scenario.getExpected().getErrors();
             List<PaperTrackings> expTrackings = scenario.getExpected().getTrackings();
             List<PaperTrackerDryRunOutputs> expOutputs = scenario.getExpected().getOutputs();
 
@@ -219,14 +228,18 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
                             null,
                             event.getMessageId(),
                             null);
-                }else if(ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                }else if(!ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
                     ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().get(event.getOcrResponseIdx() - 1));
                 }
             });
         }
         if(scenario.getEvents().stream().noneMatch(testEvent -> testEvent.getMessageId().equalsIgnoreCase("SEND_OCR_RESPONSE"))
-                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && ocrStatusEnum.equals(OcrStatusEnum.RUN)) {
+                && Objects.nonNull(scenario.getExpected().getOcrResultPayload()) && !ocrStatusEnum.equals(OcrStatusEnum.DISABLED)) {
             ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
+            if(scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_AR") ||
+                    scenario.getName().equalsIgnoreCase("OK_DUPLICATE_OCR_RESPONSE_890")) {
+                ocrEventHandler.handleOcrMessage(scenario.getExpected().getOcrResultPayload().getFirst());
+            }
         }
     }
 
@@ -241,7 +254,6 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
             List<PaperTrackingsErrors> errors = new ArrayList<>();
             List<PaperTrackerDryRunOutputs> outputs = new ArrayList<>();
             List<PaperTrackings> trackings = paperTrackingsDAO.retrieveAllByTrackingIds(requestIds.stream().toList()).collectList().block();
-
 
             requestIds.forEach(requestId -> errors.addAll(Objects.requireNonNull(paperTrackingsErrorsDAO.retrieveErrors(requestId).collectList().block())));
             ErrorValidator.verifyErrors(scenario, errors);

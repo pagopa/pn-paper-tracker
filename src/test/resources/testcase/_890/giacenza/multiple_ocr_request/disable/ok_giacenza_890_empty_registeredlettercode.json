@@ -1,5 +1,5 @@
 {
-  "name": "OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890",
+  "name": "OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_890",
   "productType": "890",
   "initialTracking": {
     "productType": "890",
@@ -45,15 +45,44 @@
     "errors": [
       {
         "trackingId": "{{REQUEST_ID}}",
-        "errorCategory": "REGISTERED_LETTER_CODE_NOT_FOUND",
+        "errorCategory": "REGISTERED_LETTER_CODE_ERROR",
         "flowThrow": "SEQUENCE_VALIDATION",
         "type": "WARNING",
         "productType": "890",
         "eventThrow": "RECAG005C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "cause": null,
-          "message": "Registered letter code is null or empty in one or more events:"
+          "cause": "INVALID_VALUES",
+          "message": "Registered letter code is null or empty in one or more events",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECAG005B",
+                "statusTimestamp": "2024-01-01T10:00:00Z"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "trackingId": "{{REQUEST_ID}}",
+        "errorCategory": "OCR_VALIDATION",
+        "flowThrow": "DEMAT_VALIDATION",
+        "type": "WARNING",
+        "productType": "890",
+        "eventThrow": "RECAG012",
+        "eventIdThrow": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24",
+        "details": {
+          "cause": "OCR_KO",
+          "message": "Invalid registered letter code",
+          "additionalDetails": {
+            "ocrDataResultPayload":  {
+              "validationStatus": "KO",
+              "description": "Invalid registered letter code",
+              "predictedRefinementType": "",
+              "validationType": "ai"
+            }
+          }
         }
       }
     ],
@@ -102,7 +131,7 @@
         },
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24",
               "documentType": "23L",
               "attachmentEventId": "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d65",

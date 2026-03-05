@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -71,6 +72,9 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCategory.INCONSISTENT_STATE,
                             ErrorCause.STOCK_890_REFINEMENT_MISSING,
                             "invalid AWAITING_REFINEMENT state for stock 890",
+                            Map.of("statusCode", context.getPaperProgressStatusEvent().getStatusCode(),
+                                "statusTimestamp", context.getPaperProgressStatusEvent().getStatusDateTime().toString()
+                            ),
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()
@@ -90,6 +94,9 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCategory.INCONSISTENT_STATE,
                             ErrorCause.STOCK_890_REFINEMENT_ERROR,
                             "Refinement process reached KO state, cannot proceed with final event validation",
+                            Map.of("statusCode", context.getPaperProgressStatusEvent().getStatusCode(),
+                                    "statusTimestamp", context.getPaperProgressStatusEvent().getStatusDateTime().toString()
+                            ),
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()
@@ -103,6 +110,7 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
                             ErrorCategory.INVALID_STATE_FOR_STOCK_890,
                             ErrorCause.STOCK_890_REFINEMENT_ERROR,
                             String.format("Invalid state %s for processing stock 890 final event", state),
+                            null,
                             FlowThrow.SEQUENCE_VALIDATION,
                             ErrorType.ERROR,
                             context.getEventId()

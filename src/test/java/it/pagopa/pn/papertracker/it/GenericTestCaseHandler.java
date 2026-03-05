@@ -8,7 +8,7 @@ public interface GenericTestCaseHandler {
 
     String getProductType();
 
-    void beforeInit(ProductTestCase scenario, boolean strictFinalValidation);
+    void beforeInit(ProductTestCase scenario, boolean strictFinalValidation, OcrStatusEnum ocrStatusEnum);
 
     void afterInit(ProductTestCase scenario, TrackingCreationRequest request);
 

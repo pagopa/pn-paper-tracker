@@ -142,7 +142,7 @@ public class TestUtils {
         assertNotNull(e.getTrackingId());
         assertNotNull(e.getProductType());
         assertTrue(e.getDetails().getMessage().contains(msgContains));
-        assertNull(e.getDetails().getCause());
+        assertNotNull(e.getDetails().getCause());
     }
 
 
@@ -156,7 +156,7 @@ public class TestUtils {
         assertNotNull(e.getTrackingId());
         assertNotNull(e.getProductType());
         assertTrue(e.getDetails().getMessage().contains(msgContains));
-        assertNull(e.getDetails().getCause());
+        assertNotNull(e.getDetails().getCause());
     }
 
     public static void assertSingleWarning(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {

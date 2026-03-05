@@ -44,7 +44,17 @@
         "eventThrow": "RECAG001C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "message": "Invalid deliveryFailureCause: M02"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Invalid deliveryFailureCause: M02",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECAG001A",
+                "statusTimestamp": "2024-01-01T10:00:00Z",
+                "deliveryFailureCause": "M02"
+              }
+            ]
+          }
         }
       }
     ],

@@ -64,7 +64,7 @@
         ],
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "ff06aa07-bb08-4cc9-9dd0-445566778806",
               "documentType": "Plico",
               "attachmentEventId": "ee05ff06-aa07-4bb8-8cc9-334455667705"

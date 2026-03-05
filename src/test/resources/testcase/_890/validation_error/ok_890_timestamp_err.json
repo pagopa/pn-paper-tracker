@@ -56,7 +56,24 @@
         "eventThrow": "RECAG001C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c75",
         "details": {
-          "message": "Invalid business timestamps"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Invalid business timestamps",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusTimestamp":"2024-01-01T12:00:00Z",
+                "statusCode":"RECAG001C"
+              },
+              {
+                "statusTimestamp":"2024-01-01T12:00:00Z",
+                "statusCode":"RECAG001A"
+              },
+              {
+                "statusTimestamp":"2024-01-01T11:00:00Z",
+                "statusCode":"RECAG001B"
+              }
+            ]
+          }
         }
       }
     ],
@@ -103,7 +120,7 @@
         },
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
               "documentType": "23L",
               "attachmentEventId": "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d63"

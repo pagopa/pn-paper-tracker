@@ -15,7 +15,6 @@ import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,10 +22,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-@Component
 @Slf4j
 @RequiredArgsConstructor
-public class GenericFinalEventBuilder implements HandlerStep {
+public abstract class GenericFinalEventBuilder implements HandlerStep {
 
     private final DataVaultClient dataVaultClient;
     private final PaperTrackingsDAO paperTrackingsDAO;

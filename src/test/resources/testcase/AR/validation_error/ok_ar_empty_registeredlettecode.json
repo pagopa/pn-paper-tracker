@@ -33,15 +33,23 @@
     "errors": [
       {
         "trackingId": "{{REQUEST_ID}}",
-        "errorCategory": "REGISTERED_LETTER_CODE_NOT_FOUND",
+        "errorCategory": "REGISTERED_LETTER_CODE_ERROR",
         "flowThrow": "SEQUENCE_VALIDATION",
         "type": "ERROR",
         "productType": "AR",
         "eventThrow": "RECRN001C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "cause": null,
-          "message": "Registered letter code is null or empty in one or more events:"
+          "cause": "INVALID_VALUES",
+          "message": "Registered letter code is null or empty in one or more events",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECRN001B",
+                "statusTimestamp": "2024-01-01T10:00:00Z"
+              }
+            ]
+          }
         }
       }
     ],

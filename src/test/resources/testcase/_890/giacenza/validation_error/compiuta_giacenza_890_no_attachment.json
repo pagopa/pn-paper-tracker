@@ -56,7 +56,11 @@
         "eventThrow": "RECAG008C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "message": "Missed required attachments for the sequence validation: [Plico]"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Missed required attachments for the sequence validation: [Plico]",
+          "additionalDetails": {
+            "missingAttachments":"Plico"
+          }
         }
       }
     ],
@@ -106,7 +110,7 @@
         },
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24",
               "documentType": "23L",
               "attachmentEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d25"

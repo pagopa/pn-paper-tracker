@@ -22,10 +22,11 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
 
     public HandlersFactory890(
             MetadataUpserter metadataUpserter,
+            CheckTrackingProduct checkTrackingProduct,
             DeliveryPushSender deliveryPushSender,
             FinalEventBuilder890 finalEventBuilder,
             IntermediateEventsBuilder intermediateEventsBuilder,
-            DematValidator dematValidator,
+            DematValidator890 dematValidator,
             SequenceValidator890 sequenceValidator,
             RetrySender retrySender,
             NotRetryableErrorInserting notRetryableErrorInserting,
@@ -39,6 +40,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
     ) {
         super(
                 metadataUpserter,
+                checkTrackingProduct,
                 deliveryPushSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,

@@ -37,12 +37,11 @@ public enum EventStatusCodeEnum {
     PNRN012(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Perfezionamento per decorrenza termini", false),
 
     // RIR
-    //TODO: AGGIORNARE DOPO LO SVILUPPO DEL TASK SULLA DELIVERYFAILURECAUSE PER LA RIR
     RECRI001(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
     RECRI002(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false),
     RECRI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto, smarrimento o deterioramento", false),
     RECRI003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
-    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Mancata consegna - pre-esito", false),
+    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(M01, M02, M03, M04, M05, M06, M07, M08, M09), "Mancata consegna - pre-esito", false),
     RECRI003B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
     RECRI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Mancata consegna - In Dematerializzazione", true),
     RECRI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.OK, List.of(),"Consegnato - Fascicolo Chiuso", false),
@@ -104,7 +103,37 @@ public enum EventStatusCodeEnum {
     RECAG007C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
     RECAG008A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - pre-esito", false),
     RECAG008B(EventTypeEnum.STOCK_INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - In Dematerializzazione", true),
-    RECAG008C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false);
+    RECAG008C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false),
+
+    // RS
+    RECRS002A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(M02, M05, M06, M07, M08, M09), "Mancata consegna - pre-esito", false),
+    RECRS002D(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(M01, M03, M04), "Irreperibilità Assoluta - pre-esito", false),
+    RECRS004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - pre-esito", false),
+    RECRS005A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - pre-esito", false),
+    RECRS015(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(C01, C02, C03, C04, C05, C06), "Causa Forza Maggiore", false),
+    RECRS010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Inesito", false),
+    RECRS002B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Mancata consegna - In Dematerializzazione", true),
+    RECRS002E(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED),"Irreperibilità Assoluta - In Dematerializzazione",true),
+    RECRS004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Mancata consegna presso Punti di Giacenza - In Dematerializzazione", true),
+    RECRS005B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Compiuta giacenza - In Dematerializzazione", true),
+    RECRS001C(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
+    RECRS002C(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.KO, List.of(CHECK_IF_REQUIRED), "Mancata consegna - Fascicolo Chiuso", false),
+    RECRS003C(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.OK, List.of(), "Consegnato presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECRS002F(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.KO, List.of(CHECK_IF_REQUIRED), "Irreperibilità Assoluta - Fascicolo Chiuso", false),
+    RECRS004C(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.KO, List.of(), "Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
+    RECRS005C(EventTypeEnum.FINAL_EVENT, ProductType.RS, EventStatus.KO, List.of(), "Compiuta giacenza - Fascicolo Chiuso", false),
+    RECRS006(EventTypeEnum.RETRYABLE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
+    RECRS013(EventTypeEnum.RETRYABLE_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "Non Rendicontabile", false),
+    RECRS011(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "In giacenza", false),
+
+    //RIS
+    RECRSI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - pre-esito", false),
+    RECRSI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - In Dematerializzazione", true),
+    RECRSI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
+    RECRSI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.KO, List.of(), "Non Consegnato - fascicolo Chiuso", false),
+    RECRSI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
+    RECRSI001(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
+    RECRSI002(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false);
 
 
     private final EventTypeEnum codeType;

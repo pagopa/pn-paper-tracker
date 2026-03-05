@@ -21,7 +21,16 @@ public enum DateValidationGroup {
     RECAG005C(Set.of("RECAG005A", "RECAG005B", "RECAG005C"), Set.of("RECAG010A","RECAG011B")),
     RECAG006C(Set.of("RECAG006A", "RECAG006B", "RECAG006C"), Set.of("RECAG010A","RECAG011B")),
     RECAG007C(Set.of("RECAG007A", "RECAG007B", "RECAG007C"), Set.of("RECAG010A","RECAG011B")),
-    RECAG008C(Set.of("RECAG008A", "RECAG008B", "RECAG008C"), Set.of("RECAG010A","RECAG011B"));
+    RECAG008C(Set.of("RECAG008A", "RECAG008B", "RECAG008C"), Set.of("RECAG010A","RECAG011B")),
+    RECRS001C(Set.of("RECRS001C"), Set.of()),
+    RECRS002C(Set.of("RECRS002A","RECRS002B","RECRS002C"), Set.of()),
+    RECRS002F(Set.of("RECRS002D","RECRS002E","RECRS002F"), Set.of()),
+    RECRS003C(Set.of("RECRS003C"), Set.of()),
+    RECRS004C(Set.of("RECRS004A","RECRS004B","RECRS004C"), Set.of()),
+    RECRS005C(Set.of("RECRS005A","RECRS005B","RECRS005C"), Set.of()),
+    RECRSI003C(Set.of("RECRSI003C"), Set.of()),
+    RECRSI004C(Set.of("RECRSI004A","RECRSI004B","RECRSI004C"), Set.of());
+
 
     private final Set<String> finalEventDateValidationGroup;
     private final Set<String> stockEventsDateValidationGroup;

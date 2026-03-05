@@ -45,7 +45,17 @@
         "eventThrow": "RECRI003C",
         "eventIdThrow": "gg77f9a1c-3e6a-48c2-9b4d-8c0e2f4a1b27",
         "details": {
-          "message": "Invalid deliveryFailureCause: F01"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Invalid deliveryFailureCause: F01",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusCode": "RECRI003C",
+                "statusTimestamp": "2024-01-01T10:00:00Z",
+                "deliveryFailureCause": "F01"
+              }
+            ]
+          }
         }
       }
     ],

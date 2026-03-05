@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataResultPayload;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -10,7 +11,6 @@ import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -30,7 +30,6 @@ class CheckOcrResponseTest {
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
 
-    @InjectMocks
     private CheckOcrResponse checkOcrResponse;
 
     private HandlerContext context;
@@ -58,6 +57,7 @@ class CheckOcrResponseTest {
                 .data(Data.builder().validationStatus(Data.ValidationStatus.OK).build())
                 .build();
         context.setOcrDataResultPayload(ocrPayload);
+        checkOcrResponse = new CheckOcrResponse(paperTrackingsDAO, new ObjectMapper());
     }
 
     @Test
@@ -73,7 +73,6 @@ class CheckOcrResponseTest {
         paperTrackings.setState(PaperTrackingsState.DONE);
         paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.DRY);
         when(paperTrackingsDAO.updateOcrRequests(any(), any(), eq(Data.ValidationStatus.OK))).thenReturn(Mono.just(paperTrackings));
-        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
         StepVerifier.create(checkOcrResponse.execute(context))
                 .verifyComplete();
         assertTrue(context.isStopExecution());
@@ -110,6 +109,7 @@ class CheckOcrResponseTest {
 
     @Test
     void execute_ocrRUN_ocrValidationStatusPENDING() {
+        when(paperTrackingsDAO.updateOcrRequests(any(), any(), eq(Data.ValidationStatus.PENDING))).thenReturn(Mono.just(paperTrackings));
         context.getOcrDataResultPayload().setData(Data.builder().validationStatus(Data.ValidationStatus.PENDING).build());
         StepVerifier.create(checkOcrResponse.execute(context))
                 .verifyComplete();

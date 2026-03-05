@@ -52,7 +52,36 @@
         "eventThrow": "RECAG005C",
         "eventIdThrow": "7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76",
         "details": {
-          "message": "Registered letter codes do not match in sequence: [1234567891011, 1234567891012, 1234567891011, 1234567891011, 1234567891011]"
+          "cause": "VALUES_NOT_MATCHING",
+          "message": "Registered letter codes do not match in sequence: [1234567891011, 1234567891012, 1234567891011, 1234567891011, 1234567891011]",
+          "additionalDetails": {
+            "affectedEvents": [
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG005C"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG005B"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG005A"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG010"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG011A"
+              },
+              {
+                "statusTimestamp":"2024-01-01T10:00:00Z",
+                "statusCode":"RECAG012"
+              }
+            ]
+          }
         }
       }
     ],
@@ -101,7 +130,7 @@
         },
         "validationFlow": {
           "ocrRequests": [
-            {
+            { "responseStatus":"OK",
               "finalEventId": "2a6d8f3c-7b4e-4a9d-8f33-2b7c1e6a4d24",
               "documentType": "23L",
               "attachmentEventId": "6e1b3d8a-9c4f-4e7a-8d77-6f2c4b9a1d65"
