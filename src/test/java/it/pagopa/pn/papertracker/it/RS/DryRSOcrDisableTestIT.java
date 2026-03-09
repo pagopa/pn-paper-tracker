@@ -59,7 +59,7 @@ public class DryRSOcrDisableTestIT extends BaseTest.WithLocalStack {
 
     private void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
-        if (scenario.getName().equalsIgnoreCase("OK_RETRY_RS")) {
+        if (scenario.getName().equalsIgnoreCase("OK_RETRY_RS") || scenario.getName().equalsIgnoreCase("OK_NON_RENDICONTABILE_RS")) {
             Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
         }
     }

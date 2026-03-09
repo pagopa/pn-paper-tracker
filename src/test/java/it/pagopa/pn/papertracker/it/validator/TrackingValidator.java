@@ -136,6 +136,8 @@ public class TrackingValidator {
         boolean isOkRs = scenarioName.equalsIgnoreCase("OK_RS");
         boolean isOkRis = scenarioName.equalsIgnoreCase("OK_RIS");
         boolean isOkRetryRs = scenarioName.equalsIgnoreCase("OK_RETRY_RS");
+        boolean isCausaForzaMaggioreRS = scenarioName.equalsIgnoreCase("CAUSA_FORZA_MAGGIORE_RS");
+        boolean isOkNonRendicontabileRs = scenarioName.equalsIgnoreCase("OK_NON_RENDICONTABILE_RS");
         boolean isOkRetryRis = scenarioName.equalsIgnoreCase("OK_RETRY_RIS");
         boolean isFailCompiuta = scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") || scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
         boolean isOcrPending = scenarioName.equalsIgnoreCase("OK_AR_OCR_PENDING") || scenarioName.equalsIgnoreCase("OK_890_OCR_PENDING");
@@ -144,7 +146,7 @@ public class TrackingValidator {
         boolean hasRetry = !noRetry;
         boolean businessDoneNoRetry = expected.getBusinessState() == BusinessState.DONE && noRetry;
         boolean stateDoneNoRetry = expected.getState() == DONE && noRetry;
-        boolean isOkRsRis = isOkRs || isOkRis || ((isOkRetryRs || isOkRetryRis) && noRetry);
+        boolean isOkRsRis = isCausaForzaMaggioreRS || isOkRs || isOkRis || ((isOkRetryRs || isOkRetryRis || isOkNonRendicontabileRs) && noRetry);
 
         if (isOkRsRis) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
