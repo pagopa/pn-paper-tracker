@@ -51,7 +51,7 @@ public class CheckTrackingProduct implements HandlerStep {
                         errorMsg,
                         additionalDetails,
                         FlowThrow.CHECK_TRACKING_PRODUCT,
-                        ErrorType.ERROR,
+                        ErrorType.WARNING,
                         context.getEventId()
                 )));
     }
