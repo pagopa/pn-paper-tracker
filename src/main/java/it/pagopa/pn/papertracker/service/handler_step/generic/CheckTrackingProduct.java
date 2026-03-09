@@ -35,24 +35,43 @@ public class CheckTrackingProduct implements HandlerStep {
         String payloadProduct = context.getPaperProgressStatusEvent().getProductType();
         String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
         String productType = EventStatusCodeEnum.fromKey(statusCode).getProductType().getValue();
-        if ((productType.equals(ProductType.ALL.getValue()) || paperTrackingProduct.equals(productType)) && paperTrackingProduct.equals(payloadProduct)) {
+        String errorMsg;
+        if ((productType.equals(ProductType.ALL.getValue()))){
+            return Mono.empty();
+        }else if(!paperTrackingProduct.equals(payloadProduct)){
+            errorMsg = String.format("Product type mismatch for trackingId %s: expected %s, but got %s", context.getTrackingId(), paperTrackingProduct, payloadProduct);
+            Map<String, Object> additionalDetails = createAffectedEventsMap(false, List.of(TrackerUtility.extractEventFromContext(context)));
+            return Mono.error(new PnPaperTrackerValidationException(
+                    errorMsg,
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                            context.getPaperTrackings(),
+                            context.getPaperProgressStatusEvent().getStatusCode(),
+                            ErrorCategory.INCONSISTENT_STATE,
+                            ErrorCause.VALUES_NOT_MATCHING,
+                            errorMsg,
+                            additionalDetails,
+                            FlowThrow.CHECK_TRACKING_PRODUCT,
+                            ErrorType.WARNING,
+                            context.getEventId()
+                    )));
+        } else if(!paperTrackingProduct.equals(productType)){
+            errorMsg = String.format("Product type mismatch for trackingId %s: expected %s, but got %s", context.getTrackingId(), paperTrackingProduct, productType);
+            Map<String, Object> additionalDetails = createAffectedEventsMap(false, List.of(TrackerUtility.extractEventFromContext(context)));
+            return Mono.error(new PnPaperTrackerValidationException(
+                    errorMsg,
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(
+                            context.getPaperTrackings(),
+                            context.getPaperProgressStatusEvent().getStatusCode(),
+                            ErrorCategory.INCONSISTENT_STATE,
+                            ErrorCause.VALUES_NOT_MATCHING,
+                            errorMsg,
+                            additionalDetails,
+                            FlowThrow.CHECK_TRACKING_PRODUCT,
+                            ErrorType.WARNING,
+                            context.getEventId()
+                    )));
+        }else{
             return Mono.empty();
         }
-
-        String errorMsg = String.format("Product type mismatch for trackingId %s: expected %s, but got %s", context.getTrackingId(), paperTrackingProduct, productType);
-        Map<String, Object> additionalDetails = createAffectedEventsMap(false, List.of(TrackerUtility.extractEventFromContext(context)));
-        return Mono.error(new PnPaperTrackerValidationException(
-                errorMsg,
-                PaperTrackingsErrorsMapper.buildPaperTrackingsError(
-                        context.getPaperTrackings(),
-                        context.getPaperProgressStatusEvent().getStatusCode(),
-                        ErrorCategory.INCONSISTENT_STATE,
-                        ErrorCause.VALUES_NOT_MATCHING,
-                        errorMsg,
-                        additionalDetails,
-                        FlowThrow.CHECK_TRACKING_PRODUCT,
-                        ErrorType.WARNING,
-                        context.getEventId()
-                )));
     }
 }

@@ -55,7 +55,7 @@
           "cause": "INVALID_VALUES",
           "message": "Event RECRS004B contains invalid attachments",
           "additionalDetails": {
-            "invalidAttachments": "AR"
+            "invalidAttachments":  ["AR"]
           }
         }
       }
@@ -114,5 +114,6 @@
         }
       }
     ]
-  }
+  ,
+  "sentToOcr": 0 }
 }

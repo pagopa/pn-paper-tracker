@@ -55,7 +55,7 @@
           "cause": "INVALID_VALUES",
           "message": "Event RECRSI004B contains invalid attachments",
           "additionalDetails": {
-            "invalidAttachments": "AR"
+            "invalidAttachments":  ["AR"]
           }
         }
       }

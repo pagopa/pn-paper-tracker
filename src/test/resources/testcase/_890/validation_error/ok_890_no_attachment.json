@@ -48,7 +48,7 @@
           "cause": "VALUES_NOT_MATCHING",
           "message": "Missed required attachments for the sequence validation: [23L]",
           "additionalDetails": {
-            "missingAttachments":"23L"
+            "missingAttachments":["23L"]
           }
         }
       }

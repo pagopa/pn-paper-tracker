@@ -56,7 +56,8 @@
         },
 
         "validationFlow": {
-          "ocrRequests": []
+          "ocrRequests": [
+          ]
         },
         "paperStatus": {
           "registeredLetterCode": "1234567891011",
@@ -66,6 +67,7 @@
           ]
         }
       }
-    ]
+    ],
+    "sentToOcr": 0
   }
 }

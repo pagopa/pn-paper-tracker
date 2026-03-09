@@ -191,15 +191,15 @@ public class TrackingValidator {
         }
 
         verifyOcrRequests(expectedFlow, flow, ocrStatusEnum, hasRetry,
-                expected.getState() == DONE || expected.getBusinessState() == BusinessState.DONE, scenarioName);
+                expected.getState() == DONE || expected.getBusinessState() == BusinessState.DONE, scenarioName, scenario.getExpected().getSentToOcr());
     }
 
-    private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase) {
+    private static void verifyOcrRequests(ValidationFlow expected, ValidationFlow actual, OcrStatusEnum ocrStatusEnum, boolean hasNextRequestIdPcretry, boolean isDone, String testCase, Integer sentToOcr) {
         boolean isFailCompiutaGiacenzaAr = testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") || testCase.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
         boolean isOkGiacenzaEmptyRegisteredLetterCode890 = testCase.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890");
         boolean isOcrPending = testCase.equalsIgnoreCase("OK_AR_OCR_PENDING") || testCase.equalsIgnoreCase("OK_890_OCR_PENDING");
 
-        if (ocrStatusEnum == OcrStatusEnum.DISABLED) {
+        if (ocrStatusEnum == OcrStatusEnum.DISABLED || sentToOcr == 0) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }

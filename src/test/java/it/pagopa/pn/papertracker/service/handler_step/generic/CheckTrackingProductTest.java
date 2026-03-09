@@ -71,9 +71,7 @@ public class CheckTrackingProductTest {
         context.getPaperProgressStatusEvent().setStatusDateTime(offsetDateTime);
 
         StepVerifier.create(checkTrackingProduct.execute(context))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Product type mismatch for trackingId null: expected AR, but got ALL"))
-                .verify();
+                .verifyComplete();
     }
 
     @Test

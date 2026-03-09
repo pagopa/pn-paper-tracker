@@ -156,7 +156,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         if (missingDocs.isEmpty()) {
             return Mono.just(events);
         }
-        Map<String, Object> additionalDetails = Map.of("missingAttachments", String.join(",", missingDocs));
+        Map<String, Object> additionalDetails = Map.of("missingAttachments", missingDocs.stream().toList());
         return getErrorOrSaveWarning
                 ("Missed required attachments for the sequence validation: " + missingDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, VALUES_NOT_MATCHING, additionalDetails, strictFinalEventValidation, events);    }
 
@@ -174,7 +174,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                     .collect(Collectors.toSet());
 
             if (!CollectionUtils.isEmpty(invalidDocs)) {
-                Map<String, Object> additionalDetails = Map.of("invalidAttachments",  String.join(",", invalidDocs));
+                Map<String, Object> additionalDetails = Map.of("invalidAttachments",  invalidDocs.stream().toList());
 
                 return getErrorOrSaveWarning("Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, INVALID_VALUES, additionalDetails, strictFinalEventValidation, events);
             }
