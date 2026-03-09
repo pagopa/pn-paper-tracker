@@ -71,6 +71,7 @@ components:
                 - RIR
                 - 890
                 - RS
+                - RIS
               example: "AR"
             documentType:
               type: string
