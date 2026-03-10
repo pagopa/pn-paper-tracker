@@ -51,7 +51,7 @@
           "cause": "INVALID_VALUES",
           "message": "Event RECRN001B contains invalid attachments: [Plico]",
           "additionalDetails": {
-            "invalidAttachments": "Plico"
+            "invalidAttachments": ["Plico"]
           }
         }
       }

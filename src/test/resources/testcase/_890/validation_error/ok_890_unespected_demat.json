@@ -51,7 +51,7 @@
           "cause": "INVALID_VALUES",
           "message": "Event RECAG001B contains invalid attachments: [ARCAD]",
           "additionalDetails": {
-            "invalidAttachments": "ARCAD"
+            "invalidAttachments": ["ARCAD"]
           }
         }
       }

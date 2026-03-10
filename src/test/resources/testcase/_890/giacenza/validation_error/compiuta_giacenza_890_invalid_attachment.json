@@ -59,7 +59,7 @@
           "cause": "INVALID_VALUES",
           "message": "Event RECAG008B contains invalid attachments: [CAD]",
           "additionalDetails": {
-            "invalidAttachments": "CAD"
+            "invalidAttachments": ["CAD"]
           }
         }
       },
@@ -75,7 +75,7 @@
           "cause": "VALUES_NOT_MATCHING",
           "message": "Missed required attachments for the sequence validation: [Plico]",
           "additionalDetails": {
-            "missingAttachments":"Plico"
+            "missingAttachments":["Plico"]
           }
         }
       }

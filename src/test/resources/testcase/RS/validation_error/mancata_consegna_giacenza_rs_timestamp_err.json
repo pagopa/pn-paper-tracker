@@ -103,7 +103,14 @@
           "ocrEnabled": "DISABLED"
         },
         "validationFlow": {
-          "ocrRequests": []
+          "ocrRequests": [
+            {
+              "responseStatus":"OK",
+              "finalEventId": "k1fa015f-7c8e-4a0b-9d5c-2a3b4c5d6e71",
+              "documentType": "Plico",
+              "attachmentEventId": "h8f7782c-4f7b-49d3-9c5e-9d1f3a0e2f38"
+            }
+          ]
         },
         "paperStatus": {
           "registeredLetterCode": "1234567891011",
@@ -119,5 +126,34 @@
         }
       }
     ]
-  }
-}
+  ,
+  "ocrResultPayload": [{
+    "commandId": "{{REQUEST_ID}}#k1fa015f-7c8e-4a0b-9d5c-2a3b4c5d6e71#Plico",
+    "version": "v1",
+    "commandType": "postal",
+    "data": {
+      "validationStatus": "OK",
+      "description": "OK",
+      "predictedRefinementType": null,
+      "validationType": "ai"
+    }
+  }],
+  "ocrDataPayload": [{
+    "commandId": "{{REQUEST_ID}}#k1fa015f-7c8e-4a0b-9d5c-2a3b4c5d6e71#Plico",
+    "commandType": "postal",
+    "data": {
+      "documentType": "Plico",
+      "productType": "RS",
+      "unifiedDeliveryDriver": "Poste",
+      "details": {
+        "deliveryDetailCode": "RECRS004C",
+        "notificationDate": "2024-01-01T12:00",
+        "registeredLetterCode": "1234567891011",
+        "deliveryFailureCause": null,
+        "attachment": "uri.pdf",
+        "deliveryAttemptDate": null
+      }
+    }
+  }],
+  "sentToOcr": 1
+}}

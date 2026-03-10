@@ -51,7 +51,7 @@
           "cause": "VALUES_NOT_MATCHING",
           "message": "Missed required attachments for the sequence validation: [Plico]",
           "additionalDetails": {
-            "missingAttachments":"Plico"
+            "missingAttachments":["Plico"]
         }
         }
       }

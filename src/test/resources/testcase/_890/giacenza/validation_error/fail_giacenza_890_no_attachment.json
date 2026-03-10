@@ -59,7 +59,7 @@
           "cause": "VALUES_NOT_MATCHING",
           "message": "Missed required attachments for the sequence validation: [Plico, CAD, ARCAD]",
           "additionalDetails": {
-            "missingAttachments":"Plico,CAD,ARCAD"
+            "missingAttachments":["Plico","CAD","ARCAD"]
           }
         }
       }
