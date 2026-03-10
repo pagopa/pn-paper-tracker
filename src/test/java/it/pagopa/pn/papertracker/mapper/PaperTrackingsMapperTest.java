@@ -417,6 +417,9 @@ public class PaperTrackingsMapperTest {
         ocrRequest.setResponseTimestamp(Instant.now());
         ocrRequest.setDocumentType("23L");
         ocrRequest.setFinalEventId("eventId");
+        ocrRequest.setAttachmentEventId("attachmentEventId");
+        ocrRequest.setResponseStatus("OK");
+        ocrRequest.setUri("uri");
         validationFlow.setOcrRequests(List.of(ocrRequest));
         paperTrackings.setValidationFlow(validationFlow);
 
@@ -492,7 +495,8 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(paperTrackings.getValidationFlow().getOcrRequests().getFirst().getDocumentType(), tracking.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
         Assertions.assertEquals(paperTrackings.getValidationFlow().getOcrRequests().getFirst().getFinalEventId(), tracking.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         Assertions.assertEquals(paperTrackings.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId(), tracking.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
-
+        Assertions.assertEquals(paperTrackings.getValidationFlow().getOcrRequests().getFirst().getResponseStatus(), tracking.getValidationFlow().getOcrRequests().getFirst().getResponseStatus());
+        Assertions.assertEquals(paperTrackings.getValidationFlow().getOcrRequests().getFirst().getUri(), tracking.getValidationFlow().getOcrRequests().getFirst().getUri());
         Assertions.assertNotNull(tracking.getValidationFlow().getOcrRequests().getFirst().getResponseTimestamp());
         Assertions.assertNotNull(tracking.getValidationFlow().getOcrRequests().getFirst().getRequestTimestamp());
 

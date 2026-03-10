@@ -469,6 +469,10 @@ components:
         responseTimestamp:
           type: string
           format: date-time
+        uri:
+          type: string
+        responseStatus:
+          type: string
     ValidationConfig:
       type: object
       properties:
