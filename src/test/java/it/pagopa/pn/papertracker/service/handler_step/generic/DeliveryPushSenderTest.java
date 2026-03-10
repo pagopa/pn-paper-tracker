@@ -1,7 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
@@ -13,7 +12,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsStat
 import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import jdk.jshell.EvalException;
+import it.pagopa.pn.papertracker.utils.LogUtility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +42,9 @@ class DeliveryPushSenderTest {
 
     @Mock
     private ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
+
+    @Mock
+    private LogUtility logUtility;
 
     @InjectMocks
     private DeliveryPushSender deliveryPushSender;
