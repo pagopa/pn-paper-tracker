@@ -494,6 +494,8 @@ components:
             type: string
         strictFinalValidationStock890:
           type: boolean
+        strictDeliveryFailureCause:
+          type: boolean
         ocrEnabled:
           type: string
           enum:
