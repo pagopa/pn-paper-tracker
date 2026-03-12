@@ -47,17 +47,6 @@ Resources:
         LogGroupRetention: !Ref LogRetention
         LogsKinesisSourceStreamArn: !Ref LogsKinesisSourceStreamArn
 
-  QueueProxyLogGroup:
-    Type: AWS::CloudFormation::Stack
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-    Properties:
-      TemplateURL: !Sub ${TemplateBucketBaseUrl}/fragments/log-group.yaml
-      Parameters:
-        LogGroupName: !Sub ${ProjectName}-paper-tracker-QueueProxy
-        LogGroupRetention: !Ref LogRetention
-        LogGroupPrefix: /aws/lambda
-
   NotificationReworkEventsValidationLambdaLogGroup:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -181,32 +170,6 @@ Resources:
         VisibilityTimeout: 60
         DelaySeconds: 1
 
-  UninitializedShipmentDryRunQueue:
-    Type: AWS::CloudFormation::Stack
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
-      Parameters:
-        QueueName: !Sub '${ProjectName}-paper_tracker_uninitialized_dryrun'
-        HasDLQ: false
-        QueueHasAlarm: false
-        VisibilityTimeout: 60
-        DelaySeconds: 1
-
-  UninitializedShipmentRunQueue:
-    Type: AWS::CloudFormation::Stack
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
-      Parameters:
-        QueueName: !Sub '${ProjectName}-paper_tracker_uninitialized_run'
-        HasDLQ: false
-        QueueHasAlarm: false
-        VisibilityTimeout: 60
-        DelaySeconds: 1
-
   ExternalChannelToPaperTrackerQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -234,9 +197,6 @@ Resources:
 Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
-
-  PaperTrackerQueueProxyLambdaName:
-    Value: !Sub ${ProjectName}-paper-tracker-QueueProxy
 
   # Lambda functions
   NotificationReworkEventsValidationLambdaName:
@@ -289,13 +249,3 @@ Outputs:
     Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueARN
   ExternalChannelToReworkEventValidationQueueURL:
     Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueURL
-
-  UninitializedShipmentDryRunQueueName:
-    Value: !GetAtt UninitializedShipmentDryRunQueue.Outputs.QueueName
-  UninitializedShipmentDryRunQueueARN:
-    Value: !GetAtt UninitializedShipmentDryRunQueue.Outputs.QueueARN
-
-  UninitializedShipmentRunQueueName:
-    Value: !GetAtt UninitializedShipmentRunQueue.Outputs.QueueName
-  UninitializedShipmentRunQueueARN:
-    Value: !GetAtt UninitializedShipmentRunQueue.Outputs.QueueARN
