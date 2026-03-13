@@ -75,7 +75,7 @@ public class CheckTrackingProductTest {
     }
 
     @Test
-    void execute_shouldReturnErrorWhenProductTypeDontMatch() {
+    void execute_shouldReturnErrorWhenEnumProductTypeDontMatch() {
 
         Event event = new Event();
         event.setId("eventId");
@@ -92,6 +92,27 @@ public class CheckTrackingProductTest {
         StepVerifier.create(checkTrackingProduct.execute(context))
                 .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
                         throwable.getMessage().contains("Product type mismatch for trackingId null: expected AR, but got 890"))
+                .verify();
+    }
+
+    @Test
+    void execute_shouldReturnErrorWhenPayloadProductTypeDontMatch() {
+
+        Event event = new Event();
+        event.setId("eventId");
+        event.setStatusCode("RECAG005C");
+        OffsetDateTime offsetDateTime = OffsetDateTime.now();
+
+        context.setEventId("eventId");
+        context.getPaperTrackings().setProductType("AR");
+        context.getPaperTrackings().setEvents(List.of(event));
+        context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
+        context.getPaperProgressStatusEvent().setProductType("RIR");
+        context.getPaperProgressStatusEvent().setStatusDateTime(offsetDateTime);
+
+        StepVerifier.create(checkTrackingProduct.execute(context))
+                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
+                        throwable.getMessage().contains("Product type mismatch for trackingId null: expected AR, but got RIR"))
                 .verify();
     }
 }

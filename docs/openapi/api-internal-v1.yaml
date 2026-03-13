@@ -469,6 +469,10 @@ components:
         responseTimestamp:
           type: string
           format: date-time
+        uri:
+          type: string
+        responseStatus:
+          type: string
     ValidationConfig:
       type: object
       properties:
@@ -489,6 +493,8 @@ components:
           items:
             type: string
         strictFinalValidationStock890:
+          type: boolean
+        strictDeliveryFailureCause:
           type: boolean
         ocrEnabled:
           type: string
