@@ -157,7 +157,7 @@ Resources:
             details:struct<M:struct<
               cause:struct<S:string>,
               message:struct<S:string>,
-              additionalDetails:struct<M:map<string,string>>
+              additionalDetails:struct<S:string>
             >>,
             flowThrow:struct<S:string>,
             eventThrow:struct<S:string>,
