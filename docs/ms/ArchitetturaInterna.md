@@ -1,11 +1,40 @@
-# Flussi logici interni
+# Logica di business
+
+## Inizializzazione della spedizione tramite API initTracking
+Il flusso operativo di pn-paper-tracker ha inizio con la chiamata all’API `initTracking`, esposta dal controller 
+[`PaperTrackerTrackingController`](../../src/main/java/it/pagopa/pn/papertracker/rest/PaperTrackerTrackingController.java) e 
+invocata dal microservizio pn-paper-channel.
+
+Questa API viene utilizzata per inizializzare una nuova spedizione, salvando un oggetto `PaperTrackings` su DynamoDB. 
+I dati inizializzati comprendono:
+- **trackingId**: identificativo univoco della spedizione cartacea
+- **productType**: tipologia di prodotto (AR, RIR, 890, RS, RIS)
+- **unifiedDeliveryDriver**: recapitista
+- **altri metadati**: configurazioni ed eventuali dati aggiuntivi utili al tracciamento e alla gestione della spedizione
+
+Questi dati vengono ricevuti tramite il payload della richiesta (`TrackingCreationRequest`) e salvati tramite il servizio [`PaperTrackerTrackingService`](../../src/main/java/it/pagopa/pn/papertracker/service/PaperTrackerTrackingService.java). 
+L’inizializzazione della spedizione è un prerequisito per la corretta gestione degli eventi successivi relativi alla stessa spedizione.
+
 
 La classe [`PnEventInboundService`](../../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/PnEventInboundService.java)
-gestisce la ricezione dei messaggi da due code distinte: `pn-external_channel_to_paper_tracker` e `pn-ocr_outputs`.
+gestisce la ricezione dei messaggi da tre code distinte: `pn-external_channel_to_paper_channel`, `pn-external_channel_to_paper_tracker` e `pn-ocr_outputs`.
 Ogni coda segue un flusso separato, descritto di seguito.
 
-## Flusso: pn-external_channel_to_paper_tracker
+## Consumer pn-external_channel_to_paper_channel
+I messaggi ricevuti vengono inoltrati, in definitiva, alla classe
+[`SourceQueueProxyService`](../../src/main/java/it/pagopa/pn/papertracker/service/impl/SourceQueueProxyServiceImpl.java),
+che si occupa di gestire il routing degli eventi provenienti da pn-ec in base alla modalità operativa associata alla spedizione 
+(attributo `processingMode` della classe [`PaperTrackings`](../../src/main/java/it/pagopa/pn/papertracker/middleware/dao/dynamo/entity/PaperTrackings.java)).
 
+La logica applicata è la seguente:
+- **Spedizione NON presente su pn-PaperTrackings**: l'evento viene inoltrato solo a pn-paper-channel.
+- **Spedizione presente e modalità DRY**: l'evento viene inoltrato sia a pn-paper-channel che a pn-paper-tracker.
+- **Spedizione presente e modalità RUN**: l'evento viene inoltrato solo a pn-paper-tracker.
+- **Spedizione con processingMode null**: l'evento viene gestito come in modalità DRY.
+
+Il messaggio viene arricchito con header e flag dry-run, e inoltrato ai consumer appropriati tramite i producer dedicati.
+
+## Consumer pn-external_channel_to_paper_tracker
 I messaggi ricevuti vengono inoltrati alla classe
 [`ExternalChannelHandler`](../../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/ExternalChannelHandler.java).
 Qui, in base al `productType` e all' `eventType` (ricavato tramite lo `statusCode` e l’enum
@@ -22,7 +51,6 @@ utilizzando le informazioni condivise tramite la classe
 [`HandlerContext`](../src/main/java/it/pagopa/pn/papertracker/model/HandlerContext.java).
 
 ### Esempio di sequence e gestione degli eventi
-
 Esempio di configurazione di una sequence:
 
 ```json
@@ -97,10 +125,9 @@ participant pn-delivery-push
     pn-paper-tracker->>pn-delivery-push: PROGRESS - RECAG005C
 ```
 
-## Flusso: pn-ocr_outputs
-
+## Consumer pn-ocr_outputs
 I messaggi ricevuti vengono gestiti dalla classe
-[`OcrEventHandler`](../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/OcrEventHandler.java),
+[`OcrEventHandler`](../../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/OcrEventHandler.java),
 che recupera l’oggetto `PaperTrackings` da DynamoDB tramite il `commandId` presente nel payload.
 Successivamente, come per la coda precedente, il messaggio viene smistato al relativo handler in base al `productType`
 e all’`EventTypeEnum.OCR_RESPONSE_EVENT`.
@@ -117,4 +144,3 @@ flowchart LR
         I3[deliveryPushSender]
     end
 ```
-
