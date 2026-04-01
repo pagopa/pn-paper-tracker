@@ -28,7 +28,8 @@ public class PaperTrackingsMapper {
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest,
                                                   TrackerConfigUtils trackerConfigUtils,
                                                   PnPaperTrackerConfigs pnPaperTrackerConfigs,
-                                                  Instant now) {
+                                                  Instant now,
+                                                  String xOriginClientId) {
         ProductType productType = ProductType.fromValue(trackingCreationRequest.getProductType());
         LocalDate localDate = LocalDate.now(ZoneId.of("Europe/Rome"));
         PaperTrackings paperTrackings = new PaperTrackings();
@@ -41,6 +42,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModes(localDate).get(productType));
+        paperTrackings.setXOriginClientId(xOriginClientId);
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();

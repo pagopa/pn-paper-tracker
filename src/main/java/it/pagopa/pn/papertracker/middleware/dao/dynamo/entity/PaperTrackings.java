@@ -35,6 +35,7 @@ public class PaperTrackings {
     public static final String COL_REWORK_ID = "reworkId";
     public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
     public static final String COL_PROCESSING_MODE = "processingMode";
+    public static final String COL_X_ORIGIN_CLIENT_ID = "xOriginClientId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -92,6 +93,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROCESSING_MODE)}))
     private ProcessingMode processingMode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_X_ORIGIN_CLIENT_ID)}))
+    private String xOriginClientId;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =

@@ -48,6 +48,15 @@ paths:
       tags:
         - PaperTrackerTracking
       operationId: initTracking
+      parameters:
+        - name: X-Origin-Client-Id
+          in: header
+          description: Identificativo del client che ha fatto la richiesta di spedizione analogica
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
       requestBody:
         content:
           application/json:

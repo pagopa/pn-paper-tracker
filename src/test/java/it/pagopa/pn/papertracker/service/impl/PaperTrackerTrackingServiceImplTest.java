@@ -59,16 +59,18 @@ class PaperTrackerTrackingServiceImplTest {
     void insertPaperTrackingsValidRequest() {
         //ARRANGE
         TrackingCreationRequest request = getTrackerCreationRequest();
+        String xOriginClientId = "clientId";
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
-                        pt.getProcessingMode() == ProcessingMode.DRY
+                        pt.getProcessingMode() == ProcessingMode.DRY &&
+                        pt.getXOriginClientId().equals(xOriginClientId)
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
-        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
+        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request, xOriginClientId);
 
         //ASSERT
         StepVerifier.create(response)
@@ -77,7 +79,8 @@ class PaperTrackerTrackingServiceImplTest {
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
-                        pt.getProcessingMode() == ProcessingMode.DRY
+                        pt.getProcessingMode() == ProcessingMode.DRY &&
+                        pt.getXOriginClientId().equals(xOriginClientId)
         ));
     }
 
@@ -85,6 +88,7 @@ class PaperTrackerTrackingServiceImplTest {
     void insertPaperTrackingsConflictException() {
         //ARRANGE
         TrackingCreationRequest request = getTrackerCreationRequest();
+        String xOriginClientId = "clientId";
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
@@ -93,7 +97,7 @@ class PaperTrackerTrackingServiceImplTest {
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
 
         //ACT
-        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
+        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request, xOriginClientId);
 
         //ASSERT
         StepVerifier.create(response)
