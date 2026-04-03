@@ -42,7 +42,7 @@ public class PaperTrackingsMapper {
         paperTrackings.setPcRetry(trackingCreationRequest.getPcRetry());
         paperTrackings.setCreatedAt(now);
         paperTrackings.setProcessingMode(trackerConfigUtils.getActualProductsProcessingModes(localDate).get(productType));
-        paperTrackings.setXOriginClientId(xOriginClientId);
+        paperTrackings.setAnalogRequestClientId(xOriginClientId);
         PaperStatus paperStatus = new PaperStatus();
         paperTrackings.setPaperStatus(paperStatus);
         ValidationFlow validationFlow = new ValidationFlow();

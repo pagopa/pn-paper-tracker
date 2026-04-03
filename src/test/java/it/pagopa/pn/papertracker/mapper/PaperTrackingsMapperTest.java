@@ -50,7 +50,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.DRY, paperTrackings.getProcessingMode());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -141,7 +141,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -179,7 +179,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -217,7 +217,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -254,7 +254,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -292,7 +292,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -330,7 +330,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -368,7 +368,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DISABLED, paperTrackings.getValidationConfig().getOcrEnabled());
-        Assertions.assertEquals(xOriginClientId, paperTrackings.getXOriginClientId());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test

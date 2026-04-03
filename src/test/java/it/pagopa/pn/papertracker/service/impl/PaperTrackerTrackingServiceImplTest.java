@@ -66,7 +66,7 @@ class PaperTrackerTrackingServiceImplTest {
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
                         pt.getProcessingMode() == ProcessingMode.DRY &&
-                        pt.getXOriginClientId().equals(xOriginClientId)
+                        pt.getAnalogRequestClientId().equals(xOriginClientId)
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
@@ -80,7 +80,7 @@ class PaperTrackerTrackingServiceImplTest {
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
                         pt.getProcessingMode() == ProcessingMode.DRY &&
-                        pt.getXOriginClientId().equals(xOriginClientId)
+                        pt.getAnalogRequestClientId().equals(xOriginClientId)
         ));
     }
 
