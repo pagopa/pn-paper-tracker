@@ -1,6 +1,5 @@
 package it.pagopa.pn.papertracker.service.handler_step.generic;
 
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
@@ -11,8 +10,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
-import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.LogUtility;
@@ -24,24 +22,21 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 import static it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent.JSON_PROPERTY_DISCOVERED_ADDRESS;
-import static it.pagopa.pn.papertracker.utils.QueueConst.DELIVERY_PUSH_EVENT_TYPE;
-import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.setNewStatus;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class DeliveryPushSender implements HandlerStep {
+public class OutputTargetSender implements HandlerStep {
 
+    private final String CLIENT_ID = "pn-delivery-push-workflow";
     private final PnPaperTrackerConfigs configs;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
+    private final EventBridgePublisher eventBridgePublisher;
     private final LogUtility logUtility;
 
     /**
@@ -51,14 +46,14 @@ public class DeliveryPushSender implements HandlerStep {
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        log.info("Executing DeliveryPushSender step for trackingId: {}", context.getTrackingId());
+        log.info("Executing OutputTargetSender step for trackingId: {}", context.getTrackingId());
 
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
                 .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
 
         if (CollectionUtils.isEmpty(filteredEvent)) {
-            log.info("No events to send for trackingId: {}. Skipping DeliveryPushSender step.", context.getTrackingId());
+            log.info("No events to send for trackingId: {}. Skipping OutputTargetSender step.", context.getTrackingId());
             return Mono.empty();
         }
 
@@ -84,24 +79,18 @@ public class DeliveryPushSender implements HandlerStep {
         return Mono.just(event)
                 .flatMap(sendEvent -> {
                     String anonymizedEvent = logUtility.maskSensitiveData(sendEvent, JSON_PROPERTY_DISCOVERED_ADDRESS);
-                    log.info("Sending delivery push for event: {}", anonymizedEvent);
+                    log.info("Sending to output target for event: {}", anonymizedEvent);
                     if (context.isDryRunEnabled()) {
                         log.info("Sending event to PnPaperTrackerDryRunOutputs");
                         return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context.getAnonymizedDiscoveredAddressId()));
                     } else {
                         log.info("Sending event to pn-external_channel_outputs");
                         sendEvent.setRequestId(context.getPaperTrackings().getAttemptId());
-                        DeliveryPushEvent deliveryPushEvent = DeliveryPushEvent
-                                .builder()
-                                .payload(PaperChannelUpdate.builder().sendEvent(sendEvent).build())
-                                .header( GenericEventHeader.builder()
-                                        .publisher(PUBLISHER)
-                                        .eventId(UUID.randomUUID().toString())
-                                        .createdAt( Instant.now() )
-                                        .eventType(DELIVERY_PUSH_EVENT_TYPE)
-                                        .build())
-                                .build();
-                        externalChannelOutputsMomProducer.push(deliveryPushEvent);
+                        PaperChannelUpdate paperChannelUpdate = new PaperChannelUpdate();
+                        paperChannelUpdate.setSendEvent(sendEvent);
+                        paperChannelUpdate.setClientId(StringUtils.hasText(context.getPaperTrackings().getAnalogRequestClientId()) ?
+                                context.getPaperTrackings().getAnalogRequestClientId() : CLIENT_ID);
+                        eventBridgePublisher.publish(paperChannelUpdate);
                         return Mono.empty();
                     }
                 })

@@ -27,7 +27,7 @@ class HandlersFactory890Test {
     private CheckTrackingProduct checkTrackingProduct;
 
     @Mock
-    private DeliveryPushSender deliveryPushSender;
+    private OutputTargetSender outputTargetSender;
 
     @Mock
     private FinalEventBuilder890 finalEventBuilder;
@@ -75,7 +75,7 @@ class HandlersFactory890Test {
         handlersFactory = new HandlersFactory890(
                 metadataUpserter,
                 checkTrackingProduct,
-                deliveryPushSender,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,
