@@ -19,7 +19,7 @@ import java.util.function.Function;
 public abstract class AbstractHandlersFactory implements HandlersFactory {
     protected final MetadataUpserter metadataUpserter;
     protected final CheckTrackingProduct checkTrackingProduct;
-    protected final DeliveryPushSender deliveryPushSender;
+    protected final OutputTargetSender outputTargetSender;
     protected final GenericFinalEventBuilder finalEventBuilder;
     protected final IntermediateEventsBuilder intermediateEventsBuilder;
     protected final GenericDematValidator dematValidator;
@@ -79,7 +79,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -103,7 +103,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         checkTrackingState,
                         duplicatedEventFiltering,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -130,7 +130,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -156,7 +156,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         duplicatedEventFiltering,
                         notRetryableErrorInserting,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -177,7 +177,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -214,7 +214,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         duplicatedEventFiltering,
                         retrySenderCON996,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 }
