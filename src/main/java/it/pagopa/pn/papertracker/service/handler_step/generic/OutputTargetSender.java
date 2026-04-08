@@ -32,7 +32,7 @@ import static it.pagopa.pn.papertracker.utils.TrackerUtility.setNewStatus;
 @Component
 public class OutputTargetSender implements HandlerStep {
 
-    private final String CLIENT_ID = "pn-delivery-push-workflow";
+    private final String CLIENT_ID = "pn-delivery-push";
     private final PnPaperTrackerConfigs configs;
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
     private final PaperTrackingsDAO paperTrackingsDAO;
