@@ -44,7 +44,7 @@ class PaperTrackerTrackingControllerTest {
         when(paperTrackerEventService.insertPaperTrackings(request, "clientId")).thenReturn(Mono.empty());
 
         //ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(xOriginClientId, requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         //ASSERT
         StepVerifier.create(response)
@@ -63,7 +63,7 @@ class PaperTrackerTrackingControllerTest {
         when(paperTrackerEventService.insertPaperTrackings(request, "clientId")).thenReturn(Mono.error(new PnPaperTrackerConflictException("Duplicated item", "Conflict")));
 
         //ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(xOriginClientId, requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         //ASSERT
         StepVerifier.create(response)
@@ -83,7 +83,7 @@ class PaperTrackerTrackingControllerTest {
                 .thenReturn(Mono.error(new RuntimeException("Unexpected error")));
 
         // ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(xOriginClientId, requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         // ASSERT
         StepVerifier.create(response)
