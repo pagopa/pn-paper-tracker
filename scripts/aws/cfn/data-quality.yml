@@ -117,7 +117,10 @@ Resources:
               sendOcrAttachmentsRefinementStock890:struct<L:array<struct<S:string>>>,
               sendOcrAttachmentsFinalValidationStock890:struct<L:array<struct<S:string>>>,
               sendOcrAttachmentsFinalValidation:struct<L:array<struct<S:string>>>,
-              strictFinalValidationStock890:struct<BOOL:boolean>
+              strictFinalValidationStock890:struct<BOOL:boolean>,
+              ocrFilterTemporal:struct<S:string>,
+              ocrFilterUnifiedDeliveryDriver:struct<L:array<struct<S:string>>>,
+              ocrFileTypes:struct<L:array<struct<S:string>>>
             >>,
             nextRequestIdPcretry:struct<S:string>,
             state:struct<S:string>,
@@ -127,7 +130,8 @@ Resources:
             updatedAt:struct<S:string>,
             ttl:struct<N:string>,
             notificationReworkRequestTimestamp:struct<S:string>,
-            notificationReworkId:struct<S:string>
+            notificationReworkId:struct<S:string>,
+            processingMode:struct<S:string>
           >
 
   PaperTrackingsErrorsDataQualityStack:
@@ -152,7 +156,8 @@ Resources:
             category:struct<S:string>,
             details:struct<M:struct<
               cause:struct<S:string>,
-              message:struct<S:string>
+              message:struct<S:string>,
+              additionalDetails:struct<S:string>
             >>,
             flowThrow:struct<S:string>,
             eventThrow:struct<S:string>,

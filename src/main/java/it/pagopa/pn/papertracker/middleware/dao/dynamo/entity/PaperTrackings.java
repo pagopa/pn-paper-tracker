@@ -29,13 +29,13 @@ public class PaperTrackings {
     public static final String COL_STATE = "state";
     public static final String COL_BUSINESS_STATE = "businessState";
     public static final String COL_TTL = "ttl";
-    public static final String COL_REFINED = "refined";
     public static final String COL_RECAG012_STATUS_TIMESTAMP = "recag012StatusTimestamp";
     public static final String COL_PENDING_FINAL_EVENT_ID = "pendingFinalEventId";
     public static final String ATTEMPT_ID_PCRETRY_INDEX = "attemptId-pcRetry-index";
     public static final String COL_REWORK_ID = "reworkId";
     public static final String COL_REWORK_REQUEST_TIMESTAMP = "reworkRequestTimestamp";
     public static final String COL_PROCESSING_MODE = "processingMode";
+    public static final String COL_ANALOG_REQUEST_CLIENT_ID = "analogRequestClientId";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -93,6 +93,9 @@ public class PaperTrackings {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROCESSING_MODE)}))
     private ProcessingMode processingMode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ANALOG_REQUEST_CLIENT_ID)}))
+    private String analogRequestClientId;
 
     // Costruito UNA volta sola
     private static final TableSchema<PaperTrackings> SCHEMA =

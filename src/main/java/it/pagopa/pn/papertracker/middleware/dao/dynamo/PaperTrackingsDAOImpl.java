@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
@@ -71,24 +72,27 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
     }
 
-    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId){
+    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId, Data.ValidationStatus validationStatus) {
         log.debug("updateOcrRequests for item with trackingId: {}", trackingId);
         Instant now = Instant.now();
         Map<String, String> expressionAttributeNames = new HashMap<>();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
 
+        String updateExpr = "SET #updatedAt = :updatedAt";
+
         expressionAttributeNames.put("#updatedAt", PaperTrackings.COL_UPDATED_AT);
         expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
         expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
-        expressionAttributeNames.put("#response", OcrRequest.COL_RESPONSE_TIMESTAMP);
 
         expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(now.toString()).build());
-        expressionAttributeValues.put(":responseTimestamp", AttributeValue.builder().s(now.toString()).build());
 
-        String updateExpr = "SET #updatedAt = :updatedAt";
-
-        if(Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0){
-            updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#response = :responseTimestamp";
+        if (Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0) {
+            expressionAttributeNames.put("#responseTimestamp", OcrRequest.COL_RESPONSE_TIMESTAMP);
+            expressionAttributeValues.put(":responseTimestamp", AttributeValue.builder().s(now.toString()).build());
+            expressionAttributeNames.put("#responseStatus", OcrRequest.COL_RESPONSE_STATUS);
+            expressionAttributeValues.put(":responseStatus", AttributeValue.builder().s(validationStatus.getValue()).build());
+            updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#responseStatus = :responseStatus, " +
+                    "#validationFlow.#ocr[" + ocrRequestIndex + "].#responseTimestamp = :responseTimestamp";
         }
 
         String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_TRACKING_ID);
@@ -120,18 +124,20 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
         String updateExpr = "SET ";
 
-        List<OcrRequest> ocrRequests =  Optional.ofNullable(paperTrackings.getValidationFlow())
-                .map(ValidationFlow::getOcrRequests)
-                .orElse(List.of());
+        Optional.ofNullable(paperTrackings.getValidationFlow())
+                .ifPresent(flow -> {
+                    List<OcrRequest> requests = flow.getOcrRequests();
+                    if (!CollectionUtils.isEmpty(requests)) {
+                        expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
+                        expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
+                        expressionAttributeValues.put(":requests", AttributeValue.builder()
+                                .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("validationFlow").m().get("ocrRequests").l()).build());
+                        updateExpressions.add("#validationFlow.#ocr = list_append(#validationFlow.#ocr, :requests) ");
+                    }
 
-        if(!CollectionUtils.isEmpty(ocrRequests)){
-            expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
-            expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
-            expressionAttributeValues.put(":requests", AttributeValue.builder()
-                    .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("validationFlow").m().get("ocrRequests").l()).build());
-            updateExpr += "#validationFlow.#ocr = list_append(#validationFlow.#ocr, :requests), ";
-            paperTrackings.getValidationFlow().setOcrRequests(null);
-        }
+                    flow.setOcrRequests(null);
+                });
+
 
         Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
         AtomicInteger counter = new AtomicInteger(0);

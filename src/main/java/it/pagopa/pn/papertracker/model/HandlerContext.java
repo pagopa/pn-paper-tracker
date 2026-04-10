@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class HandlerContext {
 
-    private PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
+    private PaperProgressStatusEvent paperProgressStatusEvent;
     private String trackingId;
     private PaperTrackings paperTrackings;
     private String anonymizedDiscoveredAddressId;
@@ -22,9 +22,9 @@ public class HandlerContext {
     private String finalStatusCode;
     private boolean dryRunEnabled;
     private Long messageReceiveCount;
-    private boolean needToSendRECAG012A;
+    private boolean needToSendRECAG012A = false;
     private String reworkId;
     private OcrDataResultPayload ocrDataResultPayload;
     private boolean isRedrive;
-
+    private String nextRequestIdPcRetry;
 }

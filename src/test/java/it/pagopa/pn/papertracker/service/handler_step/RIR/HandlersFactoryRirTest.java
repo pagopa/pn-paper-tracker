@@ -25,10 +25,13 @@ class HandlersFactoryRirTest {
     private MetadataUpserter metadataUpserter;
 
     @Mock
+    private CheckTrackingProduct checkTrackingProduct;
+
+    @Mock
     private SequenceValidatorRir sequenceValidatorRir;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidatorRir dematValidator;
 
     @Mock
     private FinalEventBuilderRir finalEventBuilder;
@@ -40,7 +43,7 @@ class HandlersFactoryRirTest {
     private RetrySender retrySender;
 
     @Mock
-    private DeliveryPushSender deliveryPushSender;
+    private OutputTargetSender outputTargetSender;
 
     @Mock
     private IntermediateEventsBuilder intermediateEventsBuilder;
@@ -74,23 +77,24 @@ class HandlersFactoryRirTest {
     void buildEventsHandler_WithValidSteps_ExecutesAllStepsInOrder() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(sequenceValidatorRir).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
 
@@ -100,6 +104,7 @@ class HandlersFactoryRirTest {
         RuntimeException testException = new RuntimeException("Second step failed");
 
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
@@ -117,31 +122,33 @@ class HandlersFactoryRirTest {
     void buildFinalEventsHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryRir.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(sequenceValidatorRir).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
     void buildIntermediateEventsHandler_ExecutesMetadataUpserterAndDeliveryPushSender() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
 
@@ -150,19 +157,20 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Verify both steps were executed in the correct order
-        InOrder inOrder = inOrder(metadataUpserter, intermediateEventsBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, intermediateEventsBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
     void buildRetryEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
@@ -179,9 +187,10 @@ class HandlersFactoryRirTest {
     void buildNotRetryableEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
         when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(notRetryableErrorInserting.execute(handlerContext)).thenReturn(Mono.empty());
 
@@ -190,12 +199,13 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
         inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
         inOrder.verify(notRetryableErrorInserting).execute(handlerContext);
         inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
@@ -203,7 +213,7 @@ class HandlersFactoryRirTest {
         // Arrange
         when(checkOcrResponse.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         // Act & Assert
         StepVerifier.create(handlersFactoryRir.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
@@ -213,13 +223,15 @@ class HandlersFactoryRirTest {
     void buildSaveOnlyEventHandler_ExecutesMetadataUpserter() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handlersFactoryRir.buildSaveOnlyEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
     }
 }

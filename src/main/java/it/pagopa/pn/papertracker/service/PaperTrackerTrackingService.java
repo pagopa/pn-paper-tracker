@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 public interface PaperTrackerTrackingService {
 
-    Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest);
+    Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest, String xOriginClientId);
 
     Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest);
 

@@ -38,13 +38,18 @@ public class PnPaperTrackerConfigs {
     private List<String> sendOcrAttachmentsFinalValidationStock890 = new ArrayList<>();
     private List<String> sendOcrAttachmentsFinalValidation = new ArrayList<>();
     private List<String> strictFinalValidationStock890;
+    private List<String> strictDeliveryFailureCause;
     private List<String> internalEvents = new ArrayList<>();
     private List<String> productsProcessingModes = new ArrayList<>();
     private List<String> redriveEnabledDomains = new ArrayList<>();
+    private String ocrFilterTemporal;
+    private List<String> ocrFilterUnifiedDeliveryDriver = new ArrayList<>();
 
     private Duration compiutaGiacenzaArDuration;
     private boolean enableTruncatedDateForRefinementCheck;
     private Duration refinementDuration;
+
+    private EventBus eventBus;
 
     @Data
     public static class Dao {
@@ -65,6 +70,13 @@ public class PnPaperTrackerConfigs {
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
         private String externalChannelToPaperChannelDryRunQueue;
+    }
+
+    @Data
+    public static class EventBus {
+        private String name;
+        private String detailType;
+        private String source;
     }
 
     @PostConstruct

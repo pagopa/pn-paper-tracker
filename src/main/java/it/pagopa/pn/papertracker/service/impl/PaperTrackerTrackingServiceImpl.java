@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service.impl;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+
 import static it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper.toPaperTrackings;
 
 @Service
@@ -22,14 +25,19 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final TrackerConfigUtils trackerConfigUtils;
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Override
-    public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
-        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils)).then();
+    public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest, String xOriginClientId) {
+        log.info("Init tracking for request: {}", trackingCreationRequest);
+
+        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now(), xOriginClientId)).then();
     }
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackings(TrackingsRequest trackingsRequest) {
+        log.info("Retrieving trackings for request: {}", trackingsRequest);
+
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
                 .map(PaperTrackingsMapper::toTracking)
@@ -41,12 +49,16 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
     @Override
     public Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings) {
+        log.info("Updating tracking status for trackingId: {}", trackingId);
+
         return paperTrackingsDAO.updateItem(trackingId, paperTrackings)
                 .then();
     }
 
     @Override
     public Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry) {
+        log.info("Retrieving trackings for attemptId: {} with pcRetry: {}", attemptId, pcRetry);
+
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry)
                 .map(PaperTrackingsMapper::toTracking)

@@ -48,25 +48,29 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidation()).thenReturn(List.of("1970-01-01;Plico;AR;23L"));
         when(pnPaperTrackerConfigs.getStrictFinalValidationStock890()).thenReturn(List.of("1970-01-01;true"));
+        when(pnPaperTrackerConfigs.getStrictDeliveryFailureCause()).thenReturn(List.of("1970-01-01;false"));
         when(pnPaperTrackerConfigs.getProductsProcessingModes()).thenReturn(List.of("1970-01-01;AR:RUN;RS:DRY"));
+        when(pnPaperTrackerConfigs.getEnableOcrValidationFor()).thenReturn(List.of("1970-01-01;AR:RUN;RIR:RUN;"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils,pnPaperTrackerConfigs);
     }
 
     @Test
     void insertPaperTrackingsValidRequest() {
         //ARRANGE
         TrackingCreationRequest request = getTrackerCreationRequest();
+        String xOriginClientId = "clientId";
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
-                        pt.getProcessingMode() == ProcessingMode.DRY
+                        pt.getProcessingMode() == ProcessingMode.DRY &&
+                        pt.getAnalogRequestClientId().equals(xOriginClientId)
         ))).thenReturn(Mono.just(new PaperTrackings()));
 
         //ACT
-        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
+        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request, xOriginClientId);
 
         //ASSERT
         StepVerifier.create(response)
@@ -75,7 +79,8 @@ class PaperTrackerTrackingServiceImplTest {
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
                         pt.getUnifiedDeliveryDriver().equals(request.getUnifiedDeliveryDriver()) &&
                         pt.getProductType() == ProductType.RS.getValue() &&
-                        pt.getProcessingMode() == ProcessingMode.DRY
+                        pt.getProcessingMode() == ProcessingMode.DRY &&
+                        pt.getAnalogRequestClientId().equals(xOriginClientId)
         ));
     }
 
@@ -83,6 +88,7 @@ class PaperTrackerTrackingServiceImplTest {
     void insertPaperTrackingsConflictException() {
         //ARRANGE
         TrackingCreationRequest request = getTrackerCreationRequest();
+        String xOriginClientId = "clientId";
 
         when(paperTrackingsDAO.putIfAbsent(argThat(pt ->
                 pt.getTrackingId().equals(String.join(".", request.getAttemptId(), request.getPcRetry())) &&
@@ -91,7 +97,7 @@ class PaperTrackerTrackingServiceImplTest {
         ))).thenReturn(Mono.error(new PnPaperTrackerConflictException("", "")));
 
         //ACT
-        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request);
+        Mono<Void> response = paperTrackerEventService.insertPaperTrackings(request, xOriginClientId);
 
         //ASSERT
         StepVerifier.create(response)

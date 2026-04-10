@@ -11,10 +11,11 @@ import org.springframework.stereotype.Component;
 public class HandlersFactoryRir extends AbstractHandlersFactory {
 
     public HandlersFactoryRir(MetadataUpserter metadataUpserter,
-                              DeliveryPushSender deliveryPushSender,
+                              CheckTrackingProduct checkTrackingProduct,
+                              OutputTargetSender outputTargetSender,
                               FinalEventBuilderRir finalEventBuilder,
                               IntermediateEventsBuilder intermediateEventsBuilder,
-                              DematValidator dematValidator,
+                              DematValidatorRir dematValidator,
                               SequenceValidatorRir sequenceValidator,
                               RetrySender retrySender,
                               NotRetryableErrorInserting notRetryableErrorInserting,
@@ -23,7 +24,8 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               CheckOcrResponse checkOcrResponse,
                               RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
-                deliveryPushSender,
+                checkTrackingProduct,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,

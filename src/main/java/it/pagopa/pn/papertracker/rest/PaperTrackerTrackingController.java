@@ -31,9 +31,9 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
      * @return status HTTP
      */
     @Override
-    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, final ServerWebExchange exchange) {
+    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, String xOriginClientId, final ServerWebExchange exchange) {
         return trackingCreationRequest
-                .flatMap(paperTrackerEventService::insertPaperTrackings)
+                .flatMap(trackingRequest -> paperTrackerEventService.insertPaperTrackings(trackingRequest, xOriginClientId))
                 .thenReturn(ResponseEntity.status(HttpStatus.CREATED).<Void>build())
                 .onErrorResume(PnPaperTrackerConflictException.class, ex ->
                         Mono.just(ResponseEntity.status(HttpStatus.NO_CONTENT).build()));

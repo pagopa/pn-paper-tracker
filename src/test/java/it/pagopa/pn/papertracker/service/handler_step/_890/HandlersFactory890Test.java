@@ -24,7 +24,10 @@ class HandlersFactory890Test {
     private MetadataUpserter metadataUpserter;
 
     @Mock
-    private DeliveryPushSender deliveryPushSender;
+    private CheckTrackingProduct checkTrackingProduct;
+
+    @Mock
+    private OutputTargetSender outputTargetSender;
 
     @Mock
     private FinalEventBuilder890 finalEventBuilder;
@@ -33,7 +36,7 @@ class HandlersFactory890Test {
     private IntermediateEventsBuilder intermediateEventsBuilder;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidator890 dematValidator;
 
     @Mock
     private SequenceValidator890 sequenceValidator;
@@ -71,7 +74,8 @@ class HandlersFactory890Test {
     void setUp() {
         handlersFactory = new HandlersFactory890(
                 metadataUpserter,
-                deliveryPushSender,
+                checkTrackingProduct,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,

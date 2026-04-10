@@ -29,7 +29,7 @@ public class PcRetryService {
      */
     public Mono<Void> handlePcRetryResponse(PcRetryResponse pcRetryResponse, Boolean isCON996, HandlerContext context) {
         if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
-            updateContext(context, pcRetryResponse);
+            context.setNextRequestIdPcRetry(pcRetryResponse.getRequestId());
             return Mono.empty();
         } else {
             PaperTrackingsErrors paperTrackingsErrors = Boolean.TRUE.equals(isCON996) ? buildErrorForCON996(context) : buildErrorForGeneric(context);
@@ -37,20 +37,13 @@ public class PcRetryService {
         }
     }
 
-    private void updateContext(HandlerContext context, PcRetryResponse pcRetryResponse) {
-        PaperTrackings paperTrackings = context.getPaperTrackings();
-        paperTrackings.setState(PaperTrackingsState.DONE);
-        paperTrackings.setBusinessState(BusinessState.DONE);
-        paperTrackings.setNextRequestIdPcretry(pcRetryResponse.getRequestId());
-    }
-
-
     private PaperTrackingsErrors buildErrorForGeneric(HandlerContext context) {
         return PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
                 context.getPaperProgressStatusEvent().getStatusCode(),
                 ErrorCategory.MAX_RETRY_REACHED_ERROR,
                 null,
                 "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
+                null,
                 FlowThrow.RETRY_PHASE,
                 ErrorType.ERROR,
                 context.getEventId());
@@ -63,6 +56,7 @@ public class PcRetryService {
                 ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,
                 null,
                 EventStatusCodeEnum.fromKey(statusCode).getStatusCodeDescription(),
+                null,
                 FlowThrow.NOT_RETRYABLE_EVENT_HANDLER,
                 ErrorType.WARNING,
                 context.getEventId());

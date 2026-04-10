@@ -13,6 +13,7 @@ import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
+@Slf4j
 public class SendEventMapper {
 
     /**
@@ -44,6 +46,7 @@ public class SendEventMapper {
                             } else if(!isFinalDemat)
                                 return Flux.just(buildSendEvent(progressEvent, null));
 
+                            log.info("Event with statusCode {} is a final demat without attachments, skipping sending to delivery-push", progressEvent.getStatusCode());
                             return Flux.empty();
                         }
                 );

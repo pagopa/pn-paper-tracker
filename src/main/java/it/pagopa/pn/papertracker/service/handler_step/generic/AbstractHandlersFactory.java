@@ -18,10 +18,11 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public abstract class AbstractHandlersFactory implements HandlersFactory {
     protected final MetadataUpserter metadataUpserter;
-    protected final DeliveryPushSender deliveryPushSender;
+    protected final CheckTrackingProduct checkTrackingProduct;
+    protected final OutputTargetSender outputTargetSender;
     protected final GenericFinalEventBuilder finalEventBuilder;
     protected final IntermediateEventsBuilder intermediateEventsBuilder;
-    protected final DematValidator dematValidator;
+    protected final GenericDematValidator dematValidator;
     protected final GenericSequenceValidator sequenceValidator;
     protected final RetrySender retrySender;
     protected final NotRetryableErrorInserting notRetryableErrorInserting;
@@ -73,11 +74,12 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -97,10 +99,11 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -123,10 +126,11 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         retrySender,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -147,11 +151,12 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         notRetryableErrorInserting,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -172,7 +177,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -180,7 +185,8 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     public Handler buildSaveOnlyEventHandler(HandlerContext context) {
         return new HandlerImpl(
                 List.of(
-                        metadataUpserter
+                        metadataUpserter,
+                        checkTrackingProduct
                 ));
     }
 
@@ -203,11 +209,12 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
         return new HandlerImpl(
                 List.of(
                         metadataUpserter,
+                        checkTrackingProduct,
                         checkTrackingState,
                         duplicatedEventFiltering,
                         retrySenderCON996,
                         intermediateEventsBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 }

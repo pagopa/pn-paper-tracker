@@ -40,8 +40,7 @@ public class PcRetryServiceTest {
                 .verifyComplete();
 
         //ASSERT
-        Assertions.assertEquals(response.getRequestId(), context.getPaperTrackings().getNextRequestIdPcretry());
-        Assertions.assertEquals(PaperTrackingsState.DONE, context.getPaperTrackings().getState());
+        Assertions.assertEquals(response.getRequestId(), context.getNextRequestIdPcRetry());
         verify(paperTrackerExceptionHandler, never()).handleRetryError(any());
     }
 
@@ -74,8 +73,7 @@ public class PcRetryServiceTest {
                 .verifyComplete();
 
         //ASSERT
-        Assertions.assertEquals(response.getRequestId(), context.getPaperTrackings().getNextRequestIdPcretry());
-        Assertions.assertEquals(PaperTrackingsState.DONE, context.getPaperTrackings().getState());
+        Assertions.assertEquals(response.getRequestId(), context.getNextRequestIdPcRetry());
         verify(paperTrackerExceptionHandler, never()).handleRetryError(any());
     }
 

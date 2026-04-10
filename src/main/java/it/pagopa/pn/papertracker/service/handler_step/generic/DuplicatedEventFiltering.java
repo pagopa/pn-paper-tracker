@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -65,6 +66,10 @@ public class DuplicatedEventFiltering implements HandlerStep {
                                                                         PaperProgressStatusEvent event,
                                                                         HandlerContext context) {
         String statusCode = event.getStatusCode();
+        Map<String, Object> additionalDetails = Map.of(
+                "statusCode", statusCode,
+                "statusTimestamp", Objects.toString(event.getStatusDateTime(), null)
+        );
         return new PnPaperTrackerValidationException(
                 "Duplicated event found: " + statusCode,
                 PaperTrackingsErrorsMapper.buildPaperTrackingsError(
@@ -73,6 +78,7 @@ public class DuplicatedEventFiltering implements HandlerStep {
                         ErrorCategory.DUPLICATED_EVENT,
                         null,
                         "Duplicated event found for statusCode: " + statusCode,
+                        additionalDetails,
                         FlowThrow.DUPLICATED_EVENT_VALIDATION,
                         ErrorType.WARNING,
                         context.getEventId()

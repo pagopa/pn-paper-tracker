@@ -55,6 +55,10 @@ Parameters:
   VpcId:
     Type: String
     Description: 'VpcId where the microservice is going to be deployed'
+
+  AlbSecurityGroup:
+    Type: String
+    Description: "Application load balancer security group"
   
   EcsDefaultSecurityGroup:
     Type: String
@@ -94,7 +98,7 @@ Parameters:
 
   MountEfs:
     Type: String
-    Default: false
+    Default: "false"
     AllowedValues:
       - "true"
       - "false"
@@ -326,47 +330,6 @@ Parameters:
     Type: String
     Description: 'URL of the SQS queue where external channel rework validation events are sent'
 
-  # PaperTrackerQueueProxy Lambda
-  PaperTrackerQueueProxyLambdaName:
-    Type: String
-    Description: Name of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyLambdaRuntime:
-    Type: String
-    Default: nodejs22.x
-    Description: Runtime of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyLambdaMemory:
-    Type: Number
-    Default: 512
-    MinValue: 512
-    MaxValue: 10240
-    Description: Memory of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyMaximumConcurrency:
-    Type: Number
-    Default: 10
-    Description: Maximum concurrency of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyBatchSize:
-    Type: Number
-    Default: 10
-    MinValue: 1
-    Description: Batch size of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyMaximumBatchingWindowInSeconds:
-    Type: Number
-    Default: 0
-    MinValue: 0
-    Description: Maximum batching window in seconds of the PaperTrackerQueueProxy Lambda.
-
-  PaperTrackerQueueProxyTimeout:
-    Type: Number
-    Default: 10
-    MinValue: 1
-    MaxValue: 900
-    Description: Timeout of the PaperTrackerQueueProxy Lambda.
-
   NotificationReworkEventsValidationLambdaName:
     Type: String
     Description: 'Name of the NotificationReworkEventsValidation Lambda.'
@@ -375,16 +338,6 @@ Parameters:
     Type: Number
     Description: "Batch size of the NotificationReworkEventsValidation Lambda."
     Default: 10
-
-  PaperTrackerEnabledProductsModes:
-    Type: String
-    Default: ""
-    Description: Comma separated list of product types for which pn-paper-tracker is enabled in run or dry-run mode. Es. "AR:RUN,RS:DRY,890:DRY"
-
-  PaperChannelEnabledProducts:
-    Type: String
-    Default: ""
-    Description: Comma separated list of product types for which paper channel is enabled. Es. "AR,RS,890,RIR,RIS"
 
   ApplicativeEnvFileChecksum:
     Type: String
@@ -395,20 +348,115 @@ Parameters:
     Type: String
     Description: 'Comma separated list of invalid status codes for notification rework events'
 
-  EnableLambdaProxyQueueSource:
-    Type: String
-    AllowedValues: [ "true", "false" ]
-    Default: "true"
-
   DisableAllConsumers:
     Type: String
     AllowedValues: [ "true", "false" ]
     Default: "false"
 
-Conditions:
-  EnableLambdaProxyQueueSourceCondition: !Equals
-    - !Ref EnableLambdaProxyQueueSource
-    - "true"
+  MetricFormatType:
+    Type: String
+    Description: 'Metric format type'
+    Default: 'EMF'
+
+  890ErrorThreshold:
+    Type: Number
+    Description: 'Threshold for 890 errors to trigger the alarm'
+    Default: 300
+
+  890EvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for 890 errors alarm'
+    Default: 12
+
+  890DatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for 890 errors alarm'
+    Default: 1
+
+  890WhereClause:
+    Type: String
+    Description: 'Where clause to filter 890 errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  ARErrorThreshold:
+    Type: Number
+    Description: 'Threshold for AR errors to trigger the alarm'
+    Default: 300
+
+  AREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for AR errors alarm'
+    Default: 12
+
+  ARDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for AR errors alarm'
+    Default: 1
+
+  ARWhereClause:
+    Type: String
+    Description: 'Where clause to filter AR errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+  
+  RSErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RS errors to trigger the alarm'
+    Default: 300
+
+  RSEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RS errors alarm'
+    Default: 12
+  
+  RSDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RS errors alarm'
+    Default: 1
+  
+  RSWhereClause:
+    Type: String
+    Description: 'Where clause to filter RS errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  RIRErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RIR errors to trigger the alarm'
+    Default: 300
+  
+  RIREvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIR errors alarm'
+    Default: 12
+  
+  RIRDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIR errors alarm'
+    Default: 1
+
+  RIRWhereClause:
+    Type: String
+    Description: 'Where clause to filter RIR errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
+
+  RISErrorThreshold:
+    Type: Number
+    Description: 'Threshold for RIS errors to trigger the alarm'
+    Default: 300
+
+  RISEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for RIS errors alarm'
+    Default: 12
+
+  RISDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for RIS errors alarm'
+    Default: 1
+
+  RISWhereClause:
+    Type: String
+    Description: 'Where clause to filter RIS errors in the custom metric query'
+    Default: "errorCategory != 'OCR_VALIDATION'"
 
 Resources:
 
@@ -456,11 +504,14 @@ Resources:
         ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_DISABLEALLCONSUMERS=${DisableAllConsumers}'
         ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELQUEUE=${ExternalChannels2PaperChannelQueueName}'
         ContainerEnvEntry22: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELDRYRUNQUEUE=${ExternalChannelsToPaperChannelDryrunQueueName}'
+        ContainerEnvEntry23: !Sub 'METRIC_FORMAT_TYPE=${MetricFormatType}'
+        ContainerEnvEntry24: !Sub 'PN_PAPERTRACKER_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
         Subnets: !Ref VpcEgressSubnetsIds
         VpcId: !Ref VpcId
+        AlbSecurityGroup: !Ref AlbSecurityGroup
         EcsDefaultSecurityGroup: !Ref EcsDefaultSecurityGroup
         LoadBalancerListenerArn: !Ref ApplicationLoadBalancerListenerArn
         LoadbalancerRulePriority: !Ref MicroserviceNumber
@@ -482,7 +533,7 @@ Resources:
             Action:
               - sqs:SendMessage
             Resource:
-              - !Ref PnOcrOutputsQueueURL
+              - !Ref PnOcrOutputsQueueARN
             Condition:
               StringEquals:
                 aws:PrincipalArn: !Ref OcrAwsRoleARN
@@ -547,75 +598,11 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
-
-  # PaperTrackerQueueProxy Lambda
-  PaperTrackerQueueProxy:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Ref PaperTrackerQueueProxyLambdaName
-      Runtime: !Ref PaperTrackerQueueProxyLambdaRuntime
-      Handler: index.handler
-      Role: !GetAtt PaperTrackerQueueProxyExecutionRole.Arn
-      Code:
-        S3Bucket: !Ref MicroserviceBucketName
-        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/queueProxy.zip"
-      Timeout: !Ref PaperTrackerQueueProxyTimeout
-      MemorySize: !Ref PaperTrackerQueueProxyLambdaMemory
-      Environment:
-        Variables:
-          PAPER_TRACKER_ENABLED_PRODUCTS: !Ref PaperTrackerEnabledProductsModes
-          PAPER_CHANNEL_ENABLED_PRODUCTS: !Ref PaperChannelEnabledProducts
-          QUEUE_URL_PAPER_CHANNEL: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelsToPaperChannelDryrunQueueName}"
-          QUEUE_URL_PAPER_TRACKER: !Sub "https://sqs.${AWS::Region}.amazonaws.com/${AWS::AccountId}/${ExternalChannelToPaperTrackerQueueName}"
-      Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
-      TracingConfig:
-        Mode: Active
-
-  # Event Source Mapping to trigger Lambda from SQS
-  PaperTrackerQueueProxyEventSourceMapping:
-    Type: AWS::Lambda::EventSourceMapping
-    Properties:
-      EventSourceArn: !Ref ExternalChannels2PaperChannelQueueARN
-      FunctionName: !Ref PaperTrackerQueueProxy
-      BatchSize: !Ref PaperTrackerQueueProxyBatchSize  # Max messages per batch
-      MaximumBatchingWindowInSeconds: !Ref PaperTrackerQueueProxyMaximumBatchingWindowInSeconds
-      FunctionResponseTypes:
-        - ReportBatchItemFailures  # Enables partial batch failures
-      ScalingConfig:
-        MaximumConcurrency: !Ref PaperTrackerQueueProxyMaximumConcurrency
-      Enabled: !If [EnableLambdaProxyQueueSourceCondition, true, false]
-
-  PaperTrackerQueueProxyExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${PaperTrackerQueueProxyLambdaName}LambdaRole
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
           - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
             Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: PaperTrackerQueueProxyPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sqs:DeleteMessage
-                  - sqs:GetQueueAttributes
-                  - sqs:ReceiveMessage
-                  - sqs:SendMessage
-                Resource:
-                  - !Ref ExternalChannels2PaperChannelQueueARN
-                  - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
-                  - !Ref ExternalChannelToPaperTrackerQueueARN
+              - events:PutEvents
+            Resource:
+              - !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus
 
   ##########################################################################
   ###              NotificationReworkEventsValidationLambda              ###
@@ -868,3 +855,113 @@ Resources:
               - "SQS:SendMessage"
             Resource:
               - !Ref ExternalChannelToReworkEventValidationQueueARN
+
+  PaperTracker890ErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-890Errors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref 890ErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref 890EvaluationPeriods
+      DatapointsToAlarm: !Ref 890DatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${890WhereClause} AND productType = '890'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRISErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RISErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RISErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RISEvaluationPeriods
+      DatapointsToAlarm: !Ref RISDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RISWhereClause} AND productType = 'RIS'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerARErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-ARErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref ARErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref AREvaluationPeriods
+      DatapointsToAlarm: !Ref ARDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${ARWhereClause} AND productType = 'AR'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRSErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RSErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RSErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RSEvaluationPeriods
+      DatapointsToAlarm: !Ref RSDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RSWhereClause} AND productType = 'RS'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerRIRErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-RIRErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref RIRErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref RIREvaluationPeriods
+      DatapointsToAlarm: !Ref RIRDatapointsToAlarm
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: q1
+          Expression: !Sub |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE ${RIRWhereClause} AND productType = 'RIR'
+          ReturnData: true
+          Period: 600
