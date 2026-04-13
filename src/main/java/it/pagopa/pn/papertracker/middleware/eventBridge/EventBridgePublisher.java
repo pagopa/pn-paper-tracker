@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 import software.amazon.awssdk.services.eventbridge.EventBridgeAsyncClient;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequest;
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -19,13 +20,13 @@ public class EventBridgePublisher {
     private final ObjectMapper objectMapper;
     private final PnPaperTrackerConfigs configs;
 
-    public Mono<Void> publish(Object event) {
+    public Mono<PutEventsResponse> publish(Object event) {
+        log.info("Sending event to EventBridge");
         return Mono.fromCallable(() ->
                         objectMapper.writeValueAsString(event))
                 .flatMap(detail -> Mono.fromFuture(client.putEvents(createRequest(detail))))
                 .doOnError(e -> log.error("EventBridge publish error: {}", e.getMessage()))
-                .doOnNext(response -> log.info("EventBridge publish response: {}", response.entries()))
-                .then();
+                .doOnNext(response -> log.info("EventBridge publish response: {}", response.entries()));
     }
 
     private PutEventsRequest createRequest(String detail) {

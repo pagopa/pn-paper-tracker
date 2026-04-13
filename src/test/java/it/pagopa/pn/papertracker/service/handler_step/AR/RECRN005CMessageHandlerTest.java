@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -90,6 +91,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         Event eventMetaRECRN005B = getEventMeta(STATUS_RECRN005B, now);
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
@@ -168,6 +170,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         Event eventMetaRECRN005B = getEventMeta(STATUS_RECRN005B, recrn005AStatusDateTime);
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";

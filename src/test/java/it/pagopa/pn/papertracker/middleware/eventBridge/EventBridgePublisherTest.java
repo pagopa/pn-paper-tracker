@@ -45,6 +45,7 @@ class EventBridgePublisherTest {
                 .thenReturn(CompletableFuture.completedFuture(response));
 
         StepVerifier.create(publisher.publish(event))
+                .expectNext(response)
                 .verifyComplete();
 
         verify(client, times(1)).putEvents(any(PutEventsRequest.class));

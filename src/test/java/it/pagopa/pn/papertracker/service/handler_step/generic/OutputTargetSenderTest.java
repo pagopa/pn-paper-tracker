@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -56,6 +57,7 @@ class OutputTargetSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(paperTrackings);
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
         outputTargetSender.sendToOutputTarget(event, context).block();
@@ -94,6 +96,7 @@ class OutputTargetSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(paperTrackings);
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
         outputTargetSender.sendToOutputTarget(event, context).block();
@@ -113,6 +116,7 @@ class OutputTargetSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         context.setPaperTrackings(paperTrackings);
         context.setEventsToSend(Collections.singletonList(event));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
         outputTargetSender.execute(context).block();
@@ -129,6 +133,8 @@ class OutputTargetSenderTest {
         // Arrange
         HandlerContext context = getFinalEventHandlerContext();
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+
         // Act
         outputTargetSender.execute(context).block();
 
@@ -145,6 +151,8 @@ class OutputTargetSenderTest {
         // Arrange
         HandlerContext context = getPcRetryHandlerContext();
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+
         // Act
         outputTargetSender.execute(context).block();
 
