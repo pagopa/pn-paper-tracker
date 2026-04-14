@@ -10,9 +10,11 @@ I dati inizializzati comprendono:
 - **trackingId**: identificativo univoco della spedizione cartacea
 - **productType**: tipologia di prodotto (AR, RIR, 890, RS, RIS)
 - **unifiedDeliveryDriver**: recapitista
+- **analogRequestClientId**: identificativo del client che ha effettuato la richiesta di spedizione
 - **altri metadati**: configurazioni ed eventuali dati aggiuntivi utili al tracciamento e alla gestione della spedizione
 
-Questi dati vengono ricevuti tramite il payload della richiesta (`TrackingCreationRequest`) e salvati tramite il servizio [`PaperTrackerTrackingService`](../../src/main/java/it/pagopa/pn/papertracker/service/PaperTrackerTrackingService.java). 
+Mentre l'`analogRequestClientId` viene ricevuto tramite header, gli altri dati vengono ricevuti tramite il payload della richiesta (`TrackingCreationRequest`) e 
+salvati tramite il servizio [`PaperTrackerTrackingService`](../../src/main/java/it/pagopa/pn/papertracker/service/PaperTrackerTrackingService.java). 
 L’inizializzazione della spedizione è un prerequisito per la corretta gestione degli eventi successivi relativi alla stessa spedizione.
 
 
@@ -83,7 +85,7 @@ flowchart LR
         H2[checkTrackingState] --> 
         H3[duplicatedEventFiltering] --> 
         H4[intermediateEventsBuilder] --> 
-        H5[deliveryPushSender]
+        H5[outputTargetSender]
     end
 
     %% Final Handler
@@ -93,7 +95,7 @@ flowchart LR
         I3[sequenceValidator] --> 
         I4[dematValidator] --> 
         I5[finalEventBuilder] --> 
-        I6[deliveryPushSender]
+        I6[outputTargetSender]
     end
 ```
 
@@ -141,6 +143,6 @@ flowchart LR
     subgraph OCR[buildOcrResponseHandler]
         I1[checkOcrResponse] -->  
         I2[finalEventBuilder] --> 
-        I3[deliveryPushSender]
+        I3[outputTargetSender]
     end
 ```
