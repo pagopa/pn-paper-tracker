@@ -373,6 +373,31 @@ Parameters:
     Description: 'Number of datapoints to alarm for 890 errors alarm'
     Default: 1
 
+  890TreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for 890 errors alarm'
+    Default: 'ignore'
+
+  ARTreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for AR errors alarm'
+    Default: 'ignore'
+
+  RSTreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for RS errors alarm'
+    Default: 'ignore'
+
+  RIRTreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for RIR errors alarm'
+    Default: 'ignore'
+
+  RISTreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for RIS errors alarm'
+    Default: 'ignore'
+
   890WhereClause:
     Type: String
     Description: 'Where clause to filter 890 errors in the custom metric query'
@@ -868,7 +893,7 @@ Resources:
         - !Ref AlarmSNSTopicArn
       EvaluationPeriods: !Ref 890EvaluationPeriods
       DatapointsToAlarm: !Ref 890DatapointsToAlarm
-      TreatMissingData: notBreaching
+      TreatMissingData: !Ref 890TreatMissingData
       Metrics:
         - Id: q1
           Expression: !Sub |
@@ -890,7 +915,7 @@ Resources:
         - !Ref AlarmSNSTopicArn
       EvaluationPeriods: !Ref RISEvaluationPeriods
       DatapointsToAlarm: !Ref RISDatapointsToAlarm
-      TreatMissingData: notBreaching
+      TreatMissingData: !Ref RISTreatMissingData
       Metrics:
         - Id: q1
           Expression: !Sub |
@@ -912,7 +937,7 @@ Resources:
         - !Ref AlarmSNSTopicArn
       EvaluationPeriods: !Ref AREvaluationPeriods
       DatapointsToAlarm: !Ref ARDatapointsToAlarm
-      TreatMissingData: notBreaching
+      TreatMissingData: !Ref ARTreatMissingData
       Metrics:
         - Id: q1
           Expression: !Sub |
@@ -934,7 +959,7 @@ Resources:
         - !Ref AlarmSNSTopicArn
       EvaluationPeriods: !Ref RSEvaluationPeriods
       DatapointsToAlarm: !Ref RSDatapointsToAlarm
-      TreatMissingData: notBreaching
+      TreatMissingData: !Ref RSTreatMissingData
       Metrics:
         - Id: q1
           Expression: !Sub |
@@ -956,7 +981,7 @@ Resources:
         - !Ref AlarmSNSTopicArn
       EvaluationPeriods: !Ref RIREvaluationPeriods
       DatapointsToAlarm: !Ref RIRDatapointsToAlarm
-      TreatMissingData: notBreaching
+      TreatMissingData: !Ref RIRTreatMissingData
       Metrics:
         - Id: q1
           Expression: !Sub |
