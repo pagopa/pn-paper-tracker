@@ -96,14 +96,10 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
 | ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
 | ALARM     | pn-paper-tracker-RIRErrors-Alarm | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                           |
-| DASHBOARD | pn-paper-tracker                 | Dashboard CloudWatch con metriche su errori, code SQS, tabelle DynamoDB e stato operativo del microservizio.   |
 | LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
 
 **Note operative:**
 - Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
-- Gli allarmi sono configurati per notificare tramite SNS in caso di superamento soglie.
-- La dashboard CloudWatch aggrega lo stato delle code SQS, delle tabelle DynamoDB e degli allarmi attivi.
-- I log applicativi sono disponibili nel log group ECS dedicato e includono anche eventuali errori di runtime.
 
 Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
 
