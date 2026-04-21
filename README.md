@@ -4,7 +4,7 @@
 - [Descrizione](#descrizione)
 - [Tecnologie Utilizzate](#tecnologie-utilizzate)
 - [Architettura](#architettura)
-- [API & Documentazione](#api--documentazione)
+- [Interfacce del Servizio](#interfacce-del-servizio)
 - [Allarmi e monitoraggio](#allarmi-e-monitoraggio)
 - [Configurazione](#configurazione)
 - [Esecuzione](#esecuzione)
@@ -63,26 +63,64 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 
 - **servizio OCR:** per la validazione dei documenti allegati alla spedizione
 
-## API & Documentazione
+## Interfacce del Servizio
 
-- Documentazione OpenAPI/Swagger disponibile in [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
+| Tipo  | Dir | Risorsa                                     | Protocollo  | Metodo  | Route / Destinazione                                                    | Descrizione                                            |
+|-------|-----|---------------------------------------------|-------------|---------|-------------------------------------------------------------------------|--------------------------------------------------------|
+| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/init                                          | Inizializzazione entità di tracking                    |
+| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/trackings                                     | Recupero entità di tracking da lista di trackingId     |
+| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/errors                                        | Recupero errori di tracking                            |
+| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/outputs                                       | Recupero degli oggetti in output                       |
+| API   | IN  | pn-paper-tracker                            | REST        | GET     | /paper-tracker-private/v1/attempts/{attemptId}                          | Recupero tracking tramite attemptId                    |
+| API   | IN  | pn-paper-tracker                            | REST        | GET     | /paper-tracker-private/v1/notification-rework/sequence                  | Recupero sequence e finalStatus per rework notifica    |
+| API   | IN  | pn-paper-tracker                            | REST        | PUT     | /paper-tracker-private/v1/notification-rework/{trackingId}/init         | Avvio processo di invalidazione timeline per rework    |
+| API   | OUT | pn-paper-channel                            | REST        | GET     | /paper-channel-private/v1/b2b/pc-retry/{requestId}                      | Verifica se ci sono altri retry                        |
+| API   | OUT | pn-data-vault                               | REST        | PUT     | /datavault-private/v1/paper-addresses/{paperRequestId}/{paperAddressId} | Inserisci o modifica un indirizzo                      |
+| API   | OUT | pn-data-vault                               | REST        | GET     | /datavault-private/v1/paper-addresses/{paperRequestId}/{paperAddressId} | Recupera tutti gli indirizzi associati alla spedizione |
+| EVENT | IN  | pn-ocr_outputs                              | SQS         | CONSUME | -                                                                       | Risposta validazione OCR degli allegati spedizione     |
+| EVENT | OUT | send-receipt-validation-input               | SQS         | PRODUCE | -                                                                       | Invio allegati di spedizione all'OCR per validazione   |
+| EVENT | IN  | pn-external_channel_to_paper_channel        | SQS         | CONSUME | -                                                                       | Ricezione eventi dal consolidatore                     |
+| EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
+| EVENT | OUT | pn-external_channel_to_paper_channel_dryrun | SQS         | PRODUCE | -                                                                       | Produzione eventi smistati verso pn-paper-channel      |
+| EVENT | OUT | pn-CoreEventBus                             | EventBridge | PUBLISH | -                                                                       | Pubblicazione eventi su EventBridge                    |
+
+* **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
+* **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml)
 
 ## Allarmi e monitoraggio
+
+| Tipo      | Nome                             | Descrizione                                                                                                    |
+|-----------|----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| ALARM     | pn-paper-tracker-890Errors-Alarm | Allarme su errori di tipo 890 (Atti Giudiziari). Scatta se il numero di errori supera la soglia configurata.   |
+| ALARM     | pn-paper-tracker-RISErrors-Alarm | Allarme su errori di tipo RIS (Raccomandata Internazionale Semplice).                                          |
+| ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
+| ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
+| ALARM     | pn-paper-tracker-RIRErrors-Alarm | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                           |
+| DASHBOARD | pn-paper-tracker                 | Dashboard CloudWatch con metriche su errori, code SQS, tabelle DynamoDB e stato operativo del microservizio.   |
+| LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
+
+**Note operative:**
+- Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
+- Gli allarmi sono configurati per notificare tramite SNS in caso di superamento soglie.
+- La dashboard CloudWatch aggrega lo stato delle code SQS, delle tabelle DynamoDB e degli allarmi attivi.
+- I log applicativi sono disponibili nel log group ECS dedicato e includono anche eventuali errori di runtime.
+
+Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
 
 ## Configurazione
 
 Le principali configurazioni del microservizio sono gestite tramite variabili d'ambiente:
 
-| Nome                                   | Valori                                             | Descrizione                                                                              |
-|----------------------------------------|----------------------------------------------------|------------------------------------------------------------------------------------------|
-| ENABLEOCRVALIDATIONFOR                 | RUN, DRY                                           | Abilita l'OCR per singolo prodotto                                                       |
-| OCRFILTERTEMPORAL                      | CRON_EXPRESSION, DISABLED                          | Abilita l'OCR in modalità RUN per spedizioni in specifiche fasce orarie                  |
-| OCRFILTERUNIFIEDDELIVERYDRIVER         | Fulmine, Poste, Sailpost, PostAndService, DISABLED | Abilita l'OCR in modalità RUN per determinati recapitisti                                |
-| ENABLEOCRVALIDATIONFORFILE             | PDF                                                | Estensione file abilitata per la validazione OCR                                         |
-| SAVEANDNOTSENDTODELIVERYPUSH           | statusCode                                         | StatusCode che non invia a pn-delivery-push ma vengono salvati nel tracking              |
-| REQUIREDATTACHMENTSREFINEMENTSTOCK890  | 23L, ARCAD, CAD                                    | Allegati necessari al perfezionamento giacenza 890                                       |
-| SENDOCRATTACHMENTSFINALVALIDATION      | AR, Plico, 23L                                     | Allegati da inviare all'OCR per la validazione finale                                    |
-| PRODUCTSPROCESSINGMODES                | RUN, DRY                                           | Modalità di processamento per prodotto                                                   |
+| Nome                                                                                                                                                                                      | Sorgente | Valori | Descrizione                                                                              |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------|------------------------------------------------------------------------------------------|
+| [PN_PAPERTRACKER_ENABLEOCRVALIDATIONFOR](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L4)                 | ENV      | -      | Abilita l'OCR per singolo prodotto                                                       |
+| [PN_PAPERTRACKER_OCRFILTERTEMPORAL](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L8)                      | ENV      | -      | Abilita l'OCR in modalità RUN per spedizioni in specifiche fasce orarie                  |
+| [PN_PAPERTRACKER_OCRFILTERUNIFIEDDELIVERYDRIVER](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L13)        | ENV      | -      | Abilita l'OCR in modalità RUN per determinati recapitisti                                |
+| [PN_PAPERTRACKER_ENABLEOCRVALIDATIONFORFILE](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L15)            | ENV      | -      | Estensione file abilitata per la validazione OCR                                         |
+| [PN_PAPERTRACKER_SAVEANDNOTSENDTODELIVERYPUSH](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L20)          | ENV      | -      | StatusCode che non invia a pn-delivery-push ma vengono salvati nel tracking              |
+| [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
+| [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
+| [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
@@ -92,6 +130,5 @@ Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultar
 
 Eseguire il comando Maven:
 ```bash
-mvn verify
+mvn spring-boot:run
 ```
-
