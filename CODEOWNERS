@@ -2,4 +2,4 @@
 * @pagopa/pn-pagopa-core-analog
 
 # scripts/aws/cfn ownership on yml files to administrators
-scripts/aws/cfn/*.yml @pagopa/pn-pagopa-admin
+scripts/aws/cfn/*.yml @pagopa/pn-pagopa-infra
