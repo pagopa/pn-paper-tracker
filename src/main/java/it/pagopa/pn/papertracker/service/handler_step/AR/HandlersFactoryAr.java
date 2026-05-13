@@ -11,7 +11,7 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
 
     public HandlersFactoryAr(MetadataUpserter metadataUpserter,
                              CheckTrackingProduct checkTrackingProduct,
-                             DeliveryPushSender deliveryPushSender,
+                             OutputTargetSender outputTargetSender,
                              FinalEventBuilderAr finalEventBuilder,
                              IntermediateEventsBuilder intermediateEventsBuilder,
                              DematValidatorAr dematValidator,
@@ -24,7 +24,7 @@ public class HandlersFactoryAr extends AbstractHandlersFactory {
                              RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
                 checkTrackingProduct,
-                deliveryPushSender,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,

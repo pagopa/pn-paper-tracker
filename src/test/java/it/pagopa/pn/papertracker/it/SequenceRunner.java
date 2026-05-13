@@ -36,21 +36,22 @@ public class SequenceRunner {
     }
 
     private void initPaperTrackings(ProductTestCase scenario) {
-        paperTrackerTrackingService.insertPaperTrackings(scenario.getInitialTracking()).block();
+        String xOriginClientId = "clientId";
+        paperTrackerTrackingService.insertPaperTrackings(scenario.getInitialTracking(), xOriginClientId).block();
         if(!CollectionUtils.isEmpty(scenario.getEvents())) {
 
             if (scenario.getEvents().stream()
                     .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
                     .anyMatch(singleStatusUpdate -> singleStatusUpdate.getAnalogMail()
                             .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY}}"))) {
-                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_1")).block();
+                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_1"), xOriginClientId).block();
             }
 
             if (scenario.getEvents().stream()
                     .filter(testEvent -> Objects.nonNull(testEvent.getAnalogMail()))
                     .anyMatch(singleStatusUpdate -> singleStatusUpdate.getAnalogMail()
                             .getRequestId().equalsIgnoreCase("{{REQUEST_ID_RETRY_2}}"))) {
-                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_2")).block();
+                paperTrackerTrackingService.insertPaperTrackings(getTrackingCreationRequest(scenario, "PCRETRY_2"), xOriginClientId).block();
             }
         }
     }

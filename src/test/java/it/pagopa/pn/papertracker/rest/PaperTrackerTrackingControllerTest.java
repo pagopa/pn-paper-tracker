@@ -39,17 +39,18 @@ class PaperTrackerTrackingControllerTest {
         request.setUnifiedDeliveryDriver("test-driver-id");
         request.setProductType("test-product-type");
         Mono<TrackingCreationRequest> requestMono = Mono.just(request);
+        String xOriginClientId = "clientId";
 
-        when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.empty());
+        when(paperTrackerEventService.insertPaperTrackings(request, "clientId")).thenReturn(Mono.empty());
 
         //ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         //ASSERT
         StepVerifier.create(response)
                 .expectNext(ResponseEntity.status(HttpStatus.CREATED).build())
                 .verifyComplete();
-        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request);
+        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request, xOriginClientId);
     }
 
     @Test
@@ -57,17 +58,18 @@ class PaperTrackerTrackingControllerTest {
         //ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
         Mono<TrackingCreationRequest> requestMono = Mono.just(request);
+        String xOriginClientId = "clientId";
 
-        when(paperTrackerEventService.insertPaperTrackings(request)).thenReturn(Mono.error(new PnPaperTrackerConflictException("Duplicated item", "Conflict")));
+        when(paperTrackerEventService.insertPaperTrackings(request, "clientId")).thenReturn(Mono.error(new PnPaperTrackerConflictException("Duplicated item", "Conflict")));
 
         //ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         //ASSERT
         StepVerifier.create(response)
                 .expectNext(ResponseEntity.noContent().build())
                 .verifyComplete();
-        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request);
+        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request, xOriginClientId);
     }
 
     @Test
@@ -75,19 +77,20 @@ class PaperTrackerTrackingControllerTest {
         // ARRANGE
         TrackingCreationRequest request = new TrackingCreationRequest();
         Mono<TrackingCreationRequest> requestMono = Mono.just(request);
+        String xOriginClientId = "clientId";
 
-        when(paperTrackerEventService.insertPaperTrackings(request))
+        when(paperTrackerEventService.insertPaperTrackings(request, xOriginClientId))
                 .thenReturn(Mono.error(new RuntimeException("Unexpected error")));
 
         // ACT
-        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, null);
+        Mono<ResponseEntity<Void>> response = controller.initTracking(requestMono, xOriginClientId, null);
 
         // ASSERT
         StepVerifier.create(response)
                 .expectErrorMatches(throwable -> throwable instanceof RuntimeException
                         && "Unexpected error".equals(throwable.getMessage()))
                 .verify();
-        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request);
+        verify(paperTrackerEventService, times(1)).insertPaperTrackings(request, xOriginClientId);
     }
 
     @Test

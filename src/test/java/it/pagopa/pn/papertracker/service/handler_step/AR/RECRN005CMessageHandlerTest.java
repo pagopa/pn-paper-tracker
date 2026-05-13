@@ -4,18 +4,18 @@ import it.pagopa.pn.papertracker.BaseTest;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
-import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
 import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -77,7 +78,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
     @MockitoBean
     private DataVaultClient dataVaultClient;
     @MockitoBean
-    private ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
+    private EventBridgePublisher eventBridgePublisher;
 
     @Test
     void should_pushPNRN012_when_RECRN005AGreaterOrEqualsRECRN010By30Days (){
@@ -90,6 +91,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         Event eventMetaRECRN005B = getEventMeta(STATUS_RECRN005B, now);
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
@@ -106,18 +108,18 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
         singleStatusUpdate.setAnalogMail(paperRequest);
 
-        ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
+        ArgumentCaptor<PaperChannelUpdate> capturedSendEvent = ArgumentCaptor.forClass(PaperChannelUpdate.class);
 
         // Act
         externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId, null);
         // Assert
-        verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
+        verify(eventBridgePublisher, times(2)).publish(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
-        assertEquals(STATUS_PNRN012, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getPayload().getSendEvent()).getStatusDetail());
-        assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getPayload().getSendEvent()).getStatusCode());
-        assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getPayload().getSendEvent()).getStatusDetail());
-        assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getPayload().getSendEvent()).getStatusCode());
+        assertEquals(STATUS_PNRN012, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusCode());
+        assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusCode());
     }
 
     @Test
@@ -151,7 +153,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, eventId, null);
 
         // Assert
-        verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, never()).publish(any(PaperChannelUpdate.class));
 
 
     }
@@ -168,6 +170,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         Event eventMetaRECRN005B = getEventMeta(STATUS_RECRN005B, recrn005AStatusDateTime);
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
@@ -184,19 +187,19 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
         singleStatusUpdate.setAnalogMail(paperRequest);
 
-        ArgumentCaptor<DeliveryPushEvent> capturedSendEvent = ArgumentCaptor.forClass(DeliveryPushEvent.class);
+        ArgumentCaptor<PaperChannelUpdate> capturedSendEvent = ArgumentCaptor.forClass(PaperChannelUpdate.class);
 
         // Act
         externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, false, null, eventId, null);
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(2)).push(capturedSendEvent.capture());
+        verify(eventBridgePublisher, times(2)).publish(capturedSendEvent.capture());
         assertNotNull(capturedSendEvent.getAllValues());
         assertEquals(2, capturedSendEvent.getAllValues().size());
-        assertEquals(STATUS_PNRN012, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getPayload().getSendEvent()).getStatusDetail());
-        assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getPayload().getSendEvent()).getStatusCode());
-        assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getPayload().getSendEvent()).getStatusDetail());
-        assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getPayload().getSendEvent()).getStatusCode());
+        assertEquals(STATUS_PNRN012, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusDetail());
+        assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusCode());
+        assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusDetail());
+        assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusCode());
 
     }
 
@@ -233,7 +236,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         externalChannelHandler.handleExternalChannelMessage(singleStatusUpdate, true, null, eventId, null);
 
         // Assert
-        verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, never()).publish(any(PaperChannelUpdate.class));
     }
 
     private Event getEventMeta(String statusCode, Instant time) {

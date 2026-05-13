@@ -28,10 +28,10 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Override
-    public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest) {
+    public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest, String xOriginClientId) {
         log.info("Init tracking for request: {}", trackingCreationRequest);
 
-        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now())).then();
+        return paperTrackingsDAO.putIfAbsent(toPaperTrackings(trackingCreationRequest, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now(), xOriginClientId)).then();
     }
 
     @Override

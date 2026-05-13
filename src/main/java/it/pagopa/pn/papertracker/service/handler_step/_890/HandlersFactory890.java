@@ -23,7 +23,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
     public HandlersFactory890(
             MetadataUpserter metadataUpserter,
             CheckTrackingProduct checkTrackingProduct,
-            DeliveryPushSender deliveryPushSender,
+            OutputTargetSender outputTargetSender,
             FinalEventBuilder890 finalEventBuilder,
             IntermediateEventsBuilder intermediateEventsBuilder,
             DematValidator890 dematValidator,
@@ -41,7 +41,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
         super(
                 metadataUpserter,
                 checkTrackingProduct,
-                deliveryPushSender,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,
@@ -83,7 +83,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                         recag012EventChecker,
                         intermediateEventsBuilder,
                         recag012EventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -94,7 +94,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                         checkTrackingState,
                         recag012EventChecker,
                         recag012EventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 
@@ -104,12 +104,12 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                         checkOcrResponse,
                         finalEventBuilder,
                         recag012EventBuilder,
-                        deliveryPushSender,
+                        outputTargetSender,
                         pendingFinalEventTrigger,
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
-                        deliveryPushSender
+                        outputTargetSender
                 ));
     }
 }

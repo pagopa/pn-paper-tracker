@@ -49,6 +49,8 @@ public class PnPaperTrackerConfigs {
     private boolean enableTruncatedDateForRefinementCheck;
     private Duration refinementDuration;
 
+    private EventBus eventBus;
+
     @Data
     public static class Dao {
         private String paperTrackingsErrorsTable;
@@ -68,6 +70,13 @@ public class PnPaperTrackerConfigs {
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
         private String externalChannelToPaperChannelDryRunQueue;
+    }
+
+    @Data
+    public static class EventBus {
+        private String name;
+        private String detailType;
+        private String source;
     }
 
     @PostConstruct

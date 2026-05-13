@@ -17,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PaperTrackingsMapperTest {
 
+    private final String xOriginClientId = "clientId";
+
     @Test
     void toPaperTrackingsValidRequest() {
         //ARRANGE
@@ -39,7 +41,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request,trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request,trackerConfigUtils, pnPaperTrackerConfigs, Instant.now(), xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -48,6 +50,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals("driver456", paperTrackings.getUnifiedDeliveryDriver());
         Assertions.assertEquals(ProductType.RS.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.DRY, paperTrackings.getProcessingMode());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -62,7 +65,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(new PnPaperTrackerConfigs());
 
         //ACT & ASSERT
-        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, new PnPaperTrackerConfigs(), Instant.now()));
+        assertThrows(IllegalArgumentException.class, () -> PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, new PnPaperTrackerConfigs(), Instant.now(), xOriginClientId));
     }
 
     @Test
@@ -89,7 +92,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now(), xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -99,6 +102,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -127,7 +131,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -137,6 +141,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -164,7 +169,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -174,6 +179,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -201,7 +207,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T15:00:00.333Z"); //venerdì 27 febbraio 2026 alle 16:00 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -211,6 +217,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -237,7 +244,7 @@ public class PaperTrackingsMapperTest {
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now());
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, Instant.now(), xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -247,6 +254,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -274,7 +282,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -284,6 +292,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.RUN, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -311,7 +320,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -321,6 +330,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DRY, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test
@@ -348,7 +358,7 @@ public class PaperTrackingsMapperTest {
         Instant dateTime = Instant.parse("2026-02-27T19:15:08.333Z"); //venerdì 27 febbraio 2026 alle 20:15 ora italiana (UTC+1)
 
         //ACT
-        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime);
+        PaperTrackings paperTrackings = PaperTrackingsMapper.toPaperTrackings(request, trackerConfigUtils, pnPaperTrackerConfigs, dateTime, xOriginClientId);
 
         //ASSERT
         Assertions.assertEquals("request123.PCRETRY_0", paperTrackings.getTrackingId());
@@ -358,6 +368,7 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(ProductType.AR.getValue(), paperTrackings.getProductType());
         Assertions.assertEquals(ProcessingMode.RUN, paperTrackings.getProcessingMode());
         Assertions.assertEquals(OcrStatusEnum.DISABLED, paperTrackings.getValidationConfig().getOcrEnabled());
+        Assertions.assertEquals(xOriginClientId, paperTrackings.getAnalogRequestClientId());
     }
 
     @Test

@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperChannelUpdate;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
@@ -9,8 +10,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
-import it.pagopa.pn.papertracker.middleware.queue.model.DeliveryPushEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.ExternalChannelOutputsMomProducer;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.utils.LogUtility;
 import org.junit.jupiter.api.Assertions;
@@ -21,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
-class DeliveryPushSenderTest {
+class OutputTargetSenderTest {
 
     @Mock
     private PnPaperTrackerConfigs config;
@@ -41,13 +42,13 @@ class DeliveryPushSenderTest {
     private PaperTrackingsDAO paperTrackingsDAO;
 
     @Mock
-    private ExternalChannelOutputsMomProducer externalChannelOutputsMomProducer;
+    private EventBridgePublisher eventBridgePublisher;
 
     @Mock
     private LogUtility logUtility;
 
     @InjectMocks
-    private DeliveryPushSender deliveryPushSender;
+    private OutputTargetSender outputTargetSender;
 
     @Test
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
@@ -56,12 +57,13 @@ class DeliveryPushSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(paperTrackings);
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, context).block();
+        outputTargetSender.sendToOutputTarget(event, context).block();
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
         verifyNoInteractions(paperTrackingsDAO);
     }
@@ -79,11 +81,11 @@ class DeliveryPushSenderTest {
         when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, context).block();
+        outputTargetSender.sendToOutputTarget(event, context).block();
 
         // Assert
         verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
-        verify(externalChannelOutputsMomProducer, never()).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, never()).publish(any(PaperChannelUpdate.class));
         verifyNoInteractions(paperTrackingsDAO);
     }
 
@@ -94,14 +96,15 @@ class DeliveryPushSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(paperTrackings);
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
-        deliveryPushSender.sendToOutputTarget(event, context).block();
+        outputTargetSender.sendToOutputTarget(event, context).block();
 
         // Assert
-        ArgumentCaptor<DeliveryPushEvent> captor = ArgumentCaptor.forClass(DeliveryPushEvent.class);
-        verify(externalChannelOutputsMomProducer).push(captor.capture());
-        Assertions.assertEquals(event, captor.getValue().getPayload().getSendEvent());
+        ArgumentCaptor<PaperChannelUpdate> captor = ArgumentCaptor.forClass(PaperChannelUpdate.class);
+        verify(eventBridgePublisher).publish(captor.capture());
+        Assertions.assertEquals(event, captor.getValue().getSendEvent());
         verifyNoInteractions(paperTrackingsDAO);
     }
 
@@ -113,12 +116,13 @@ class DeliveryPushSenderTest {
         PaperTrackings paperTrackings = new PaperTrackings();
         context.setPaperTrackings(paperTrackings);
         context.setEventsToSend(Collections.singletonList(event));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
 
         // Act
-        deliveryPushSender.execute(context).block();
+        outputTargetSender.execute(context).block();
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
         verify(paperTrackingsDAO, never()).updateItem(anyString(), any(PaperTrackings.class));
         verifyNoInteractions(paperTrackingsDAO);
@@ -129,11 +133,13 @@ class DeliveryPushSenderTest {
         // Arrange
         HandlerContext context = getFinalEventHandlerContext();
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+
         // Act
-        deliveryPushSender.execute(context).block();
+        outputTargetSender.execute(context).block();
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
         ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
@@ -145,11 +151,13 @@ class DeliveryPushSenderTest {
         // Arrange
         HandlerContext context = getPcRetryHandlerContext();
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+
         // Act
-        deliveryPushSender.execute(context).block();
+        outputTargetSender.execute(context).block();
 
         // Assert
-        verify(externalChannelOutputsMomProducer, times(1)).push(any(DeliveryPushEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
         verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
         ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());

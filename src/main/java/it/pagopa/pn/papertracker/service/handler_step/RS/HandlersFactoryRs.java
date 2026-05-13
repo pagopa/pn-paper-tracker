@@ -9,7 +9,7 @@ public class HandlersFactoryRs extends AbstractHandlersFactory {
 
     public HandlersFactoryRs(MetadataUpserter metadataUpserter,
                              CheckTrackingProduct checkTrackingProduct,
-                             DeliveryPushSender deliveryPushSender,
+                             OutputTargetSender outputTargetSender,
                              FinalEventBuilderRs finalEventBuilder,
                              IntermediateEventsBuilder intermediateEventsBuilder,
                              DematValidatorRs dematValidator,
@@ -22,7 +22,7 @@ public class HandlersFactoryRs extends AbstractHandlersFactory {
                              RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
                 checkTrackingProduct,
-                deliveryPushSender,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,

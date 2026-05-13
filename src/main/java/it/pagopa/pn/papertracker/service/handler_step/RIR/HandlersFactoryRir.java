@@ -12,7 +12,7 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
 
     public HandlersFactoryRir(MetadataUpserter metadataUpserter,
                               CheckTrackingProduct checkTrackingProduct,
-                              DeliveryPushSender deliveryPushSender,
+                              OutputTargetSender outputTargetSender,
                               FinalEventBuilderRir finalEventBuilder,
                               IntermediateEventsBuilder intermediateEventsBuilder,
                               DematValidatorRir dematValidator,
@@ -25,7 +25,7 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               RetrySenderCON996 retrySenderCON996) {
         super(metadataUpserter,
                 checkTrackingProduct,
-                deliveryPushSender,
+                outputTargetSender,
                 finalEventBuilder,
                 intermediateEventsBuilder,
                 dematValidator,
