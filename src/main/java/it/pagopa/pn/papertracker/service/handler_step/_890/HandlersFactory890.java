@@ -92,6 +92,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                 List.of(
                         metadataUpserter,
                         checkTrackingState,
+                        duplicatedEventFiltering,
                         recag012EventChecker,
                         recag012EventBuilder,
                         outputTargetSender
