@@ -15,6 +15,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.ExternalChannelHandler;
 import it.pagopa.pn.papertracker.middleware.queue.consumer.internal.OcrEventHandler;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.service.NotificationReworkService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -34,6 +35,7 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
     private final PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDao;
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final OcrEventHandler ocrEventHandler;
+    private final NotificationReworkService notificationReworkService;
 
     @Override
     public String getProductType() {
@@ -225,7 +227,10 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
         if (hasEvents) {
             for (TestEvent event : events) {
                 boolean isOcrMessage = "SEND_OCR_RESPONSE".equalsIgnoreCase(event.getMessageId());
-                if (!isOcrMessage) {
+                boolean runRework = "RUN_REWORK".equalsIgnoreCase(event.getMessageId());
+                if (runRework) {
+                    notificationReworkService.updatePaperTrackingsStatusForRework(event.getAnalogMail().getRequestId(), "REWORK_0").block();
+                } else if (!isOcrMessage) {
                     SingleStatusUpdate singleStatusUpdate = new SingleStatusUpdate();
                     singleStatusUpdate.setAnalogMail(event.getAnalogMail());
                     externalChannelHandler.handleExternalChannelMessage(

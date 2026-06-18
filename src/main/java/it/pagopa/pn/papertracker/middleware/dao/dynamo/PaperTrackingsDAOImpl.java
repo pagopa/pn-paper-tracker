@@ -100,6 +100,16 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
 
     }
 
+    @Override
+    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings) {
+        return updateItem(trackingId, paperTrackings, false);
+    }
+
+    @Override
+    public Mono<PaperTrackings> updateItemForRework(String trackingId, PaperTrackings paperTrackings) {
+        return updateItem(trackingId, paperTrackings, true);
+    }
+
     /**
      * Aggiorna un elemento PaperTrackings nel database DynamoDB, identificato dal trackingId.
      * L'aggiornamento viene eseguito solo se l'elemento esiste (condizione attribute_exists).
@@ -110,8 +120,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
      * @return un Mono contenente l'oggetto PaperTrackings aggiornato
      * @throws PnPaperTrackerNotFoundException se l'elemento con il trackingId specificato non esiste
      */
-    @Override
-    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings) {
+    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings, boolean resetPaperStatus) {
         log.debug("Updating item with trackingId: {}", trackingId);
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
@@ -139,7 +148,23 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 });
 
 
-        Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
+        Map<String, AttributeValue> attributeValueMap = new HashMap<>(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings));
+
+        /*
+         * Reset completo di paperStatus.
+         * In questo modo DynamoDB sovrascrive l'intero attributo paperStatus
+         * con una mappa vuota, eliminando tutti i campi precedenti.
+         */
+        if (resetPaperStatus) {
+            expressionAttributeNames.put("#paperStatus", PaperTrackings.COL_PAPER_STATUS);
+            expressionAttributeValues.put(":emptyPaperStatus", AttributeValue.builder()
+                    .m(Collections.emptyMap())
+                    .build());
+
+            updateExpressions.add("#paperStatus = :emptyPaperStatus");
+            attributeValueMap.remove(PaperTrackings.COL_PAPER_STATUS);
+        }
+
         AtomicInteger counter = new AtomicInteger(0);
 
         attributeValueMap.forEach((key, value) -> {

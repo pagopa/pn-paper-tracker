@@ -337,14 +337,14 @@ class NotificationReworkServiceImplTest {
         String reworkId = "rework123";
         PaperTrackings existingPaperTracking = new PaperTrackings();
         existingPaperTracking.setTrackingId(trackingId);
-        when(paperTrackingsDAO.updateItem(eq(trackingId), any(PaperTrackings.class)))
+        when(paperTrackingsDAO.updateItemForRework(eq(trackingId), any(PaperTrackings.class)))
                 .thenReturn(Mono.just(existingPaperTracking));
 
         Mono<Void> response = service.updatePaperTrackingsStatusForRework(trackingId, reworkId);
 
         StepVerifier.create(response)
                 .verifyComplete();
-        verify(paperTrackingsDAO, times(1)).updateItem(eq(trackingId), argThat(pt ->
+        verify(paperTrackingsDAO, times(1)).updateItemForRework(eq(trackingId), argThat(pt ->
                 pt.getState().equals(PaperTrackingsState.AWAITING_REWORK_EVENTS) &&
                         pt.getNotificationReworkId().equals(reworkId) &&
                         pt.getNotificationReworkRequestTimestamp() != null

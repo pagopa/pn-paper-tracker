@@ -64,8 +64,7 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
         paperTrackings.setBusinessState(BusinessState.AWAITING_REWORK_EVENTS);
         paperTrackings.setNotificationReworkRequestTimestamp(Instant.now());
         paperTrackings.setNotificationReworkId(reworkId);
-        paperTrackings.setPaperStatus(new PaperStatus());
-        return paperTrackingsDAO.updateItem(trackingId, paperTrackings).then();
+        return paperTrackingsDAO.updateItemForRework(trackingId, paperTrackings).then();
     }
 
     private List<SequenceItem> retrieveSequence(String statusCode, String deliveryFailureCause) {
