@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceItem;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.SequenceResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
 import it.pagopa.pn.papertracker.model.EventStatus;
@@ -63,7 +64,7 @@ public class NotificationReworkServiceImpl implements NotificationReworkService 
         paperTrackings.setBusinessState(BusinessState.AWAITING_REWORK_EVENTS);
         paperTrackings.setNotificationReworkRequestTimestamp(Instant.now());
         paperTrackings.setNotificationReworkId(reworkId);
-        return paperTrackingsDAO.updateItem(trackingId, paperTrackings).then();
+        return paperTrackingsDAO.updateItemForRework(trackingId, paperTrackings).then();
     }
 
     private List<SequenceItem> retrieveSequence(String statusCode, String deliveryFailureCause) {

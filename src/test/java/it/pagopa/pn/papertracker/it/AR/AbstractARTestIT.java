@@ -134,14 +134,23 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
     }
 
 
-    protected Stream<Arguments> loadTestCases(String folder, String exclude) throws Exception {
+    protected Stream<Arguments> loadTestCases(String folder, String exclude, boolean ocrDisable) throws Exception {
         ClassPathResource classPathResource = new ClassPathResource("testcase/" + folder);
         URI excludeURI = null;
-        if(StringUtils.hasText(exclude)) {
+        if (StringUtils.hasText(exclude)) {
             ClassPathResource classPathResourceExclude = new ClassPathResource("testcase/" + folder + exclude);
             excludeURI = classPathResourceExclude.getURI();
         }
-        return SequenceLoader.loadScenarios(classPathResource.getURI(),excludeURI);
+
+        Stream<Arguments> scenarios = SequenceLoader.loadScenarios(classPathResource.getURI(), excludeURI);
+
+        if(ocrDisable) {
+            ClassPathResource extraResource = new ClassPathResource("testcase/rework/ok_ar_rework.json");
+            Stream<Arguments> extraScenarios = SequenceLoader.loadScenarios(extraResource.getURI(), null);
+            return Stream.concat(scenarios, extraScenarios);
+        }
+
+        return scenarios;
     }
 
 }
