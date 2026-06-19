@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Objects;
 
+import static it.pagopa.pn.papertracker.utils.TrackerUtility.checkIfIsFinalDemat;
 import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
@@ -39,12 +40,11 @@ public class CheckTrackingState implements HandlerStep {
 
         return Mono.just(context)
                 .flatMap(ctx -> {
-                    String statusCode = TrackerUtility.getStatusCodeFromEventId(context.getPaperTrackings(), ctx.getEventId());
-                    if (statusCode.startsWith("CON")) {
+                    String statusCode = TrackerUtility.getStatusCodeFromEventId(ctx.getPaperTrackings(), ctx.getEventId());
+                    if (statusCode.startsWith("CON") || checkIfIsFinalDemat(statusCode)) {
                         log.info("StatusCode excluded from CheckTrackingState: {}", statusCode);
                         return Mono.empty();
                     }
-
                     return isInvalidState(ctx, statusCode)
                             ? createValidationError(ctx, statusCode)
                             : Mono.empty();
