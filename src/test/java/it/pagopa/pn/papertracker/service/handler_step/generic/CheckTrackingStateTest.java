@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.test.StepVerifier;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,7 +79,7 @@ class CheckTrackingStateTest {
     @Test
     void execute_shouldThrowExceptionWhenStateIsAwaitingOcr() {
         // Arrange
-        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECRN004B");
+        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECRN004C");
         context.getPaperTrackings().setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         context.getPaperTrackings().setState(PaperTrackingsState.AWAITING_OCR);
 
@@ -125,6 +124,16 @@ class CheckTrackingStateTest {
         context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECAG012");
         context.getPaperTrackings().setBusinessState(BusinessState.DONE);
         context.getPaperTrackings().setState(PaperTrackingsState.AWAITING_REFINEMENT);
+
+        // Act & Assert
+        StepVerifier.create(checkTrackingState.execute(context))
+                .verifyComplete();
+    }
+
+    @Test
+    void execute_shouldCompleteWhenStatusCodeIsFinalDemat() {
+        // Arrange
+        context.getPaperTrackings().getEvents().getFirst().setStatusCode("RECRS002B");
 
         // Act & Assert
         StepVerifier.create(checkTrackingState.execute(context))
