@@ -22,7 +22,7 @@ import java.util.Objects;
 public class PaperTrackingsMapper {
 
     public static Tracking toTracking(PaperTrackings paperTrackings) {
-        return SmartMapper.mapToClass(paperTrackings, Tracking.class);
+        return PaperTrackerMapStructMapper.INSTANCE.toTracking(paperTrackings);
     }
 
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest,

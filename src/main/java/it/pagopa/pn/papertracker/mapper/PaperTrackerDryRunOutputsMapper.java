@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -58,6 +56,6 @@ public class PaperTrackerDryRunOutputsMapper {
     }
 
     public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
-        return SmartMapper.mapToClass(entity, PaperTrackerOutput.class);
+        return PaperTrackerMapStructMapper.INSTANCE.toDtoPaperTrackerOutput(entity);
     }
 }
