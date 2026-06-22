@@ -31,7 +31,8 @@ class PaperTrackerDryRunOutputsMapperTest {
         entity.setAttachments(List.of(attachment));
         entity.setAnonymizedDiscoveredAddressId("ADDR1");
         entity.setClientRequestTimestamp("2024-06-01T12:01:00Z");
-        PaperTrackerOutput output = PaperTrackerDryRunOutputsMapper.toDtoPaperTrackerOutput(entity);
+        PaperTrackerMapStructMapper mapper = new PaperTrackerMapStructMapperImpl();
+        PaperTrackerOutput output = mapper.toDtoPaperTrackerOutput(entity);
 
         Assertions.assertEquals("RL123", output.getRegisteredLetterCode());
         Assertions.assertNotNull(output.getCreated());

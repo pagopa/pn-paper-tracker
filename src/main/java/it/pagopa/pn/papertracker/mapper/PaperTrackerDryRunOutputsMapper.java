@@ -2,7 +2,6 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
-import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import lombok.AccessLevel;
@@ -10,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -55,9 +52,5 @@ public class PaperTrackerDryRunOutputsMapper {
         attachmentEntity.setDocumentType(attachment.getDocumentType());
         attachmentEntity.setUri(attachment.getUrl());
         return attachmentEntity;
-    }
-
-    public static PaperTrackerOutput toDtoPaperTrackerOutput(PaperTrackerDryRunOutputs entity) {
-        return SmartMapper.mapToClass(entity, PaperTrackerOutput.class);
     }
 }

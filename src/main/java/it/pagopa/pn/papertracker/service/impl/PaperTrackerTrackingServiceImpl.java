@@ -5,7 +5,7 @@ import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.service.PaperTrackerTrackingService;
@@ -26,6 +26,7 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
     private final PaperTrackingsDAO paperTrackingsDAO;
     private final TrackerConfigUtils trackerConfigUtils;
     private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
+    private final PaperTrackerMapStructMapper mapper;
 
     @Override
     public Mono<Void> insertPaperTrackings(TrackingCreationRequest trackingCreationRequest, String xOriginClientId) {
@@ -40,7 +41,7 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveAllByTrackingIds(trackingsRequest.getTrackingIds())
-                .map(PaperTrackingsMapper::toTracking)
+                .map(mapper::toTracking)
                 .collectList()
                 .doOnNext(trackings -> log.info("Retrieved {} trackings for request {}", trackings.size(), trackingsRequest))
                 .doOnNext(response::setTrackings)
@@ -61,7 +62,7 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
 
         TrackingsResponse response = new TrackingsResponse();
         return paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry)
-                .map(PaperTrackingsMapper::toTracking)
+                .map(mapper::toTracking)
                 .collectList()
                 .doOnNext(response::setTrackings)
                 .thenReturn(response);

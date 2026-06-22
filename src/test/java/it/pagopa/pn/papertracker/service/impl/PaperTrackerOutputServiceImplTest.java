@@ -2,6 +2,8 @@ package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutputsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapperImpl;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import org.junit.jupiter.api.Assertions;
@@ -30,7 +32,8 @@ class PaperTrackerOutputServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        paperTrackerOutputService = new PaperTrackerOutputServiceImpl(paperTrackerDryRunOutputsDAO);
+        PaperTrackerMapStructMapper mapper = new PaperTrackerMapStructMapperImpl();
+        paperTrackerOutputService = new PaperTrackerOutputServiceImpl(paperTrackerDryRunOutputsDAO,mapper);
     }
 
     @Test

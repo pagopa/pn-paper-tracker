@@ -452,7 +452,8 @@ public class PaperTrackingsMapperTest {
         paperTrackings.setCreatedAt(Instant.now());
         paperTrackings.setUpdatedAt(Instant.now());
 
-        Tracking tracking = PaperTrackingsMapper.toTracking(paperTrackings);
+        PaperTrackerMapStructMapperImpl mapper = new PaperTrackerMapStructMapperImpl();
+        Tracking tracking = mapper.toTracking(paperTrackings);
 
         Assertions.assertEquals(paperTrackings.getTrackingId(), tracking.getTrackingId());
         Assertions.assertEquals(paperTrackings.getAttemptId(), tracking.getAttemptId());

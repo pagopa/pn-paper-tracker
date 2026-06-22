@@ -11,6 +11,10 @@
 	<version>1.6.0-SNAPSHOT</version>
 	<name>pn-paper-tracker</name>
 	<description>PN paper-tracker Microservice</description>
+	<properties>
+		<org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <lombok.version>1.18.34</lombok.version>
+	</properties>
 	<scm>
 		<connection>${git.conn}</connection>
 		<developerConnection>${git.devConn}</developerConnection>
@@ -23,7 +27,7 @@
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>2.18.0-SPRINGBOOT3</version>
+			<version>2.16.0-SPRINGBOOT3</version>
 		</dependency>
 
 		<dependency>
@@ -33,9 +37,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.modelmapper</groupId>
-			<artifactId>modelmapper</artifactId>
-			<version>3.1.0</version>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${org.mapstruct.version}</version>
 		</dependency>
 
 		<dependency>
@@ -441,8 +445,32 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>21</source>
-                    <target>21</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
+					<target>21</target>
+					<compilerArgs>
+						<arg>--enable-preview</arg>
+					</compilerArgs>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${org.mapstruct.version}</version>
+						</path>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
+						<path>
+							<groupId>org.springframework.boot</groupId>
+							<artifactId>spring-boot-configuration-processor</artifactId>
+							<version>3.4.5</version>
+						</path>
+					</annotationProcessorPaths>
                 </configuration>
             </plugin>
         </plugins>

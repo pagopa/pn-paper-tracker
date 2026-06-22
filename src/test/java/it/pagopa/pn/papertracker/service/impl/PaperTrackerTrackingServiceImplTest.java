@@ -6,6 +6,8 @@ import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapperImpl;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
@@ -40,9 +42,11 @@ class PaperTrackerTrackingServiceImplTest {
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     private PaperTrackerTrackingServiceImpl paperTrackerEventService;
+    private PaperTrackerMapStructMapper mapper;
 
     @BeforeEach
     void setUp() {
+        mapper = new PaperTrackerMapStructMapperImpl();
         when(pnPaperTrackerConfigs.getRequiredAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));
@@ -52,7 +56,7 @@ class PaperTrackerTrackingServiceImplTest {
         when(pnPaperTrackerConfigs.getProductsProcessingModes()).thenReturn(List.of("1970-01-01;AR:RUN;RS:DRY"));
         when(pnPaperTrackerConfigs.getEnableOcrValidationFor()).thenReturn(List.of("1970-01-01;AR:RUN;RIR:RUN;"));
         TrackerConfigUtils trackerConfigUtils = new TrackerConfigUtils(pnPaperTrackerConfigs);
-        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils,pnPaperTrackerConfigs);
+        paperTrackerEventService = new PaperTrackerTrackingServiceImpl(paperTrackingsDAO,trackerConfigUtils,pnPaperTrackerConfigs, mapper);
     }
 
     @Test
@@ -118,7 +122,7 @@ class PaperTrackerTrackingServiceImplTest {
         PaperTrackings paperTracking1 = new PaperTrackings();
         PaperTrackings paperTracking2 = new PaperTrackings();
         TrackingsResponse expectedResponse = new TrackingsResponse();
-        expectedResponse.setTrackings(List.of(PaperTrackingsMapper.toTracking(paperTracking1), PaperTrackingsMapper.toTracking(paperTracking2)));
+        expectedResponse.setTrackings(List.of(mapper.toTracking(paperTracking1), mapper.toTracking(paperTracking2)));
 
         when(paperTrackingsDAO.retrieveAllByTrackingIds(request.getTrackingIds()))
                 .thenReturn(Flux.just(paperTracking1, paperTracking2));
@@ -201,7 +205,7 @@ class PaperTrackerTrackingServiceImplTest {
         PaperTrackings paperTracking1 = new PaperTrackings();
         PaperTrackings paperTracking2 = new PaperTrackings();
         TrackingsResponse expectedResponse = new TrackingsResponse();
-        expectedResponse.setTrackings(List.of(PaperTrackingsMapper.toTracking(paperTracking1), PaperTrackingsMapper.toTracking(paperTracking2)));
+        expectedResponse.setTrackings(List.of(mapper.toTracking(paperTracking1), mapper.toTracking(paperTracking2)));
 
         when(paperTrackingsDAO.retrieveEntityByAttemptId(attemptId, pcRetry))
                 .thenReturn(Flux.just(paperTracking1, paperTracking2));
