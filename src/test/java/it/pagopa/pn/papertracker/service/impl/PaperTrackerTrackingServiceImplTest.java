@@ -12,12 +12,12 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -42,11 +42,12 @@ class PaperTrackerTrackingServiceImplTest {
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     private PaperTrackerTrackingServiceImpl paperTrackerEventService;
-    private PaperTrackerMapStructMapper mapper;
+
+    @Spy
+    private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
 
     @BeforeEach
     void setUp() {
-        mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         when(pnPaperTrackerConfigs.getRequiredAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsRefinementStock890()).thenReturn(List.of("1970-01-01;23L"));
         when(pnPaperTrackerConfigs.getSendOcrAttachmentsFinalValidationStock890()).thenReturn(List.of("1970-01-01;ARCAD;CAD"));

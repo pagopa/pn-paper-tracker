@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -28,11 +29,13 @@ class PaperTrackerOutputServiceImplTest {
     @Mock
     private PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
 
+    @Spy
+    private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
+
     private PaperTrackerOutputServiceImpl paperTrackerOutputService;
 
     @BeforeEach
     void setUp() {
-        PaperTrackerMapStructMapper mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         paperTrackerOutputService = new PaperTrackerOutputServiceImpl(paperTrackerDryRunOutputsDAO,mapper);
     }
 

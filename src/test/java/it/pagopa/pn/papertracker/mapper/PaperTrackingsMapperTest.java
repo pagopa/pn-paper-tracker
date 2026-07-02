@@ -8,18 +8,24 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.spy;
 
+@ExtendWith(MockitoExtension.class)
 public class PaperTrackingsMapperTest {
 
     private final String xOriginClientId = "clientId";
+
+    @Spy
+    private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
 
     @Test
     void toPaperTrackingsValidRequest() {
@@ -454,7 +460,6 @@ public class PaperTrackingsMapperTest {
         paperTrackings.setCreatedAt(Instant.now());
         paperTrackings.setUpdatedAt(Instant.now());
 
-        PaperTrackerMapStructMapper mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         Tracking tracking = mapper.toTracking(paperTrackings);
 
         Assertions.assertEquals(paperTrackings.getTrackingId(), tracking.getTrackingId());
