@@ -8,12 +8,14 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.spy;
 
 public class PaperTrackingsMapperTest {
 
@@ -452,7 +454,7 @@ public class PaperTrackingsMapperTest {
         paperTrackings.setCreatedAt(Instant.now());
         paperTrackings.setUpdatedAt(Instant.now());
 
-        PaperTrackerMapStructMapperImpl mapper = new PaperTrackerMapStructMapperImpl();
+        PaperTrackerMapStructMapper mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         Tracking tracking = mapper.toTracking(paperTrackings);
 
         Assertions.assertEquals(paperTrackings.getTrackingId(), tracking.getTrackingId());

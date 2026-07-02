@@ -3,13 +3,13 @@ package it.pagopa.pn.papertracker.service.impl;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
-import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapperImpl;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
@@ -32,7 +32,7 @@ class PaperTrackerErrorServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        PaperTrackerMapStructMapper mapper = new PaperTrackerMapStructMapperImpl();
+        PaperTrackerMapStructMapper mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO,mapper);
     }
 

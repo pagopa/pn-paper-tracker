@@ -2,13 +2,14 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
-import org.testcontainers.shaded.org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
+import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
 import java.util.List;
+
+import static org.mockito.Mockito.spy;
 
 class PaperTrackerDryRunOutputsMapperTest {
 
@@ -31,7 +32,7 @@ class PaperTrackerDryRunOutputsMapperTest {
         entity.setAttachments(List.of(attachment));
         entity.setAnonymizedDiscoveredAddressId("ADDR1");
         entity.setClientRequestTimestamp("2024-06-01T12:01:00Z");
-        PaperTrackerMapStructMapper mapper = new PaperTrackerMapStructMapperImpl();
+        PaperTrackerMapStructMapper mapper = spy(Mappers.getMapper(PaperTrackerMapStructMapper.class));
         PaperTrackerOutput output = mapper.toDtoPaperTrackerOutput(entity);
 
         Assertions.assertEquals("RL123", output.getRegisteredLetterCode());
