@@ -21,10 +21,6 @@ import java.util.Objects;
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackingsMapper {
 
-    public static Tracking toTracking(PaperTrackings paperTrackings) {
-        return SmartMapper.mapToClass(paperTrackings, Tracking.class);
-    }
-
     public static PaperTrackings toPaperTrackings(TrackingCreationRequest trackingCreationRequest,
                                                   TrackerConfigUtils trackerConfigUtils,
                                                   PnPaperTrackerConfigs pnPaperTrackerConfigs,

@@ -3,10 +3,10 @@ package it.pagopa.pn.papertracker.service.impl;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponseResultsInner;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,13 +19,14 @@ import reactor.core.publisher.Mono;
 public class PaperTrackerErrorServiceImpl implements PaperTrackerErrorService {
 
     private final PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+    private final PaperTrackerMapStructMapper mapper;
 
     @Override
     public Mono<TrackingErrorsResponse> retrieveTrackingErrors(TrackingsRequest trackingsRequest) {
         TrackingErrorsResponse trackingErrorsResponse = new TrackingErrorsResponse();
         return Flux.fromIterable(trackingsRequest.getTrackingIds())
                 .flatMap(trackingId -> paperTrackingsErrorsDAO.retrieveErrors(trackingId)
-                        .map(PaperTrackingsErrorsMapper::toTrackingError)
+                        .map(mapper::toTrackingError)
                         .collectList()
                         .map(trackingErrors -> {
                                     TrackingErrorsResponseResultsInner trackingErrorsResponseResultsInner = new TrackingErrorsResponseResultsInner();

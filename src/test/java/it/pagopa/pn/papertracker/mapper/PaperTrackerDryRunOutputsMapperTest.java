@@ -2,15 +2,21 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
-import org.testcontainers.shaded.org.bouncycastle.jce.spec.ECNamedCurveGenParameterSpec;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.List;
 
+@ExtendWith(MockitoExtension.class)
 class PaperTrackerDryRunOutputsMapperTest {
+
+    @Spy
+    private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
 
     @Test
     void shouldSetAndGetAllFieldsCorrectly() {
@@ -31,7 +37,7 @@ class PaperTrackerDryRunOutputsMapperTest {
         entity.setAttachments(List.of(attachment));
         entity.setAnonymizedDiscoveredAddressId("ADDR1");
         entity.setClientRequestTimestamp("2024-06-01T12:01:00Z");
-        PaperTrackerOutput output = PaperTrackerDryRunOutputsMapper.toDtoPaperTrackerOutput(entity);
+        PaperTrackerOutput output = mapper.toDtoPaperTrackerOutput(entity);
 
         Assertions.assertEquals("RL123", output.getRegisteredLetterCode());
         Assertions.assertNotNull(output.getCreated());

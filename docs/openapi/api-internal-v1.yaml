@@ -376,6 +376,7 @@ components:
           enum:
             - AWAITING_FINAL_STATUS_CODE
             - AWAITING_OCR
+            - AWAITING_REFINEMENT_OCR
             - AWAITING_REWORK_EVENTS
             - DONE
             - KO

@@ -37,8 +37,4 @@ public class PaperTrackingsErrorsMapper {
                 .build();
     }
 
-    public static TrackingError toTrackingError(PaperTrackingsErrors paperTrackingsErrors) {
-        return SmartMapper.mapToClass(paperTrackingsErrors, TrackingError.class);
-    }
-
 }
