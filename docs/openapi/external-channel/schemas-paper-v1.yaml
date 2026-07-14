@@ -302,6 +302,11 @@ components:
           format: date-time
           description: >-
             Timestamp della richiesta in UTC
+        isDuplicate:
+          type: boolean
+          description: >-
+            Indica se l'evento risulta duplicato rispetto agli eventi già presenti sulla richiesta.
+            Valorizzato sempre da pn-ec per gli eventi analogici.
     
 
     AttachmentDetails:
