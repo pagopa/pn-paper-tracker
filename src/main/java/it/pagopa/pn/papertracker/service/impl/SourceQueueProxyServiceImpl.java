@@ -59,14 +59,18 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
             SingleStatusUpdate message,
             Map<String, MessageAttributeValue> messageAttributes
     ) {
-        log.info("Routing message");
-
         String requestId;
         try {
             requestId = message.getAnalogMail().getRequestId();
         } catch (NullPointerException e) {
             return Mono.error(new PaperTrackerException("Malformed event from external-channel", e));
         }
+
+        log.info("Routing message - requestId: {}, statusCode: {}, isDuplicate: {}, clientRequestTimeStamp: {}",
+                requestId, 
+                message.getAnalogMail().getStatusCode(), 
+                message.getAnalogMail().getIsDuplicate(),
+                message.getAnalogMail().getClientRequestTimeStamp());
 
         return paperTrackingsDAO.retrieveEntityByTrackingId(requestId)
                 // caso: tracking NON trovato
@@ -112,25 +116,40 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
             Map<String, MessageAttributeValue> messageAttributes
     ) {
         return switch (tracking.getProcessingMode()) {
-            case DRY -> Mono.fromRunnable(() -> {
-                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
-                if (shouldForwardToPaperChannel(event)) {
-                    paperChannelDryRunProducer.push(enrichedMessage);
-                }
-                paperTrackerProducer.push(enrichedMessage);
-            });
+            case DRY -> Mono.fromRunnable(() -> forwardInDryRun(tracking, event, messageAttributes));
             case RUN -> Mono.fromRunnable(() ->
                     paperTrackerProducer.push(buildOutputMessage(event, messageAttributes, false))
             );
             case null -> Mono.fromRunnable(() -> {
                 log.info("Tracking entity created without processignMode, createdAt: {}", tracking.getCreatedAt());
-                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
-                if (shouldForwardToPaperChannel(event)) {
-                    paperChannelDryRunProducer.push(enrichedMessage);
-                }
-                paperTrackerProducer.push(enrichedMessage);
+                forwardInDryRun(tracking, event, messageAttributes);
             });
         };
+    }
+
+    /**
+     * Inoltra l'evento in modalità dry-run a pn-paper-tracker e, solo se non è un duplicato
+     * (isDuplicate == false o isDuplicate == null), anche a pn-paper-channel.
+     *
+     * @param tracking oggetto della spedizione
+     * @param event l'evento da inoltrare
+     * @param messageAttributes attributi del messaggio
+     */
+    private void forwardInDryRun(
+            PaperTrackings tracking,
+            SingleStatusUpdate event,
+            Map<String, MessageAttributeValue> messageAttributes
+    ) {
+        var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
+        if (shouldForwardToPaperChannel(event)) {
+            paperChannelDryRunProducer.push(enrichedMessage);
+        } else {
+            log.info("Event is duplicate, not forwarding to paper-channel, requestId: {}, statusCode: {}, clientRequestTimeStamp: {}",
+                    tracking.getTrackingId(),
+                    event.getAnalogMail().getStatusCode(),
+                    event.getAnalogMail().getClientRequestTimeStamp());
+        }
+        paperTrackerProducer.push(enrichedMessage);
     }
 
     /**
