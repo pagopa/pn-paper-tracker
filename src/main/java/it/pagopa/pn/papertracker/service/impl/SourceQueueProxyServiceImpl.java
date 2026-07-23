@@ -44,9 +44,10 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
      * <p>
      * Le regole applicate sono:
      * <ul>
-     *   <li>Spedizione NON presente su pn-PaperTrackings -> evento inoltrato solo a pn-paper-channel</li>
-     *   <li>Spedizione presente e modalità DRY -> evento inoltrato a pn-paper-channel e pn-paper-tracker</li>
+     *   <li>Spedizione NON presente su pn-PaperTrackings -> evento inoltrato solo a pn-paper-channel (se non duplicato)</li>
+     *   <li>Spedizione presente e modalità DRY -> evento inoltrato a pn-paper-channel (se non duplicato) e pn-paper-tracker</li>
      *   <li>Spedizione presente e modalità RUN -> evento inoltrato solo a pn-paper-tracker</li>
+     *   <li>Spedizione presente e processingMode null -> evento inoltrato a pn-paper-channel (se non duplicato) e pn-paper-tracker</li>
      * </ul>
      * </p>
      *
@@ -58,14 +59,18 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
             SingleStatusUpdate message,
             Map<String, MessageAttributeValue> messageAttributes
     ) {
-        log.info("Routing message");
-
         String requestId;
         try {
             requestId = message.getAnalogMail().getRequestId();
         } catch (NullPointerException e) {
             return Mono.error(new PaperTrackerException("Malformed event from external-channel", e));
         }
+
+        log.info("Routing message - requestId: {}, statusCode: {}, isDuplicate: {}, clientRequestTimeStamp: {}",
+                requestId, 
+                message.getAnalogMail().getStatusCode(), 
+                message.getAnalogMail().getIsDuplicate(),
+                message.getAnalogMail().getClientRequestTimeStamp());
 
         return paperTrackingsDAO.retrieveEntityByTrackingId(requestId)
                 // caso: tracking NON trovato
@@ -77,24 +82,27 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
 
     /**
      * Gestisce un evento quando il tracking non è presente su pn-PaperTrackings.
-     * L'evento viene inoltrato direttamente a pn-paper-channel in modalità dry-run.
+     * L'evento viene inoltrato a pn-paper-channel in modalità dry-run solo se non è un duplicato
+     * (isDuplicate == false o isDuplicate == null).
      *
      * @param event l'evento da inoltrare
      * @return Mono<Void>
      */
     private Mono<Void> handlePaperChannelEvent(SingleStatusUpdate event,
                                                Map<String, MessageAttributeValue> messageAttributes) {
-        return Mono.fromRunnable(() ->
-                paperChannelDryRunProducer.push(buildOutputMessage(event, messageAttributes,true))
-        );
+        return Mono.fromRunnable(() -> {
+            if (shouldForwardToPaperChannel(event)) {
+                paperChannelDryRunProducer.push(buildOutputMessage(event, messageAttributes, true));
+            }
+        });
     }
 
     /**
      * Gestisce l'evento in base alla modalità operativa (DRY o RUN) recuperata dal tracking.
      * <p>
-     * Modalità DRY: l'evento viene inoltrato sia a pn-paper-channel che a pn-paper-tracker.
+     * Modalità DRY: l'evento viene inoltrato a pn-paper-tracker e a pn-paper-channel solo se non duplicato.
      * Modalità RUN: l'evento viene inviato solo a pn-paper-tracker.
-     * Null: spedizioni inizializzate prima della GA26Q1.A
+     * Null: spedizioni inizializzate prima della GA26Q1.A, stesse regole di DRY per l'inoltro a pn-paper-channel.
      * </p>
      *
      * @param tracking oggetto della spedizione
@@ -108,21 +116,54 @@ public class SourceQueueProxyServiceImpl implements SourceQueueProxyService {
             Map<String, MessageAttributeValue> messageAttributes
     ) {
         return switch (tracking.getProcessingMode()) {
-            case DRY -> Mono.fromRunnable(() -> {
-                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
-                paperChannelDryRunProducer.push(enrichedMessage);
-                paperTrackerProducer.push(enrichedMessage);
-            });
+            case DRY -> Mono.fromRunnable(() -> forwardInDryRun(tracking, event, messageAttributes));
             case RUN -> Mono.fromRunnable(() ->
                     paperTrackerProducer.push(buildOutputMessage(event, messageAttributes, false))
             );
             case null -> Mono.fromRunnable(() -> {
                 log.info("Tracking entity created without processignMode, createdAt: {}", tracking.getCreatedAt());
-                var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
-                paperChannelDryRunProducer.push(enrichedMessage);
-                paperTrackerProducer.push(enrichedMessage);
+                forwardInDryRun(tracking, event, messageAttributes);
             });
         };
+    }
+
+    /**
+     * Inoltra l'evento in modalità dry-run a pn-paper-tracker e, solo se non è un duplicato
+     * (isDuplicate == false o isDuplicate == null), anche a pn-paper-channel.
+     *
+     * @param tracking oggetto della spedizione
+     * @param event l'evento da inoltrare
+     * @param messageAttributes attributi del messaggio
+     */
+    private void forwardInDryRun(
+            PaperTrackings tracking,
+            SingleStatusUpdate event,
+            Map<String, MessageAttributeValue> messageAttributes
+    ) {
+        var enrichedMessage = buildOutputMessage(event, messageAttributes, true);
+        if (shouldForwardToPaperChannel(event)) {
+            paperChannelDryRunProducer.push(enrichedMessage);
+        } else {
+            log.info("Event is duplicate, not forwarding to paper-channel, requestId: {}, statusCode: {}, clientRequestTimeStamp: {}",
+                    tracking.getTrackingId(),
+                    event.getAnalogMail().getStatusCode(),
+                    event.getAnalogMail().getClientRequestTimeStamp());
+        }
+        paperTrackerProducer.push(enrichedMessage);
+    }
+
+    /**
+     * Determina se l'evento deve essere inoltrato a pn-paper-channel.
+     * L'evento viene inoltrato solo se non è un duplicato (isDuplicate == false o isDuplicate == null).
+     *
+     * @param event l'evento da verificare
+     * @return true se l'evento deve essere inoltrato a pn-paper-channel
+     */
+    private boolean shouldForwardToPaperChannel(SingleStatusUpdate event) {
+        Boolean isDuplicate = event.getAnalogMail() != null
+                ? event.getAnalogMail().getIsDuplicate()
+                : null;
+        return !Boolean.TRUE.equals(isDuplicate);
     }
 
     /**

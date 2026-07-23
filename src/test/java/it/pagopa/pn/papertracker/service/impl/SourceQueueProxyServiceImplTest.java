@@ -323,4 +323,160 @@ class SourceQueueProxyServiceImplTest {
         ExternalChannelEvent event = eventCaptor.getValue();
         assertNotNull(event.getHeader().getMessageAttributes());
     }
+
+    // ===== Test filtro eventi duplicati (isDuplicate) =====
+
+    @Test
+    void handleExternalChannelMessage_trackingNotFound_duplicate_shouldNotSend() {
+        // Arrange
+        analogMail.setIsDuplicate(true);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.empty());
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, never()).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, never()).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_trackingNotFound_notDuplicate_shouldSendToPaperChannelOnly() {
+        // Arrange
+        analogMail.setIsDuplicate(false);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.empty());
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, never()).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_dryMode_duplicate_shouldSendToPaperTrackerOnly() {
+        // Arrange
+        analogMail.setIsDuplicate(true);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(ProcessingMode.DRY);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, never()).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_dryMode_notDuplicate_shouldSendToBothQueues() {
+        // Arrange
+        analogMail.setIsDuplicate(false);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(ProcessingMode.DRY);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_runMode_notDuplicate_shouldSendToPaperTrackerOnly() {
+        // Arrange
+        analogMail.setIsDuplicate(false);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(ProcessingMode.RUN);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperChannelDryRunProducer, never()).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_runMode_duplicate_shouldSendToPaperTrackerOnly() {
+        // Arrange
+        analogMail.setIsDuplicate(true);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(ProcessingMode.RUN);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperChannelDryRunProducer, never()).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_nullProcessingMode_duplicate_shouldSendToPaperTrackerOnly() {
+        // Arrange
+        analogMail.setIsDuplicate(true);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(null);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, never()).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+    }
+
+    @Test
+    void handleExternalChannelMessage_nullProcessingMode_notDuplicate_shouldSendToBothQueues() {
+        // Arrange
+        analogMail.setIsDuplicate(false);
+        PaperTrackings tracking = new PaperTrackings();
+        tracking.setProcessingMode(null);
+        tracking.setTrackingId(REQUEST_ID);
+        when(paperTrackingsDAO.retrieveEntityByTrackingId(REQUEST_ID))
+                .thenReturn(Mono.just(tracking));
+
+        // Act
+        Mono<Void> result = service.handleExternalChannelMessage(message, attributes);
+
+        // Assert
+        StepVerifier.create(result).verifyComplete();
+
+        verify(paperChannelDryRunProducer, times(1)).push(any(ExternalChannelEvent.class));
+        verify(paperTrackerProducer, times(1)).push(any(ExternalChannelEvent.class));
+    }
 }
