@@ -29,10 +29,10 @@ che si occupa di gestire il routing degli eventi provenienti da pn-ec in base al
 (attributo `processingMode` della classe [`PaperTrackings`](../../src/main/java/it/pagopa/pn/papertracker/middleware/dao/dynamo/entity/PaperTrackings.java)).
 
 La logica applicata è la seguente:
-- **Spedizione NON presente su pn-PaperTrackings**: l'evento viene inoltrato solo a pn-paper-channel.
-- **Spedizione presente e modalità DRY**: l'evento viene inoltrato sia a pn-paper-channel che a pn-paper-tracker.
+- **Spedizione NON presente su pn-PaperTrackings**: l'evento viene inoltrato solo a pn-paper-channel, unicamente se non è un duplicato (`isDuplicate == false` oppure `isDuplicate == null`).
+- **Spedizione presente e modalità DRY**: l'evento viene inoltrato a pn-paper-tracker e a pn-paper-channel; l'inoltro a pn-paper-channel avviene solo se l'evento non è un duplicato (`isDuplicate == false` oppure `isDuplicate == null`).
 - **Spedizione presente e modalità RUN**: l'evento viene inoltrato solo a pn-paper-tracker.
-- **Spedizione con processingMode null**: l'evento viene gestito come in modalità DRY.
+- **Spedizione con processingMode null**: l'evento viene gestito come in modalità DRY (inoltro a pn-paper-tracker e, solo se non duplicato, a pn-paper-channel).
 
 Il messaggio viene arricchito con header e flag dry-run, e inoltrato ai consumer appropriati tramite i producer dedicati.
 

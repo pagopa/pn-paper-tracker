@@ -33,7 +33,7 @@ import java.util.Objects;
  *   </li>
  *   <li>
  *     <b>Spedizione presente su pn-PaperTrackings e modalità DRY</b><br>
- *     L'evento viene inoltrato a pn-paper-channel e, in parallelo, processato internamente
+ *     L'evento viene inoltrato a pn-paper-channel (se non duplicato) e, in parallelo, processato internamente
  *     da pn-paper-tracker, con persistenza dell'output su tabella a fini di verifica.
  *   </li>
  *   <li>
