@@ -67,7 +67,7 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 
 | Tipo  | Dir | Risorsa                                     | Protocollo  | Metodo  | Route / Destinazione                                                    | Descrizione                                            |
 |-------|-----|---------------------------------------------|-------------|---------|-------------------------------------------------------------------------|--------------------------------------------------------|
-| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/init                                          | Inizializzazione entità di tracking                    |
+| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/paper-init                                    | Inizializzazione entità di tracking                    |
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/trackings                                     | Recupero entità di tracking da lista di trackingId     |
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/errors                                        | Recupero errori di tracking                            |
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/outputs                                       | Recupero degli oggetti in output                       |
