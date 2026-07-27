@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.config.TrackerConfigUtils;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.AttachmentsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import static it.pagopa.pn.papertracker.mapper.PaperTrackingsMapper.toPaperTrackings;
 
@@ -66,6 +70,23 @@ public class PaperTrackerTrackingServiceImpl implements PaperTrackerTrackingServ
                 .collectList()
                 .doOnNext(response::setTrackings)
                 .thenReturn(response);
+    }
+
+    @Override
+    public Mono<AttachmentsResponse> retrieveAttachmentsByTrackingId(String trackingId) {
+        log.info("Retrieving attachments for trackingId: {}", trackingId);
+
+        return paperTrackingsDAO.retrieveEntityByTrackingId(trackingId)
+                .map(paperTrackings -> {
+                    List<it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment> attachments =
+                            Objects.requireNonNullElse(paperTrackings.getEvents(), Collections.emptyList())
+                                    .stream()
+                                    .filter(event -> event.getAttachments() != null)
+                                    .flatMap(event -> event.getAttachments().stream())
+                                    .map(mapper::toAttachmentDto)
+                                    .toList();
+                    return new AttachmentsResponse(attachments);
+                });
     }
 
 }

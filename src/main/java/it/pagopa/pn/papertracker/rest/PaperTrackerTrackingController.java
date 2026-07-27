@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.rest;
 
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.api.PaperTrackerTrackingApi;
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.AttachmentsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
@@ -48,6 +49,12 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
     @Override
     public Mono<ResponseEntity<TrackingsResponse>> retrieveTrackingsByAttemptId(String attemptId, String pcRetry, final ServerWebExchange exchange) {
         return paperTrackerEventService.retrieveTrackingsByAttemptId(attemptId, pcRetry)
+                .map(ResponseEntity::ok);
+    }
+
+    @Override
+    public Mono<ResponseEntity<AttachmentsResponse>> retrieveAttachmentsByTrackingId(String trackingId, final ServerWebExchange exchange) {
+        return paperTrackerEventService.retrieveAttachmentsByTrackingId(trackingId)
                 .map(ResponseEntity::ok);
     }
 }

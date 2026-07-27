@@ -19,27 +19,12 @@ info:
     url: https://www.pn.pagopa.it/LICENSE
   version: '1.0.0'
 tags:
-  - name: HealthCheck
-    description: >-
-      Invocazioni per sapere lo stato del microservizio
   - name: PaperTrackerTracking
   - name: PaperTrackerAttempt
   - name: PaperTrackerError
   - name: PaperTrackerOutput
   - name: NotificationRework
 paths:
-  /status:
-    get:
-      summary: healthCheck path
-      description: health check path per verificare lo stato del micro servizio
-      tags:
-        - HealthCheck
-      operationId: status
-      responses:
-        '200':
-          description: Ok
-        '500':
-          description: Internal Server Error
   '/paper-tracker-private/v1/init':
     post:
       summary: Inserimento tracker
@@ -197,6 +182,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TrackingsResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
+  '/paper-tracker-private/v1/trackings/{trackingId}/attachments':
+    get:
+      summary: Recupero allegati di una spedizione
+      description: >-
+        Restituisce tutti gli allegati ricevuti negli eventi per una data spedizione identificata dal trackingId.
+      tags:
+        - PaperTrackerTracking
+      operationId: retrieveAttachmentsByTrackingId
+      parameters:
+        - $ref: '#/components/parameters/trackingId'
+      responses:
+        '200':
+          description: Lista di allegati ricevuti negli eventi della spedizione
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentsResponse'
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: 'remote-refs.yaml#/components/schemas/Problem'
         '500':
           description: Internal Server Error
           content:
@@ -655,6 +669,15 @@ components:
           type: string
         clientRequestTimestamp:
           type: string
+    AttachmentsResponse:
+      type: object
+      required:
+        - attachments
+      properties:
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
     TrackingCreationRequest:
       type: object
       properties:

@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.mapper;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.PaperTrackerOutput;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Tracking;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingError;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorType;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
@@ -23,6 +24,8 @@ public interface PaperTrackerMapStructMapper {
 
     @Mapping(target = "notificationReworkTimestamp", source = "notificationReworkRequestTimestamp")
     Tracking toTracking(PaperTrackings paperTrackings);
+
+    it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.Attachment toAttachmentDto(Attachment attachment);
 
     TrackingError toTrackingError(PaperTrackingsErrors paperTrackingsErrors);
 

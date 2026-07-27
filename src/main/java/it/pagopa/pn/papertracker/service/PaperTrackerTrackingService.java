@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.service;
 
+import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.AttachmentsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
@@ -15,5 +16,7 @@ public interface PaperTrackerTrackingService {
     Mono<Void> updatePaperTrackingsStatus(String trackingId, PaperTrackings paperTrackings);
 
     Mono<TrackingsResponse> retrieveTrackingsByAttemptId(String attemptId, String pcRetry);
+
+    Mono<AttachmentsResponse> retrieveAttachmentsByTrackingId(String trackingId);
 
 }
