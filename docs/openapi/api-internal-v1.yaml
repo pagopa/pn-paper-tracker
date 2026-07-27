@@ -40,7 +40,7 @@ paths:
           description: Ok
         '500':
           description: Internal Server Error
-  '/paper-tracker-private/v1/init':
+  '/paper-tracker-private/v1/paper-init':
     post:
       summary: Inserimento tracker
       description: >-
