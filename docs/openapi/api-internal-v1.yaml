@@ -119,33 +119,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: 'remote-refs.yaml#/components/schemas/Problem'
-  '/paper-tracker-private/v1/errors':
-    post:
-      summary: Recupero errori
-      description: >-
-        Permette il recupero degli errori presenti nella tabella PnPaperTrackingsErrors.
-      tags:
-        - PaperTrackerError
-      operationId: retrieveTrackingErrors
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TrackingsRequest'
-        required: true
-      responses:
-        '200':
-          description: returns TrackingErrorsResponse entity for each trackingId
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TrackingErrorsResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: 'remote-refs.yaml#/components/schemas/Problem'
   '/paper-tracker-private/v1/outputs':
     post:
       summary: Recupero output prodotto
