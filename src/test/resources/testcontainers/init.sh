@@ -1,6 +1,6 @@
 echo "### CREATE QUEUES ###"
 
-queues="pn-ocr_outputs dl-sqs pn-external_channel_to_paper_tracker pn-external_channel_outputs pn-external_channel_to_paper_channel_dryrun pn-external_channel_to_paper_channel"
+queues="pn-ocr_outputs dl-sqs pn-external_channel_to_paper_tracker pn-external_channel_outputs pn-external_channel_to_paper_channel_dryrun pn-external_channel_to_paper_channel pn-paper_tracker_errors"
 for qn in $(echo $queues | tr " " "\n"); do
     echo creating queue $qn ...
     aws --profile default --region us-east-1 --endpoint-url http://localstack:4566 \

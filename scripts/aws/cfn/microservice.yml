@@ -330,6 +330,14 @@ Parameters:
     Type: String
     Description: 'URL of the SQS queue where external channel rework validation events are sent'
 
+  PaperTrackerErrorsQueueName:
+    Type: String
+    Description: 'Name of the SQS queue where paper-tracker errors are sent'
+
+  PaperTrackerErrorsQueueARN:
+    Type: String
+    Description: 'ARN of the SQS queue where paper-tracker errors are sent'
+
   NotificationReworkEventsValidationLambdaName:
     Type: String
     Description: 'Name of the NotificationReworkEventsValidation Lambda.'
@@ -531,6 +539,7 @@ Resources:
         ContainerEnvEntry22: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELDRYRUNQUEUE=${ExternalChannelsToPaperChannelDryrunQueueName}'
         ContainerEnvEntry23: !Sub 'METRIC_FORMAT_TYPE=${MetricFormatType}'
         ContainerEnvEntry24: !Sub 'PN_PAPERTRACKER_EVENTBUS_NAME=arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${ProjectName}-CoreEventBus'
+        ContainerEnvEntry25: !Sub 'PN_PAPERTRACKER_TOPICS_PAPERTRACKERERRORSQUEUE=${PaperTrackerErrorsQueueName}'
         ApplicativeEnvFileChecksum: !Ref ApplicativeEnvFileChecksum
         MappedPaths: '/paper-tracker/*,/paper-tracker-private/*'
         ECSClusterName: !Ref ECSClusterName
@@ -623,6 +632,7 @@ Resources:
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
               - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ExternalChannelsToPaperChannelDryrunQueueName}'
+              - !Ref PaperTrackerErrorsQueueARN
           - Effect: Allow
             Action:
               - events:PutEvents

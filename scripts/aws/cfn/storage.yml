@@ -194,6 +194,18 @@ Resources:
         VisibilityTimeout: 1800
         DelaySeconds: 1
 
+  PaperTrackerErrorsQueue:
+    Type: AWS::CloudFormation::Stack
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
+      Parameters:
+        QueueName: !Sub '${ProjectName}-paper_tracker_errors'
+        AlarmSNSTopicName: !Ref AlarmSNSTopicName
+        VisibilityTimeout: 60
+        DelaySeconds: 1
+
 Outputs:
   EcsLogGroup:
     Value: !GetAtt PnPaperTrackerLogGroup.Outputs.LogGroupName
@@ -249,3 +261,10 @@ Outputs:
     Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueARN
   ExternalChannelToReworkEventValidationQueueURL:
     Value:  !GetAtt ExternalChannelToReworkEventValidationQueue.Outputs.QueueURL
+
+  PaperTrackerErrorsQueueName:
+    Value: !GetAtt PaperTrackerErrorsQueue.Outputs.QueueName
+  PaperTrackerErrorsQueueARN:
+    Value: !GetAtt PaperTrackerErrorsQueue.Outputs.QueueARN
+  PaperTrackerErrorsQueueURL:
+    Value: !GetAtt PaperTrackerErrorsQueue.Outputs.QueueURL
