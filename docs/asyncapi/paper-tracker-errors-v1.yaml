@@ -1,0 +1,121 @@
+asyncapi: '3.0.0'
+info:
+  title: Paper Tracker Errors
+  version: '1.0.0'
+  description: >-
+    Event schema for the errors produced by pn-paper-tracker. Every error
+    persisted on the PaperTrackingsErrors DynamoDB table is also published on
+    this queue.
+
+servers:
+  pn_sqs:
+    host: 'sqs.eu-south-1.amazonaws.com'
+    protocol: 'sqs'
+    description: PN SQS
+
+channels:
+  pn_paper_tracker_errors_sqs:
+    address: arn:aws:sqs:eu-south-1:123456789012:pn-paper_tracker_errors
+    description: SQS queue where pn-paper-tracker errors are published
+    servers:
+      - $ref: '#/servers/pn_sqs'
+    messages:
+      paper_tracker_error:
+        $ref: '#/components/messages/paper_tracker_error'
+
+operations:
+  PaperTrackerError:
+    action: send
+    channel:
+      $ref: '#/channels/pn_paper_tracker_errors_sqs'
+    summary: >-
+      Publish a pn-paper-tracker error on the errors queue
+    messages:
+      - $ref: '#/channels/pn_paper_tracker_errors_sqs/messages/paper_tracker_error'
+
+components:
+  messages:
+    paper_tracker_error:
+      name: paper_tracker_error
+      title: Paper tracker error
+      summary: >-
+        Error occurred while processing a paper tracking
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/paperTrackerErrorPayload'
+
+  schemas:
+    paperTrackerErrorPayload:
+      type: object
+      required:
+        - version
+        - trackingId
+        - created
+      properties:
+        version:
+          type: string
+          description: Version of the schema
+          example: "1.0.0"
+        trackingId:
+          type: string
+          description: Unique identifier of the paper tracking
+          example: "PREPARE_ANALOG_DOMICILE.IUN_ABCD-EFGH-IJKL-202409-A-1.RECINDEX_0.ATTEMPT_0"
+        created:
+          type: string
+          description: ISO-8601 UTC instant when the error has been created
+          example: "2024-09-20T17:00:00Z"
+        category:
+          type: string
+          description: >-
+            Category of the error. Mirrors the ErrorCategory enum of
+            pn-paper-tracker (e.g. TRACKING_ID_NOT_FOUND, NOT_RETRYABLE_EVENT_ERROR,
+            DATE_ERROR, ATTACHMENTS_ERROR, OCR_VALIDATION, DUPLICATED_EVENT, ...)
+          example: "ATTACHMENTS_ERROR"
+        type:
+          type: string
+          description: Severity of the error
+          enum:
+            - ERROR
+            - WARNING
+            - INFO
+          example: "ERROR"
+        flowThrow:
+          type: string
+          description: >-
+            Handler/flow that raised the error. Mirrors the FlowThrow enum of
+            pn-paper-tracker (e.g. INIT_TRACKING, SEQUENCE_VALIDATION,
+            DEMAT_VALIDATION, FINAL_EVENT_BUILDING, RETRY_PHASE, ...)
+          example: "SEQUENCE_VALIDATION"
+        eventThrow:
+          type: string
+          description: Status code of the event that raised the error
+          example: "RECRN001C"
+        eventIdThrow:
+          type: string
+          description: Identifier of the event that raised the error
+          example: "b1a2c3d4-1234-5678-9abc-def012345678"
+        productType:
+          type: string
+          description: >-
+            Product type of the paper tracking. Allowed values: AR, RIR, 890, RS, RIS
+          example: "AR"
+        details:
+          $ref: '#/components/schemas/paperTrackerErrorDetails'
+
+    paperTrackerErrorDetails:
+      type: object
+      properties:
+        cause:
+          type: string
+          description: >-
+            Cause of the error. Mirrors the ErrorCause enum of pn-paper-tracker
+            (e.g. VALUES_NOT_FOUND, VALUES_NOT_MATCHING, OCR_KO, INVALID_VALUES, ...)
+          example: "VALUES_NOT_FOUND"
+        message:
+          type: string
+          description: Human readable description of the error
+          example: "Status code not found"
+        additionalDetails:
+          type: object
+          description: Free form map with additional information about the error
+          additionalProperties: true
