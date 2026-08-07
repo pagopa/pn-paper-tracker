@@ -70,6 +70,7 @@ public class PnPaperTrackerConfigs {
         private String queueOcrInputsRegion;
         private String externalChannelOutputsQueue;
         private String externalChannelToPaperChannelDryRunQueue;
+        private String paperTrackerErrorsQueue;
     }
 
     @Data

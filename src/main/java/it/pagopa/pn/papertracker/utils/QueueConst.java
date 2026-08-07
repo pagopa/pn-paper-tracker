@@ -9,4 +9,5 @@ public class QueueConst {
     public static final String OCR_REQUEST_EVENT_TYPE = "OCR_REQUEST";
     public static final String DELIVERY_PUSH_EVENT_TYPE = "SEND_ANALOG_RESPONSE";
     public static final String TRACKER_QUEUE_PROXY_EVENT_TYPE = "QUEUE_PROXY";
+    public static final String PAPER_TRACKER_ERROR_EVENT_TYPE = "PAPER_TRACKER_ERROR";
 }
