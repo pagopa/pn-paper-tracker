@@ -8,7 +8,7 @@ public class PaperTrackerApplication {
 
 
     public static void main(String[] args) {
-        SpringApplication.run(PaperTrackerApplication.class, args);
+        SpringApplication.run(PaperTrackerApplication.class, args); 
     }
 
 }
