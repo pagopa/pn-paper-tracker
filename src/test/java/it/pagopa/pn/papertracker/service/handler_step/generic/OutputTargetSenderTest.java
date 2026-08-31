@@ -51,6 +51,26 @@ class OutputTargetSenderTest {
     private OutputTargetSender outputTargetSender;
 
     @Test
+    void testExecuteDisableTimelineEvents() {
+        // Arrange
+        SendEvent event = getSendEvent();
+        event.setStatusDetail("RECRN001C");
+        HandlerContext context = new HandlerContext();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        context.setPaperTrackings(paperTrackings);
+        context.setEventsToSend(Collections.singletonList(event));
+        when(config.isDisableTimelineEvents()).thenReturn(true);
+
+        // Act
+        outputTargetSender.execute(context).block();
+
+        // Assert
+        verify(eventBridgePublisher, never()).publish(any(PaperChannelUpdate.class));
+        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verifyNoInteractions(paperTrackingsDAO);
+    }
+
+    @Test
     void testSendToOutputTarget_SendToExternalChannelOutputs() {
         // Arrange
         SendEvent event = getSendEvent();

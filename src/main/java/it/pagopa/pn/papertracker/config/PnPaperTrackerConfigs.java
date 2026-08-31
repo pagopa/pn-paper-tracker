@@ -30,6 +30,7 @@ public class PnPaperTrackerConfigs {
     private Topics topics;
     private int maxPcRetryMock;
 
+    private boolean disableTimelineEvents = false;
     private List<String> enableOcrValidationFor = new ArrayList<>();
     private List<FileType> enableOcrValidationForFile = new ArrayList<>();
     private List<String> saveAndNotSendToDeliveryPush = new ArrayList<>();
