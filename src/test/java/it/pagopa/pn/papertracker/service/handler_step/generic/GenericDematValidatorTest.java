@@ -5,8 +5,9 @@ import it.pagopa.pn.papertracker.exception.PaperTrackerException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
@@ -36,7 +37,7 @@ class GenericDematValidatorTest {
     @Mock
     PnPaperTrackerConfigs cfg;
     @Mock
-    OcrMomProducer ocrMomProducer;
+    EventBridgePublisher eventBridgePublisher;
     @Mock
     SafeStorageClient safeStorageClient;
 
@@ -49,7 +50,7 @@ class GenericDematValidatorTest {
     @BeforeEach
     void setUp() {
         context = new HandlerContext();
-        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
+        OcrUtility ocrUtility = new OcrUtility(eventBridgePublisher, safeStorageClient, cfg, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("req-123");
         paperTrackings.setProductType(ProductType.AR.getValue());
@@ -99,6 +100,7 @@ class GenericDematValidatorTest {
         context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
         // Act
@@ -108,7 +110,7 @@ class GenericDematValidatorTest {
         // Assert
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
-        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any());
         assertTrue(context.isStopExecution());
     }
 
@@ -121,6 +123,7 @@ class GenericDematValidatorTest {
         context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
 
         // Act
@@ -130,7 +133,7 @@ class GenericDematValidatorTest {
         // Assert
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
-        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any());
         assertTrue(context.isStopExecution());
     }
 
@@ -149,7 +152,7 @@ class GenericDematValidatorTest {
         // Assert
         verifyNoInteractions(safeStorageClient);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
-        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, never()).publish(any());
         assertFalse(context.isStopExecution());
     }
 
@@ -160,6 +163,7 @@ class GenericDematValidatorTest {
         context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         context.getPaperTrackings().setEvents(List.of(getEvent("RECRN005C", null, "eventId1"), getEvent("RECRN005A", null, "eventId2"), getEvent("RECRN005B", "Plico", "eventId3")));
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
 
@@ -171,7 +175,7 @@ class GenericDematValidatorTest {
                 .verify();
 
         // Assert
-        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any());
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
@@ -192,7 +196,7 @@ class GenericDematValidatorTest {
         // Assert
         verify(safeStorageClient, never()).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
-        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, never()).publish(any());
         assertFalse(context.isStopExecution());
     }
 

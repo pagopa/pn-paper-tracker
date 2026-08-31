@@ -9,8 +9,8 @@ import it.pagopa.pn.papertracker.it.model.ProductTestCase;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.TestInstance;
@@ -53,7 +53,7 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
     protected SafeStorageClient safeStorageClient;
 
     @MockitoBean
-    protected OcrMomProducer ocrMomProducer;
+    protected EventBridgePublisher eventBridgePublisher;
 
     @MockitoBean
     protected DataVaultClient dataVaultClient;
@@ -100,14 +100,14 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
     protected void mockSendToOcr(ProductTestCase scenario) {
         if (Objects.nonNull(scenario.getExpected().getOcrDataPayload())) {
             Mockito.when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("Uri"));
-            Mockito.doNothing().when(ocrMomProducer).push(any(OcrEvent.class));
+            Mockito.when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         }
     }
 
 
-    protected void verifySentToOcr(ProductTestCase scenario, ArgumentCaptor<OcrEvent> ocrEventCaptor){
-        Mockito.verify(ocrMomProducer, times(scenario.getExpected().getSentToOcr())).push(ocrEventCaptor.capture());
-        List<OcrDataPayloadDTO> ocrEvents = ocrEventCaptor.getAllValues().stream().map(OcrEvent::getPayload).toList();
+    protected void verifySentToOcr(ProductTestCase scenario, ArgumentCaptor<OcrDataPayloadDTO> ocrEventCaptor){
+        Mockito.verify(eventBridgePublisher, times(scenario.getExpected().getSentToOcr())).publish(ocrEventCaptor.capture());
+        List<OcrDataPayloadDTO> ocrEvents = ocrEventCaptor.getAllValues();
         List<OcrDataPayloadDTO> expected = scenario.getExpected().getOcrDataPayload();
         if(Objects.nonNull(expected)) {
             Assertions.assertEquals(expected.size(), ocrEvents.size());

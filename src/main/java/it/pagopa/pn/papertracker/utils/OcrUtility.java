@@ -3,13 +3,11 @@ package it.pagopa.pn.papertracker.utils;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DataDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.DetailsDTO;
 import com.sngular.apigenerator.asyncapi.business_model.model.event.OcrDataPayloadDTO;
-import it.pagopa.pn.api.dto.events.GenericEventHeader;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -29,15 +27,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN010;
-import static it.pagopa.pn.papertracker.utils.QueueConst.OCR_REQUEST_EVENT_TYPE;
-import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class OcrUtility {
 
-    private final OcrMomProducer ocrMomProducer;
+    private final EventBridgePublisher eventBridgePublisher;
     private final SafeStorageClient safeStorageClient;
     private final PnPaperTrackerConfigs cfg;
     private final PaperTrackingsDAO paperTrackingsDAO;
@@ -126,9 +122,10 @@ public class OcrUtility {
         ocrRequests.add(getOcrRequest(documentType, event.getId(), attachmentEventId, attachment.getUri(), now));
 
         return safeStorageClient.getSafeStoragePresignedUrl(attachment.getUri())
-                .doOnNext(presignedUrl -> {
-                    OcrEvent ocrEvent = buildOcrEvent(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(documentType), event);
-                    ocrMomProducer.push(ocrEvent);
+                .flatMap(presignedUrl -> {
+                    OcrDataPayloadDTO ocrPayload = buildOcrPayload(paperTracking, ocrRequestId, presignedUrl, DocumentTypeEnum.fromValue(documentType), event);
+                    return eventBridgePublisher.publish(ocrPayload)
+                            .thenReturn(presignedUrl);
                 });
     }
 
@@ -165,14 +162,7 @@ public class OcrUtility {
         return paperTracking;
     }
 
-    private OcrEvent buildOcrEvent(PaperTrackings paperTracking, String ocrRequestId, String presignedUrl, DocumentTypeEnum documentType, Event event) {
-
-        GenericEventHeader ocrHeader = GenericEventHeader.builder()
-                .publisher(PUBLISHER)
-                .eventId(UUID.randomUUID().toString())
-                .createdAt(Instant.now())
-                .eventType(OCR_REQUEST_EVENT_TYPE)
-                .build();
+    private OcrDataPayloadDTO buildOcrPayload(PaperTrackings paperTracking, String ocrRequestId, String presignedUrl, DocumentTypeEnum documentType, Event event) {
 
         DetailsDTO.DeliveryFailureCause deliveryFailureCause = StringUtils.isNotBlank(paperTracking.getPaperStatus().getDeliveryFailureCause()) ?
                 DetailsDTO.DeliveryFailureCause.valueOf(paperTracking.getPaperStatus().getDeliveryFailureCause()) : null;
@@ -184,7 +174,7 @@ public class OcrUtility {
                 .map(instant -> LocalDateTime.ofInstant(instant, ZoneOffset.UTC))
                 .orElse(null);
 
-        OcrDataPayloadDTO ocrDataPayload = OcrDataPayloadDTO.builder()
+        return OcrDataPayloadDTO.builder()
                 .version("v1")
                 .commandType(OcrDataPayloadDTO.CommandType.POSTAL)
                 .commandId(ocrRequestId)
@@ -204,8 +194,6 @@ public class OcrUtility {
                         )
                         .build())
                 .build();
-
-        return new OcrEvent(ocrHeader, ocrDataPayload);
     }
 
     private DataDTO.ProductType getProductType(PaperTrackings paperTracking) {

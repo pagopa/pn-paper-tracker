@@ -6,8 +6,8 @@ import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -38,7 +38,7 @@ class RECAG012EventCheckerTest {
     @Mock
     PnPaperTrackerConfigs cfg;
     @Mock
-    OcrMomProducer ocrMomProducer;
+    EventBridgePublisher eventBridgePublisher;
     @Mock
     SafeStorageClient safeStorageClient;
 
@@ -49,7 +49,7 @@ class RECAG012EventCheckerTest {
 
     @BeforeEach
     void setUp() {
-        OcrUtility ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
+        OcrUtility ocrUtility = new OcrUtility(eventBridgePublisher, safeStorageClient, cfg, paperTrackingsDAO);
         recag012EventChecker = new RECAG012EventChecker(ocrUtility);
         context = new HandlerContext();
         context.setTrackingId("trackingId");
@@ -68,6 +68,7 @@ class RECAG012EventCheckerTest {
         //Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
@@ -84,9 +85,9 @@ class RECAG012EventCheckerTest {
         //Assert
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("uri.pdf");
 
-        ArgumentCaptor<OcrEvent> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-        verify(ocrMomProducer, times(1)).push(ocrEventArgumentCaptor.capture());
-        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue().getPayload();
+        ArgumentCaptor<OcrDataPayloadDTO> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrDataPayloadDTO.class);
+        verify(eventBridgePublisher, times(1)).publish(ocrEventArgumentCaptor.capture());
+        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue();
         assertEquals("trackingId#eventIdRECAG012#23L", pushedEventPayload.getCommandId());
         assertEquals(DataDTO.ProductType._890, pushedEventPayload.getData().getProductType());
         assertEquals(DataDTO.DocumentType._23L, pushedEventPayload.getData().getDocumentType());
@@ -131,7 +132,7 @@ class RECAG012EventCheckerTest {
 
         //Assert
         verifyNoInteractions(safeStorageClient);
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
 
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
@@ -158,7 +159,7 @@ class RECAG012EventCheckerTest {
 
         //Assert
         verifyNoInteractions(safeStorageClient);
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         verifyNoInteractions(paperTrackingsDAO);
 
         assertTrue(context.isNeedToSendRECAG012A());
@@ -179,7 +180,7 @@ class RECAG012EventCheckerTest {
 
         //Assert
         verifyNoInteractions(safeStorageClient);
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         verifyNoInteractions(paperTrackingsDAO);
 
         assertFalse(context.isNeedToSendRECAG012A());
@@ -190,6 +191,7 @@ class RECAG012EventCheckerTest {
         //Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
@@ -206,9 +208,9 @@ class RECAG012EventCheckerTest {
         //Assert
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("uri.pdf");
 
-        ArgumentCaptor<OcrEvent> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-        verify(ocrMomProducer, times(1)).push(ocrEventArgumentCaptor.capture());
-        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue().getPayload();
+        ArgumentCaptor<OcrDataPayloadDTO> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrDataPayloadDTO.class);
+        verify(eventBridgePublisher, times(1)).publish(ocrEventArgumentCaptor.capture());
+        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue();
         assertEquals("trackingId#eventIdRECAG012#23L", pushedEventPayload.getCommandId());
         assertEquals(DataDTO.ProductType._890, pushedEventPayload.getData().getProductType());
         assertEquals(DataDTO.DocumentType._23L, pushedEventPayload.getData().getDocumentType());
@@ -240,6 +242,7 @@ class RECAG012EventCheckerTest {
         //Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue()));
@@ -256,11 +259,11 @@ class RECAG012EventCheckerTest {
         //Assert
         verify(safeStorageClient, times(2)).getSafeStoragePresignedUrl("uri.pdf");
 
-        ArgumentCaptor<OcrEvent> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-        verify(ocrMomProducer, times(2)).push(ocrEventArgumentCaptor.capture());
-        List<OcrEvent> pushedEvents = ocrEventArgumentCaptor.getAllValues();
-        OcrDataPayloadDTO secondPushedEventPayload = pushedEvents.getFirst().getPayload();
-        OcrDataPayloadDTO firstPushedEventPayload = pushedEvents.getLast().getPayload();
+        ArgumentCaptor<OcrDataPayloadDTO> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrDataPayloadDTO.class);
+        verify(eventBridgePublisher, times(2)).publish(ocrEventArgumentCaptor.capture());
+        List<OcrDataPayloadDTO> pushedEvents = ocrEventArgumentCaptor.getAllValues();
+        OcrDataPayloadDTO secondPushedEventPayload = pushedEvents.getFirst();
+        OcrDataPayloadDTO firstPushedEventPayload = pushedEvents.getLast();
         assertEquals("trackingId#eventIdRECAG012#ARCAD", firstPushedEventPayload.getCommandId());
         assertEquals("presigned-url-1", firstPushedEventPayload.getData().getDetails().getAttachment());
         assertEquals("RL123", firstPushedEventPayload.getData().getDetails().getRegisteredLetterCode());
@@ -303,6 +306,7 @@ class RECAG012EventCheckerTest {
         //Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue()));
@@ -319,9 +323,9 @@ class RECAG012EventCheckerTest {
         //Assert
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("uri.pdf");
 
-        ArgumentCaptor<OcrEvent> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrEvent.class);
-        verify(ocrMomProducer, times(1)).push(ocrEventArgumentCaptor.capture());
-        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue().getPayload();
+        ArgumentCaptor<OcrDataPayloadDTO> ocrEventArgumentCaptor = ArgumentCaptor.forClass(OcrDataPayloadDTO.class);
+        verify(eventBridgePublisher, times(1)).publish(ocrEventArgumentCaptor.capture());
+        OcrDataPayloadDTO pushedEventPayload = ocrEventArgumentCaptor.getValue();
         assertEquals("trackingId#eventIdRECAG012#23L", pushedEventPayload.getCommandId());
         assertEquals("presigned-url-1", pushedEventPayload.getData().getDetails().getAttachment());
         assertEquals("RL123", pushedEventPayload.getData().getDetails().getRegisteredLetterCode());
@@ -364,7 +368,7 @@ class RECAG012EventCheckerTest {
 
         //Assert
         verifyNoInteractions(safeStorageClient);
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         assertFalse(context.isNeedToSendRECAG012A());
     }
 
@@ -386,7 +390,7 @@ class RECAG012EventCheckerTest {
 
         //Assert
         verifyNoInteractions(safeStorageClient);
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         assertFalse(context.isNeedToSendRECAG012A());
     }
 
@@ -395,6 +399,7 @@ class RECAG012EventCheckerTest {
         //Arrange
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
         context.getPaperTrackings().getValidationConfig().setRequiredAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.CAD.getValue(), DocumentTypeEnum.PLICO.getValue()));
         context.getPaperTrackings().getValidationConfig().setSendOcrAttachmentsRefinementStock890(List.of(DocumentTypeEnum._23L.getValue(), DocumentTypeEnum.ARCAD.getValue(), DocumentTypeEnum.PLICO.getValue()));
@@ -414,7 +419,7 @@ class RECAG012EventCheckerTest {
         //Assert
         verify(safeStorageClient, times(3)).getSafeStoragePresignedUrl("uri.pdf");
 
-        verify(ocrMomProducer, times(3)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(3)).publish(any());
 
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());

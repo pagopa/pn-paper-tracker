@@ -3,9 +3,8 @@ package it.pagopa.pn.papertracker.utils;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
-import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
-import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
@@ -18,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class OcrUtilityTest {
     @Mock
-    OcrMomProducer ocrMomProducer;
+    EventBridgePublisher eventBridgePublisher;
     @Mock
     SafeStorageClient safeStorageClient;
     @Mock
@@ -49,7 +49,7 @@ class OcrUtilityTest {
 
     @BeforeEach
     void setUp() {
-        ocrUtility = new OcrUtility(ocrMomProducer, safeStorageClient, cfg, paperTrackingsDAO);
+        ocrUtility = new OcrUtility(eventBridgePublisher, safeStorageClient, cfg, paperTrackingsDAO);
         context = new HandlerContext();
         paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("trackingId");
@@ -75,6 +75,7 @@ class OcrUtilityTest {
         event.setStatusCode(RECAG012.name());
         event.setStatusTimestamp(Instant.now());
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         // Act
@@ -83,7 +84,7 @@ class OcrUtilityTest {
                 .verifyComplete();
 
         // Assert
-        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any());
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
@@ -108,7 +109,7 @@ class OcrUtilityTest {
                 .verifyComplete();
 
         // Assert
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
@@ -135,7 +136,7 @@ class OcrUtilityTest {
                 .verifyComplete();
 
         // Assert
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
@@ -157,7 +158,7 @@ class OcrUtilityTest {
                 .verifyComplete();
 
         // Assert
-        verifyNoInteractions(ocrMomProducer);
+        verify(eventBridgePublisher, never()).publish(any());
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
@@ -179,6 +180,7 @@ class OcrUtilityTest {
         event.setStatusCode(RECAG012.name());
         event.setStatusTimestamp(Instant.now());
         when(safeStorageClient.getSafeStoragePresignedUrl("uri.pdf")).thenReturn(Mono.just("presigned-url-1"));
+        when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
         // Act
@@ -187,7 +189,7 @@ class OcrUtilityTest {
                 .verifyComplete();
 
         // Assert
-        verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        verify(eventBridgePublisher, times(1)).publish(any());
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
