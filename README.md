@@ -83,9 +83,10 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
 | EVENT | OUT | pn-external_channel_to_paper_channel_dryrun | SQS         | PRODUCE | -                                                                       | Produzione eventi smistati verso pn-paper-channel      |
 | EVENT | OUT | pn-CoreEventBus                             | EventBridge | PUBLISH | -                                                                       | Pubblicazione eventi su EventBridge                    |
+| EVENT | OUT | pn-paper_tracker_errors                     | SQS         | PRODUCE | -                                                                       | Pubblicazione errori di tracciamento sulla coda errori |
 
 * **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
-* **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml)
+* **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml), [paper-tracker-errors-v1.yaml](docs/asyncapi/paper-tracker-errors-v1.yaml)
 
 ## Allarmi e monitoraggio
 
@@ -117,6 +118,9 @@ Le principali configurazioni del microservizio sono gestite tramite variabili d'
 | [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
 | [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
 | [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
+| PN_PAPERTRACKER_DISABLETIMELINEEVENTS                                                                                                                                                     | ENV      | `true`, `false` | Se `true`, disabilita globalmente l'invio di eventi in timeline verso pn-delivery-push. Default: `false` |
+| PN_PAPERTRACKER_TOPICS_PAPERTRACKERERRORSQUEUE                                                                                                                                            | ENV      | -      | Nome della coda SQS su cui vengono pubblicati gli errori di tracciamento                 |
+| PaperTrackerErrorsQueueName                                                                                                                                                               | CloudFormation | - | Nome della coda SQS degli errori; popola `PN_PAPERTRACKER_TOPICS_PAPERTRACKERERRORSQUEUE` |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
