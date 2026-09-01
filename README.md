@@ -2,8 +2,10 @@
 
 ## Indice
 - [Descrizione](#descrizione)
+- [Tecnologie Utilizzate](#tecnologie-utilizzate)
 - [Architettura](#architettura)
 - [Interfacce del Servizio](#interfacce-del-servizio)
+- [Allarmi e monitoraggio](#allarmi-e-monitoraggio)
 - [Configurazione](#configurazione)
 - [Esecuzione](#esecuzione)
 
@@ -33,6 +35,18 @@ Questa riorganizzazione permette di:
 * Ridurre la complessità di pn-paper-channel
 * Migliorare la manutenibilità
 * Introdurre nuove validazioni OCR
+
+## Tecnologie Utilizzate
+### Stack Tecnologico
+* **Java 21** con **Spring Boot 3.x** e **WebFlux**
+* **AWS SDK v2** per integrazione servizi AWS
+* **OpenAPI 3.0** per definizione contratti API
+* **AsyncAPI 3.0** per definizione DTO code
+* **Maven** per build management
+
+### Servizi utilizzati
+* **Amazon DynamoDB:** DB principale per tracciamento spedizioni
+* **Amazon SQS:** messaggistica asincrona
 
 ## Architettura
 
@@ -72,6 +86,22 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 
 * **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
 * **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml)
+
+## Allarmi e monitoraggio
+
+| Tipo      | Nome                             | Descrizione                                                                                                    |
+|-----------|----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| ALARM     | pn-paper-tracker-890Errors-Alarm | Allarme su errori di tipo 890 (Atti Giudiziari). Scatta se il numero di errori supera la soglia configurata.   |
+| ALARM     | pn-paper-tracker-RISErrors-Alarm | Allarme su errori di tipo RIS (Raccomandata Internazionale Semplice).                                          |
+| ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
+| ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
+| ALARM     | pn-paper-tracker-RIRErrors-Alarm | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                           |
+| LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
+
+**Note operative:**
+- Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
+
+Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
 
 ## Configurazione
 
