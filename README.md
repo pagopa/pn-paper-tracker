@@ -47,6 +47,7 @@ Questa riorganizzazione permette di:
 ### Servizi utilizzati
 * **Amazon DynamoDB:** DB principale per tracciamento spedizioni
 * **Amazon SQS:** messaggistica asincrona
+* **Amazon EventBridge:** bus eventi per pubblicazione degli eventi validati
 
 ## Architettura
 
@@ -83,9 +84,11 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
 | EVENT | OUT | pn-external_channel_to_paper_channel_dryrun | SQS         | PRODUCE | -                                                                       | Produzione eventi smistati verso pn-paper-channel      |
 | EVENT | OUT | pn-CoreEventBus                             | EventBridge | PUBLISH | -                                                                       | Pubblicazione eventi su EventBridge                    |
+| API   | OUT | pn-safe-storage                             | REST        | GET     | /safe-storage-private/v1/files/{fileKey}                                | Recupero file allegati alla spedizione                 |
+| EVENT | OUT | pn-external_channel_to_paper_tracker        | SQS         | PRODUCE | -                                                                       | Routing eventi verso pn-paper-tracker in modalità RUN e DRY |
 
 * **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
-* **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml)
+* **AsyncAPI**: [internal-datalake-v1.yaml](docs/asyncapi/internal-datalake-v1.yaml), [external-datalake-v1.yaml](docs/asyncapi/external-datalake-v1.yaml)
 
 ## Allarmi e monitoraggio
 
@@ -117,6 +120,17 @@ Le principali configurazioni del microservizio sono gestite tramite variabili d'
 | [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
 | [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
 | [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
+| [PN_PAPERTRACKER_COMPIUTAGIACENZAARDURATION](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L23)              | ENV      | -      | Durata della giacenza compiuta AR                                                        |
+| [PN_PAPERTRACKER_ENABLETRUNCATEDDATEFORREFINEMENTCHECK](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L26)   | ENV      | -      | Abilita troncamento data per controllo perfezionamento                                   |
+| [PN_PAPERTRACKER_REFINEMENTDURATION](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L28)                      | ENV      | -      | Durata del perfezionamento                                                               |
+| [PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L31)               | ENV      | -      | TTL delle entità di tracking                                                             |
+| [PN_PAPERTRACKER_PAPERTRACKINGSERRORSTTLDURATION](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L34)         | ENV      | -      | TTL degli errori di tracking                                                             |
+| [PN_PAPERTRACKER_MAXPCRETRYMOCK](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L37)                          | ENV      | -      | Numero massimo di retry mock per paper-channel                                           |
+| [PN_PAPERTRACKER_SENDOCRATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L48)    | ENV      | -      | Allegati da inviare all'OCR per il perfezionamento giacenza 890                          |
+| [PN_PAPERTRACKER_STRICTFINALVALIDATIONSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L70)           | ENV      | -      | Abilita validazione finale strict per 890                                                |
+| [PN_PAPERTRACKER_STRICTDELIVERYFAILURECAUSE](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L76)              | ENV      | -      | Abilita validazione strict su deliveryFailureCause                                       |
+| [PN_PAPERTRACKER_INTERNALEVENTS](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L80)                          | ENV      | -      | StatusCode gestiti internamente senza inoltro                                            |
+| [PN_PAPERTRACKER_REDRIVEENABLEDDOMAINS](https://github.com/pagopa/pn-paper-tracker/blob/06db37cf0b0faa61ff38b557e51854830396d43b/scripts/aws/cfn/application-dev.env#L89)                   | ENV      | -      | Domini abilitati al redrive degli eventi                                                 |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
