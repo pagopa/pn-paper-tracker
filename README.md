@@ -6,7 +6,6 @@
 - [Architettura](#architettura)
 - [Interfacce del Servizio](#interfacce-del-servizio)
 - [Allarmi e monitoraggio](#allarmi-e-monitoraggio)
-- [Configurazione](#configurazione)
 - [Esecuzione](#esecuzione)
 
 ## Descrizione
@@ -102,23 +101,6 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 - Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
 
 Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
-
-## Configurazione
-
-Le principali configurazioni del microservizio sono gestite tramite variabili d'ambiente:
-
-| Nome                                                                                                                                                                                      | Sorgente | Valori | Descrizione                                                                              |
-|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------|--------|------------------------------------------------------------------------------------------|
-| [PN_PAPERTRACKER_ENABLEOCRVALIDATIONFOR](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L4)                 | ENV      | -      | Abilita l'OCR per singolo prodotto                                                       |
-| [PN_PAPERTRACKER_OCRFILTERTEMPORAL](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L8)                      | ENV      | -      | Abilita l'OCR in modalità RUN per spedizioni in specifiche fasce orarie                  |
-| [PN_PAPERTRACKER_OCRFILTERUNIFIEDDELIVERYDRIVER](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L13)        | ENV      | -      | Abilita l'OCR in modalità RUN per determinati recapitisti                                |
-| [PN_PAPERTRACKER_ENABLEOCRVALIDATIONFORFILE](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L15)            | ENV      | -      | Estensione file abilitata per la validazione OCR                                         |
-| [PN_PAPERTRACKER_SAVEANDNOTSENDTODELIVERYPUSH](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L20)          | ENV      | -      | StatusCode che non invia a pn-delivery-push ma vengono salvati nel tracking              |
-| [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
-| [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
-| [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
-
-Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
 ## Esecuzione
 **Prerequisiti**
