@@ -429,6 +429,16 @@
 										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
 									</supplier>
 								</specFile>
+								<specFile>
+									<filePath>docs/asyncapi/paper-tracker-errors-v1.yaml</filePath>
+									<supplier>
+										<ids>PaperTrackerError</ids>
+										<classNamePostfix>ErrorsProducer</classNamePostfix>
+										<modelNameSuffix>DTO</modelNameSuffix>
+										<apiPackage>com.sngular.apigenerator.asyncapi.business_model.model.event.producer</apiPackage>
+										<modelPackage>com.sngular.apigenerator.asyncapi.business_model.model.event</modelPackage>
+									</supplier>
+								</specFile>
 							</specFiles>
 							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
 						</configuration>
