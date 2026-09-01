@@ -22,19 +22,25 @@ public class PaperTrackerOutputServiceImpl implements PaperTrackerOutputService 
 
     @Override
     public Mono<PaperTrackerOutputsResponse> retrieveTrackingOutputs(TrackingsRequest trackingsRequest) {
-        PaperTrackerOutputsResponse paperTrackerOutputsResponse = new PaperTrackerOutputsResponse();
         return Flux.fromIterable(trackingsRequest.getTrackingIds())
-                .flatMap(trackingId -> paperTrackerDryRunOutputsDAO.retrieveOutputEvents(trackingId)
-                        .map(mapper::toDtoPaperTrackerOutput)
-                        .collectList()
-                        .map(paperTrackerDryRunOutputs -> {
-                            PaperTrackerOutputsResponseResultsInner paperTrackerOutputsResponseResultInner = new PaperTrackerOutputsResponseResultsInner();
-                            paperTrackerOutputsResponseResultInner.setTrackingId(trackingId);
-                            paperTrackerOutputsResponseResultInner.setOutputs(paperTrackerDryRunOutputs);
-                            return paperTrackerOutputsResponseResultInner;
-                        }))
+                .flatMap(this::buildResultForTrackingId)
                 .collectList()
-                .doOnNext(paperTrackerOutputsResponse::setResults)
-                .map(paperTrackerOutputsResponseResultInners -> paperTrackerOutputsResponse);
+                .map(results -> {
+                    PaperTrackerOutputsResponse response = new PaperTrackerOutputsResponse();
+                    response.setResults(results);
+                    return response;
+                });
+    }
+
+    private Mono<PaperTrackerOutputsResponseResultsInner> buildResultForTrackingId(String trackingId) {
+        return paperTrackerDryRunOutputsDAO.retrieveOutputEvents(trackingId)
+                .map(mapper::toDtoPaperTrackerOutput)
+                .collectList()
+                .map(outputs -> {
+                    PaperTrackerOutputsResponseResultsInner result = new PaperTrackerOutputsResponseResultsInner();
+                    result.setTrackingId(trackingId);
+                    result.setOutputs(outputs);
+                    return result;
+                });
     }
 }
