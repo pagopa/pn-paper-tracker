@@ -4,12 +4,16 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsR
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
+import com.sngular.apigenerator.asyncapi.business_model.model.event.PaperTrackerErrorPayloadDTO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.middleware.queue.model.PaperTrackerErrorEvent;
+import it.pagopa.pn.papertracker.middleware.queue.producer.PaperTrackerErrorsMomProducer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,11 +36,14 @@ class PaperTrackerErrorServiceImplTest {
     @Spy
     private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
 
+    @Mock
+    private PaperTrackerErrorsMomProducer paperTrackerErrorsMomProducer;
+
     private PaperTrackerErrorServiceImpl paperTrackerErrorService;
 
     @BeforeEach
     void setUp() {
-        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO,mapper);
+        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO, mapper, paperTrackerErrorsMomProducer);
     }
 
     @Test
@@ -136,6 +143,17 @@ class PaperTrackerErrorServiceImplTest {
     void insertPaperTrackingsErrorsSuccessfully() {
         //ARRANGE
         PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        paperTrackingsErrors.setTrackingId("tracking1");
+        paperTrackingsErrors.setCreated(java.time.Instant.parse("2024-09-20T17:00:00Z"));
+        paperTrackingsErrors.setType(ErrorType.ERROR);
+        paperTrackingsErrors.setErrorCategory(ErrorCategory.ATTACHMENTS_ERROR);
+        paperTrackingsErrors.setFlowThrow(FlowThrow.SEQUENCE_VALIDATION);
+        paperTrackingsErrors.setEventThrow("RECRN001C");
+        paperTrackingsErrors.setProductType("AR");
+        paperTrackingsErrors.setDetails(ErrorDetails.builder()
+                .cause(ErrorCause.VALUES_NOT_FOUND)
+                .message("message")
+                .build());
         when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
 
         //ACT
@@ -146,5 +164,36 @@ class PaperTrackerErrorServiceImplTest {
                 .expectNext(paperTrackingsErrors)
                 .verifyComplete();
         verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
+
+        ArgumentCaptor<PaperTrackerErrorEvent> captor = ArgumentCaptor.forClass(PaperTrackerErrorEvent.class);
+        verify(paperTrackerErrorsMomProducer, times(1)).push(captor.capture());
+        PaperTrackerErrorEvent sentEvent = captor.getValue();
+        Assertions.assertEquals("tracking1", sentEvent.getPayload().getTrackingId());
+        Assertions.assertEquals("2024-09-20T17:00:00Z", sentEvent.getPayload().getCreated());
+        Assertions.assertEquals(PaperTrackerErrorPayloadDTO.Type.ERROR, sentEvent.getPayload().getType());
+        Assertions.assertEquals("ATTACHMENTS_ERROR", sentEvent.getPayload().getCategory());
+        Assertions.assertEquals("SEQUENCE_VALIDATION", sentEvent.getPayload().getFlowThrow());
+        Assertions.assertEquals("AR", sentEvent.getPayload().getProductType());
+        Assertions.assertEquals("VALUES_NOT_FOUND", sentEvent.getPayload().getDetails().getCause());
+    }
+
+    @Test
+    void insertPaperTrackingsErrorsDoesNotFailWhenQueuePushFails() {
+        //ARRANGE
+        PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        paperTrackingsErrors.setTrackingId("tracking1");
+        paperTrackingsErrors.setCreated(java.time.Instant.parse("2024-09-20T17:00:00Z"));
+        when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
+        doThrow(new RuntimeException("SQS KO")).when(paperTrackerErrorsMomProducer).push(any(PaperTrackerErrorEvent.class));
+
+        //ACT
+        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
+
+        //ASSERT
+        StepVerifier.create(response)
+                .expectNext(paperTrackingsErrors)
+                .verifyComplete();
+        verify(paperTrackingsErrorsDAO, times(1)).insertError(paperTrackingsErrors);
+        verify(paperTrackerErrorsMomProducer, times(1)).push(any(PaperTrackerErrorEvent.class));
     }
 }

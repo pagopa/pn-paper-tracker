@@ -48,6 +48,11 @@ public class OutputTargetSender implements HandlerStep {
     public Mono<Void> execute(HandlerContext context) {
         log.info("Executing OutputTargetSender step for trackingId: {}", context.getTrackingId());
 
+        if (configs.isDisableTimelineEvents()) {
+            log.info("Timeline events sending is disabled globally. Skipping OutputTargetSender step for trackingId: {}", context.getTrackingId());
+            return Mono.empty();
+        }
+
         List<SendEvent> filteredEvent = context.getEventsToSend().stream()
                 .filter(sendEvent -> !configs.getSaveAndNotSendToDeliveryPush().contains(sendEvent.getStatusDetail()))
                 .toList();
