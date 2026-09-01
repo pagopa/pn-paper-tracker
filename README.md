@@ -89,14 +89,15 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 
 ## Allarmi e monitoraggio
 
-| Tipo      | Nome                             | Descrizione                                                                                                    |
-|-----------|----------------------------------|----------------------------------------------------------------------------------------------------------------|
-| ALARM     | pn-paper-tracker-890Errors-Alarm | Allarme su errori di tipo 890 (Atti Giudiziari). Scatta se il numero di errori supera la soglia configurata.   |
-| ALARM     | pn-paper-tracker-RISErrors-Alarm | Allarme su errori di tipo RIS (Raccomandata Internazionale Semplice).                                          |
-| ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
-| ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
-| ALARM     | pn-paper-tracker-RIRErrors-Alarm | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                           |
-| LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
+| Tipo  | Nome                                            | Descrizione                                                                                                                                                                                                       |
+|-------|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ALARM | pn-paper-tracker-890Errors-Alarm                | Allarme su errori di tipo 890 (Atti Giudiziari). Scatta se il numero di errori supera la soglia configurata.                                                                                                      |
+| ALARM | pn-paper-tracker-RISErrors-Alarm                | Allarme su errori di tipo RIS (Raccomandata Internazionale Semplice).                                                                                                                                             |
+| ALARM | pn-paper-tracker-ARErrors-Alarm                 | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                                                                                                                              |
+| ALARM | pn-paper-tracker-RSErrors-Alarm                 | Allarme su errori di tipo RS (Raccomandata Semplice).                                                                                                                                                             |
+| ALARM | pn-paper-tracker-RIRErrors-Alarm                | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                                                                                                                              |
+| ALARM | pn-paper-tracker-TrackingIdNotFoundErrors-Alarm | Allarme su errori con `errorCategory = TRACKING_ID_NOT_FOUND`. Scatta se il conteggio degli errori supera la soglia configurata (`TrackingIdNotFoundErrorThreshold`, default 300) nell'intervallo di valutazione. |
+| LOG   | /aws/ecs/pn-paper-tracker                       | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                                                                                                                           |
 
 **Note operative:**
 - Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
@@ -117,6 +118,10 @@ Le principali configurazioni del microservizio sono gestite tramite variabili d'
 | [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
 | [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
 | [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
+| TrackingIdNotFoundErrorThreshold                                                                                                                                                          | CloudFormation | Numero intero (default: `300`) | Soglia del numero di errori `TRACKING_ID_NOT_FOUND` che attiva l'allarme `TrackingIdNotFoundErrors`. |
+| TrackingIdNotFoundEvaluationPeriods                                                                                                                                                       | CloudFormation | Numero intero (default: `12`)  | Numero di periodi di valutazione (da 600 s ciascuno) usati dall'allarme `TrackingIdNotFoundErrors`. |
+| TrackingIdNotFoundDatapointsToAlarm                                                                                                                                                       | CloudFormation | Numero intero (default: `1`)   | Numero minimo di datapoints in breach necessari ad attivare l'allarme `TrackingIdNotFoundErrors`.   |
+| TrackingIdNotFoundTreatMissingData                                                                                                                                                        | CloudFormation | Stringa (default: `ignore`)    | Comportamento dell'allarme `TrackingIdNotFoundErrors` in assenza di dati nel periodo di valutazione. |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
