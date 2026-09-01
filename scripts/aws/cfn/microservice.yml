@@ -483,6 +483,26 @@ Parameters:
     Description: 'Where clause to filter RIS errors in the custom metric query'
     Default: "errorCategory != 'OCR_VALIDATION'"
 
+  TrackingIdNotFoundErrorThreshold:
+    Type: Number
+    Description: 'Threshold for TrackingIdNotFound errors to trigger the alarm'
+    Default: 300
+
+  TrackingIdNotFoundEvaluationPeriods:
+    Type: Number
+    Description: 'Number of evaluation periods for TrackingIdNotFound errors alarm'
+    Default: 12
+
+  TrackingIdNotFoundDatapointsToAlarm:
+    Type: Number
+    Description: 'Number of datapoints to alarm for TrackingIdNotFound errors alarm'
+    Default: 1
+
+  TrackingIdNotFoundTreatMissingData:
+    Type: String
+    Description: 'TreatMissingData for TrackingIdNotFound errors alarm'
+    Default: 'ignore'
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -988,5 +1008,27 @@ Resources:
             SELECT SUM(ERROR_COUNT)
             FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
             WHERE ${RIRWhereClause} AND productType = 'RIR'
+          ReturnData: true
+          Period: 600
+
+  PaperTrackerTrackingIdNotFoundErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-paper-tracker-TrackingIdNotFoundErrors-Alarm"
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: !Ref TrackingIdNotFoundErrorThreshold
+      OKActions:
+        - !Ref AlarmSNSTopicArn
+      AlarmActions:
+        - !Ref AlarmSNSTopicArn
+      EvaluationPeriods: !Ref TrackingIdNotFoundEvaluationPeriods
+      DatapointsToAlarm: !Ref TrackingIdNotFoundDatapointsToAlarm
+      TreatMissingData: !Ref TrackingIdNotFoundTreatMissingData
+      Metrics:
+        - Id: q1
+          Expression: |
+            SELECT SUM(ERROR_COUNT)
+            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
+            WHERE errorCategory = 'TRACKING_ID_NOT_FOUND'
           ReturnData: true
           Period: 600
