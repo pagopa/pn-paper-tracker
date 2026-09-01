@@ -6,6 +6,7 @@
 - [Architettura](#architettura)
 - [Interfacce del Servizio](#interfacce-del-servizio)
 - [Allarmi e monitoraggio](#allarmi-e-monitoraggio)
+- [Configurazioni](#configurazioni)
 - [Esecuzione](#esecuzione)
 
 ## Descrizione
@@ -101,6 +102,26 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 - Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
 
 Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
+
+## Configurazioni
+
+| Nome                                                    | Sorgente       | Valori                                                       | Descrizione                                                                                                                            |
+|---------------------------------------------------------|----------------|--------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES`               | ENV            | `data_attivazione;PRODOTTO:RUN\|DRY`                         | Modalità di processamento per prodotto con attivazione temporalizzata                                                                  |
+| `PN_PAPERTRACKER_ENABLEOCRVALIDATIONFOR`                | ENV            | `data_attivazione;PRODOTTO:RUN\|DRY`                         | Abilita la validazione OCR per singolo prodotto con relativa modalità                                                                  |
+| `PN_PAPERTRACKER_OCRFILTERTEMPORAL`                     | ENV            | `CRON_EXPRESSION \| DISABLED`                                | Restringe l'OCR in modalità RUN alle fasce orarie definite dall'espressione CRON                                                       |
+| `PN_PAPERTRACKER_OCRFILTERUNIFIEDDELIVERYDRIVER`        | ENV            | `Fulmine \| Poste \| Sailpost \| PostAndService \| DISABLED` | Restringe l'OCR in modalità RUN ai recapitisti indicati                                                                                |
+| `PN_PAPERTRACKER_ENABLEOCRVALIDATIONFORFILE`            | ENV            | Es. `PDF`                                                    | Estensione file abilitata per la validazione OCR                                                                                       |
+| `PN_PAPERTRACKER_SAVEANDNOTSENDTODELIVERYPUSH`          | ENV            | CommaDelimitedList di StatusCode                             | StatusCode salvati nel tracking ma non inoltrati a pn-delivery-push                                                                    |
+| `PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890` | ENV            | `data_attivazione;23L\|ARCAD\|CAD`                           | Allegati necessari al perfezionamento della giacenza 890                                                                               |
+| `PN_PAPERTRACKER_SENDOCRATTACHMENTSREFINEMENTSTOCK890`  | ENV            | `data_attivazione;23L\|ARCAD`                                | Allegati inviati all'OCR nel processo di perfezionamento giacenza 890                                                                  |
+| `PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION`     | ENV            | `data_attivazione;AR\|Plico\|23L`                            | Allegati inviati all'OCR per la validazione finale (prodotti eccetto giacenza 890)                                                     |
+| `PN_PAPERTRACKER_STRICTFINALVALIDATIONSTOCK890`         | ENV            | `data_attivazione;true\|false`                               | Se `true`, errori di validazione sull'evento finale di giacenza 890 bloccano la spedizione; se `false` vengono registrati come warning |
+| `PN_PAPERTRACKER_STRICTDELIVERYFAILURECAUSE`            | ENV            | `data_attivazione;true\|false`                               | Se `true`, la `deliveryFailureCause` deve essere presente su tutti gli eventi della sequence                                           |
+| `PN_PAPERTRACKER_INTERNALEVENTS`                        | ENV            | CommaDelimitedList di StatusCode                             | StatusCode interni gestiti dal microservizio                                                                                           |
+| `PN_PAPERTRACKER_REDRIVEENABLEDDOMAINS`                 | ENV            | CommaDelimitedList di domini                                 | Domini del `senderId` usati per identificare un redrive manuale                                                                        |
+| `DisableAllConsumers`                                   | CloudFormation | `true \| false`                                              | Se `true`, disabilita tutti i consumer SQS del microservizio                                                                           |
+| `NotificationReworkInvalidStatusCode`                   | CloudFormation | CommaDelimitedList di StatusCode                             | StatusCode considerati non validi nel processo di rework notifica (Lambda `NotificationReworkEventsValidationLambda`)                  |
 
 ## Esecuzione
 **Prerequisiti**
