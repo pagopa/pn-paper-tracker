@@ -81,7 +81,9 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | EVENT | OUT | send-receipt-validation-input               | SQS         | PRODUCE | -                                                                       | Invio allegati di spedizione all'OCR per validazione   |
 | EVENT | IN  | pn-external_channel_to_paper_channel        | SQS         | CONSUME | -                                                                       | Ricezione eventi dal consolidatore                     |
 | EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
+| EVENT | IN  | pn-external_channel_to_rework_event_validation | SQS      | CONSUME | -                                                                       | Ricezione eventi di rework per validazione (Lambda MyNotificationReworkEventsValidation) |
 | EVENT | OUT | pn-external_channel_to_paper_channel_dryrun | SQS         | PRODUCE | -                                                                       | Produzione eventi smistati verso pn-paper-channel      |
+| EVENT | OUT | pn-external_channel_to_paper_channel        | SQS         | PRODUCE | -                                                                       | Inoltro eventi di rework validati verso pn-paper-channel (Lambda MyNotificationReworkEventsValidation) |
 | EVENT | OUT | pn-CoreEventBus                             | EventBridge | PUBLISH | -                                                                       | Pubblicazione eventi su EventBridge                    |
 
 * **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
