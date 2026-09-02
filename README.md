@@ -96,6 +96,7 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
 | ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
 | ALARM     | pn-paper-tracker-RIRErrors-Alarm | Allarme su errori di tipo RIR (Raccomandata Internazionale con Ricevuta di Ritorno).                           |
+| ALARM     | pn-paper-tracker-TrackingIdNotFoundErrors-Alarm | Allarme su errori di tipo TRACKING_ID_NOT_FOUND (tracking ID non trovato).                      |
 | LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
 
 **Note operative:**
