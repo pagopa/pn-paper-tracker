@@ -21,7 +21,7 @@ public enum EventStatusCodeEnum {
     RECRN004C(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Mancata consegna presso Punti di Giacenza - Fascicolo Chiuso", false),
     RECRN005C(EventTypeEnum.FINAL_EVENT, ProductType.AR, EventStatus.OK, List.of(),"Compiuta giacenza - Fascicolo Chiuso", false),
     RECRN011(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "In giacenza", false),
-    RECRN001A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
+    RECRN001AB(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
     RECRN002A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(M02, M05, M06, M07, M08, M09), "Mancata consegna - pre-esito", false),
     RECRN002D(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(M01, M03, M04), "Irreperibilità Assoluta - pre-esito", false),
     RECRN003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.AR, EventStatus.PROGRESS, List.of(), "Consegnato presso Punti di Giacenza - pre-esito", false),

@@ -155,7 +155,7 @@ class SequenceValidatorArTest {
         String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -179,7 +179,7 @@ class SequenceValidatorArTest {
         String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", List.of(DocumentTypeEnum.AR.getValue()))
         ));
@@ -275,7 +275,7 @@ class SequenceValidatorArTest {
         String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", Instant.now(), Instant.now(), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", Instant.now(), Instant.now(), "REG123", "", null),
                 buildEvent(eventIdC, "RECRN001C", Instant.now(), Instant.now(), "REG123", "", null)
         ));
 
@@ -348,7 +348,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, Instant.now(), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, Instant.now(), "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, Instant.now(), "REG123", "", null),
                 buildEvent(eventIdC, "RECRN002C", timestamp, Instant.now(), "REG123", "", null)
         ));
@@ -371,7 +371,7 @@ class SequenceValidatorArTest {
         String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", null),
                 buildEvent(eventIdC, "RECRN002F", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -395,7 +395,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", null),
                 buildEvent(eventIdC, "RECRN002C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -416,7 +416,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", Instant.now(), businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", Instant.now(), businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", Instant.now().plusSeconds(10), businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", Instant.now(), businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -438,7 +438,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG444", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -460,7 +460,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, null, "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, null, "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), null, "", null)
         ));
@@ -606,7 +606,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "TESTERR", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "TESTERR", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -630,7 +630,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", "", null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "", null)
         ));
@@ -654,7 +654,7 @@ class SequenceValidatorArTest {
                String eventIdC = UUID.randomUUID().toString();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN001A", timestamp, businessTimestamp, "REG123", null, null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN001AB", timestamp, businessTimestamp, "REG123", null, null),
                 buildEvent(UUID.randomUUID().toString(), "RECRN001B", timestamp, businessTimestamp.plusSeconds(1), "REG123", null, List.of(DocumentTypeEnum.AR.getValue())),
                 buildEvent(eventIdC, "RECRN001C", timestamp, businessTimestamp.plusSeconds(2), "REG123", "TESTERR", null)
         ));

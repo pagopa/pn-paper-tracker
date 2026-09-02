@@ -58,7 +58,7 @@ Esempio di configurazione di una sequence:
 ```json
 {
     "sequenceName": "OK_AR",
-    "sequence": "@sequence.5s-CON080.5s-CON020[DOC:7ZIP;PAGES:3].5s-CON018.5s-RECRN001A.5s-RECRN001B[DOC:AR].5s-RECRN001C"
+    "sequence": "@sequence.5s-CON080.5s-CON020[DOC:7ZIP;PAGES:3].5s-CON018.5s-RECRN001AB.5s-RECRN001B[DOC:AR].5s-RECRN001C"
 }
 ```
 

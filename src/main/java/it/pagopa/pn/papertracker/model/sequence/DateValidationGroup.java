@@ -11,7 +11,7 @@ public enum DateValidationGroup {
     RECRN003C(Set.of("RECRN003A", "RECRN003B", "RECRN003C"), Set.of()),
     RECRN002F(Set.of("RECRN002D", "RECRN002E", "RECRN002F"), Set.of()),
     RECRN002C(Set.of("RECRN002A", "RECRN002B", "RECRN002C"), Set.of()),
-    RECRN001C(Set.of("RECRN001A", "RECRN001B", "RECRN001C"), Set.of()),
+    RECRN001C(Set.of("RECRN001AB", "RECRN001B", "RECRN001C"), Set.of()),
     RECRI003C(Set.of("RECRI003A", "RECRI003B", "RECRI003C"), Set.of()),
     RECRI004C(Set.of("RECRI004A", "RECRI004B", "RECRI004C"), Set.of()),
     RECAG001C(Set.of("RECAG001A", "RECAG001B", "RECAG001C"), Set.of()),

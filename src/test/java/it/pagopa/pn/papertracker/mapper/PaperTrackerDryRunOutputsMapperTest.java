@@ -23,7 +23,7 @@ class PaperTrackerDryRunOutputsMapperTest {
         PaperTrackerDryRunOutputs entity = new PaperTrackerDryRunOutputs();
         entity.setCreated(Instant.now());
         entity.setRegisteredLetterCode("RL123");
-        entity.setStatusCode("RECRN001A");
+        entity.setStatusCode("RECRN001AB");
         entity.setStatusDetail("Detail");
         entity.setStatusDescription("Description");
         entity.setStatusDateTime("2024-06-01T12:00:00Z");
@@ -41,7 +41,7 @@ class PaperTrackerDryRunOutputsMapperTest {
 
         Assertions.assertEquals("RL123", output.getRegisteredLetterCode());
         Assertions.assertNotNull(output.getCreated());
-        Assertions.assertEquals("RECRN001A", output.getStatusCode());
+        Assertions.assertEquals("RECRN001AB", output.getStatusCode());
         Assertions.assertEquals("Detail", output.getStatusDetail());
         Assertions.assertEquals("Description", output.getStatusDescription());
         Assertions.assertEquals("2024-06-01T12:00:00Z", output.getStatusDateTime());
