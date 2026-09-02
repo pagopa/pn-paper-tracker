@@ -339,6 +339,15 @@ Parameters:
     Description: "Batch size of the NotificationReworkEventsValidation Lambda."
     Default: 10
 
+  MyNotificationReworkEventsValidationLambdaName:
+    Type: String
+    Description: 'Name of the MyNotificationReworkEventsValidation Lambda.'
+
+  MyNotificationReworkEventsValidationLambdaBatchSize:
+    Type: Number
+    Description: "Batch size of the MyNotificationReworkEventsValidation Lambda."
+    Default: 10
+
   ApplicativeEnvFileChecksum:
     Type: String
     Default: ''
@@ -733,6 +742,112 @@ Resources:
       TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
       Parameters:
         FunctionName: !Ref  NotificationReworkEventsValidationLambda
+        AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
+
+  ##########################################################################
+  ###             MyNotificationReworkEventsValidationLambda             ###
+  ##########################################################################
+  MyNotificationReworkEventsValidationLambdaSecGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub '${MyNotificationReworkEventsValidationLambdaName}-sec-group'
+      VpcId: !Ref VpcId
+
+  # Lambda function
+  MyNotificationReworkEventsValidationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref MyNotificationReworkEventsValidationLambdaName
+      Runtime: nodejs22.x
+      Handler: "index.handler"
+      Code:
+        S3Bucket: !Ref MicroserviceBucketName
+        S3Key: !Sub "${MicroserviceBucketBaseKey}/functions_zip/myNotificationReworkEventsValidation.zip"
+      Role: !GetAtt MyNotificationReworkEventsValidationLambdaRole.Arn
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          NOTIFICATION_REWORK_TABLE: !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-NotificationReworks
+          NOTIFICATION_REWORK_EVENTS_ERROR_TABLE: !Ref NotificationReworkEventsErrorTableName
+          INVALID_STATUS_CODE: !Ref NotificationReworkInvalidStatusCode
+          EXTERNAL_TO_PAPER_QUEUE_URL: !Ref ExternalChannels2PaperChannelQueueURL
+      TracingConfig:
+        Mode: Active
+      Layers:
+        - !Sub "arn:aws:lambda:${AWS::Region}:339249233099:layer:LambdaInsightsExtension:13"
+      Timeout: 10
+
+  # Lambda function role
+  MyNotificationReworkEventsValidationLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-MyNotificationReworkEventsValidationLambdaRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # Lambda function IAM policy
+  MyNotificationReworkEventsValidationLambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${ProjectName}-MyNotificationReworkEventsValidationLambdaPolicy
+      Roles:
+        - !Ref MyNotificationReworkEventsValidationLambdaRole
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "dynamodb:updateItem"
+              - "dynamodb:putItem"
+              - "dynamodb:getItem"
+              - "dynamodb:query"
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworks/*"
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworkEventsError
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/pn-NotificationReworkEventsError/*"
+          - Effect: Allow
+            Action:
+              - sqs:ChangeMessageVisibility
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+              - sqs:SendMessage
+            Resource: !Ref ExternalChannels2PaperChannelQueueARN
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:ChangeMessageVisibility
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+              - sqs:GetQueueUrl
+            Resource: !Ref ExternalChannelToReworkEventValidationQueueARN
+
+  # CDC to  MyNotificationReworkEventsValidationLambda
+  MyNotificationReworkEventsValidationLambdaSource:
+    Type: AWS::Lambda::EventSourceMapping
+    DependsOn: MyNotificationReworkEventsValidationLambdaPolicy
+    Properties:
+      BatchSize: !Sub ${MyNotificationReworkEventsValidationLambdaBatchSize}
+      EventSourceArn: !Ref ExternalChannelToReworkEventValidationQueueARN
+      FunctionName: !Ref MyNotificationReworkEventsValidationLambda
+      MaximumBatchingWindowInSeconds: 60
+      Enabled: true
+
+  MyNotificationReworkEventsValidationLambdaAlarms:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/lambda-alarms.yaml"
+      Parameters:
+        FunctionName: !Ref  MyNotificationReworkEventsValidationLambda
         AlarmSNSTopicArn: !Ref AlarmSNSTopicArn
 
   #### Alarm for custom metric Autoscaling

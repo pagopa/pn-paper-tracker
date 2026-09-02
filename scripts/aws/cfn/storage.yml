@@ -201,6 +201,9 @@ Outputs:
   # Lambda functions
   NotificationReworkEventsValidationLambdaName:
     Value: !Sub ${ProjectName}-NotificationReworkEventsValidationLambda
+
+  MyNotificationReworkEventsValidationLambdaName:
+    Value: !Sub ${ProjectName}-MyNotificationReworkEventsValidationLambda
     
   PaperTrackingsErrorsTableName:
     Description: Name of dynamodb table containing trackings errors
