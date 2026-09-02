@@ -81,7 +81,9 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | EVENT | OUT | send-receipt-validation-input               | SQS         | PRODUCE | -                                                                       | Invio allegati di spedizione all'OCR per validazione   |
 | EVENT | IN  | pn-external_channel_to_paper_channel        | SQS         | CONSUME | -                                                                       | Ricezione eventi dal consolidatore                     |
 | EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
+| EVENT | IN  | pn-external_channel_to_rework_event_validation | SQS      | CONSUME | -                                                                       | Ricezione eventi di rework per validazione (Lambda MyNotificationReworkEventsValidation) |
 | EVENT | OUT | pn-external_channel_to_paper_channel_dryrun | SQS         | PRODUCE | -                                                                       | Produzione eventi smistati verso pn-paper-channel      |
+| EVENT | OUT | pn-external_channel_to_paper_channel        | SQS         | PRODUCE | -                                                                       | Inoltro eventi di rework validati verso pn-paper-channel (Lambda MyNotificationReworkEventsValidation) |
 | EVENT | OUT | pn-CoreEventBus                             | EventBridge | PUBLISH | -                                                                       | Pubblicazione eventi su EventBridge                    |
 
 * **OpenAPI**: [api-internal-v1.yaml](docs/openapi/api-internal-v1.yaml)
@@ -117,6 +119,8 @@ Le principali configurazioni del microservizio sono gestite tramite variabili d'
 | [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
 | [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
 | [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
+| MyNotificationReworkEventsValidationLambdaName                                                                                                                                             | CloudFormation | -   | Nome della Lambda MyNotificationReworkEventsValidation                                    |
+| MyNotificationReworkEventsValidationLambdaBatchSize                                                                                                                                        | CloudFormation | 10 (default) | Batch size di lettura dalla coda SQS per la Lambda MyNotificationReworkEventsValidation |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 
