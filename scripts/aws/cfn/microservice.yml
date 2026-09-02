@@ -206,14 +206,6 @@ Parameters:
     Default: ''
     Description: Application load balancer dimension name
 
-  PnOcrOutputsQueueName:
-    Type: String
-    Description: 'Name of the SQS queue where OCR outputs are sent'
-
-  PnOcrOutputsQueueARN:
-    Type: String
-    Description: 'ARN of the SQS queue where OCR outputs are sent'
-
   ExternalChannelToPaperTrackerQueueName:
     Type: String
     Description: 'Name of the SQS queue where external channel messages are sent'
@@ -298,18 +290,6 @@ Parameters:
     Type: String
     Description: 'Region of the SQS queue where OCR inputs are sent'
 
-  PnOcrOutputsQueueURL:
-    Type: String
-    Description: 'URL of the SQS queue where OCR outputs are sent'
-
-  OcrAwsRoleARN:
-    Type: String
-    Description: 'ARN of the IAM role in the OCR AWS account that can send messages to the PnOcrOutputsQueue'
-
-  OcrAwsAccountId:
-    Type: String
-    Description: 'AWS account ID of the OCR service'
-
   PaperTrackerExternalChannelUser:
     Type: String
     Description: 'The clientId used by ExternalChannel to send events to PaperTracker'
@@ -358,26 +338,6 @@ Parameters:
     Description: 'Metric format type'
     Default: 'EMF'
 
-  890ErrorThreshold:
-    Type: Number
-    Description: 'Threshold for 890 errors to trigger the alarm'
-    Default: 300
-
-  890EvaluationPeriods:
-    Type: Number
-    Description: 'Number of evaluation periods for 890 errors alarm'
-    Default: 12
-
-  890DatapointsToAlarm:
-    Type: Number
-    Description: 'Number of datapoints to alarm for 890 errors alarm'
-    Default: 1
-
-  890TreatMissingData:
-    Type: String
-    Description: 'TreatMissingData for 890 errors alarm'
-    Default: 'ignore'
-
   ARTreatMissingData:
     Type: String
     Description: 'TreatMissingData for AR errors alarm'
@@ -397,11 +357,6 @@ Parameters:
     Type: String
     Description: 'TreatMissingData for RIS errors alarm'
     Default: 'ignore'
-
-  890WhereClause:
-    Type: String
-    Description: 'Where clause to filter 890 errors in the custom metric query'
-    Default: "errorCategory != 'OCR_VALIDATION'"
 
   ARErrorThreshold:
     Type: Number
@@ -524,7 +479,6 @@ Resources:
         ContainerEnvEntry12: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELOUTPUTSQUEUE=${ExternalChannelsOutputsQueueName}'
         ContainerEnvEntry16: !Sub 'PN_PAPERTRACKER_SAFESTORAGEBASEURL=${SandboxSafeStorageBaseUrl}'
         ContainerEnvEntry17: !Sub 'PN_PAPERTRACKER_SAFESTORAGECXID=${SafeStorageCxId}'
-        ContainerEnvEntry18: !Sub 'PN_PAPERTRACKER_TOPICS_PNOCROUTPUTSQUEUE=${PnOcrOutputsQueueName}'
         ContainerEnvEntry19: !Sub 'PN_PAPERTRACKER_DATAVAULTBASEURL=${DataVaultBaseUrl}'
         ContainerEnvEntry20: !Sub 'PN_PAPERTRACKER_DISABLEALLCONSUMERS=${DisableAllConsumers}'
         ContainerEnvEntry21: !Sub 'PN_PAPERTRACKER_TOPICS_EXTERNALCHANNELTOPAPERCHANNELQUEUE=${ExternalChannels2PaperChannelQueueName}'
@@ -544,25 +498,6 @@ Resources:
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
 
-  PnOcrOutputsQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
-    Properties:
-      Queues:
-        - !Ref PnOcrOutputsQueueURL
-      PolicyDocument:
-        Statement:
-          - Sid: AllowCrossAccountSend
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${OcrAwsAccountId}:root"
-            Action:
-              - sqs:SendMessage
-            Resource:
-              - !Ref PnOcrOutputsQueueARN
-            Condition:
-              StringEquals:
-                aws:PrincipalArn: !Ref OcrAwsRoleARN
-
   PaperTrackerMicroserviceCloudWatchDashboard:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -580,7 +515,6 @@ Resources:
         QueueArns: !Join
           - ','
           - - !Ref ExternalChannelToPaperTrackerQueueARN
-            - !Ref PnOcrOutputsQueueARN
         LogGroupsNames: !Join
           - ','
           - - !Sub '/aws/ecs/${ProjectName}-paper-tracker'
@@ -618,7 +552,6 @@ Resources:
               - sqs:SendMessageBatch
             Resource:
               - !Ref ExternalChannelToPaperTrackerQueueARN
-              - !Ref PnOcrOutputsQueueARN
               - !Ref PnOcrInputsQueueARN
               - !Ref ExternalChannelsOutputsQueueARN
               - !Ref ExternalChannels2PaperChannelQueueARN
@@ -755,17 +688,6 @@ Resources:
             Period: !Ref AutoscalingCheckPeriod
             Stat: Average
           ReturnData: False
-        - Id: m2
-          MetricStat:
-            Metric:
-              Dimensions:
-                - Name: QueueName
-                  Value: !Ref "PnOcrOutputsQueueName"
-              Namespace: "AWS/SQS"
-              MetricName: "ApproximateNumberOfMessagesVisible"
-            Period: !Ref AutoscalingCheckPeriod
-            Stat: Average
-          ReturnData: False
         - Id: m3
           MetricStat:
             Metric:
@@ -791,7 +713,7 @@ Resources:
             Stat: Average
           ReturnData: False
         - Id: code
-          Expression: !Sub "IF(m4==0, 101, (100*(m1+m2)) / (${ConsumedQueueMessagePerMinute} * m4) )"
+          Expression: !Sub "IF(m4==0, 101, (100*m1) / (${ConsumedQueueMessagePerMinute} * m4) )"
           Label: !Sub "${ProjectName}-paper-tracker-queue-custom-metric"
           ReturnData: False
         - Id: http
@@ -880,28 +802,6 @@ Resources:
               - "SQS:SendMessage"
             Resource:
               - !Ref ExternalChannelToReworkEventValidationQueueARN
-
-  PaperTracker890ErrorsAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: !Sub "${ProjectName}-paper-tracker-890Errors-Alarm"
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      Threshold: !Ref 890ErrorThreshold
-      OKActions:
-        - !Ref AlarmSNSTopicArn
-      AlarmActions:
-        - !Ref AlarmSNSTopicArn
-      EvaluationPeriods: !Ref 890EvaluationPeriods
-      DatapointsToAlarm: !Ref 890DatapointsToAlarm
-      TreatMissingData: !Ref 890TreatMissingData
-      Metrics:
-        - Id: q1
-          Expression: !Sub |
-            SELECT SUM(ERROR_COUNT)
-            FROM SCHEMA("paper-tracker-errors", errorCategory, productType)
-            WHERE ${890WhereClause} AND productType = '890'
-          ReturnData: true
-          Period: 600
 
   PaperTrackerRISErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
