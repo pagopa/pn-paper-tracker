@@ -47,7 +47,7 @@ public class PnEventInboundService {
         processMessage(() -> {
                 var messageAttributes = sourceMessage.messageAttributes();
                 externalChannelSourceEventsHandler.handleExternalChannelMessage(message.getPayload(), messageAttributes);
-            }, "pn-external_channel_to_paper_channel", message, headers);
+            }, "pn-external_channell_to_paper_channel", message, headers);
     }
 
     @SqsListener("${pn.paper-tracker.topics.external-channel-to-paper-tracker-queue}")
