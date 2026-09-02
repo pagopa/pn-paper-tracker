@@ -70,14 +70,12 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/init                                          | Inizializzazione entità di tracking                    |
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/trackings                                     | Recupero entità di tracking da lista di trackingId     |
 | API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/errors                                        | Recupero errori di tracking                            |
-| API   | IN  | pn-paper-tracker                            | REST        | POST    | /paper-tracker-private/v1/outputs                                       | Recupero degli oggetti in output                       |
 | API   | IN  | pn-paper-tracker                            | REST        | GET     | /paper-tracker-private/v1/attempts/{attemptId}                          | Recupero tracking tramite attemptId                    |
 | API   | IN  | pn-paper-tracker                            | REST        | GET     | /paper-tracker-private/v1/notification-rework/sequence                  | Recupero sequence e finalStatus per rework notifica    |
 | API   | IN  | pn-paper-tracker                            | REST        | PUT     | /paper-tracker-private/v1/notification-rework/{trackingId}/init         | Avvio processo di invalidazione timeline per rework    |
 | API   | OUT | pn-paper-channel                            | REST        | GET     | /paper-channel-private/v1/b2b/pc-retry/{requestId}                      | Verifica se ci sono altri retry                        |
 | API   | OUT | pn-data-vault                               | REST        | PUT     | /datavault-private/v1/paper-addresses/{paperRequestId}/{paperAddressId} | Inserisci o modifica un indirizzo                      |
 | API   | OUT | pn-data-vault                               | REST        | GET     | /datavault-private/v1/paper-addresses/{paperRequestId}/{paperAddressId} | Recupera tutti gli indirizzi associati alla spedizione |
-| EVENT | IN  | pn-ocr_outputs                              | SQS         | CONSUME | -                                                                       | Risposta validazione OCR degli allegati spedizione     |
 | EVENT | OUT | send-receipt-validation-input               | SQS         | PRODUCE | -                                                                       | Invio allegati di spedizione all'OCR per validazione   |
 | EVENT | IN  | pn-external_channel_to_paper_channel        | SQS         | CONSUME | -                                                                       | Ricezione eventi dal consolidatore                     |
 | EVENT | IN  | pn-external_channel_to_paper_tracker        | SQS         | CONSUME | -                                                                       | Ricezione eventi smistati da pn-paper-tracker          |
@@ -91,7 +89,6 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 
 | Tipo      | Nome                             | Descrizione                                                                                                    |
 |-----------|----------------------------------|----------------------------------------------------------------------------------------------------------------|
-| ALARM     | pn-paper-tracker-890Errors-Alarm | Allarme su errori di tipo 890 (Atti Giudiziari). Scatta se il numero di errori supera la soglia configurata.   |
 | ALARM     | pn-paper-tracker-RISErrors-Alarm | Allarme su errori di tipo RIS (Raccomandata Internazionale Semplice).                                          |
 | ALARM     | pn-paper-tracker-ARErrors-Alarm  | Allarme su errori di tipo AR (Raccomandata con Ricevuta di Ritorno).                                           |
 | ALARM     | pn-paper-tracker-RSErrors-Alarm  | Allarme su errori di tipo RS (Raccomandata Semplice).                                                          |
@@ -99,7 +96,7 @@ Per una descrizione dettagliata dei flussi, delle classi principali e delle sequ
 | LOG       | /aws/ecs/pn-paper-tracker        | Log applicativi ECS del microservizio, consultabili su CloudWatch Logs.                                        |
 
 **Note operative:**
-- Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (890, AR, RS, RIS, RIR).
+- Le metriche monitorate includono il conteggio degli errori per categoria di prodotto postale (AR, RS, RIS, RIR).
 
 Per consultare lo stato operativo del servizio, accedere alla dashboard CloudWatch `pn-paper-tracker` e al log group `/aws/ecs/pn-paper-tracker`.
 
