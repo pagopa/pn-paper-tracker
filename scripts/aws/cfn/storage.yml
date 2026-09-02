@@ -158,18 +158,6 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
-  PnOcrOutputsQueue:
-    Type: AWS::CloudFormation::Stack
-    UpdateReplacePolicy: Retain
-    DeletionPolicy: Retain
-    Properties:
-      TemplateURL: !Sub "${TemplateBucketBaseUrl}/fragments/sqs-queue.yaml"
-      Parameters:
-        QueueName: !Sub '${ProjectName}-paper_tracker_ocr_outputs'
-        AlarmSNSTopicName: !Ref AlarmSNSTopicName
-        VisibilityTimeout: 60
-        DelaySeconds: 1
-
   ExternalChannelToPaperTrackerQueue:
     Type: AWS::CloudFormation::Stack
     UpdateReplacePolicy: Retain
@@ -230,13 +218,6 @@ Outputs:
   NotificationReworkEventsErrorTableArn:
     Description: ARN of dynamodb table containing rework events errors
     Value: !Sub '${NotificationReworkEventsErrorTable.Arn}'
-
-  PnOcrOutputsQueueName:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueName
-  PnOcrOutputsQueueARN:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueARN
-  PnOcrOutputsQueueURL:
-    Value: !GetAtt PnOcrOutputsQueue.Outputs.QueueURL
 
   ExternalChannelToPaperTrackerQueueName:
     Value: !GetAtt ExternalChannelToPaperTrackerQueue.Outputs.QueueName
