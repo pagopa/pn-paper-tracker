@@ -395,6 +395,8 @@ public class PaperTrackingsMapperTest {
         attachment.setSha256("sha256");
         attachment.setDate(Instant.now());
         attachment.setDocumentType("ARCAD");
+        attachment.setSourceType("SCANNED");
+        attachment.setOriginType("ORIGINAL");
 
         Event event = new Event();
         event.setId("id");
@@ -488,6 +490,8 @@ public class PaperTrackingsMapperTest {
         Assertions.assertEquals(entityAttachment.getSha256(), trackingAttachment.getSha256());
         Assertions.assertEquals(entityAttachment.getDate(), trackingAttachment.getDate());
         Assertions.assertEquals(entityAttachment.getDocumentType(), trackingAttachment.getDocumentType());
+        Assertions.assertEquals(entityAttachment.getSourceType(), trackingAttachment.getSourceType());
+        Assertions.assertEquals(entityAttachment.getOriginType(), trackingAttachment.getOriginType());
 
 
         Assertions.assertNotNull(tracking.getPaperStatus());

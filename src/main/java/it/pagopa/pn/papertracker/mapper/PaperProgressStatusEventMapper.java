@@ -87,6 +87,8 @@ public class PaperProgressStatusEventMapper {
         attachment.setDocumentType(attachmentDetails.getDocumentType());
         attachment.setUri(attachmentDetails.getUri());
         attachment.setSha256(attachmentDetails.getSha256());
+        attachment.setSourceType(attachmentDetails.getSourceType());
+        attachment.setOriginType(attachmentDetails.getOriginType());
         return attachment;
     }
 
