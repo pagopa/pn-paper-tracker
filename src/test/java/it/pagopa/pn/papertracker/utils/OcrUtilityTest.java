@@ -6,9 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.model.FileType;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -195,6 +193,69 @@ class OcrUtilityTest {
         assertEquals("attachmentEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getAttachmentEventId());
         assertEquals("finalEventId", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getFinalEventId());
         assertEquals("ARCAD", updatedPaperTrackings.getValidationFlow().getOcrRequests().getFirst().getDocumentType());
+    }
+
+    @Test
+    void checkAndSendToOcr_OcrEnabled_MixedAttachments_OnlyValidAreProcessed() {
+        // Arrange
+        paperTrackings.getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        paperTrackings.getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
+
+        Map<String, List<Attachment>> attachments = new HashMap<>();
+        attachments.put("eventId1", List.of(buildAttachment("valid.pdf", "ARCAD", null, null)));
+        attachments.put("eventId2", List.of(buildAttachment("valid2.PDF", "ARCAD", SourceType.SCANNED.name(), OriginType.ORIGINAL.name())));
+        attachments.put("eventId3", List.of(buildAttachment("valid3.pdf", "ARCAD", SourceType.SCANNED.name(), null)));
+        attachments.put("eventId4", List.of(buildAttachment("invalid-source.pdf", "ARCAD", SourceType.DIGITAL.name(), OriginType.ORIGINAL.name())));
+        attachments.put("eventId5", List.of(buildAttachment("invalid-origin.pdf", "ARCAD", SourceType.SCANNED.name(), OriginType.DUPLICATED.name())));
+        attachments.put("eventId6", List.of(buildAttachment("invalid.txt", "ARCAD", null, null)));
+
+        Event event = buildEvent();
+
+        when(safeStorageClient.getSafeStoragePresignedUrl("valid.pdf")).thenReturn(Mono.just("presigned-valid"));
+        when(safeStorageClient.getSafeStoragePresignedUrl("valid2.PDF")).thenReturn(Mono.just("presigned-valid2"));
+        when(safeStorageClient.getSafeStoragePresignedUrl("valid3.pdf")).thenReturn(Mono.just("presigned-valid3"));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
+
+        // Act
+        StepVerifier.create(ocrUtility.checkAndSendToOcr(event, attachments, context))
+                .expectNext(true)
+                .verifyComplete();
+
+        // Assert
+        verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("valid.pdf");
+        verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("valid2.PDF");
+        verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl("valid3.pdf");
+        verify(safeStorageClient, never()).getSafeStoragePresignedUrl("invalid-source.pdf");
+        verify(safeStorageClient, never()).getSafeStoragePresignedUrl("invalid-origin.pdf");
+        verify(safeStorageClient, never()).getSafeStoragePresignedUrl("invalid.txt");
+
+        ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
+        PaperTrackings updatedPaperTrackings = paperTrackingsArgumentCaptor.getValue();
+
+        assertEquals(OcrStatusEnum.RUN, updatedPaperTrackings.getValidationConfig().getOcrEnabled());
+        assertEquals(3, updatedPaperTrackings.getValidationFlow().getOcrRequests().size());
+        assertTrue(updatedPaperTrackings.getValidationFlow().getOcrRequests().stream()
+                .map(OcrRequest::getUri)
+                .toList()
+                .containsAll(List.of("valid.pdf", "valid2.PDF", "valid3.pdf")));
+    }
+
+    private Event buildEvent() {
+        Event event = new Event();
+        event.setId("finalEventId");
+        event.setStatusCode(RECAG012.name());
+        event.setStatusTimestamp(Instant.now());
+        return event;
+    }
+
+    private Attachment buildAttachment(String uri, String documentType, String sourceType, String originType) {
+        Attachment attachment = new Attachment();
+        attachment.setUri(uri);
+        attachment.setDocumentType(documentType);
+        attachment.setSourceType(sourceType);
+        attachment.setOriginType(originType);
+        return attachment;
     }
 
 }
