@@ -59,8 +59,13 @@ public enum EventStatusCodeEnum {
     CON011(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Distinta Elettronica Sigillata", false),
     CON012(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "OK Distinta Elettronica da Recapitista", false),
     CON09A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Materialità Pronta", false),
+    CON09B(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Prenotazione Pickup", false),
     CON016(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "PICKUP Sigillata", false),
     CON018(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Accettazione Recapitista", false),
+
+    REC016(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Materialità Ritirata", false),
+    REC018(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Accettazione Recapitista", false),
+    REC991(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accettazione Recapitista", false),
     //eventi non gestiti da paper-channel ma previsti dal consolidatore
     //CON992(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "KO Distinta Elettronica da Recapitista", false),
     //CON991(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.ALL, EventStatus.PROGRESS, List.of(), "Mancata Accetazione Recapitsita ", false);
@@ -85,6 +90,7 @@ public enum EventStatusCodeEnum {
     RECAG001C(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
     RECAG003F(EventTypeEnum.FINAL_EVENT, ProductType._890, EventStatus.KO, List.of(CHECK_IF_REQUIRED), "Irreperibilità Assoluta - Fascicolo Chiuso", false),
     RECAG010(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Inesito", false),
+    RECAG010A(EventTypeEnum.SAVE_ONLY_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Invio CAD", false),
     RECAG004(EventTypeEnum.RETRYABLE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
     RECAG015(EventTypeEnum.INTERMEDIATE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(C01, C02, C03, C04, C05, C06), "Causa Forza Maggiore", false),
     RECAG013(EventTypeEnum.RETRYABLE_EVENT, ProductType._890, EventStatus.PROGRESS, List.of(), "Non Rendicontabile", false),
