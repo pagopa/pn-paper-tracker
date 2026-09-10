@@ -308,6 +308,16 @@ components:
           description: >-
             Indica se l'evento risulta duplicato rispetto agli eventi già presenti sulla richiesta.
             Valorizzato sempre da pn-ec per gli eventi analogici.
+        printer:
+          type: string
+          description: >-
+            [FASE2] Identificativo dello stampatore.
+          example: '123456789abc'
+        du:
+          type: string
+          description: >-
+            [FASE2] Distinta Unica, raggruppamento di spedizioni in un unico lotto.
+          example: '123456789abc'
     
 
     AttachmentDetails:

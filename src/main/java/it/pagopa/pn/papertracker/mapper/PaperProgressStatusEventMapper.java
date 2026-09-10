@@ -75,6 +75,8 @@ public class PaperProgressStatusEventMapper {
         event.setDryRun(dryRunEnabled);
         event.setStatusDescription(paperProgressStatusEvent.getStatusDescription());
         event.setCreatedAt(now);
+        event.setPrinter(paperProgressStatusEvent.getPrinter());
+        event.setDu(paperProgressStatusEvent.getDu());
 
         paperTrackings.setEvents(List.of(event));
         return paperTrackings;
