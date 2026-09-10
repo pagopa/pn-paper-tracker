@@ -115,7 +115,7 @@ public class OcrUtility {
         if (isSourceTypeAndOriginTypeNotNull(attachment)) {
             return attachment.getSourceType();
         }
-        return "PDF".equalsIgnoreCase(retrieveFileType(attachment.getUri())) ? SourceType.SCANNED.name() : SourceType.DIGITAL.name();
+        return FileType.PDF.getValue().equalsIgnoreCase(retrieveFileType(attachment.getUri())) ? SourceType.SCANNED.name() : SourceType.DIGITAL.name();
     }
 
     private String getOriginType(Attachment attachment) {
