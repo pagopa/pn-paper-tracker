@@ -53,7 +53,7 @@ public abstract class GenericDematValidator implements HandlerStep {
         List<String> requiredAttachments = getRequiredAttachments(currentEvent, paperTrackings);
         List<Event> validatedEvent = TrackerUtility.validatedEvents(paperTrackings.getPaperStatus().getValidatedEvents(), paperTrackings.getEvents());
         Map<String, List<Attachment>> attachmentList = retrieveFinalDemat(validatedEvent, requiredAttachments);
-        return checkSourceTypeFileTypeCoherent(paperTrackings)
+        return checkSourceTypeFileTypeCoherent(paperTrackings, validatedEvent)
                 .then(Mono.defer(() -> ocrUtility.checkAndSendToOcr(currentEvent, attachmentList, context)
                         .onErrorResume(e -> Mono.error(new PaperTrackerException("Error during Demat Validation", e)))
                         .filter(isSentToOcr -> Boolean.TRUE.equals(isSentToOcr))
@@ -82,8 +82,8 @@ public abstract class GenericDematValidator implements HandlerStep {
         return paperTrackings.getValidationConfig().getSendOcrAttachmentsFinalValidation();
     }
 
-    private Mono<Void> checkSourceTypeFileTypeCoherent(PaperTrackings paperTracking) {
-        return Flux.fromIterable(paperTracking.getEvents())
+    private Mono<Void> checkSourceTypeFileTypeCoherent(PaperTrackings paperTracking, List<Event> validatedEvent) {
+        return Flux.fromIterable(validatedEvent)
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
                 .flatMap(event -> Flux.fromIterable(event.getAttachments())
                         .flatMap(attachment -> {
