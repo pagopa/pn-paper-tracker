@@ -448,6 +448,10 @@ components:
           format: date-time
         sha256:
           type: string
+        sourceType:
+          type: string
+        originType:
+          type: string
     ValidationFlow:
       type: object
       properties:
