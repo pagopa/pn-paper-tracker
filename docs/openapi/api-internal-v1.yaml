@@ -427,6 +427,10 @@ components:
           format: date-time
         dryRun:
           type: boolean
+        printer:
+          type: string
+        du:
+          type: string
 
     ProductType:
       type: string
@@ -443,6 +447,10 @@ components:
           type: string
           format: date-time
         sha256:
+          type: string
+        sourceType:
+          type: string
+        originType:
           type: string
     ValidationFlow:
       type: object

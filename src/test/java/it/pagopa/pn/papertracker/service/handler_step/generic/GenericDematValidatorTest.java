@@ -10,10 +10,13 @@ import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.model.SourceType;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.StringUtils;
@@ -23,6 +26,7 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +43,8 @@ class GenericDematValidatorTest {
     OcrMomProducer ocrMomProducer;
     @Mock
     SafeStorageClient safeStorageClient;
+    @Mock
+    PaperTrackerErrorService paperTrackerErrorService;
 
     GenericDematValidator dematValidator;
 
@@ -68,10 +74,14 @@ class GenericDematValidatorTest {
         validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
         validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
         paperTrackings.setValidationConfig(validationConfig);
-        dematValidator = new GenericDematValidator(ocrUtility) { };
+        dematValidator = new GenericDematValidator(ocrUtility, paperTrackerErrorService) { };
     }
 
     private Event getEvent(String statusCode, String documentType, String eventId) {
+        return getEvent(statusCode, documentType, eventId, "uri.pdf", null);
+    }
+
+    private Event getEvent(String statusCode, String documentType, String eventId, String uri, String sourceType) {
         Event event = new Event();
         event.setStatusCode(statusCode);
         event.setProductType(ProductType.AR.getValue());
@@ -82,8 +92,9 @@ class GenericDematValidatorTest {
             attachment.setUri("uri.pdf");
             attachment.setDocumentType("Indagine");
             Attachment attachment1 = new Attachment();
-            attachment1.setUri("uri.pdf");
+            attachment1.setUri(uri);
             attachment1.setDocumentType(documentType);
+            attachment1.setSourceType(sourceType);
             event.setAttachments(List.of(attachment, attachment1));
         }
         return event;
@@ -192,6 +203,89 @@ class GenericDematValidatorTest {
         // Assert
         verify(safeStorageClient, never()).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        assertFalse(context.isStopExecution());
+    }
+
+    @Test
+    void validateDemat_IncoherentSourceTypeFileType_InsertsWarning() {
+        // Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECRN005C", null, "eventId1"),
+                getEvent("RECRN005B", "Plico", "eventId3", "uri.png", SourceType.SCANNED.name())
+        ));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId3"));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+        when(paperTrackerErrorService.insertPaperTrackingsErrors(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
+
+        // Act
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<PaperTrackingsErrors> warningCaptor = ArgumentCaptor.forClass(PaperTrackingsErrors.class);
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(warningCaptor.capture());
+
+        PaperTrackingsErrors warning = warningCaptor.getValue();
+        assertEquals("eventId3", warning.getEventIdThrow());
+        assertEquals("RECRN005B", warning.getEventThrow());
+        assertEquals("png", warning.getDetails().getAdditionalDetails().get("fileType"));
+        assertEquals(SourceType.SCANNED.name(), warning.getDetails().getAdditionalDetails().get("sourceType"));
+        assertEquals("uri.png", warning.getDetails().getAdditionalDetails().get("uri"));
+
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        verifyNoInteractions(safeStorageClient);
+        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        assertFalse(context.isStopExecution());
+    }
+
+    @Test
+    void validateDemat_CoherentSourceTypeFileType_DoesNotInsertWarning() {
+        // Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECRN005C", null, "eventId1"),
+                getEvent("RECRN005B", "Plico", "eventId3", "uri.pdf", SourceType.SCANNED.name())
+        ));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId3"));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+
+        // Act
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackerErrorService, never()).insertPaperTrackingsErrors(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        verifyNoInteractions(safeStorageClient);
+        verify(ocrMomProducer, never()).push(any(OcrEvent.class));
+        assertFalse(context.isStopExecution());
+    }
+
+    @Test
+    void validateDemat_InsertWarningFails_DoesNotBreakFlow() {
+        // Arrange
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.DISABLED);
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECRN005C", null, "eventId1"),
+                getEvent("RECRN005B", "Plico", "eventId3", "uri.png", SourceType.SCANNED.name())
+        ));
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId3"));
+
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+        when(paperTrackerErrorService.insertPaperTrackingsErrors(any())).thenReturn(Mono.error(new RuntimeException("warning insert failed")));
+
+        // Act
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(any());
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+        verifyNoInteractions(safeStorageClient);
         verify(ocrMomProducer, never()).push(any(OcrEvent.class));
         assertFalse(context.isStopExecution());
     }
