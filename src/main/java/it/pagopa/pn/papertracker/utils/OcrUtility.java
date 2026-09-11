@@ -10,10 +10,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.FileType;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -81,10 +78,14 @@ public class OcrUtility {
         Instant now = Instant.now();
         List<String> ocrFileTypes = paperTracking.getValidationConfig().getOcrFileTypes();
         Map<String, List<Attachment>> validAttachmentList = attachmentList.entrySet().stream()
-                .filter(entry -> entry.getValue().stream()
-                        .map(Attachment::getUri)
-                        .map(OcrUtility::retrieveFileType)
-                        .anyMatch(ocrFileTypes::contains))
+                .map(entry -> Map.entry(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .filter(attachment ->
+                                        ocrFileTypes.contains(retrieveFileType(attachment.getUri()))
+                                                && getSourceType(attachment).equals(SourceType.SCANNED.name()) && getOriginType(attachment).equals(OriginType.ORIGINAL.name()))
+                                .toList()))
+                .filter(entry -> !entry.getValue().isEmpty())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 
@@ -104,6 +105,21 @@ public class OcrUtility {
                         getPaperTrackingsToUpdate(ocrStatusEnum, true, event, ocrRequests)))
                 .doOnNext(unused -> log.info("OCR validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .thenReturn(true);
+    }
+
+    private boolean isSourceTypeAndOriginTypeNotNull(Attachment attachment) {
+        return StringUtils.isNotBlank(attachment.getSourceType()) && StringUtils.isNotBlank(attachment.getOriginType());
+    }
+
+    private String getSourceType(Attachment attachment) {
+        if (isSourceTypeAndOriginTypeNotNull(attachment)) {
+            return attachment.getSourceType();
+        }
+        return FileType.PDF.getValue().equalsIgnoreCase(retrieveFileType(attachment.getUri())) ? SourceType.SCANNED.name() : SourceType.DIGITAL.name();
+    }
+
+    private String getOriginType(Attachment attachment) {
+        return isSourceTypeAndOriginTypeNotNull(attachment) ? attachment.getOriginType() : OriginType.ORIGINAL.name();
     }
 
     private Flux<String> processAttachments(Map.Entry<String, List<Attachment>> attachmentEntry,
