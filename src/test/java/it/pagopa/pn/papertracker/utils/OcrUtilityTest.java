@@ -20,14 +20,11 @@ import reactor.test.StepVerifier;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG010A;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG010A;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG012;
 import static org.junit.jupiter.api.Assertions.*;
