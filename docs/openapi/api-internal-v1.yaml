@@ -427,6 +427,10 @@ components:
           format: date-time
         dryRun:
           type: boolean
+        printer:
+          type: string
+        du:
+          type: string
 
     ProductType:
       type: string

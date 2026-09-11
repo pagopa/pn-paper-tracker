@@ -28,6 +28,8 @@ public class Event {
     public static final String COL_IUN = "iun";
     public static final String COL_CREATED_AT = "createdAt";
     public static final String COL_REWORK_ID = "reworkId";
+    public static final String COL_PRINTER = "printer";
+    public static final String COL_DU = "du";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
@@ -71,5 +73,11 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
     private String notificationReworkId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRINTER)}))
+    private String printer;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DU)}))
+    private String du;
 
 }
