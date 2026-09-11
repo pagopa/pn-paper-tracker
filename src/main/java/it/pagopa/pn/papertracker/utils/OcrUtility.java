@@ -25,6 +25,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG010A;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN010;
 import static it.pagopa.pn.papertracker.utils.QueueConst.OCR_REQUEST_EVENT_TYPE;
 import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
@@ -235,14 +236,15 @@ public class OcrUtility {
 
     /**
      * Per il prodotto AR, recupera lo statusTimestamp dell'evento RECRN010 se presente, altrimenti ritorna null.
-     * Per il prodotto 890, in futuro sarà recuperato lo statusTimestamp dell'evento RECAG010A. Ad oggi ritorna null.
+     * Per il prodotto 890, recupera lo statusTimestamp dell'evento RECAG010A se presente, altrimenti ritorna null.
      *
      * @param paperTrackings L'oggetto `PaperTrackings` contenente gli eventi associati al tracking.
      * @return Lo statusTimestamp del primo evento trovato, oppure null.
      */
     private Instant getDeliveryAttemptDate(PaperTrackings paperTrackings) {
         return paperTrackings.getEvents().stream()
-                .filter(event -> RECRN010.name().equals(event.getStatusCode()))
+                .filter(event -> RECRN010.name().equals(event.getStatusCode())
+                        || RECAG010A.name().equals(event.getStatusCode()))
                 .sorted(Comparator.comparing(Event::getRequestTimestamp).reversed())
                 .map(Event::getStatusTimestamp)
                 .findFirst()
