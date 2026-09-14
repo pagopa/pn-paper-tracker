@@ -50,7 +50,7 @@ public class PaperTrackerExceptionHandler {
     }
 
     private Mono<Void> insertErrorAndUpdateTrackingsEntity(PaperTrackingsErrors paperTrackingsErrors){
-        return paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors)
+        return paperTrackerErrorService.insertPaperTrackingsError(paperTrackingsErrors)
                 .filter(errors -> paperTrackingsErrors.getType().equals(ErrorType.ERROR))
                 .doOnDiscard(PaperTrackingsErrors.class, errors -> log.info("Skipped updating PaperTrackings entity for error with type Warning"))
                 .map(unused -> {
