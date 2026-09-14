@@ -8,7 +8,6 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsReques
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsResponse;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
@@ -34,9 +33,6 @@ class PaperTrackerTrackingServiceImplTest {
 
     @Mock
     private PaperTrackingsDAO paperTrackingsDAO;
-
-    @Mock
-    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
 
     @Mock
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
