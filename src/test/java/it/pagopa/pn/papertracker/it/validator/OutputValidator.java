@@ -24,6 +24,7 @@ public class OutputValidator {
         swapRules.put("OK_GIACENZA_GT10_890", List.of(new SwapRule("RECAG005A", "RECAG012")));
         swapRules.put("OK_GIACENZA_DELEGATO_GT10_890", List.of(new SwapRule("RECAG006A", "RECAG012")));
         swapRules.put("OK_COMPIUTA_GIACENZA_890", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
+        swapRules.put("OK_COMPIUTA_GIACENZA_890_RECAG010A", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
         swapRules.put("OK_COMPIUTA_GIACENZA_INVALID_ATTACHMENT_890", List.of(new SwapRule("RECAG008A", "RECAG012"), new SwapRule("RECAG008A", "RECAG008B")));
         swapRules.put("OK_COMPIUTA_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG008A", "RECAG012")));
         swapRules.put("FAIL_GIACENZA_NO_ATTACHMENT_890", List.of(new SwapRule("RECAG007A", "RECAG012")));
