@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -43,6 +42,9 @@ class HandlersFactoryRirTest {
     private RetrySender retrySender;
 
     @Mock
+    private M10RetryTrigger m10RetryTrigger;
+
+    @Mock
     private OutputTargetSender outputTargetSender;
 
     @Mock
@@ -63,7 +65,9 @@ class HandlersFactoryRirTest {
     @Mock
     private CheckOcrResponse checkOcrResponse;
 
-    @InjectMocks
+    @Mock
+    private RetrySenderCON996 retrySenderCON996;
+
     private HandlersFactoryRir handlersFactoryRir;
 
     private HandlerContext handlerContext;
@@ -71,6 +75,22 @@ class HandlersFactoryRirTest {
     @BeforeEach
     void setUp() {
         handlerContext = new HandlerContext();
+        handlersFactoryRir = new HandlersFactoryRir(
+                metadataUpserter,
+                checkTrackingProduct,
+                outputTargetSender,
+                finalEventBuilder,
+                intermediateEventsBuilder,
+                dematValidator,
+                sequenceValidatorRir,
+                retrySender,
+                m10RetryTrigger,
+                notRetryableErrorInserting,
+                duplicatedEventFiltering,
+                checkTrackingState,
+                checkOcrResponse,
+                retrySenderCON996
+        );
     }
 
     @Test
@@ -82,6 +102,7 @@ class HandlersFactoryRirTest {
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
         when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
@@ -89,11 +110,12 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, outputTargetSender);
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, m10RetryTrigger, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(sequenceValidatorRir).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
         inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
@@ -127,6 +149,7 @@ class HandlersFactoryRirTest {
         when(sequenceValidatorRir.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
         when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
@@ -134,11 +157,12 @@ class HandlersFactoryRirTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, outputTargetSender);
+        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorRir, dematValidator, finalEventBuilder, m10RetryTrigger, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(sequenceValidatorRir).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
         inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
