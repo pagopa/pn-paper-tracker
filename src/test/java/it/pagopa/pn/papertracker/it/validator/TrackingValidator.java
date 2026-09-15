@@ -215,6 +215,11 @@ public class TrackingValidator {
             return;
         }
 
+        if (expected != null && CollectionUtils.isEmpty(expected.getOcrRequests())) {
+            assertTrue(actual.getOcrRequests().isEmpty());
+            return;
+        }
+
         boolean isM10RetryInitialTracking = testCase.startsWith("OK_RETRY_M10_") && hasNextRequestIdPcretry;
         if ((!isM10RetryInitialTracking && hasNextRequestIdPcretry) || (!isDone && !isFailCompiutaGiacenzaAr && !isOkGiacenzaEmptyRegisteredLetterCode890 && !isOcrPending)) {
             assertTrue(actual.getOcrRequests().isEmpty());

@@ -180,6 +180,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
+                        m10RetryTrigger,
                         outputTargetSender
                 ));
     }

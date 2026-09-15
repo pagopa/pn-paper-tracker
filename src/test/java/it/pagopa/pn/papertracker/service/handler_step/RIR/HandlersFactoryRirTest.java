@@ -233,14 +233,23 @@ class HandlersFactoryRirTest {
     }
 
     @Test
-    void buildOcrResponseHandler() {
+    void buildOcrResponseHandler_executesM10RetryTriggerBeforeOutputTargetSender() {
         // Arrange
         when(checkOcrResponse.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
         when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
-        // Act & Assert
+
+        // Act
         StepVerifier.create(handlersFactoryRir.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(checkOcrResponse, finalEventBuilder, m10RetryTrigger, outputTargetSender);
+        inOrder.verify(checkOcrResponse).execute(handlerContext);
+        inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test

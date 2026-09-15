@@ -159,4 +159,36 @@ class HandlersFactory890Test {
         inOrder.verify(outputTargetSender).execute(context);
     }
 
+    @Test
+    void buildOcrResponseHandler890_executesM10RetryTriggerBeforeOutputTargetSender() {
+        // Arrange
+        HandlerContext context = new HandlerContext();
+        when(checkOcrResponse.execute(context)).thenReturn(Mono.empty());
+        when(finalEventBuilder.execute(context)).thenReturn(Mono.empty());
+        when(recag012EventBuilder.execute(context)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(context)).thenReturn(Mono.empty());
+        when(pendingFinalEventTrigger.execute(context)).thenReturn(Mono.empty());
+        when(sequenceValidator.execute(context)).thenReturn(Mono.empty());
+        when(dematValidator.execute(context)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(context)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(handlersFactory.buildOcrResponseHandler890(context).execute(context))
+                .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(checkOcrResponse, finalEventBuilder, m10RetryTrigger, recag012EventBuilder,
+                outputTargetSender, pendingFinalEventTrigger, sequenceValidator, dematValidator);
+        inOrder.verify(checkOcrResponse).execute(context);
+        inOrder.verify(finalEventBuilder).execute(context);
+        inOrder.verify(m10RetryTrigger).execute(context);
+        inOrder.verify(recag012EventBuilder).execute(context);
+        inOrder.verify(outputTargetSender).execute(context);
+        inOrder.verify(pendingFinalEventTrigger).execute(context);
+        inOrder.verify(sequenceValidator).execute(context);
+        inOrder.verify(dematValidator).execute(context);
+        inOrder.verify(finalEventBuilder).execute(context);
+        inOrder.verify(outputTargetSender).execute(context);
+    }
+
 }

@@ -88,6 +88,10 @@
       }
     },
     {
+      "messageId": "SEND_OCR_RESPONSE",
+      "ocrResponseIdx": 1
+    },
+    {
       "messageId": "7216492f-ecd5-41f8-83da-38648d646a59",
       "analogMail": {
         "requestId": "{{REQUEST_ID_RETRY}}",
@@ -208,6 +212,10 @@
         "clientRequestTimeStamp": "2025-11-28T08:29:21.405720200Z",
         "statusDateTime": "2025-11-28T08:29:10Z"
       }
+    },
+    {
+      "messageId": "SEND_OCR_RESPONSE",
+      "ocrResponseIdx": 2
     }
   ],
   "expected": {
@@ -610,6 +618,23 @@
     ],
     "ocrDataPayload": [
       {
+        "commandId": "{{REQUEST_ID}}#7f2c4e9b-1d6a-4a8f-9c88-7a3d5e1b2c76#Plico",
+        "commandType": "postal",
+        "data": {
+          "documentType": "Plico",
+          "productType": "890",
+          "unifiedDeliveryDriver": "Poste",
+          "details": {
+            "deliveryDetailCode": "RECAG003C",
+            "notificationDate": "2024-01-01T10:00:00Z",
+            "registeredLetterCode": "1234567891011",
+            "deliveryFailureCause": "M10",
+            "attachment": "Uri",
+            "deliveryAttemptDate": null
+          }
+        }
+      },
+      {
         "commandId": "{{REQUEST_ID_RETRY}}#be44bcac-cf28-4ad2-8f25-49fa69031b82#23L",
         "commandType": "postal",
         "data": {
@@ -627,6 +652,6 @@
         }
       }
     ],
-    "sentToOcr": 1
+    "sentToOcr": 2
   }
 }

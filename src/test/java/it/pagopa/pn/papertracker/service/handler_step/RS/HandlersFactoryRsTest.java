@@ -120,4 +120,25 @@ class HandlersFactoryRsTest {
         inOrder.verify(m10RetryTrigger).execute(context);
         inOrder.verify(outputTargetSender).execute(context);
     }
+
+    @Test
+    void buildOcrResponseHandler_executesM10RetryTriggerBeforeOutputTargetSender() {
+        // Arrange
+        HandlerContext context = new HandlerContext();
+        when(checkOcrResponse.execute(context)).thenReturn(Mono.empty());
+        when(finalEventBuilder.execute(context)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(context)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(context)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(handlersFactoryRs.buildOcrResponseHandler(context).execute(context))
+                .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(checkOcrResponse, finalEventBuilder, m10RetryTrigger, outputTargetSender);
+        inOrder.verify(checkOcrResponse).execute(context);
+        inOrder.verify(finalEventBuilder).execute(context);
+        inOrder.verify(m10RetryTrigger).execute(context);
+        inOrder.verify(outputTargetSender).execute(context);
+    }
 }
