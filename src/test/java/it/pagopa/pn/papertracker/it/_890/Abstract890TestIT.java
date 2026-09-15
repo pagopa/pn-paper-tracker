@@ -57,7 +57,7 @@ public abstract class Abstract890TestIT extends BaseTest.WithLocalStack {
     protected void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
         switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_890", "OK_NON_RENDICONTABILE_890" ->
+            case "OK_RETRY_890", "OK_RETRY_M10_890", "OK_NON_RENDICONTABILE_890" ->
                     Mockito.when(paperChannelClient.getPcRetry(any(), any()))
                             .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
         }

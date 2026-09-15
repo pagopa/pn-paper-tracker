@@ -135,10 +135,17 @@ public class TrackingValidator {
 
         boolean isOkRs = scenarioName.equalsIgnoreCase("OK_RS");
         boolean isOkRis = scenarioName.equalsIgnoreCase("OK_RIS");
-        boolean isOkRetryRs = scenarioName.equalsIgnoreCase("OK_RETRY_RS");
+        boolean isOkRetryRs = scenarioName.equalsIgnoreCase("OK_RETRY_RS")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_RS");
         boolean isCausaForzaMaggioreRS = scenarioName.equalsIgnoreCase("CAUSA_FORZA_MAGGIORE_RS");
         boolean isOkNonRendicontabileRs = scenarioName.equalsIgnoreCase("OK_NON_RENDICONTABILE_RS");
-        boolean isOkRetryRis = scenarioName.equalsIgnoreCase("OK_RETRY_RIS");
+        boolean isOkRetryRis = scenarioName.equalsIgnoreCase("OK_RETRY_RIS")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_RIS");
+        boolean isM10Retry = scenarioName.equalsIgnoreCase("OK_RETRY_M10_AR")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_RS")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_RIR")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_RIS")
+                || scenarioName.equalsIgnoreCase("OK_RETRY_M10_890");
         boolean isFailCompiuta = scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR") || scenarioName.equalsIgnoreCase("FAIL_COMPIUTA_GIACENZA_AR_2");
         boolean isOcrPending = scenarioName.equalsIgnoreCase("OK_AR_OCR_PENDING") || scenarioName.equalsIgnoreCase("OK_890_OCR_PENDING");
         boolean isGiacenza890 = scenarioName.equalsIgnoreCase("OK_GIACENZA_EMPTY_REGISTEREDLETTERCODE_KO_890");
@@ -148,7 +155,11 @@ public class TrackingValidator {
         boolean stateDoneNoRetry = expected.getState() == DONE && noRetry;
         boolean isOkRsRis = isCausaForzaMaggioreRS || isOkRs || isOkRis || ((isOkRetryRs || isOkRetryRis || isOkNonRendicontabileRs) && noRetry);
 
-        if (isOkRsRis) {
+        if (isM10Retry && hasRetry) {
+            assertNotNull(flow.getFinalEventBuilderTimestamp());
+            assertNotNull(flow.getFinalEventDematValidationTimestamp());
+            assertNotNull(flow.getSequencesValidationTimestamp());
+        } else if (isOkRsRis) {
             assertNotNull(flow.getFinalEventBuilderTimestamp());
             assertNull(flow.getFinalEventDematValidationTimestamp());
             assertNotNull(flow.getSequencesValidationTimestamp());
@@ -183,7 +194,7 @@ public class TrackingValidator {
         if (isOkRsRis) {
             assertNull(flow.getRefinementDematValidationTimestamp());
 
-        } else if (stateDoneNoRetry || isFailCompiuta || isGiacenza890) {
+        } else if ((isM10Retry && hasRetry) || stateDoneNoRetry || isFailCompiuta || isGiacenza890) {
             assertNotNull(flow.getRefinementDematValidationTimestamp());
 
         } else {
@@ -204,7 +215,8 @@ public class TrackingValidator {
             return;
         }
 
-        if (hasNextRequestIdPcretry || (!isDone && !isFailCompiutaGiacenzaAr && !isOkGiacenzaEmptyRegisteredLetterCode890 && !isOcrPending)) {
+        boolean isM10RetryInitialTracking = testCase.startsWith("OK_RETRY_M10_") && hasNextRequestIdPcretry;
+        if ((!isM10RetryInitialTracking && hasNextRequestIdPcretry) || (!isDone && !isFailCompiutaGiacenzaAr && !isOkGiacenzaEmptyRegisteredLetterCode890 && !isOcrPending)) {
             assertTrue(actual.getOcrRequests().isEmpty());
             return;
         }

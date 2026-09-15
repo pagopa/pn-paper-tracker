@@ -127,10 +127,10 @@ public enum EventStatusCodeEnum {
     RECRS011(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "In giacenza", false),
 
     //RIS
-    RECRSI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - pre-esito", false),
-    RECRSI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - In Dematerializzazione", true),
+    RECRSI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(M10), "Non Consegnato - pre-esito", false),
+    RECRSI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(M10), "Non Consegnato - In Dematerializzazione", true),
     RECRSI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
-    RECRSI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.KO, List.of(), "Non Consegnato - fascicolo Chiuso", false),
+    RECRSI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.KO, List.of(M10), "Non Consegnato - fascicolo Chiuso", false),
     RECRSI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
     RECRSI001(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
     RECRSI002(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false);
