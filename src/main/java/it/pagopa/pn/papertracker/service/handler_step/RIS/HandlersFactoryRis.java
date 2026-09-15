@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.RIS;
 
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +15,9 @@ public class HandlersFactoryRis extends AbstractHandlersFactory {
                               IntermediateEventsBuilder intermediateEventsBuilder,
                               DematValidatorRis dematValidator,
                               SequenceValidatorRis sequenceValidator,
+                              @Qualifier("retrySender")
                               RetrySender retrySender,
+                              M10RetryTrigger m10RetryTrigger,
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
                               CheckTrackingState checkTrackingState,
@@ -28,6 +31,7 @@ public class HandlersFactoryRis extends AbstractHandlersFactory {
                 dematValidator,
                 sequenceValidator,
                 retrySender,
+                m10RetryTrigger,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
                 checkTrackingState,

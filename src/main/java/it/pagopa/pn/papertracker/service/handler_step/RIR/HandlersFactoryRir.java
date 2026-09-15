@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.service.handler_step.generic.NotRetryableErrorInserting;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,7 +18,9 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                               IntermediateEventsBuilder intermediateEventsBuilder,
                               DematValidatorRir dematValidator,
                               SequenceValidatorRir sequenceValidator,
+                              @Qualifier("retrySender")
                               RetrySender retrySender,
+                              M10RetryTrigger m10RetryTrigger,
                               NotRetryableErrorInserting notRetryableErrorInserting,
                               DuplicatedEventFiltering duplicatedEventFiltering,
                               CheckTrackingState checkTrackingState,
@@ -31,6 +34,7 @@ public class HandlersFactoryRir extends AbstractHandlersFactory {
                 dematValidator,
                 sequenceValidator,
                 retrySender,
+                m10RetryTrigger,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
                 checkTrackingState,

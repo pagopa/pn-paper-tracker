@@ -25,6 +25,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
     protected final GenericDematValidator dematValidator;
     protected final GenericSequenceValidator sequenceValidator;
     protected final RetrySender retrySender;
+    protected final M10RetryTrigger m10RetryTrigger;
     protected final NotRetryableErrorInserting notRetryableErrorInserting;
     protected final DuplicatedEventFiltering duplicatedEventFiltering;
     protected final CheckTrackingState checkTrackingState;
@@ -63,6 +64,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
      *  - Validazione triplette
      *  - Validazione demat tramite invio di un messaggio all'OCR
      *  - Costruzione evento finale
+     *  - Attivazione retry per causale M10 e riallineamento dello stato evento
      *  - Invio evento finale a delivery-push
      *  - aggiornamento stato su PaperTrackings
      *
@@ -79,6 +81,7 @@ public abstract class AbstractHandlersFactory implements HandlersFactory {
                         sequenceValidator,
                         dematValidator,
                         finalEventBuilder,
+                        m10RetryTrigger,
                         outputTargetSender
                 ));
     }
