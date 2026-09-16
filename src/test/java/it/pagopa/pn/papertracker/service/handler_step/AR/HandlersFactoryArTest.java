@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -47,6 +46,9 @@ class HandlersFactoryArTest {
     private RetrySender retrySender;
 
     @Mock
+    private M10RetryTrigger m10RetryTrigger;
+
+    @Mock
     private OutputTargetSender outputTargetSender;
 
     @Mock
@@ -67,7 +69,9 @@ class HandlersFactoryArTest {
     @Mock
     private CheckOcrResponse checkOcrResponse;
 
-    @InjectMocks
+    @Mock
+    private RetrySenderCON996 retrySenderCON996;
+
     private HandlersFactoryAr handlersFactoryAr;
 
     private HandlerContext handlerContext;
@@ -75,7 +79,22 @@ class HandlersFactoryArTest {
     @BeforeEach
     void setUp() {
         handlerContext = new HandlerContext();
-        // Add any necessary setup for HandlerContext if needed
+        handlersFactoryAr = new HandlersFactoryAr(
+                metadataUpserter,
+                checkTrackingProduct,
+                outputTargetSender,
+                finalEventBuilder,
+                intermediateEventsBuilder,
+                dematValidator,
+                sequenceValidatorAr,
+                retrySender,
+                m10RetryTrigger,
+                notRetryableErrorInserting,
+                duplicatedEventFiltering,
+                checkTrackingState,
+                checkOcrResponse,
+                retrySenderCON996
+        );
     }
 
     @Test
@@ -135,6 +154,7 @@ class HandlersFactoryArTest {
         when(sequenceValidatorAr.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
         when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
@@ -142,13 +162,14 @@ class HandlersFactoryArTest {
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, sequenceValidatorAr, dematValidator, finalEventBuilder, outputTargetSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, sequenceValidatorAr, dematValidator, finalEventBuilder, m10RetryTrigger, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
         inOrder.verify(checkTrackingProduct).execute(handlerContext);
         inOrder.verify(checkTrackingState).execute(handlerContext);
         inOrder.verify(sequenceValidatorAr).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
         inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
@@ -225,14 +246,23 @@ class HandlersFactoryArTest {
     }
 
     @Test
-    void buildOcrResponseHandler() {
+    void buildOcrResponseHandler_executesM10RetryTriggerBeforeOutputTargetSender() {
         // Arrange
         when(checkOcrResponse.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
         when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
-        // Act & Assert
+
+        // Act
         StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(checkOcrResponse, finalEventBuilder, m10RetryTrigger, outputTargetSender);
+        inOrder.verify(checkOcrResponse).execute(handlerContext);
+        inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test

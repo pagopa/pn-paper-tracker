@@ -41,7 +41,7 @@ public enum EventStatusCodeEnum {
     RECRI002(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false),
     RECRI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto, smarrimento o deterioramento", false),
     RECRI003A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - pre-esito", false),
-    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(M01, M02, M03, M04, M05, M06, M07, M08, M09, M10), "Mancata consegna - pre-esito", false),
+    RECRI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Mancata consegna - pre-esito", false),
     RECRI003B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(), "Consegnato - In Dematerializzazione", true),
     RECRI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIR, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Mancata consegna - In Dematerializzazione", true),
     RECRI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIR, EventStatus.OK, List.of(),"Consegnato - Fascicolo Chiuso", false),
@@ -127,10 +127,10 @@ public enum EventStatusCodeEnum {
     RECRS011(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RS, EventStatus.PROGRESS, List.of(), "In giacenza", false),
 
     //RIS
-    RECRSI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - pre-esito", false),
-    RECRSI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Non Consegnato - In Dematerializzazione", true),
+    RECRSI004A(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Non Consegnato - pre-esito", false),
+    RECRSI004B(EventTypeEnum.INTERMEDIATE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(CHECK_IF_REQUIRED), "Non Consegnato - In Dematerializzazione", true),
     RECRSI003C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.OK, List.of(), "Consegnato - Fascicolo Chiuso", false),
-    RECRSI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.KO, List.of(), "Non Consegnato - fascicolo Chiuso", false),
+    RECRSI004C(EventTypeEnum.FINAL_EVENT, ProductType.RIS, EventStatus.KO, List.of(CHECK_IF_REQUIRED), "Non Consegnato - fascicolo Chiuso", false),
     RECRSI005(EventTypeEnum.RETRYABLE_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(F01, F02, F03, F04), "Furto/Smarrimento/deterioramento", false),
     RECRSI001(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Avviato all'estero", false),
     RECRSI002(EventTypeEnum.SAVE_ONLY_EVENT, ProductType.RIS, EventStatus.PROGRESS, List.of(), "Ingresso nel paese estero", false);

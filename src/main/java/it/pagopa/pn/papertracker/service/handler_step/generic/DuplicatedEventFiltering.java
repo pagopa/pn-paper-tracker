@@ -10,8 +10,8 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
-import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
@@ -26,7 +26,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 
 @Component
 @RequiredArgsConstructor
-@CustomLog
+@Slf4j
 public class DuplicatedEventFiltering implements HandlerStep {
 
     private final DataVaultClient dataVaultClient;

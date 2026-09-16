@@ -9,8 +9,8 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.FlowThrow;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
-import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +22,7 @@ import static it.pagopa.pn.papertracker.utils.TrackerUtility.isInvalidState;
 
 @Component
 @RequiredArgsConstructor
-@CustomLog
+@Slf4j
 public class CheckTrackingState implements HandlerStep {
 
     /**

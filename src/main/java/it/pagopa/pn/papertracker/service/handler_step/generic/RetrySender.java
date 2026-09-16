@@ -8,13 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-@Component
-@RequiredArgsConstructor
-@Slf4j
 /**
  * Gestisce l'invio delle richieste di retry a pn-paper-channel e la successiva
  * elaborazione della risposta ricevuta.
  */
+@Component
+@RequiredArgsConstructor
+@Slf4j
 public class RetrySender implements HandlerStep {
 
     private final PaperChannelClient paperChannelClient;

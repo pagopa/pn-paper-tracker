@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.service.handler_step.Handler;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerImpl;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,7 +29,9 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
             IntermediateEventsBuilder intermediateEventsBuilder,
             DematValidator890 dematValidator,
             SequenceValidator890 sequenceValidator,
+            @Qualifier("retrySender")
             RetrySender retrySender,
+            M10RetryTrigger m10RetryTrigger,
             NotRetryableErrorInserting notRetryableErrorInserting,
             DuplicatedEventFiltering duplicatedEventFiltering,
             CheckTrackingState checkTrackingState,
@@ -47,6 +50,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                 dematValidator,
                 sequenceValidator,
                 retrySender,
+                m10RetryTrigger,
                 notRetryableErrorInserting,
                 duplicatedEventFiltering,
                 checkTrackingState,
@@ -104,6 +108,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
+                        m10RetryTrigger,
                         recag012EventBuilder,
                         outputTargetSender,
                         pendingFinalEventTrigger,

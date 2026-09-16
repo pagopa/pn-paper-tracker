@@ -116,6 +116,7 @@ components:
                     - M07
                     - M08
                     - M09
+                    - M10
                   example: "M02"
                 attachment:
                   type: string
