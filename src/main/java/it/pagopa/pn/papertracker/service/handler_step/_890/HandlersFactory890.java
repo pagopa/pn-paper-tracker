@@ -108,6 +108,7 @@ public class HandlersFactory890 extends AbstractHandlersFactory {
                 List.of(
                         checkOcrResponse,
                         finalEventBuilder,
+                        m10RetryTrigger,
                         recag012EventBuilder,
                         outputTargetSender,
                         pendingFinalEventTrigger,
