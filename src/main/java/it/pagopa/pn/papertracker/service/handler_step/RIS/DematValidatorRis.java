@@ -1,6 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIS;
 
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericDematValidator;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
@@ -13,8 +14,8 @@ import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRSI003C;
 @Component
 @Slf4j
 public class DematValidatorRis extends GenericDematValidator implements HandlerStep {
-    public DematValidatorRis(OcrUtility ocrUtility) {
-        super(ocrUtility);
+    public DematValidatorRis(OcrUtility ocrUtility, PaperTrackerErrorService paperTrackerErrorService) {
+        super(ocrUtility, paperTrackerErrorService);
     }
 
     @Override

@@ -17,7 +17,8 @@ public enum ErrorCause {
     VALUE_AFTER_REFINEMENT("Evento arrivato dopo la conclusione della spedizione o mentre si stava aspettando l’OCR (DONE o AWAITING_OCR)"),
     VALUES_NOT_MATCHING("Errore nella validazione degli allegati della sequenza: mancano degli allegati"),
     INVALID_VALUES("Errore nella validazione"),
-    VALUES_NOT_FOUND("Errore nella validazione dei statusCode della sequenza: non sono presenti tutti gli statusCode previsti dalla macchina a stati");
+    VALUES_NOT_FOUND("Errore nella validazione dei statusCode della sequenza: non sono presenti tutti gli statusCode previsti dalla macchina a stati"),
+    SOURCETYPE_FILETYPE_INCOHERENT("Il sourceType e il fileType dell'allegato non sono coerenti");
 
     private final String description;
 

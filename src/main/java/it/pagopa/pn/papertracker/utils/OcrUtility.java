@@ -10,10 +10,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.SafeStorageClient;
 import it.pagopa.pn.papertracker.middleware.queue.model.OcrEvent;
 import it.pagopa.pn.papertracker.middleware.queue.producer.OcrMomProducer;
-import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
-import it.pagopa.pn.papertracker.model.FileType;
-import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -28,6 +25,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECAG010A;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN010;
 import static it.pagopa.pn.papertracker.utils.QueueConst.OCR_REQUEST_EVENT_TYPE;
 import static it.pagopa.pn.papertracker.utils.QueueConst.PUBLISHER;
@@ -81,10 +79,14 @@ public class OcrUtility {
         Instant now = Instant.now();
         List<String> ocrFileTypes = paperTracking.getValidationConfig().getOcrFileTypes();
         Map<String, List<Attachment>> validAttachmentList = attachmentList.entrySet().stream()
-                .filter(entry -> entry.getValue().stream()
-                        .map(Attachment::getUri)
-                        .map(OcrUtility::retrieveFileType)
-                        .anyMatch(ocrFileTypes::contains))
+                .map(entry -> Map.entry(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .filter(attachment ->
+                                        ocrFileTypes.contains(retrieveFileType(attachment.getUri()))
+                                                && getSourceType(attachment).equals(SourceType.SCANNED.name()) && getOriginType(attachment).equals(OriginType.ORIGINAL.name()))
+                                .toList()))
+                .filter(entry -> !entry.getValue().isEmpty())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
 
@@ -104,6 +106,21 @@ public class OcrUtility {
                         getPaperTrackingsToUpdate(ocrStatusEnum, true, event, ocrRequests)))
                 .doOnNext(unused -> log.info("OCR validation completed for trackingId={}", paperTracking.getTrackingId()))
                 .thenReturn(true);
+    }
+
+    private boolean isSourceTypeAndOriginTypeNotNull(Attachment attachment) {
+        return StringUtils.isNotBlank(attachment.getSourceType()) && StringUtils.isNotBlank(attachment.getOriginType());
+    }
+
+    private String getSourceType(Attachment attachment) {
+        if (isSourceTypeAndOriginTypeNotNull(attachment)) {
+            return attachment.getSourceType();
+        }
+        return FileType.PDF.getValue().equalsIgnoreCase(retrieveFileType(attachment.getUri())) ? SourceType.SCANNED.name() : SourceType.DIGITAL.name();
+    }
+
+    private String getOriginType(Attachment attachment) {
+        return isSourceTypeAndOriginTypeNotNull(attachment) ? attachment.getOriginType() : OriginType.ORIGINAL.name();
     }
 
     private Flux<String> processAttachments(Map.Entry<String, List<Attachment>> attachmentEntry,
@@ -219,14 +236,15 @@ public class OcrUtility {
 
     /**
      * Per il prodotto AR, recupera lo statusTimestamp dell'evento RECRN010 se presente, altrimenti ritorna null.
-     * Per il prodotto 890, in futuro sarà recuperato lo statusTimestamp dell'evento RECAG010A. Ad oggi ritorna null.
+     * Per il prodotto 890, recupera lo statusTimestamp dell'evento RECAG010A se presente, altrimenti ritorna null.
      *
      * @param paperTrackings L'oggetto `PaperTrackings` contenente gli eventi associati al tracking.
      * @return Lo statusTimestamp del primo evento trovato, oppure null.
      */
     private Instant getDeliveryAttemptDate(PaperTrackings paperTrackings) {
         return paperTrackings.getEvents().stream()
-                .filter(event -> RECRN010.name().equals(event.getStatusCode()))
+                .filter(event -> RECRN010.name().equals(event.getStatusCode())
+                        || RECAG010A.name().equals(event.getStatusCode()))
                 .sorted(Comparator.comparing(Event::getRequestTimestamp).reversed())
                 .map(Event::getStatusTimestamp)
                 .findFirst()

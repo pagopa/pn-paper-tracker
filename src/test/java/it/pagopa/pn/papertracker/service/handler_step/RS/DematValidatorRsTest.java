@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.RS;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,9 @@ class DematValidatorRsTest {
     private OcrUtility ocrUtility;
 
     @Mock
+    private PaperTrackerErrorService paperTrackerErrorService;
+
+    @Mock
     private HandlerContext context;
 
     @Mock
@@ -31,7 +35,7 @@ class DematValidatorRsTest {
 
     @BeforeEach
     void setUp() {
-        dematValidatorRs = spy(new DematValidatorRs(ocrUtility));
+        dematValidatorRs = spy(new DematValidatorRs(ocrUtility, paperTrackerErrorService));
         when(context.getPaperProgressStatusEvent()).thenReturn(paperProgressStatusEvent);
     }
 

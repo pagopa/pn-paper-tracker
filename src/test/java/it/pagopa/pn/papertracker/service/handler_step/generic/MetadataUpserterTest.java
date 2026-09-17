@@ -111,4 +111,27 @@ class MetadataUpserterTest {
         verify(paperTrackingsDAO).updateItem(eq("req-123"), any());
 
     }
+
+    @Test
+    void execute_WithPrinterAndDu_MapsFieldsIntoEvent() {
+        // Arrange
+        paperProgressStatusEvent.setPrinter("printer-123");
+        paperProgressStatusEvent.setDu("du-456");
+        handlerContext.setEventId("event-id-1");
+
+        when(paperTrackingsDAO.updateItem(eq("req-123"), any(PaperTrackings.class)))
+                .thenAnswer(invocation -> {
+                    PaperTrackings updated = invocation.getArgument(1);
+                    paperTrackings.setEvents(updated.getEvents());
+                    return Mono.just(paperTrackings);
+                });
+
+        // Act
+        StepVerifier.create(metadataUpserter.execute(handlerContext))
+                .verifyComplete();
+
+        // Assert
+        assertEquals("printer-123", handlerContext.getPaperTrackings().getEvents().get(0).getPrinter());
+        assertEquals("du-456", handlerContext.getPaperTrackings().getEvents().get(0).getDu());
+    }
 }
