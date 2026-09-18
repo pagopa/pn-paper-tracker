@@ -488,11 +488,6 @@ Parameters:
     Default: 'ARM'
     Description: CPU architecture for the Fargate tasks
 
-Conditions:
-  EnableLambdaProxyQueueSourceCondition: !Equals
-    - !Ref EnableLambdaProxyQueueSource
-    - "true"
-
 Resources:
 
   PaperTrackerMicroservice:
