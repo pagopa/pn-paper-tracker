@@ -402,7 +402,7 @@
 			<plugin>
 				<groupId>com.sngular</groupId>
 				<artifactId>scs-multiapi-maven-plugin</artifactId>
-				<version>6.1.0</version>
+				<version>6.7.3</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
@@ -430,7 +430,7 @@
 									</supplier>
 								</specFile>
 							</specFiles>
-							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
+							<generatedSourcesFolder>generated-sources</generatedSourcesFolder>
 						</configuration>
 					</execution>
 				</executions>

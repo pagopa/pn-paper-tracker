@@ -1,4 +1,4 @@
-package it.pagopa.pn.deliverypushvalidator.config.springbootcfg;
+package it.pagopa.pn.papertracker.config.springbootcfg;
 
 import io.awspring.cloud.sqs.config.SqsListenerConfigurer;
 import io.awspring.cloud.sqs.config.SqsMessageListenerContainerFactory;

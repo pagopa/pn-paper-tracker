@@ -17,6 +17,7 @@ public enum DeliveryFailureCauseEnum {
     M07,
     M08,
     M09,
+    M10,
     F01,
     F02,
     F03,

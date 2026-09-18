@@ -60,7 +60,7 @@ public class DryRIROcrDisableTestIT extends BaseTest.WithLocalStack {
     private void mockPcRetry(ProductTestCase scenario) {
         getPcRetryResponse(scenario);
         switch (scenario.getName().toUpperCase()) {
-            case "OK_RETRY_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
+            case "OK_RETRY_RIR", "OK_RETRY_M10_RIR", "OK_PCRETRY_CON996_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any())).thenReturn(Mono.just(scenario.getFirstPcRetryResponse()));
             case "FAIL_CON996_PC_RETRY_FURTO_RIR" -> Mockito.when(paperChannelClient.getPcRetry(any(), any()))
                     .thenReturn(Mono.just(scenario.getFirstPcRetryResponse()))
                     .thenReturn(Mono.just(scenario.getSecondPcRetryResponse()));
