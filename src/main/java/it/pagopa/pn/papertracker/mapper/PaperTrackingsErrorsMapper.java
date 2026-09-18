@@ -32,6 +32,10 @@ public class PaperTrackingsErrorsMapper {
                 .flowThrow(flowThrow)
                 .eventThrow(statusCode)
                 .productType(paperTrackings.getProductType())
+                .unifiedDeliveryDriver(paperTrackings.getUnifiedDeliveryDriver())
+                .registeredLetterCode(paperTrackings.getPaperStatus() != null
+                        ? paperTrackings.getPaperStatus().getRegisteredLetterCode()
+                        : null)
                 .type(errorType)
                 .eventIdThrow(eventIdThrow)
                 .build();

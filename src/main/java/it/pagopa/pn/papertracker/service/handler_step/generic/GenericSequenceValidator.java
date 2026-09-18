@@ -3,13 +3,13 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ import static it.pagopa.pn.papertracker.utils.TrackerUtility.createAffectedEvent
 public abstract class GenericSequenceValidator implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;
-    private final PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+    private final PaperTrackerErrorService paperTrackerErrorService;
 
     /**
      * Step di validazione della sequenza degli eventi di una raccomandata.
@@ -542,7 +542,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
 
         return strictFinalEventValidation
                 ? Mono.error(new PnPaperTrackerValidationException(message, error))
-                : paperTrackingsErrorsDAO.insertError(error).thenReturn(returnValue);
+                : paperTrackerErrorService.insertPaperTrackingsError(error).thenReturn(returnValue);
     }
 
     private PaperTrackings enrichWithSequenceValidationTimestamp(List<Event> events, PaperTrackings paperTrackingsToUpdate) {

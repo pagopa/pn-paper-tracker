@@ -42,6 +42,7 @@ public class PnPaperTrackerConfigs {
     private List<String> internalEvents = new ArrayList<>();
     private List<String> productsProcessingModes = new ArrayList<>();
     private List<String> redriveEnabledDomains = new ArrayList<>();
+    private List<String> sendToConsolidatoreErrorCategories = new ArrayList<>();
     private String ocrFilterTemporal;
     private List<String> ocrFilterUnifiedDeliveryDriver = new ArrayList<>();
 

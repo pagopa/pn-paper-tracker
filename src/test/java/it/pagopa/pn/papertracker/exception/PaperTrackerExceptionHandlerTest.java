@@ -34,7 +34,7 @@ class PaperTrackerExceptionHandlerTest {
     void handleInternalExceptionSuccessfully() {
         // ARRANGE
         PnPaperTrackerValidationException exception = new PnPaperTrackerValidationException("Validation error", new PaperTrackingsErrors());
-        when(paperTrackerErrorService.insertPaperTrackingsErrors(exception.getError())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(exception.getError())).thenReturn(Mono.empty());
 
         // ACT
         Mono<Void> response = exceptionHandler.handleInternalException(exception, 1L);
@@ -42,7 +42,7 @@ class PaperTrackerExceptionHandlerTest {
         // ASSERT
         StepVerifier.create(response)
                 .verifyComplete();
-        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(exception.getError());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(exception.getError());
     }
 
     @Test
@@ -64,7 +64,7 @@ class PaperTrackerExceptionHandlerTest {
         // ASSERT
         StepVerifier.create(response)
                 .verifyError(PnPaperTrackerValidationException.class);
-        verify(paperTrackerErrorService, times(0)).insertPaperTrackingsErrors(exception.getError());
+        verify(paperTrackerErrorService, times(0)).insertPaperTrackingsError(exception.getError());
 
     }
 
@@ -83,14 +83,14 @@ class PaperTrackerExceptionHandlerTest {
                 ErrorType.ERROR,
                 "eventId"));
 
-        when(paperTrackerErrorService.insertPaperTrackingsErrors(exception.getError())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(exception.getError())).thenReturn(Mono.empty());
 
         // ACT
         Mono<Void> response = exceptionHandler.handleInternalException(exception, 5L);
         // ASSERT
         StepVerifier.create(response)
                 .verifyComplete();
-        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(exception.getError());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(exception.getError());
     }
 
     @Test
@@ -107,14 +107,14 @@ class PaperTrackerExceptionHandlerTest {
                 ErrorType.ERROR,
                 "eventId"));
 
-        when(paperTrackerErrorService.insertPaperTrackingsErrors(exception.getError())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(exception.getError())).thenReturn(Mono.empty());
 
         // ACT
         Mono<Void> response = exceptionHandler.handleInternalException(exception, 1L);
         // ASSERT
         StepVerifier.create(response)
                 .verifyComplete();
-        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(exception.getError());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(exception.getError());
     }
 
 
