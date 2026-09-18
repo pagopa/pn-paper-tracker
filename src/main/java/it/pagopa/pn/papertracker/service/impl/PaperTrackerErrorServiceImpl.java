@@ -41,7 +41,11 @@ public class PaperTrackerErrorServiceImpl implements PaperTrackerErrorService {
     }
     @Override
     public Mono<PaperTrackingsErrors> insertPaperTrackingsError(PaperTrackingsErrors paperTrackingsError) {
-        log.info("Inserting paper trackings error: {}", paperTrackingsError.toString());
+        log.info("Inserting paper trackings error: trackingId={}, category={}, cause={} type={}",
+                paperTrackingsError.getTrackingId(),
+                paperTrackingsError.getErrorCategory(),
+                paperTrackingsError.getDetails().getCause(),
+                paperTrackingsError.getType());
         // TODO: inoltrare gli errori al consolidatore quando il contratto sara definito.
         return paperTrackingsErrorsDAO.insertError(paperTrackingsError)
                 .thenReturn(paperTrackingsError);
