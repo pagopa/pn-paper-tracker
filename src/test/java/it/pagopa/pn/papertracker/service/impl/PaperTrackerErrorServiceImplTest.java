@@ -36,7 +36,7 @@ class PaperTrackerErrorServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO,mapper);
+        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO, mapper);
     }
 
     @Test
@@ -133,13 +133,13 @@ class PaperTrackerErrorServiceImplTest {
     }
 
     @Test
-    void insertPaperTrackingsErrorsSuccessfully() {
+    void insertPaperTrackingsErrorSuccessfully() {
         //ARRANGE
         PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
         when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
 
         //ACT
-        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
+        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsError(paperTrackingsErrors);
 
         //ASSERT
         StepVerifier.create(response)

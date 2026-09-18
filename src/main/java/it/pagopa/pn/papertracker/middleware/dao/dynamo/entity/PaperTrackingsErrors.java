@@ -28,6 +28,8 @@ public class PaperTrackingsErrors {
     public static final String COL_PRODUCT_TYPE = "productType";
     public static final String COL_TYPE = "type";
     public static final String COL_TTL = "ttl";
+    public static final String COL_UNIFIED_DELIVERY_DRIVER = "unifiedDeliveryDriver";
+    public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -58,5 +60,11 @@ public class PaperTrackingsErrors {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_TTL)}))
     private Long ttl;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_UNIFIED_DELIVERY_DRIVER)}))
+    private String unifiedDeliveryDriver;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
+    private String registeredLetterCode;
 
 }

@@ -1,6 +1,6 @@
 package it.pagopa.pn.papertracker.service.handler_step._890;
 
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
@@ -24,8 +24,8 @@ public class SequenceValidator890 extends GenericSequenceValidator implements Ha
 
     private final PaperTrackingsDAO paperTrackingsDAO;
 
-    public SequenceValidator890(PaperTrackingsDAO paperTrackingsDAO, PaperTrackingsErrorsDAO paperTrackingsErrorsDAO) {
-        super(paperTrackingsDAO, paperTrackingsErrorsDAO);
+    public SequenceValidator890(PaperTrackingsDAO paperTrackingsDAO, PaperTrackerErrorService paperTrackerErrorService) {
+        super(paperTrackingsDAO, paperTrackerErrorService);
         this.paperTrackingsDAO = paperTrackingsDAO;
     }
 

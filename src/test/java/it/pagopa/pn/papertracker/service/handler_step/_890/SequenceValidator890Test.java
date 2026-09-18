@@ -3,7 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step._890;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.DocumentTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
@@ -39,7 +39,7 @@ class SequenceValidator890Test {
     private PaperTrackingsDAO paperTrackingsDAO;
 
     @Mock
-    private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+    private PaperTrackerErrorService paperTrackerErrorService;
 
     private SequenceValidator890 sequenceValidator890;
 
@@ -47,7 +47,7 @@ class SequenceValidator890Test {
 
     @BeforeEach
     void setUp() {
-        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO, paperTrackingsErrorsDAO);
+        sequenceValidator890 = new SequenceValidator890(paperTrackingsDAO, paperTrackerErrorService);
         context = new HandlerContext();
         PaperProgressStatusEvent paperProgressStatusEvent = new PaperProgressStatusEvent();
         paperProgressStatusEvent.setStatusDateTime(OffsetDateTime.now());
@@ -187,7 +187,7 @@ class SequenceValidator890Test {
         context.getPaperProgressStatusEvent().setStatusCode("RECAG005C");
         context.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
-        when(paperTrackingsErrorsDAO.insertError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
+        when(paperTrackerErrorService.insertPaperTrackingsError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
         context.setEventId(eventId);
         // Act
         StepVerifier.create(sequenceValidator890.execute(context))
@@ -195,7 +195,7 @@ class SequenceValidator890Test {
 
         // Assert
         ArgumentCaptor<PaperTrackings> paperTrackingsArgumentCaptor = ArgumentCaptor.forClass(PaperTrackings.class);
-        verify(paperTrackingsErrorsDAO, times(4)).insertError(any());
+        verify(paperTrackerErrorService, times(4)).insertPaperTrackingsError(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), paperTrackingsArgumentCaptor.capture());
         assertNull(paperTrackingsArgumentCaptor.getValue().getPaperStatus().getValidatedSequenceTimestamp());
         assertNull(paperTrackingsArgumentCaptor.getValue().getPaperStatus().getRegisteredLetterCode());

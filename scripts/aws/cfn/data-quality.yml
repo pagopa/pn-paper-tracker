@@ -164,5 +164,7 @@ Resources:
             eventIdThrow:struct<S:string>,
             productType:struct<S:string>,
             type:struct<S:string>,
-            ttl:struct<N:string>
+            ttl:struct<N:string>,
+            unifiedDeliveryDriver:struct<S:string>,
+            registeredLetterCode:struct<S:string>
           >
