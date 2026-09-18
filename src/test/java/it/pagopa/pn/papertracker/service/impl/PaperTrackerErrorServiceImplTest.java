@@ -4,6 +4,7 @@ import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsR
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
 import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorDetails;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -136,6 +137,7 @@ class PaperTrackerErrorServiceImplTest {
     void insertPaperTrackingsErrorSuccessfully() {
         //ARRANGE
         PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        paperTrackingsErrors.setDetails(ErrorDetails.builder().build());
         when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
 
         //ACT
