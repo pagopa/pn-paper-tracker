@@ -134,7 +134,7 @@ public abstract class GenericDematValidator implements HandlerStep {
                 event.getId()
         );
 
-        return paperTrackerErrorService.insertPaperTrackingsErrors(warning)
+        return paperTrackerErrorService.insertPaperTrackingsError(warning)
                 .doOnError(ex -> log.warn("Unable to persist warning for trackingId={}, eventId={}",
                         paperTracking.getTrackingId(), event.getId(), ex))
                 .onErrorResume(ex -> Mono.empty())
