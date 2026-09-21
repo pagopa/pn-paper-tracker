@@ -117,6 +117,9 @@ Le principali configurazioni del microservizio sono gestite tramite variabili d'
 | [PN_PAPERTRACKER_REQUIREDATTACHMENTSREFINEMENTSTOCK890](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L42) | ENV      | -      | Allegati necessari al perfezionamento giacenza 890                                       |
 | [PN_PAPERTRACKER_SENDOCRATTACHMENTSFINALVALIDATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L60)     | ENV      | -      | Allegati da inviare all'OCR per la validazione finale                                    |
 | [PN_PAPERTRACKER_PRODUCTSPROCESSINGMODES](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L85)               | ENV      | -      | Modalità di processamento per prodotto                                                   |
+| [PN_PAPERTRACKER_SENDTOCONSOLIDATOREERRORCATEGORIES](https://github.com/pagopa/pn-paper-tracker/blob/22b6733be808fb7fa5d6cf4fb904b6cebc6cde75/scripts/aws/cfn/application-dev.env#L89)    | ENV      | -      | Categorie di errore previste per l'inoltro al consolidatore |
+| [PN_PAPERTRACKER_PAPERTRACKINGSTTLDURATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L31)             | ENV      | 3650d  | Durata di conservazione dei PaperTrackings |
+| [PN_PAPERTRACKER_PAPERTRACKINGSERRORSTTLDURATION](https://github.com/pagopa/pn-paper-tracker/blob/ca6886a5053248cfcfe4635734d3ebb50197d2d3/scripts/aws/cfn/application-dev.env#L34)       | ENV      | 3650d  | Durata di conservazione dei PaperTrackingErrors |
 
 Per l'elenco completo e i dettagli di tutte le variabili, è possibile consultare il file [application-dev.env](scripts/aws/cfn/application-dev.env).
 

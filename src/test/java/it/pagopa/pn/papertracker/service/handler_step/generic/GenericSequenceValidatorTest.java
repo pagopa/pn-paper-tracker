@@ -2,7 +2,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
@@ -29,8 +29,9 @@ class GenericSequenceValidatorTest {
 
     @Mock
     PaperTrackingsDAO paperTrackingsDAO;
+
     @Mock
-    PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
+    PaperTrackerErrorService paperTrackerErrorService;
 
     GenericSequenceValidator validator;
 
@@ -41,7 +42,7 @@ class GenericSequenceValidatorTest {
 
     @BeforeEach
     void setUp() {
-        validator = new GenericSequenceValidator(paperTrackingsDAO, paperTrackingsErrorsDAO) {
+        validator = new GenericSequenceValidator(paperTrackingsDAO, paperTrackerErrorService) {
         };
         context = new HandlerContext();
         context.setTrackingId("track-1");

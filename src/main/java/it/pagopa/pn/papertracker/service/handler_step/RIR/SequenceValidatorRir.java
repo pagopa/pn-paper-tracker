@@ -1,7 +1,7 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.model.DeliveryFailureCauseEnum;
@@ -24,8 +24,8 @@ import static it.pagopa.pn.papertracker.utils.TrackerUtility.idRECRI004XEvent;
 @Slf4j
 public class SequenceValidatorRir extends GenericSequenceValidator implements HandlerStep {
 
-    public SequenceValidatorRir(PaperTrackingsDAO paperTrackingsDAO, PaperTrackingsErrorsDAO paperTrackingsErrorsDAO) {
-        super(paperTrackingsDAO, paperTrackingsErrorsDAO);
+    public SequenceValidatorRir(PaperTrackingsDAO paperTrackingsDAO, PaperTrackerErrorService paperTrackerErrorService) {
+        super(paperTrackingsDAO, paperTrackerErrorService);
     }
 
     @Override
