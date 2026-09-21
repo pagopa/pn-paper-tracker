@@ -483,6 +483,11 @@ Parameters:
     Description: 'Where clause to filter RIS errors in the custom metric query'
     Default: "errorCategory != 'OCR_VALIDATION'"
 
+  CpuArchitecture:
+    Type: String
+    Default: 'ARM'
+    Description: CPU architecture for the Fargate tasks
+
 Resources:
 
   PaperTrackerMicroservice:
@@ -543,6 +548,7 @@ Resources:
         TaskRoleManagedPolicyArn: !Ref PaperTrackerMicroserviceTaskPolicy
         EcsLogGroup: !Ref EcsLogGroup
         LogAlarmStrategyV1: !Ref LogAlarmStrategy
+        CpuArchitecture: !Ref CpuArchitecture
 
   PnOcrOutputsQueuePolicy:
     Type: AWS::SQS::QueuePolicy
