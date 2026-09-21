@@ -218,7 +218,7 @@ class GenericDematValidatorTest {
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId3"));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
-        when(paperTrackerErrorService.insertPaperTrackingsErrors(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
+        when(paperTrackerErrorService.insertPaperTrackingsError(any())).thenReturn(Mono.just(new PaperTrackingsErrors()));
 
         // Act
         StepVerifier.create(dematValidator.validateDemat(context))
@@ -226,7 +226,7 @@ class GenericDematValidatorTest {
 
         // Assert
         ArgumentCaptor<PaperTrackingsErrors> warningCaptor = ArgumentCaptor.forClass(PaperTrackingsErrors.class);
-        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(warningCaptor.capture());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(warningCaptor.capture());
 
         PaperTrackingsErrors warning = warningCaptor.getValue();
         assertEquals("eventId3", warning.getEventIdThrow());
@@ -258,7 +258,7 @@ class GenericDematValidatorTest {
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackerErrorService, never()).insertPaperTrackingsErrors(any());
+        verify(paperTrackerErrorService, never()).insertPaperTrackingsError(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verifyNoInteractions(safeStorageClient);
         verify(ocrMomProducer, never()).push(any(OcrEvent.class));
@@ -276,14 +276,14 @@ class GenericDematValidatorTest {
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId3"));
 
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
-        when(paperTrackerErrorService.insertPaperTrackingsErrors(any())).thenReturn(Mono.error(new RuntimeException("warning insert failed")));
+        when(paperTrackerErrorService.insertPaperTrackingsError(any())).thenReturn(Mono.error(new RuntimeException("warning insert failed")));
 
         // Act
         StepVerifier.create(dematValidator.validateDemat(context))
                 .verifyComplete();
 
         // Assert
-        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsErrors(any());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verifyNoInteractions(safeStorageClient);
         verify(ocrMomProducer, never()).push(any(OcrEvent.class));
