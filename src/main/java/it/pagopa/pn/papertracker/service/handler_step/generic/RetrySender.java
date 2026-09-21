@@ -8,6 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * Gestisce l'invio delle richieste di retry a pn-paper-channel e la successiva
+ * elaborazione della risposta ricevuta.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -17,15 +21,20 @@ public class RetrySender implements HandlerStep {
     private final PcRetryService pcRetryService;
 
     /**
-     * Step di invio della richiesta di retry al Paper Channel per tutti gli eventi di Retry escluso il CON996.
-     * @return Mono(Void)
+     * Invia al Paper Channel la richiesta di retry associata al contesto e delega
+     * l'elaborazione della risposta a {@link PcRetryService} (per tutti gli eventi di retry escluso il CON996).
+     *
+     * @param context contesto contenente i dati del tracking per cui effettuare il retry
+     * @return mono che completa al termine dell'elaborazione della risposta
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
         log.info("Executing RetrySender step for trackingId: {}", context.getTrackingId());
 
         return paperChannelClient.getPcRetry(context, Boolean.FALSE)
-                .doOnError(throwable -> log.error("Error retrieving retry on CON996 for trackingId: {}", context.getPaperTrackings().getTrackingId(), throwable))
+                .doOnError(throwable -> log.error("Error retrieving retry on {} for trackingId: {}",
+                        context.getPaperProgressStatusEvent().getStatusCode(),
+                        context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> pcRetryService.handlePcRetryResponse(pcRetryResponse, Boolean.FALSE, context));
     }
 }

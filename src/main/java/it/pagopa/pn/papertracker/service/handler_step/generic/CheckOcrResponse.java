@@ -12,8 +12,8 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.OcrStatusEnum;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.TrackerUtility;
-import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +22,7 @@ import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
-@CustomLog
+@Slf4j
 public class CheckOcrResponse implements HandlerStep {
 
     private final PaperTrackingsDAO paperTrackingsDAO;

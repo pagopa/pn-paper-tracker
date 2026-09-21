@@ -38,6 +38,7 @@ public abstract class AbstractARTestIT extends BaseTest.WithLocalStack {
     private static final Set<String> SINGLE_PC_RETRY_SCENARIOS = Set.of(
             "OK_RETRY_AR",
             "OK_RETRY_AR_2",
+            "OK_RETRY_M10_AR",
             "OK_CAUSA_FORZA_MAGGIORE_AR",
             "OK_NON_RENDICONTABILE_AR"
     );

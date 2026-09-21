@@ -251,7 +251,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
     /**
      * Valida la presenza e la correttezza della deliveryFailureCause negli eventi.<br>
      * Il controllo viene effettuato sulla base di quanto censito nell'enum {@link it.pagopa.pn.papertracker.model.EventStatusCodeEnum}:<br>
-     * - Se per lo status code dell'evento, come deliveryFailureCauseList, risulta censita SKIP_VALIDATION,
+     * - Se per lo status code dell'evento, come deliveryFailureCauseList, risulta censita CHECK_IF_REQUIRED,
      * allora la validazione viene saltata<br>
      * - Se per lo status code dell'evento, come deliveryFailureCauseList, risulta censita una lista vuota o una lista con valori specifici,
      * allora viene controllato che la deliveryFailureCause dell'evento sia assente (nel primo caso) o presente e valida (nel secondo caso)<br>
