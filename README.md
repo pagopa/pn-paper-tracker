@@ -47,6 +47,7 @@ Questa riorganizzazione permette di:
 ### Servizi utilizzati
 * **Amazon DynamoDB:** DB principale per tracciamento spedizioni
 * **Amazon SQS:** messaggistica asincrona
+* **Amazon ECS Fargate:** esecuzione dei task su architettura **ARM** di default, come definito dal parametro `CpuArchitecture` (default `'ARM'`) in [scripts/aws/cfn/microservice.yml](scripts/aws/cfn/microservice.yml)
 
 ## Architettura
 
@@ -131,3 +132,10 @@ Eseguire il comando Maven:
 ```bash
 mvn spring-boot:run
 ```
+
+---
+
+| Documentazione | Valore |
+|----------------|--------|
+| Ultimo aggiornamento | 2026-09-24 |
+| Commit di riferimento | 3640607b2cfe5f4e2108361264da4a6578e44f2e |
