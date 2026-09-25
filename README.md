@@ -131,3 +131,10 @@ Eseguire il comando Maven:
 ```bash
 mvn spring-boot:run
 ```
+
+---
+
+| Documentazione | Valore |
+|----------------|--------|
+| Ultimo aggiornamento | 2026-09-24 |
+| Commit di riferimento | 3640607b2cfe5f4e2108361264da4a6578e44f2e |

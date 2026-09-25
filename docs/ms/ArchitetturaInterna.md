@@ -127,6 +127,51 @@ participant pn-delivery-push
     pn-paper-tracker->>pn-delivery-push: PROGRESS - RECAG005C
 ```
 
+### Retry per DeliveryFailureCause M10
+Nella pipeline degli handler (`buildFinalEventsHandler` e `buildOcrResponseHandler`, definiti in
+[`AbstractHandlersFactory`](../../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/AbstractHandlersFactory.java))
+è stato inserito, dopo lo step `finalEventBuilder`, lo step
+[`M10RetryTrigger`](../../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/M10RetryTrigger.java).
+
+Lo step verifica se il tracking presenta la `deliveryFailureCause` con valore `M10` (nuovo valore aggiunto all'enum
+[`DeliveryFailureCauseEnum`](../../src/main/java/it/pagopa/pn/papertracker/model/DeliveryFailureCauseEnum.java) e ammesso, tra gli altri,
+per gli eventi pre-esito `RECRN002A`, `RECAG003A` e `RECRS002A`) e se lo status finale del tracking è uno tra
+`RECRS002C`, `RECRN002C`, `RECAG003C`, `RECRI004C`, `RECRSI004C`.
+
+Quando entrambe le condizioni sono soddisfatte, gli eventi di feedback (`OK`/`KO`) corrispondenti allo status finale vengono
+riallineati a `PROGRESS` e viene eseguito il retry verso pn-paper-channel, riutilizzando la logica ereditata da
+[`RetrySender`](../../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/RetrySender.java). In assenza della causale
+`M10` o di uno status finale supportato, lo step non produce alcun effetto.
+
+### Validazione sourceType e originType degli allegati
+Gli allegati (`Attachment`) sono stati arricchiti con due nuovi attributi opzionali, `sourceType` (`SCANNED`/`DIGITAL`) e `originType`
+(`ORIGINAL`/`DUPLICATED`), definiti rispettivamente negli enum
+[`SourceType`](../../src/main/java/it/pagopa/pn/papertracker/model/SourceType.java) e
+[`OriginType`](../../src/main/java/it/pagopa/pn/papertracker/model/OriginType.java).
+
+Nello step [`GenericDematValidator`](../../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/GenericDematValidator.java),
+prima dell'invio degli allegati all'OCR, viene verificata la coerenza tra `sourceType` e il tipo di file effettivo: se un allegato
+dichiarato `SCANNED` non è un PDF, viene registrato un errore di tipo `WARNING` (causale `SOURCETYPE_FILETYPE_INCOHERENT`) tramite
+`PaperTrackerErrorService`, senza bloccare il flusso.
+
+In [`OcrUtility`](../../src/main/java/it/pagopa/pn/papertracker/utils/OcrUtility.java), la selezione degli allegati da inviare all'OCR
+tiene ora conto anche di `sourceType` (deve essere `SCANNED`) e `originType` (deve essere `ORIGINAL`), oltre che dell'estensione file
+già validata in precedenza. Se i due campi non sono valorizzati, vengono inferiti: `sourceType` viene dedotto dal tipo di file
+(`SCANNED` se PDF, altrimenti `DIGITAL`), mentre `originType` viene assunto `ORIGINAL`.
+
+Inoltre, per il prodotto 890, il recupero della data del tentativo di consegna (`getDeliveryAttemptDate`) considera ora anche
+l'evento `RECAG010A` (nuovo status code, "Invio CAD"), oltre a `RECRN010` già gestito per il prodotto AR.
+
+### Registrazione degli errori verso il consolidatore
+Il servizio [`PaperTrackerErrorServiceImpl`](../../src/main/java/it/pagopa/pn/papertracker/service/impl/PaperTrackerErrorServiceImpl.java)
+espone ora il metodo `insertPaperTrackingsError` (rinominato rispetto alla versione precedente), utilizzato da tutti gli step che
+generano errori o warning (validazione sequenza, validazione demat, ecc.) al posto dell'accesso diretto al DAO.
+
+Gli errori registrati (`PaperTrackingsErrors`) vengono arricchiti con i campi `unifiedDeliveryDriver` e `registeredLetterCode`,
+recuperati dal tracking associato, per consentire analisi più puntuali. Il codice contiene un riferimento (commento `TODO`)
+a un futuro inoltro degli errori al consolidatore, il cui contratto non risulta ancora definito: l'inoltro non è quindi
+attualmente implementato, l'errore viene soltanto persistito su DynamoDB.
+
 ## Consumer pn-ocr_outputs
 I messaggi ricevuti vengono gestiti dalla classe
 [`OcrEventHandler`](../../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/OcrEventHandler.java),
