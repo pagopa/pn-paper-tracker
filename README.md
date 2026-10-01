@@ -10,7 +10,7 @@
 - [Esecuzione](#esecuzione)
 
 ## Descrizione
-**pn-paper-tracker** è il microservizio responsabile della validazione e tracciamento delle spedizioni analogiche (cartacee) all'interno del sistema **[SEND](https://notifichedigitali.it/)**.
+**pn-paper-tracker** è il microservizio responsabile della validazione e tracciamento delle spedizioni analogiche (cartacee) all'interno del sistema **[SEND](https://notifichedigitali.it/)**. 
 
 ### Responsabilità principali
 
