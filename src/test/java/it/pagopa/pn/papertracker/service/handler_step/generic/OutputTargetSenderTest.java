@@ -7,9 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.utils.LogUtility;
@@ -64,7 +62,9 @@ class OutputTargetSenderTest {
 
         // Assert
         verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
-        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        ArgumentCaptor<PaperTrackerDryRunOutputs> captor = ArgumentCaptor.forClass(PaperTrackerDryRunOutputs.class);
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(captor.capture());
+        Assertions.assertEquals(ProcessingMode.RUN, captor.getValue().getProcessingMode());
         verifyNoInteractions(paperTrackingsDAO);
     }
 
@@ -84,7 +84,9 @@ class OutputTargetSenderTest {
         outputTargetSender.sendToOutputTarget(event, context).block();
 
         // Assert
-        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
+        ArgumentCaptor<PaperTrackerDryRunOutputs> captor = ArgumentCaptor.forClass(PaperTrackerDryRunOutputs.class);
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(captor.capture());
+        Assertions.assertEquals(ProcessingMode.DRY, captor.getValue().getProcessingMode());
         verify(eventBridgePublisher, never()).publish(any(PaperChannelUpdate.class));
         verifyNoInteractions(paperTrackingsDAO);
     }
@@ -106,6 +108,26 @@ class OutputTargetSenderTest {
         verify(eventBridgePublisher).publish(captor.capture());
         Assertions.assertEquals(event, captor.getValue().getSendEvent());
         verifyNoInteractions(paperTrackingsDAO);
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
+    }
+
+    @Test
+    void testSendToOutputTarget_EventBridgePublishError() {
+        // Arrange
+        SendEvent event = getSendEvent();
+        PaperTrackings paperTrackings = new PaperTrackings();
+        HandlerContext context = new HandlerContext();
+        context.setPaperTrackings(paperTrackings);
+        RuntimeException publishError = new RuntimeException("publish failed");
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.error(publishError));
+
+        // Act & Assert
+        RuntimeException thrown = Assertions.assertThrows(RuntimeException.class,
+                () -> outputTargetSender.sendToOutputTarget(event, context).block());
+
+        Assertions.assertEquals(publishError, thrown);
+        verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
+        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
     }
 
     @Test
@@ -123,7 +145,7 @@ class OutputTargetSenderTest {
 
         // Assert
         verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
-        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
         verify(paperTrackingsDAO, never()).updateItem(anyString(), any(PaperTrackings.class));
         verifyNoInteractions(paperTrackingsDAO);
     }
@@ -140,7 +162,7 @@ class OutputTargetSenderTest {
 
         // Assert
         verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
-        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verify(paperTrackerDryRunOutputsDAO,times(1)).insertOutputEvent(any());
         ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
         Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
@@ -158,7 +180,7 @@ class OutputTargetSenderTest {
 
         // Assert
         verify(eventBridgePublisher, times(1)).publish(any(PaperChannelUpdate.class));
-        verify(paperTrackerDryRunOutputsDAO, never()).insertOutputEvent(any());
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
         ArgumentCaptor<PaperTrackings> captor = ArgumentCaptor.forClass(PaperTrackings.class);
         verify(paperTrackingsDAO, times(1)).updateItem(any(), captor.capture());
         Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
