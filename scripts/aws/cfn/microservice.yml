@@ -485,7 +485,7 @@ Parameters:
 
   CpuArchitecture:
     Type: String
-    Default: 'AMD'
+    Default: 'ARM'
     Description: CPU architecture for the Fargate tasks
 
 Resources:
