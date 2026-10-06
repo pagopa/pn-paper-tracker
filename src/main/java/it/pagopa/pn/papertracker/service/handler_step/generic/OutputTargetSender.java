@@ -88,7 +88,10 @@ public class OutputTargetSender implements HandlerStep {
                         paperChannelUpdate.setClientId(StringUtils.hasText(context.getPaperTrackings().getAnalogRequestClientId()) ?
                                 context.getPaperTrackings().getAnalogRequestClientId() : CLIENT_ID);
                         return eventBridgePublisher.publish(paperChannelUpdate)
-                                .doOnSuccess(unused -> insertOutputEvent(context, sendEvent, ProcessingMode.RUN));
+                                .flatMap(unused -> {
+                                    sendEvent.setRequestId(context.getPaperTrackings().getTrackingId());
+                                    return insertOutputEvent(context, sendEvent, ProcessingMode.RUN);
+                                });
                     }
                 })
                 .thenReturn(event);
