@@ -64,7 +64,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
     private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
     @Autowired
     private PaperTrackerExceptionHandler paperTrackerExceptionHandler;
-    @Autowired
+    @MockitoBean
     private PaperTrackerDryRunOutputsDAO paperTrackerDryRunOutputsDAO;
     @Autowired
     private HandlersFactoryAr handlersFactoryAr;
@@ -92,6 +92,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
@@ -120,6 +121,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusCode());
         assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusCode());
+        verify(paperTrackerDryRunOutputsDAO, times(2)).insertOutputEvent(any());
     }
 
     @Test
@@ -171,6 +173,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
 
         when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("url"));
         when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         String iun = UUID.randomUUID().toString();
         String requestId = "PREPARE_ANALOG_DOMICILE.IUN_" + iun + ".RECINDEX_0.ATTEMPT_0.PCRETRY_0";
@@ -200,6 +203,7 @@ class RECRN005CMessageHandlerTest extends BaseTest.WithLocalStack {
         assertEquals(StatusCodeEnum.OK, Objects.requireNonNull(capturedSendEvent.getAllValues().get(0).getSendEvent()).getStatusCode());
         assertEquals(STATUS_RECRN005C, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusDetail());
         assertEquals(StatusCodeEnum.PROGRESS, Objects.requireNonNull(capturedSendEvent.getAllValues().get(1).getSendEvent()).getStatusCode());
+        verify(paperTrackerDryRunOutputsDAO, times(2)).insertOutputEvent(any());
 
     }
 
