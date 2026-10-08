@@ -164,6 +164,53 @@ class OutputTargetSenderTest {
         Assertions.assertEquals(PaperTrackingsState.DONE, captor.getValue().getState());
     }
 
+    @Test
+    void testExecuteMaxPcRetryReachedWithFinalStatusCode_sendsProgressAndDoesNotSetDone() {
+        // Arrange
+        SendEvent event = new SendEvent();
+        event.setStatusCode(StatusCodeEnum.PROGRESS);
+        event.setStatusDetail("RECRN002C");
+        HandlerContext context = new HandlerContext();
+        context.setFinalStatusCode("RECRN002C");
+        context.setMaxPcRetryReached(true);
+        context.setPaperTrackings(new PaperTrackings());
+        context.setEventsToSend(Collections.singletonList(event));
+        when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+
+        // Act
+        outputTargetSender.execute(context).block();
+
+        // Assert
+        ArgumentCaptor<PaperChannelUpdate> captor = ArgumentCaptor.forClass(PaperChannelUpdate.class);
+        verify(eventBridgePublisher, times(1)).publish(captor.capture());
+        Assertions.assertEquals(StatusCodeEnum.PROGRESS, captor.getValue().getSendEvent().getStatusCode());
+        Assertions.assertEquals("RECRN002C", captor.getValue().getSendEvent().getStatusDetail());
+        verifyNoInteractions(paperTrackingsDAO);
+    }
+
+    @Test
+    void testExecuteMaxPcRetryReachedDryRun_savesProgressAndDoesNotSetDone() {
+        // Arrange
+        SendEvent event = new SendEvent();
+        event.setStatusCode(StatusCodeEnum.PROGRESS);
+        event.setStatusDetail("RECRN002C");
+        HandlerContext context = new HandlerContext();
+        context.setDryRunEnabled(true);
+        context.setFinalStatusCode("RECRN002C");
+        context.setMaxPcRetryReached(true);
+        context.setPaperTrackings(new PaperTrackings());
+        context.setEventsToSend(Collections.singletonList(event));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
+
+        // Act
+        outputTargetSender.execute(context).block();
+
+        // Assert
+        verify(paperTrackerDryRunOutputsDAO, times(1)).insertOutputEvent(any());
+        verifyNoInteractions(eventBridgePublisher);
+        verifyNoInteractions(paperTrackingsDAO);
+    }
+
     private HandlerContext getFinalEventHandlerContext() {
         SendEvent event = new SendEvent();
         event.setStatusCode(StatusCodeEnum.OK);

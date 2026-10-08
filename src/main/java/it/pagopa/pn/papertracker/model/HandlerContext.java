@@ -27,4 +27,5 @@ public class HandlerContext {
     private OcrDataResultPayload ocrDataResultPayload;
     private boolean isRedrive;
     private String nextRequestIdPcRetry;
+    private boolean maxPcRetryReached = false;
 }
