@@ -7,6 +7,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.P
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.utils.PcRetryUtilsMock;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class PaperChannelClientImpl implements PaperChannelClient {
             return getPcRetryPaperChannel(context.getPaperTrackings().getTrackingId(), checkApplyRasterization);
         }
         log.debug("giving mock response...");
-        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock(), context.getPaperProgressStatusEvent().getStatusCode());
+        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock(), TrackerUtility.getRetryTriggerStatusCode(context));
     }
 
     private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId, Boolean checkApplyRasterization) {
