@@ -11,6 +11,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -91,6 +92,38 @@ public class RetrySenderTest {
         //ASSERT
         verifyNoInteractions(paperTrackingsDAO);
         verifyNoInteractions(paperTrackingsErrorsDAO);
+    }
+
+    @Test
+    void execute_genericErrorFromApi_propagatesOriginalErrorWithoutHandlingResponse() {
+        //ARRANGE
+        HandlerContext context = getHandlerContext();
+        RuntimeException serverError = new RuntimeException("paper-channel 500");
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.error(serverError));
+
+        //ACT & ASSERT
+        StepVerifier.create(retrySender.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
+        Assertions.assertNull(context.getNextRequestIdPcRetry());
+        Assertions.assertFalse(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void execute_errorFromApiOnOcrResponseFlowWithoutPaperProgressStatusEvent_propagatesOriginalError() {
+        //ARRANGE
+        HandlerContext context = getHandlerContext();
+        context.setPaperProgressStatusEvent(null);
+        context.setFinalStatusCode("RECRN002C");
+        RuntimeException serverError = new RuntimeException("paper-channel timeout");
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.error(serverError));
+
+        //ACT & ASSERT
+        StepVerifier.create(retrySender.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
     }
 
     private HandlerContext getHandlerContext() {

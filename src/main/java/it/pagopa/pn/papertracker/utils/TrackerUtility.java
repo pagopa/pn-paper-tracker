@@ -2,6 +2,7 @@ package it.pagopa.pn.papertracker.utils;
 
 import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.exception.PaperTrackerException;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.*;
 import it.pagopa.pn.papertracker.model.sequence.SequenceConfig;
@@ -229,6 +230,16 @@ public class TrackerUtility {
                 .filter(event -> context.getEventId().equalsIgnoreCase(event.getId()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("The event with id " + context.getEventId() + " does not exist in the paperTrackings events list."));
+    }
+
+    /**
+     * Restituisce lo statusCode dell'evento che ha innescato la richiesta di retry.
+     * Nel flusso di risposta OCR il paperProgressStatusEvent non è valorizzato, per cui si utilizza il finalStatusCode.
+     */
+    public static String getRetryTriggerStatusCode(HandlerContext context) {
+        return Optional.ofNullable(context.getPaperProgressStatusEvent())
+                .map(PaperProgressStatusEvent::getStatusCode)
+                .orElse(context.getFinalStatusCode());
     }
 
     public static String getStatusCodeFromEventId(PaperTrackings paperTrackings, String eventId) {

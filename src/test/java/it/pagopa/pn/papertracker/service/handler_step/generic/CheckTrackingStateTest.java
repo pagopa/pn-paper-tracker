@@ -10,6 +10,8 @@ import it.pagopa.pn.papertracker.model.HandlerContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.test.StepVerifier;
@@ -116,6 +118,19 @@ class CheckTrackingStateTest {
         StepVerifier.create(checkTrackingState.execute(context))
                 .verifyComplete();
 
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"RECRN006", "RECRN002C", "RECRS002C", "RECAG003C", "RECRI004C", "RECRSI004C"})
+    void execute_shouldCompleteWhenStateIsKo_allowsRedriveAfterMaxPcRetryReached(String statusCode) {
+        // Arrange
+        context.getPaperTrackings().getEvents().getFirst().setStatusCode(statusCode);
+        context.getPaperTrackings().setBusinessState(BusinessState.KO);
+        context.getPaperTrackings().setState(PaperTrackingsState.KO);
+
+        // Act & Assert
+        StepVerifier.create(checkTrackingState.execute(context))
+                .verifyComplete();
     }
 
     @Test

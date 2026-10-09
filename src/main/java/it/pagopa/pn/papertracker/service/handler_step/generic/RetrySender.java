@@ -3,6 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,7 @@ public class RetrySender implements HandlerStep {
 
         return paperChannelClient.getPcRetry(context, Boolean.FALSE)
                 .doOnError(throwable -> log.error("Error retrieving retry on {} for trackingId: {}",
-                        context.getPaperProgressStatusEvent().getStatusCode(),
+                        TrackerUtility.getRetryTriggerStatusCode(context),
                         context.getPaperTrackings().getTrackingId(), throwable))
                 .flatMap(pcRetryResponse -> pcRetryService.handlePcRetryResponse(pcRetryResponse, Boolean.FALSE, context));
     }

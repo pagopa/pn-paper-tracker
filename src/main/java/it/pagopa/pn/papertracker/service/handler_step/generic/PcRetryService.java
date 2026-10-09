@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,15 +32,18 @@ public class PcRetryService {
         if (Boolean.TRUE.equals(pcRetryResponse.getRetryFound())) {
             context.setNextRequestIdPcRetry(pcRetryResponse.getRequestId());
             return Mono.empty();
+        } else if (Boolean.TRUE.equals(isCON996)) {
+            return paperTrackerExceptionHandler.handleRetryError(buildErrorForCON996(context));
         } else {
-            PaperTrackingsErrors paperTrackingsErrors = Boolean.TRUE.equals(isCON996) ? buildErrorForCON996(context) : buildErrorForGeneric(context);
-            return paperTrackerExceptionHandler.handleRetryError(paperTrackingsErrors);
+            // Il tracking viene portato in KO: gli step successivi non devono sovrascriverlo con DONE
+            context.setMaxPcRetryReached(true);
+            return paperTrackerExceptionHandler.handleRetryError(buildErrorForGeneric(context));
         }
     }
 
     private PaperTrackingsErrors buildErrorForGeneric(HandlerContext context) {
         return PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
-                context.getPaperProgressStatusEvent().getStatusCode(),
+                TrackerUtility.getRetryTriggerStatusCode(context),
                 ErrorCategory.MAX_RETRY_REACHED_ERROR,
                 null,
                 "Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId(),
@@ -50,7 +54,7 @@ public class PcRetryService {
     }
 
     private PaperTrackingsErrors buildErrorForCON996(HandlerContext context) {
-        String statusCode = context.getPaperProgressStatusEvent().getStatusCode();
+        String statusCode = TrackerUtility.getRetryTriggerStatusCode(context);
         return PaperTrackingsErrorsMapper.buildPaperTrackingsError(context.getPaperTrackings(),
                 statusCode,
                 ErrorCategory.NOT_RETRYABLE_EVENT_ERROR,

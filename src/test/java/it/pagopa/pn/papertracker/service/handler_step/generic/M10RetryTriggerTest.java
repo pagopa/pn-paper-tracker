@@ -114,6 +114,59 @@ class M10RetryTriggerTest {
         verifyNoInteractions(paperChannelClient, pcRetryService);
     }
 
+    @Test
+    void execute_m10RetryNotFound_convertsFeedbackEventsToProgressAndDelegatesToPcRetryService() {
+        // Arrange
+        HandlerContext context = contextWithFailureCause("M10");
+        context.setFinalStatusCode("RECRN002C");
+        context.setEventsToSend(List.of(sendEventWithStatus(StatusCodeEnum.KO, "RECRN002C")));
+        PcRetryResponse pcRetryResponse = new PcRetryResponse();
+        pcRetryResponse.setRetryFound(false);
+        when(paperChannelClient.getPcRetry(context, Boolean.FALSE)).thenReturn(Mono.just(pcRetryResponse));
+        when(pcRetryService.handlePcRetryResponse(pcRetryResponse, Boolean.FALSE, context)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(m10RetryTrigger.execute(context))
+                .verifyComplete();
+
+        // Assert
+        assertEquals(StatusCodeEnum.PROGRESS, context.getEventsToSend().getFirst().getStatusCode());
+        verify(pcRetryService).handlePcRetryResponse(pcRetryResponse, Boolean.FALSE, context);
+    }
+
+    @Test
+    void execute_m10PaperChannelError_propagatesOriginalError() {
+        // Arrange
+        HandlerContext context = contextWithFailureCause("M10");
+        context.setFinalStatusCode("RECRN002C");
+        context.setEventsToSend(List.of(sendEventWithStatus(StatusCodeEnum.KO, "RECRN002C")));
+        RuntimeException serverError = new RuntimeException("paper-channel 500");
+        when(paperChannelClient.getPcRetry(context, Boolean.FALSE)).thenReturn(Mono.error(serverError));
+
+        // Act & Assert
+        StepVerifier.create(m10RetryTrigger.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
+    }
+
+    @Test
+    void execute_m10PaperChannelErrorOnOcrResponseFlowWithoutPaperProgressStatusEvent_propagatesOriginalError() {
+        // Arrange
+        HandlerContext context = contextWithFailureCause("M10");
+        context.setPaperProgressStatusEvent(null);
+        context.setFinalStatusCode("RECRN002C");
+        context.setEventsToSend(List.of(sendEventWithStatus(StatusCodeEnum.KO, "RECRN002C")));
+        RuntimeException serverError = new RuntimeException("paper-channel timeout");
+        when(paperChannelClient.getPcRetry(context, Boolean.FALSE)).thenReturn(Mono.error(serverError));
+
+        // Act & Assert
+        StepVerifier.create(m10RetryTrigger.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
+    }
+
     private HandlerContext contextWithFailureCause(String deliveryFailureCause) {
         PaperTrackings paperTrackings = new PaperTrackings();
         paperTrackings.setTrackingId("tracking-id");

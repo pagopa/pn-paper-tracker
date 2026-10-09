@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.CON996;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN002C;
 import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.RECRN006;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -92,7 +93,100 @@ public class PcRetryServiceTest {
         //ASSERT
         PaperTrackingsErrors paperTrackingsErrors = captor.getValue();
         Assertions.assertEquals(ErrorCategory.MAX_RETRY_REACHED_ERROR, paperTrackingsErrors.getErrorCategory());
+        Assertions.assertEquals(ErrorType.ERROR, paperTrackingsErrors.getType());
+        Assertions.assertEquals(RECRN006.name(), paperTrackingsErrors.getEventThrow());
+        Assertions.assertTrue(context.isMaxPcRetryReached());
+        Assertions.assertNull(context.getNextRequestIdPcRetry());
         verify(paperTrackerExceptionHandler, times(1)).handleRetryError(captor.capture());
+    }
+
+    @Test
+    void handlePcRetryResponseM10RetryNotFoundOnFinalEventFlow() {
+        //ARRANGE
+        PcRetryResponse response = getPcRetryResponse(false);
+        HandlerContext context = getHandlerContext(RECRN002C.name());
+        context.setFinalStatusCode(RECRN002C.name());
+        ArgumentCaptor<PaperTrackingsErrors> captor = ArgumentCaptor.forClass(PaperTrackingsErrors.class);
+        when(paperTrackerExceptionHandler.handleRetryError(captor.capture())).thenReturn(Mono.empty());
+
+        //ACT
+        StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.FALSE, context))
+                .verifyComplete();
+
+        //ASSERT
+        PaperTrackingsErrors paperTrackingsErrors = captor.getValue();
+        Assertions.assertEquals(ErrorCategory.MAX_RETRY_REACHED_ERROR, paperTrackingsErrors.getErrorCategory());
+        Assertions.assertEquals(ErrorType.ERROR, paperTrackingsErrors.getType());
+        Assertions.assertEquals(FlowThrow.RETRY_PHASE, paperTrackingsErrors.getFlowThrow());
+        Assertions.assertEquals(RECRN002C.name(), paperTrackingsErrors.getEventThrow());
+        Assertions.assertTrue(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void handlePcRetryResponseM10RetryNotFoundOnOcrResponseFlowWithoutPaperProgressStatusEvent() {
+        //ARRANGE
+        PcRetryResponse response = getPcRetryResponse(false);
+        HandlerContext context = getHandlerContext(null);
+        context.setPaperProgressStatusEvent(null);
+        context.setFinalStatusCode(RECRN002C.name());
+        context.setEventId("ocrEventId");
+        ArgumentCaptor<PaperTrackingsErrors> captor = ArgumentCaptor.forClass(PaperTrackingsErrors.class);
+        when(paperTrackerExceptionHandler.handleRetryError(captor.capture())).thenReturn(Mono.empty());
+
+        //ACT
+        StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.FALSE, context))
+                .verifyComplete();
+
+        //ASSERT
+        PaperTrackingsErrors paperTrackingsErrors = captor.getValue();
+        Assertions.assertEquals(ErrorCategory.MAX_RETRY_REACHED_ERROR, paperTrackingsErrors.getErrorCategory());
+        Assertions.assertEquals(ErrorType.ERROR, paperTrackingsErrors.getType());
+        Assertions.assertEquals(RECRN002C.name(), paperTrackingsErrors.getEventThrow());
+        Assertions.assertEquals("ocrEventId", paperTrackingsErrors.getEventIdThrow());
+        Assertions.assertTrue(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void handlePcRetryResponseCon996RetryNotFoundDoesNotMarkMaxPcRetryReached() {
+        //ARRANGE
+        PcRetryResponse response = getPcRetryResponse(false);
+        HandlerContext context = getHandlerContext(CON996.name());
+        when(paperTrackerExceptionHandler.handleRetryError(any())).thenReturn(Mono.empty());
+
+        //ACT
+        StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.TRUE, context))
+                .verifyComplete();
+
+        //ASSERT
+        Assertions.assertFalse(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void handlePcRetryResponseRetryFoundDoesNotMarkMaxPcRetryReached() {
+        //ARRANGE
+        PcRetryResponse response = getPcRetryResponse(true);
+        HandlerContext context = getHandlerContext(RECRN002C.name());
+
+        //ACT
+        StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.FALSE, context))
+                .verifyComplete();
+
+        //ASSERT
+        Assertions.assertFalse(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void handlePcRetryResponseRetryNotFoundPropagatesErrorHandlerFailure() {
+        //ARRANGE
+        PcRetryResponse response = getPcRetryResponse(false);
+        HandlerContext context = getHandlerContext(RECRN002C.name());
+        RuntimeException dynamoError = new RuntimeException("dynamo error");
+        when(paperTrackerExceptionHandler.handleRetryError(any())).thenReturn(Mono.error(dynamoError));
+
+        //ACT & ASSERT
+        StepVerifier.create(pcRetryService.handlePcRetryResponse(response, Boolean.FALSE, context))
+                .expectErrorMatches(dynamoError::equals)
+                .verify();
     }
 
 

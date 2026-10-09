@@ -60,6 +60,7 @@ public class OutputTargetSender implements HandlerStep {
         return Flux.fromIterable(filteredEvent)
                 .concatMap(sendEvent -> sendToOutputTarget(sendEvent, context))
                 .collectList()
+                .filter(sendEvent -> !context.isMaxPcRetryReached())
                 .filter(sendEvent -> StringUtils.hasText(context.getFinalStatusCode()) || StringUtils.hasText(context.getNextRequestIdPcRetry()))
                 .map(sendEvent -> getPaperTrackingsDone(context.getNextRequestIdPcRetry(), context.getFinalStatusCode()))
                 .flatMap(paperTrackings -> paperTrackingsDAO.updateItem(context.getTrackingId(), paperTrackings))
