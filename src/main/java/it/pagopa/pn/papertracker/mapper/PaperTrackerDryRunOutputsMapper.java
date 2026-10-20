@@ -5,6 +5,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
+import it.pagopa.pn.papertracker.model.HandlerContext;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
@@ -15,15 +16,15 @@ import java.util.Objects;
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackerDryRunOutputsMapper {
 
-    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String anonymizedDiscoveredAddressId, ProcessingMode processingMode) {
+    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, HandlerContext context, ProcessingMode processingMode) {
         PaperTrackerDryRunOutputs dryRunOutput = new PaperTrackerDryRunOutputs();
-        dryRunOutput.setTrackingId(event.getRequestId());
+        dryRunOutput.setTrackingId(context.getTrackingId());
         dryRunOutput.setCreated(Instant.now());
         dryRunOutput.setRegisteredLetterCode(event.getRegisteredLetterCode());
         dryRunOutput.setStatusDetail(event.getStatusDetail());
         dryRunOutput.setStatusDescription(event.getStatusDescription());
         dryRunOutput.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        dryRunOutput.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
+        dryRunOutput.setAnonymizedDiscoveredAddressId(context.getAnonymizedDiscoveredAddressId());
         dryRunOutput.setProcessingMode(processingMode);
 
         if(Objects.nonNull(event.getStatusCode())) {

@@ -88,14 +88,14 @@ public class OutputTargetSender implements HandlerStep {
                         paperChannelUpdate.setClientId(StringUtils.hasText(context.getPaperTrackings().getAnalogRequestClientId()) ?
                                 context.getPaperTrackings().getAnalogRequestClientId() : CLIENT_ID);
                         return eventBridgePublisher.publish(paperChannelUpdate)
-                                .doOnSuccess(unused -> insertOutputEvent(context, sendEvent, ProcessingMode.RUN));
+                                .flatMap(unused -> insertOutputEvent(context, sendEvent, ProcessingMode.RUN));
                     }
                 })
                 .thenReturn(event);
     }
 
     private Mono<PaperTrackerDryRunOutputs> insertOutputEvent(HandlerContext context, SendEvent sendEvent, ProcessingMode processingMode) {
-        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context.getAnonymizedDiscoveredAddressId(), processingMode));
+        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context, processingMode));
     }
 
     private PaperTrackings getPaperTrackingsDone(String nextRequestIdPcRetry, String finalStatusCode) {
