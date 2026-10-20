@@ -18,6 +18,7 @@
     "ExternalChannelsToPaperChannelDryrunQueueName": "pn-external_channel_to_paper_channel_dry_run",
     "NotificationReworkInvalidStatusCode": "RECRN006,RECRN013,RECRI005,CON996,RECAG013,RECAG004",
     "DisableAllConsumers": "false",
-    "MetricFormatType": "EMF"
+    "MetricFormatType": "EMF",
+    "CpuArchitecture": "AMD"
   }
 }
