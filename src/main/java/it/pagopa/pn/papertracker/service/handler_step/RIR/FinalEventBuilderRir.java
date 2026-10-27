@@ -46,7 +46,7 @@ public class FinalEventBuilderRir extends GenericFinalEventBuilder implements Ha
                 .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
-                .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .flatMap(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }
 

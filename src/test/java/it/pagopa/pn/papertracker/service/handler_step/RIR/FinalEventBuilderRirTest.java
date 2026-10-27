@@ -191,6 +191,26 @@ class FinalEventBuilderRirTest {
         Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
     }
 
+    @Test
+    void buildRIRFinalEvent_updateItemError() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI003C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        when(paperTrackingsDAO.updateItem(any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        // Act & Assert
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .expectErrorSatisfies(throwable -> {
+                    Assertions.assertInstanceOf(RuntimeException.class, throwable);
+                    Assertions.assertEquals("DB update failed", throwable.getMessage());
+                })
+                .verify();
+
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+    }
+
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
         PaperProgressStatusEvent finalEvent = new PaperProgressStatusEvent();
         finalEvent.setStatusCode(statusCode);

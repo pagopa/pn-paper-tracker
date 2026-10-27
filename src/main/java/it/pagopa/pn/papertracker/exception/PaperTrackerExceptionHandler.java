@@ -38,7 +38,7 @@ public class PaperTrackerExceptionHandler {
         boolean isStatusCodeError = Objects.nonNull(paperTrackingsErrors.getDetails()) && ErrorCause.VALUES_NOT_FOUND.equals(paperTrackingsErrors.getDetails().getCause());
 
         if (isStatusCodeError) {
-            if (messageReceiveCount < 5) {
+            if (messageReceiveCount != null && messageReceiveCount < 5) {
                 // Retry SQS
                 return Mono.error(ex);
             }

@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -127,6 +128,33 @@ class FinalEventBuilder890Test {
         assertNotNull(context.getEventsToSend().getFirst().getDeliveryFailureCause());
         assertNotNull(context.getEventsToSend().getFirst().getDiscoveredAddress());
         assertEquals(StatusCodeEnum.OK, context.getEventsToSend().getFirst().getStatusCode());
+    }
+
+    @Test
+    void executeWithoutStockStatus3COK_updateItemError() {
+        PaperAddress paperAddress = new PaperAddress();
+        paperAddress.setCity("city");
+        paperAddress.setName("name");
+        paperAddress.setAddress("address");
+        when(dataVaultClient.deAnonymizeDiscoveredAddress(any(), any()))
+                .thenReturn(Mono.just(paperAddress));
+        context.setEventId(EVENT_ID);
+        event.setStatusCode(RECAG003C.name());
+        event1.setStatusCode(RECAG003A.name());
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("M02");
+        paperTrackings.getPaperStatus().setAnonymizedDiscoveredAddress("discAddr");
+        paperTrackings.setEvents(List.of(event, event1));
+        when(paperTrackingsDAO.updateItem(any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        StepVerifier.create(finalEventBuilder890.execute(context))
+                .expectErrorSatisfies(throwable -> {
+                    Assertions.assertInstanceOf(RuntimeException.class, throwable);
+                    Assertions.assertEquals("DB update failed", throwable.getMessage());
+                })
+                .verify();
+
+        assertEquals(1, context.getEventsToSend().size());
     }
 
     @Test
