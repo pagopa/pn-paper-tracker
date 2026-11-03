@@ -24,6 +24,7 @@ public class PaperTrackerDryRunOutputs {
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
     public static final String COL_CLIENT_REQUEST_TIMESTAMP = "clientRequestTimestamp";
+    public static final String COL_PROCESSING_MODE = "processingMode";
 
     @Getter(onMethod = @__({@DynamoDbPartitionKey, @DynamoDbAttribute(COL_TRACKING_ID)}))
     private String trackingId;
@@ -57,5 +58,8 @@ public class PaperTrackerDryRunOutputs {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_CLIENT_REQUEST_TIMESTAMP)}))
     private String clientRequestTimestamp;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PROCESSING_MODE)}))
+    private ProcessingMode processingMode;
 
 }

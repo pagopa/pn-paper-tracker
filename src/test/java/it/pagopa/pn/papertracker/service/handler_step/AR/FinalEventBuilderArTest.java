@@ -239,6 +239,30 @@ class FinalEventBuilderArTest {
         Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
+    @Test
+    void buildFinalEvent_updateItemError() {
+        // Arrange
+        handlerContext.getPaperTrackings().getEvents().getFirst().setStatusCode(RECRN003A.name());
+        handlerContext.getPaperTrackings().getEvents().getLast().setStatusTimestamp(Instant.now().minus(5, ChronoUnit.DAYS));
+        setValidatedEvents(EVENT_ID + "1");
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRN003C.name());
+        handlerContext.setEventId(EVENT_ID + "6");
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        when(cfg.getRefinementDuration()).thenReturn(Duration.ofDays(10));
+        when(paperTrackingsDAO.updateItem(any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        // Act & Assert
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .expectErrorSatisfies(throwable -> {
+                    Assertions.assertInstanceOf(RuntimeException.class, throwable);
+                    Assertions.assertEquals("DB update failed", throwable.getMessage());
+                })
+                .verify();
+
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+    }
+
     private void setValidatedEvents(String eventId) {
         paperTrackings.getPaperStatus().setValidatedEvents(List.of(eventId, EVENT_ID + 3));
     }

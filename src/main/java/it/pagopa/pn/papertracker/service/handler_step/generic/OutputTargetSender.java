@@ -6,10 +6,7 @@ import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.S
 import it.pagopa.pn.papertracker.mapper.PaperTrackerDryRunOutputsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackerDryRunOutputsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.BusinessState;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperStatus;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
-import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.eventBridge.EventBridgePublisher;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
@@ -83,7 +80,7 @@ public class OutputTargetSender implements HandlerStep {
                     log.info("Sending to output target for event: {}", anonymizedEvent);
                     if (context.isDryRunEnabled()) {
                         log.info("Sending event to PnPaperTrackerDryRunOutputs");
-                        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context.getAnonymizedDiscoveredAddressId()));
+                        return insertOutputEvent(context, sendEvent, ProcessingMode.DRY);
                     } else {
                         log.info("Sending event to pn-external_channel_outputs");
                         sendEvent.setRequestId(context.getPaperTrackings().getAttemptId());
@@ -91,10 +88,15 @@ public class OutputTargetSender implements HandlerStep {
                         paperChannelUpdate.setSendEvent(sendEvent);
                         paperChannelUpdate.setClientId(StringUtils.hasText(context.getPaperTrackings().getAnalogRequestClientId()) ?
                                 context.getPaperTrackings().getAnalogRequestClientId() : CLIENT_ID);
-                        return eventBridgePublisher.publish(paperChannelUpdate);
+                        return eventBridgePublisher.publish(paperChannelUpdate)
+                                .flatMap(unused -> insertOutputEvent(context, sendEvent, ProcessingMode.RUN));
                     }
                 })
                 .thenReturn(event);
+    }
+
+    private Mono<PaperTrackerDryRunOutputs> insertOutputEvent(HandlerContext context, SendEvent sendEvent, ProcessingMode processingMode) {
+        return paperTrackerDryRunOutputsDAO.insertOutputEvent(PaperTrackerDryRunOutputsMapper.dtoToEntity(sendEvent, context, processingMode));
     }
 
     private PaperTrackings getPaperTrackingsDone(String nextRequestIdPcRetry, String finalStatusCode) {

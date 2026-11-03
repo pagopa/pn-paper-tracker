@@ -46,7 +46,7 @@ public class FinalEventBuilder890 extends GenericFinalEventBuilder implements Ha
         String eventStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECAG003C.name(), statusCode, context.getPaperTrackings()).name();
         return addEventToSend(context, finalEvent, eventStatus)
                 .thenReturn(finalEvent)
-                .map(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .flatMap(sendEvent -> paperTrackingsDAO.updateItem(context.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }
 }

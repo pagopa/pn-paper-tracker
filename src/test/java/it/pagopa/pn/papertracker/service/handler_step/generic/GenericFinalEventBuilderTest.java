@@ -121,6 +121,26 @@ class GenericFinalEventBuilderTest {
         Assertions.assertEquals(StatusCodeEnum.KO, handlerContext.getEventsToSend().getFirst().getStatusCode());
     }
 
+    @Test
+    void genericFinalEvent_updateItemError() {
+        // Arrange
+        handlerContext.setPaperProgressStatusEvent(getFinalEvent("RECRI003C"));
+        handlerContext.setEventId(EVENT_ID);
+
+        when(paperTrackingsDAO.updateItem(any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        // Act & Assert
+        StepVerifier.create(genericFinalEventBuilder.execute(handlerContext))
+                .expectErrorSatisfies(throwable -> {
+                    Assertions.assertInstanceOf(RuntimeException.class, throwable);
+                    Assertions.assertEquals("DB update failed", throwable.getMessage());
+                })
+                .verify();
+
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+    }
+
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
         PaperProgressStatusEvent finalEvent = new PaperProgressStatusEvent();
         finalEvent.setStatusCode(statusCode);
