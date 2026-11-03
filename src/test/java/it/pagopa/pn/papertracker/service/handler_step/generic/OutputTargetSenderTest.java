@@ -203,6 +203,7 @@ class OutputTargetSenderTest {
         context.setPaperTrackings(new PaperTrackings());
         context.setEventsToSend(Collections.singletonList(event));
         when(eventBridgePublisher.publish(any(PaperChannelUpdate.class))).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         outputTargetSender.execute(context).block();
