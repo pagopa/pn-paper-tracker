@@ -90,6 +90,7 @@ class M10RetryFlowTest {
         when(paperTrackerErrorService.insertPaperTrackingsError(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(paperTrackerTrackingService.updatePaperTrackingsStatus(eq(TRACKING_ID), any())).thenReturn(Mono.empty());
         when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handler.execute(context)).verifyComplete();
@@ -126,6 +127,7 @@ class M10RetryFlowTest {
         when(paperChannelClient.getPcRetry(context, Boolean.FALSE)).thenReturn(Mono.just(retryFound()));
         when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(eq(TRACKING_ID), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handler.execute(context)).verifyComplete();
@@ -165,6 +167,7 @@ class M10RetryFlowTest {
         when(paperChannelClient.getPcRetry(context, Boolean.FALSE)).thenReturn(Mono.just(retryFound()));
         when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
         when(paperTrackingsDAO.updateItem(eq(TRACKING_ID), any())).thenReturn(Mono.just(new PaperTrackings()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handler.execute(context)).verifyComplete();
@@ -188,6 +191,7 @@ class M10RetryFlowTest {
         when(paperTrackerErrorService.insertPaperTrackingsError(any())).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
         when(paperTrackerTrackingService.updatePaperTrackingsStatus(eq(TRACKING_ID), any())).thenReturn(Mono.empty());
         when(eventBridgePublisher.publish(any())).thenReturn(Mono.just(PutEventsResponse.builder().build()));
+        when(paperTrackerDryRunOutputsDAO.insertOutputEvent(any())).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(handler.execute(context)).verifyComplete();
