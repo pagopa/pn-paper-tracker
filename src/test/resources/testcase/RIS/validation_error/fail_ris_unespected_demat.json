@@ -47,7 +47,7 @@
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "ATTACHMENTS_ERROR",
         "flowThrow": "SEQUENCE_VALIDATION",
-        "type": "ERROR",
+        "type": "WARNING",
         "productType": "RIS",
         "eventThrow": "RECRSI004C",
         "eventIdThrow": "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38",
@@ -66,7 +66,8 @@
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "CON020", "statusDescription": "RIS - CON020 - CON020 description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:01Z", "attachments": [{"documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z"}]},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRSI004A", "statusDescription": "RIS - RECRSI004A - RECRSI004A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": []},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRSI004B", "statusDescription": "RIS - RECRSI004B - RECRSI004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "AR", "sha256": "sha256", "id": "id-RECRSI004B-AR", "uri": "https://example.com/RECRSI004B-AR.pdf", "date": "2024-01-01T10:00:05Z"}]},
-      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRSI004B", "statusDescription": "RIS - RECRSI004B - RECRSI004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "Plico", "sha256": "sha256", "id": "id-RECRSI004B-Plico", "uri": "https://example.com/RECRSI004B-Plico.pdf", "date": "2024-01-01T10:00:05Z"}]}
+      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRSI004B", "statusDescription": "RIS - RECRSI004B - RECRSI004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "Plico", "sha256": "sha256", "id": "id-RECRSI004B-Plico", "uri": "https://example.com/RECRSI004B-Plico.pdf", "date": "2024-01-01T10:00:05Z"}]},
+      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "KO", "statusDetail": "RECRSI004C", "statusDescription": "RIS - RECRSI004C - RECRSI004C description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:06Z", "attachments": []}
     ],
 
     "trackings": [
@@ -77,8 +78,8 @@
         "unifiedDeliveryDriver": "POSTE",
         "processingMode": "DRY",
         "productType": "RIS",
-        "state": "KO",
-        "businessState": "KO",
+        "state": "DONE",
+        "businessState": "DONE",
         "events": [
           {"id": "a11aa111-7c9b-42e1-8d6f-0e2b3d4f5a61", "statusCode": "CON080", "statusDescription": "CON080 description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:00Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "RIS", "attachments": []},
           {"id": "b22bb222-8f1b-43d7-9c2e-3d5f7a9b6c72", "statusCode": "CON020", "statusDescription": "CON020 description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:01Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "RIS", "attachments": [{"documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z"}]},
@@ -109,6 +110,16 @@
           "ocrRequests": []
         },
         "paperStatus": {
+          "registeredLetterCode": "1234567891011",
+          "finalStatusCode": "RECRSI004C",
+          "validatedEvents": [
+            "d2a4b6c8-1e2f-4a3b-9c5d-7e8f9a0b5555",
+            "8f3e2d1c-7b6a-4d5c-9e0f-1a2b3c4d6666",
+            "e55ee555-1c4e-46a0-9f2b-6a8c0e2d9f05",
+            "f66ff666-2d5f-47b1-8a3c-7b9d1f3a0e16",
+            "f66ff666-2d5f-47b1-8a3c-7b9d1f3a0e17",
+            "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38"
+          ],
           "finalDematFound": true
         }
       }

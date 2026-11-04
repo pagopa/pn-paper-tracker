@@ -3,7 +3,9 @@ package it.pagopa.pn.papertracker.model.sequence;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Enum that defines required attachments for event statusCode.
@@ -48,5 +50,20 @@ public enum SequenceAttachments {
                 .filter(sequenceAttachments -> sequenceAttachments.name().equalsIgnoreCase(statusCode))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Restituisce i tipi di allegato ammessi (obbligatori e opzionali) per lo statusCode indicato.
+     *
+     * @param statusCode statusCode dell'evento
+     * @return set dei documentType ammessi, vuoto se per lo statusCode non sono previsti allegati
+     */
+    public static Set<String> getValidAttachments(String statusCode) {
+        return Optional.ofNullable(getFromKey(statusCode))
+                .map(SequenceAttachments::getAttachments)
+                .map(attachments -> attachments.stream()
+                        .map(attachment -> attachment.replace("?", ""))
+                        .collect(Collectors.toSet()))
+                .orElse(Set.of());
     }
 }

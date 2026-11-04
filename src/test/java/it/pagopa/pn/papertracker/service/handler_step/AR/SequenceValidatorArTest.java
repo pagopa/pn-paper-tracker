@@ -127,25 +127,86 @@ class SequenceValidatorArTest {
         Instant businessTimestamp = Instant.now();
 
         context.getPaperTrackings().setEvents(List.of(
-                buildEvent(UUID.randomUUID().toString(), "RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "", "M01", null),
-                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "", "", List.of(DocumentTypeEnum.INDAGINE.getValue())),
-                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue())),
-                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "", "", List.of(DocumentTypeEnum.PLICO.getValue())),
-                buildEvent(UUID.randomUUID().toString(), "RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "", "", null)
+                buildEvent(UUID.randomUUID().toString(), "RECRN002D", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(1), "REG1", "M01", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(2), "REG1", "", List.of(DocumentTypeEnum.INDAGINE.getValue())),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(4), "REG1", "", List.of(DocumentTypeEnum.PLICO.getValue(), DocumentTypeEnum.AR.getValue())),
+                buildEvent(UUID.randomUUID().toString(), "RECRN002E", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(5), "REG1", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(eventIdC, "RECRN002F", timestamp.plusSeconds(1), businessTimestamp.plusSeconds(6), "REG1", "", null)
         ));
 
         context.setEventId(eventIdC);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(any(PaperTrackingsErrors.class))).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidatorAr.execute(context))
-                .verifyErrorMatches(throwable -> throwable.getMessage()
-                        .contains("Event RECRN002E contains invalid attachments: [AR]"));
+                .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(0)).updateItem(any(), any());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(argThat((PaperTrackingsErrors error) ->
+                ErrorType.WARNING.equals(error.getType())
+                        && ErrorCategory.ATTACHMENTS_ERROR.equals(error.getErrorCategory())
+                        && error.getDetails().getMessage().contains("Event RECRN002E contains invalid attachments: [AR]")));
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
+    @Test
+    void sequenceRECRN005CWithInvalidAttachmentCorrectedByNewEvent() {
+        // Arrange: il recapitista invia RECRN005B con AR (non previsto) e successivamente lo corregge inviando il Plico
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN005C");
+        String eventIdC = UUID.randomUUID().toString();
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent(UUID.randomUUID().toString(), "RECRN010", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN011", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN005A", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(2), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN005B", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(3), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(UUID.randomUUID().toString(), "RECRN005B", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(4), "REG123", "", List.of(DocumentTypeEnum.PLICO.getValue())),
+                buildEvent(eventIdC, "RECRN005C", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(5), "REG123", "", null)
+        ));
+
+        context.setEventId(eventIdC);
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(any(PaperTrackingsErrors.class))).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .verifyComplete();
+
+        // Assert
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(argThat((PaperTrackingsErrors error) ->
+                ErrorType.WARNING.equals(error.getType())
+                        && error.getDetails().getMessage().contains("Event RECRN005B contains invalid attachments: [AR]")));
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
+    }
+
+    @Test
+    void sequenceRECRN005COnlyInvalidAttachment() {
+        // Arrange: il recapitista invia RECRN005B solo con AR (non previsto), senza Plico
+        context.getPaperProgressStatusEvent().setStatusCode("RECRN005C");
+        String eventIdC = UUID.randomUUID().toString();
+        Instant timestamp = Instant.now();
+        Instant businessTimestamp = Instant.now();
+
+        context.getPaperTrackings().setEvents(List.of(
+                buildEvent(UUID.randomUUID().toString(), "RECRN010", timestamp, businessTimestamp, "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN011", timestamp, businessTimestamp.plusSeconds(1), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN005A", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(2), "REG123", "", null),
+                buildEvent(UUID.randomUUID().toString(), "RECRN005B", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(3), "REG123", "", List.of(DocumentTypeEnum.AR.getValue())),
+                buildEvent(eventIdC, "RECRN005C", timestamp.plusSeconds(10), businessTimestamp.plusSeconds(5), "REG123", "", null)
+        ));
+        context.setEventId(eventIdC);
+
+        // Act
+        StepVerifier.create(sequenceValidatorAr.execute(context))
+                .verifyErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException
+                        && throwable.getMessage().contains("Missed required attachments for the sequence validation: [Plico]"));
+
+        // Assert
+        verify(paperTrackingsDAO, never()).updateItem(any(), any());
+    }
 
     @Test
     void validateSequenceValidFlowABC() {
@@ -186,13 +247,18 @@ class SequenceValidatorArTest {
 
         context.setEventId(eventIdC);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.empty());
+        when(paperTrackerErrorService.insertPaperTrackingsError(any(PaperTrackingsErrors.class))).thenReturn(Mono.empty());
 
         // Act
         StepVerifier.create(sequenceValidatorAr.execute(context))
-                .verifyErrorMatches(throwable -> throwable.getMessage().contains("Event RECRN001C contains invalid attachments: [AR]"));
+                .verifyComplete();
 
         // Assert
-        verify(paperTrackingsDAO, times(0)).updateItem(any(), any());
+        verify(paperTrackerErrorService, times(1)).insertPaperTrackingsError(argThat((PaperTrackingsErrors error) ->
+                ErrorType.WARNING.equals(error.getType())
+                        && error.getDetails().getMessage().contains("Event RECRN001A contains invalid attachments: [AR]")
+                        && error.getDetails().getMessage().contains("Event RECRN001C contains invalid attachments: [AR]")));
+        verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
     }
 
     @Test
