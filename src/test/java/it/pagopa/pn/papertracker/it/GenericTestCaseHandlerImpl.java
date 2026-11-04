@@ -67,7 +67,8 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
             List<PaperTrackerDryRunOutputs> expOutputs = scenario.getExpected().getOutputs();
 
             if (expErrors.stream().anyMatch(paperTrackingsErrors ->
-                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION)) && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")) {
+                    paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION) && !isInvalidAttachmentsWarning(paperTrackingsErrors))
+                    && !scenario.getName().equalsIgnoreCase("OK_TIMESTAMPERROR_890")) {
 
                 replaceOutputsFields(scenario, expOutputs);
                 replaceTrackingsFields(scenario, expTrackings);
@@ -78,9 +79,22 @@ public class GenericTestCaseHandlerImpl implements GenericTestCaseHandler {
 
     }
 
+    /**
+     * Gli allegati non previsti dalla macchina a stati generano sempre un WARNING non bloccante,
+     * indipendentemente dalla strict validation (gli allegati obbligatori mancanti restano bloccanti).
+     */
+    private static boolean isInvalidAttachmentsWarning(PaperTrackingsErrors error) {
+        return ErrorCategory.ATTACHMENTS_ERROR.equals(error.getErrorCategory())
+                && ErrorType.WARNING.equals(error.getType())
+                && Objects.nonNull(error.getDetails())
+                && Objects.nonNull(error.getDetails().getMessage())
+                && error.getDetails().getMessage().contains("contains invalid attachments");
+    }
+
     private static void replaceErrorsFields(ProductTestCase scenario, List<PaperTrackingsErrors> expErrors) {
         scenario.getExpected().getErrors().stream()
                 .filter(paperTrackingsErrors -> paperTrackingsErrors.getFlowThrow().equals(FlowThrow.SEQUENCE_VALIDATION))
+                .filter(paperTrackingsErrors -> !isInvalidAttachmentsWarning(paperTrackingsErrors))
                 .forEach(paperTrackingsErrors -> paperTrackingsErrors.setType(ErrorType.ERROR));
 
         if (scenario.getName().equalsIgnoreCase("OK_GIACENZA_MORE_ERROR_890")) {

@@ -47,7 +47,7 @@
         "trackingId": "{{REQUEST_ID}}",
         "errorCategory": "ATTACHMENTS_ERROR",
         "flowThrow": "SEQUENCE_VALIDATION",
-        "type": "ERROR",
+        "type": "WARNING",
         "productType": "RS",
         "eventThrow": "RECRS004C",
         "eventIdThrow": "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38",
@@ -67,7 +67,8 @@
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRS010", "statusDescription": "RS - RECRS010 - desc", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": []},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRS004A", "statusDescription": "RS - RECRS004A - RECRS004A description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:04Z", "attachments": []},
       {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRS004B", "statusDescription": "RS - RECRS004B - RECRS004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "AR", "sha256": "sha256", "id": "id-RECRS004B-AR", "uri": "https://example.com/RECRS004B-AR.pdf", "date": "2024-01-01T10:00:05Z"}]},
-      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRS004B", "statusDescription": "RS - RECRS004B - RECRS004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "Plico", "sha256": "sha256", "id": "id-RECRS004B-Plico", "uri": "https://example.com/RECRS004B-Plico.pdf", "date": "2024-01-01T10:00:05Z"}]}
+      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "PROGRESS", "statusDetail": "RECRS004B", "statusDescription": "RS - RECRS004B - RECRS004B description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:05Z", "attachments": [{"documentType": "Plico", "sha256": "sha256", "id": "id-RECRS004B-Plico", "uri": "https://example.com/RECRS004B-Plico.pdf", "date": "2024-01-01T10:00:05Z"}]},
+      {"trackingId": "{{REQUEST_ID}}", "registeredLetterCode": "1234567891011", "statusCode": "KO", "statusDetail": "RECRS004C", "statusDescription": "RS - RECRS004C - RECRS004C description", "statusDateTime": "2024-01-01T10:00:00Z", "clientRequestTimestamp": "2024-01-01T10:00:06Z", "attachments": []}
     ],
 
     "trackings": [
@@ -78,8 +79,8 @@
         "unifiedDeliveryDriver": "POSTE",
         "processingMode": "DRY",
         "productType": "RS",
-        "state": "KO",
-        "businessState": "KO",
+        "state": "DONE",
+        "businessState": "DONE",
         "events": [
           {"id": "a11aa111-7c9b-42e1-8d6f-0e2b3d4f5a61", "statusCode": "CON080", "statusDescription": "CON080 description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:00Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "RS", "attachments": []},
           {"id": "b22bb222-8f1b-43d7-9c2e-3d5f7a9b6c72", "statusCode": "CON020", "statusDescription": "CON020 description", "statusTimestamp": "2024-01-01T10:00:00Z", "requestTimestamp": "2024-01-01T10:00:01Z", "registeredLetterCode": "1234567891011", "iun": "{{RANDOM_IUN}}", "productType": "RS", "attachments": [{"documentType": "7Z", "sha256": "sha256", "id": "id-CON020-7Z", "uri": "https://example.com/CON020-7Z.pdf", "date": "2024-01-01T10:00:01Z"}]},
@@ -107,13 +108,53 @@
           "ocrEnabled": "DISABLED"
         },
         "validationFlow": {
-          "ocrRequests": []
+          "ocrRequests": [
+            { "responseStatus": "OK", "finalEventId": "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38", "documentType": "Plico", "attachmentEventId": "f66ff666-2d5f-47b1-8a3c-7b9d1f3a0e16" }
+          ]
         },
         "paperStatus": {
+          "registeredLetterCode": "1234567891011",
+          "finalStatusCode": "RECRS004C",
+          "validatedEvents": [
+            "5d7f9a1c-4e6a-4c0d-9f2b-6a8c0e2d9f03",
+            "5d7f9a1c-4e6a-4c0d-9f2b-6a8c0e2d9f04",
+            "e55ee555-1c4e-46a0-9f2b-6a8c0e2d9f05",
+            "f66ff666-2d5f-47b1-8a3c-7b9d1f3a0e15",
+            "f66ff666-2d5f-47b1-8a3c-7b9d1f3a0e16",
+            "h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38"
+          ],
           "finalDematFound": true
         }
       }
     ]
   ,
-  "sentToOcr": 0 }
+    "ocrResultPayload": [{
+      "commandId": "{{REQUEST_ID}}#h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38#Plico",
+      "version": "v1",
+      "commandType": "postal",
+      "data": {
+        "validationStatus": "OK",
+        "description": "OK",
+        "predictedRefinementType": null,
+        "validationType": "ai"
+      }
+    }],
+    "ocrDataPayload": [{
+      "commandId": "{{REQUEST_ID}}#h88hh888-4f7b-49d3-9c5e-9d1f3a0e2f38#Plico",
+      "commandType": "postal",
+      "data": {
+        "documentType": "Plico",
+        "productType": "RS",
+        "unifiedDeliveryDriver": "Poste",
+        "details": {
+          "deliveryDetailCode": "RECRS004C",
+          "notificationDate": "2024-01-01T10:00:00Z",
+          "registeredLetterCode": "1234567891011",
+          "deliveryFailureCause": null,
+          "attachment": "uri.pdf",
+          "deliveryAttemptDate": null
+        }
+      }
+    }],
+    "sentToOcr": 1 }
 }

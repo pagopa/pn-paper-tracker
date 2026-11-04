@@ -140,7 +140,7 @@ public abstract class GenericSequenceValidator implements HandlerStep {
                 .collect(Collectors.toSet());
 
         return verifyRequiredAttachments(events, paperTrackings, context, requiredAttachments, allDocs, strictFinalEventValidation)
-                .flatMap(unused -> verifyValidAttachments(events, paperTrackings, context, validAttachments, eventsWithAttachments, strictFinalEventValidation))
+                .flatMap(unused -> verifyValidAttachments(events, paperTrackings, context, validAttachments, eventsWithAttachments))
                 .doOnNext(unused -> log.info("Attachments validation completed successfully"));
     }
 
@@ -160,26 +160,41 @@ public abstract class GenericSequenceValidator implements HandlerStep {
         return getErrorOrSaveWarning
                 ("Missed required attachments for the sequence validation: " + missingDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, VALUES_NOT_MATCHING, additionalDetails, strictFinalEventValidation, events);    }
 
-    private Mono<List<Event>> verifyValidAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Map<String, Set<String>> validAttachments, List<Event> eventsWithAttachments, Boolean strictFinalEventValidation) {
+    /**
+     * Verifica che gli allegati ricevuti siano coerenti con quelli previsti dalla macchina a stati.
+     * La verifica non è bloccante: la presenza degli allegati obbligatori è garantita da {@link #verifyRequiredAttachments},
+     * mentre eventuali allegati non previsti generano un WARNING, in modo che invii non conformi
+     * (es. successivamente corretti dal recapitista) non impediscano l'elaborazione del feedback.
+     */
+    private Mono<List<Event>> verifyValidAttachments(List<Event> events, PaperTrackings paperTrackings, HandlerContext context, Map<String, Set<String>> validAttachments, List<Event> eventsWithAttachments) {
+        Map<String, Set<String>> invalidDocsByStatusCode = new LinkedHashMap<>();
         for (Event e : eventsWithAttachments) {
             var allowedDocs = validAttachments.get(e.getStatusCode());
 
-            var eventDocs = e.getAttachments().stream()
+            var invalidDocs = e.getAttachments().stream()
                     .map(Attachment::getDocumentType)
-                    .collect(Collectors.toSet());
-
-            // Se l'evento contiene documenti non ammessi
-            var invalidDocs = eventDocs.stream()
                     .filter(doc -> CollectionUtils.isEmpty(allowedDocs) || !allowedDocs.contains(doc))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
 
             if (!CollectionUtils.isEmpty(invalidDocs)) {
-                Map<String, Object> additionalDetails = Map.of("invalidAttachments",  invalidDocs.stream().toList());
-
-                return getErrorOrSaveWarning("Event " + e.getStatusCode() + " contains invalid attachments: " + invalidDocs, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, INVALID_VALUES, additionalDetails, strictFinalEventValidation, events);
+                invalidDocsByStatusCode.computeIfAbsent(e.getStatusCode(), k -> new LinkedHashSet<>()).addAll(invalidDocs);
             }
         }
-        return Mono.just(events);
+
+        if (invalidDocsByStatusCode.isEmpty()) {
+            return Mono.just(events);
+        }
+
+        String message = invalidDocsByStatusCode.entrySet().stream()
+                .map(entry -> "Event " + entry.getKey() + " contains invalid attachments: " + entry.getValue())
+                .collect(Collectors.joining("; "));
+        List<String> invalidAttachments = invalidDocsByStatusCode.values().stream()
+                .flatMap(Set::stream)
+                .distinct()
+                .toList();
+        Map<String, Object> additionalDetails = Map.of("invalidAttachments", invalidAttachments);
+
+        return getErrorOrSaveWarning(message, context, paperTrackings, ErrorCategory.ATTACHMENTS_ERROR, INVALID_VALUES, additionalDetails, false, events);
     }
 
     /**
