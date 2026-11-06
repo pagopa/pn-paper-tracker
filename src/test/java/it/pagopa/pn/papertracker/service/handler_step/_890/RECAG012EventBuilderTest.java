@@ -228,6 +228,34 @@ class RECAG012EventBuilderTest {
 
             assertThat(eventsToSend).isNotEmpty();
         }
+
+        @Test
+        void shouldBuildFeedbackWithLatestRecag012WhenMultipleReceived() {
+            paperTrackings.setState(PaperTrackingsState.AWAITING_OCR);
+            context.setNeedToSendRECAG012A(false);
+            validationConfig.setOcrEnabled(OcrStatusEnum.DRY);
+            addEventToPaperTrackings("RECAG005B");
+
+            Event firstRecag012 = new Event();
+            firstRecag012.setId("RECAG012_FIRST");
+            firstRecag012.setStatusCode("RECAG012");
+            firstRecag012.setStatusTimestamp(Instant.parse("2026-09-01T06:45:00Z"));
+            firstRecag012.setRequestTimestamp(Instant.parse("2026-09-02T16:21:18.914Z"));
+            Event latestRecag012 = new Event();
+            latestRecag012.setId("RECAG012_LATEST");
+            latestRecag012.setStatusCode("RECAG012");
+            latestRecag012.setStatusTimestamp(Instant.parse("2026-09-06T07:43:00Z"));
+            latestRecag012.setRequestTimestamp(Instant.parse("2026-09-07T15:35:46.148Z"));
+            paperTrackings.getEvents().add(firstRecag012);
+            paperTrackings.getEvents().add(latestRecag012);
+
+            StepVerifier.create(recag012EventBuilder.execute(context))
+                    .verifyComplete();
+
+            assertThat(eventsToSend).hasSize(1);
+            assertThat(eventsToSend.get(0).getStatusDetail()).isEqualTo("RECAG012");
+            assertThat(eventsToSend.get(0).getStatusDateTime().toInstant()).isEqualTo(Instant.parse("2026-09-06T07:43:00Z"));
+        }
     }
 
     @Nested
