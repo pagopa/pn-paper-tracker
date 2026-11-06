@@ -171,12 +171,7 @@ public class RECAG012EventBuilder implements HandlerStep {
     }
 
     private Event findExistingRecag012(PaperTrackings tracking) {
-        return Optional.ofNullable(tracking.getEvents())
-                .orElse(List.of())
-                .stream()
-                .filter(e -> RECAG012.name().equalsIgnoreCase(e.getStatusCode()))
-                .findFirst()
-                .orElse(null);
+        return TrackerUtility.findRECAG012Event(tracking).orElse(null);
     }
 
 }

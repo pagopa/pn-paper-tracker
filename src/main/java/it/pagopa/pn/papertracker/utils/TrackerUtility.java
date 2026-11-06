@@ -294,10 +294,15 @@ public class TrackerUtility {
                 .orElse(null);
     }
 
+    /**
+     * Restituisce l'ultimo evento RECAG012 ricevuto (requestTimestamp più recente).
+     */
     public static Optional<Event> findRECAG012Event(PaperTrackings paperTrackings) {
-        return paperTrackings.getEvents().stream()
+        return Optional.ofNullable(paperTrackings.getEvents())
+                .orElse(List.of())
+                .stream()
                 .filter(event -> RECAG012.name().equalsIgnoreCase(event.getStatusCode()))
-                .findFirst();
+                .max(Comparator.comparing(Event::getRequestTimestamp));
     }
     public static EventStatus evaluateStatusCodeAndRetrieveStatus(String statusCodeToEvaluate, String statusCode, PaperTrackings paperTrackings) {
         String deliveryFailureCause = paperTrackings.getPaperStatus().getDeliveryFailureCause();
