@@ -1,3 +1,5 @@
-# see https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Root folder ownership to administrators and developers team
+* @pagopa/pn-pagopa-core-analog
 
-*       @Vallasc
+# scripts/aws/cfn ownership on yml files to administrators
+scripts/aws/cfn/*.yml @pagopa/pn-pagopa-infra

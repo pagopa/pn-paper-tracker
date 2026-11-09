@@ -1,5 +1,6 @@
 package it.pagopa.pn.papertracker.rest;
 
+import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.api.PaperTrackerTrackingApi;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingCreationRequest;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
@@ -30,10 +31,12 @@ public class PaperTrackerTrackingController implements PaperTrackerTrackingApi {
      * @return status HTTP
      */
     @Override
-    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, final ServerWebExchange exchange) {
+    public Mono<ResponseEntity<Void>> initTracking(Mono<TrackingCreationRequest> trackingCreationRequest, String xOriginClientId, final ServerWebExchange exchange) {
         return trackingCreationRequest
-                .flatMap(paperTrackerEventService::insertPaperTrackings)
-                .thenReturn(ResponseEntity.status(HttpStatus.CREATED).build());
+                .flatMap(trackingRequest -> paperTrackerEventService.insertPaperTrackings(trackingRequest, xOriginClientId))
+                .thenReturn(ResponseEntity.status(HttpStatus.CREATED).<Void>build())
+                .onErrorResume(PnPaperTrackerConflictException.class, ex ->
+                        Mono.just(ResponseEntity.status(HttpStatus.NO_CONTENT).build()));
     }
 
     @Override

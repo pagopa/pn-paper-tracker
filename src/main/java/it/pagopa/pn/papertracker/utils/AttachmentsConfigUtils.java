@@ -1,5 +1,9 @@
 package it.pagopa.pn.papertracker.utils;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class AttachmentsConfigUtils {
 
     static String SAFESTORAGE_PREFIX = "safestorage://";

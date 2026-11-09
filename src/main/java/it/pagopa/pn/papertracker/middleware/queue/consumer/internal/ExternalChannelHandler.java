@@ -1,24 +1,27 @@
 package it.pagopa.pn.papertracker.middleware.queue.consumer.internal;
 
 import it.pagopa.pn.commons.utils.MDCUtils;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PaperTrackerExceptionHandler;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SingleStatusUpdate;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.SingleStatusUpdate;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.AR.HandlersFactoryAr;
-import it.pagopa.pn.papertracker.service.handler_step.RIR.HandlersFactoryRir;
+import it.pagopa.pn.papertracker.service.handler_step.generic.HandlersRegistry;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
+
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.ALL;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType.UNKNOWN;
 
 @Component
 @RequiredArgsConstructor
@@ -26,20 +29,18 @@ import java.util.UUID;
 public class ExternalChannelHandler {
 
     private final PaperTrackerExceptionHandler paperTrackerExceptionHandler;
-    private final HandlersFactoryAr handlersFactoryAr;
-    private final HandlersFactoryRir handlersFactoryRir;
-    private static final String HANDLING_INTERMEDIATE_EVENT_LOG = "Handling Intermediate event for productType: [{}] and event: [{}]";
-    private static final String HANDLING_RETRYABLE_EVENT_LOG = "Handling Retryable event for productType: [{}] and event: [{}]";
-    private static final String HANDLING_NOT_RETRYABLE_EVENT_LOG = "Handling NotRetryable event for productType: [{}] and event: [{}]";
-    private static final String HANDLING_FINAL_EVENT_LOG = "Handling Final event for productType: [{}] and event: [{}]";
+    private final HandlersRegistry handlersRegistry; // contiene HandlersFactoryAr, HandlersFactoryRir, ecc.
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
+
+    private static final String HANDLING_EVENT_LOG = "Handling {} event for productType: [{}] and event: [{}]";
 
     /**
-     * Riceve i messaggi provenienti dalla coda pn-external_channel_to_paper_tracker e gestisce, secondo il productType
-     * e statusCode, l'evento processandolo secondo l'handler adatto.
+     * Riceve i messaggi provenienti dalla coda pn-external_channel_to_paper_tracker e gestisce, invia l'evento all'handlersRegistry per lo
+     * smistamento allo specifico handler in base a productType ed eventType
      *
      * @param payload il SingleStatusUpdate contenente le informazioni da processare
      */
-    public void handleExternalChannelMessage(SingleStatusUpdate payload) {
+    public void handleExternalChannelMessage(SingleStatusUpdate payload, boolean dryRunEnabled, String reworkId, String messageId, String senderId) {
         if (Objects.isNull(payload) || Objects.isNull(payload.getAnalogMail())) {
             log.error("Received null payload or analogMail in ExternalChannelHandler");
             throw new IllegalArgumentException("Payload or analogMail cannot be null");
@@ -48,97 +49,44 @@ public class ExternalChannelHandler {
         String processName = "processExternalChannelMessage";
         MDC.put(MDCUtils.MDC_PN_CTX_REQUEST_ID, payload.getAnalogMail().getRequestId());
         log.logStartingProcess(processName);
+        HandlerContext context = initializeContext(payload, dryRunEnabled, reworkId, messageId, senderId);
 
-        MDCUtils.addMDCToContextAndExecute(Mono.just(payload)
-                        .flatMap(singleStatusUpdate -> {
-                            HandlerContext context = new HandlerContext();
-                            context.setPaperProgressStatusEvent(payload.getAnalogMail());
-                            context.setEventId(UUID.randomUUID().toString());
-                            String statusCode = payload.getAnalogMail().getStatusCode();
-                            String payloadProductType = payload.getAnalogMail().getProductType();
-                            ProductType productType = resolveProductType(statusCode, payloadProductType);
-                            return switch (productType){
-                                case RS, ALL, RIS, _890 -> null;
-                                case AR -> handleAREvent(statusCode, context);
-                                case RIR -> handleRIREvent(statusCode, context);
-                                case UNKNOWN -> handleUnrecognizedEventsHandler(context);
-                            };
-                        })
-                        .doOnSuccess(resultFromAsync -> log.logEndingProcess(processName))
-                )
-                .onErrorResume(PnPaperTrackerValidationException.class, paperTrackerExceptionHandler::handleInternalException)
-                .block();
+        var statusCode = payload.getAnalogMail().getStatusCode();
+        var productType = resolveProductType(statusCode, payload.getAnalogMail().getProductType());
+        var eventType = Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCode)).map(EventStatusCodeEnum::getCodeType).orElse(null);
+
+        logStatusEvent(eventType, productType, statusCode);
+
+        MDCUtils.addMDCToContextAndExecute(handlersRegistry.handleEvent(productType, eventType, context)
+                        .doOnSuccess(unused -> log.logEndingProcess(processName))
+                        .onErrorResume(PnPaperTrackerValidationException.class, ex -> paperTrackerExceptionHandler.handleInternalException(ex, context.getMessageReceiveCount())))
+                        .block();
+    }
+
+    private HandlerContext initializeContext(SingleStatusUpdate payload, boolean dryRunEnabled, String reworkId, String messageId, String senderId) {
+        HandlerContext context = new HandlerContext();
+        context.setTrackingId(payload.getAnalogMail().getRequestId());
+        context.setPaperProgressStatusEvent(payload.getAnalogMail());
+        context.setEventId(messageId);
+        context.setDryRunEnabled(dryRunEnabled);
+        context.setReworkId(reworkId);
+        context.setRedrive(TrackerUtility.checkIfIsRedrive(senderId, pnPaperTrackerConfigs.getRedriveEnabledDomains()));
+        return context;
     }
 
     private ProductType resolveProductType(String statusCode, String payloadProductType) {
-        String eventProductType = Optional.ofNullable(StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode))
-                .map(e -> e.getProductType().getValue())
-                .orElse("UNKNOWN");
-        if(StringUtils.hasText(payloadProductType) && (eventProductType.equalsIgnoreCase(payloadProductType)
-                || eventProductType.equalsIgnoreCase("ALL"))){
+        ProductType eventProductType = Optional.ofNullable(EventStatusCodeEnum.fromKey(statusCode))
+                .map(EventStatusCodeEnum::getProductType)
+                .orElse(UNKNOWN);
+
+        if (ALL.equals(eventProductType) && StringUtils.hasText(payloadProductType)) {
             return ProductType.fromValue(payloadProductType);
-        }else{
-            return ProductType.fromValue(eventProductType);
         }
+        return eventProductType;
     }
 
-    private Mono<Void> handleUnrecognizedEventsHandler(HandlerContext context) {
-        return handlersFactoryAr.buildUnrecognizedEventsHandler(context);
+    private void logStatusEvent(EventTypeEnum statusEvent, ProductType productType, String statusCode) {
+        log.info(HANDLING_EVENT_LOG, statusEvent, productType, statusCode);
     }
 
-    /**
-     * Gestisce gli eventi del prodotto RIR in base allo statusCode.
-     * A seconda dello statusCode, invoca l'handler appropriato per gestire l'evento.
-     *
-     * @param statusCode lo statusCode dell'evento
-     */
-    private Mono<Void> handleRIREvent(String statusCode, HandlerContext context) {
-        StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeConfigurationEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
-        return switch (statusCodeConfigurationEnum.getCodeType()) {
-            case INTERMEDIATE_EVENT -> {
-                log.info(HANDLING_INTERMEDIATE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryRir.buildIntermediateEventsHandler(context);
-            }
-            case RETRYABLE_EVENT -> {
-                log.info(HANDLING_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryRir.buildRetryEventHandler(context);
-            }
-            case NOT_RETRYABLE_EVENT -> {
-                log.info(HANDLING_NOT_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryAr.buildNotRetryableEventHandler(context);
-            }
-            case FINAL_EVENT -> {
-                log.info(HANDLING_FINAL_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryRir.buildFinalEventsHandler(context);
-            }
-        };
-    }
-
-    /**
-     * Gestisce gli eventi del prodotto AR in base allo statusCode.
-     * A seconda dello statusCode, invoca l'handler appropriato per gestire l'evento.
-     *
-     * @param statusCode lo statusCode dell'evento
-     */
-    private Mono<Void> handleAREvent(String statusCode, HandlerContext context) {
-        StatusCodeConfiguration.StatusCodeConfigurationEnum statusCodeConfigurationEnum = StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode);
-        return switch (statusCodeConfigurationEnum.getCodeType()) {
-            case INTERMEDIATE_EVENT -> {
-                log.info(HANDLING_INTERMEDIATE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryAr.buildIntermediateEventsHandler(context);
-            }
-            case RETRYABLE_EVENT -> {
-                log.info(HANDLING_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryAr.buildRetryEventHandler(context);
-            }
-            case NOT_RETRYABLE_EVENT -> {
-                log.info(HANDLING_NOT_RETRYABLE_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryAr.buildNotRetryableEventHandler(context);
-            }
-            case FINAL_EVENT -> {
-                log.info(HANDLING_FINAL_EVENT_LOG, statusCodeConfigurationEnum.getProductType(), statusCode);
-                yield handlersFactoryAr.buildFinalEventsHandler(context);
-            }
-        };
-    }
 }

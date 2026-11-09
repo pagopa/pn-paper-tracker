@@ -1,16 +1,18 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
+import it.pagopa.pn.papertracker.mapper.SendEventMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.service.handler_step.generic.GenericFinalEventBuilder;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -18,8 +20,9 @@ import reactor.core.publisher.Mono;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
-import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 
 @Component
 @Slf4j
@@ -45,11 +48,13 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      */
     @Override
     public Mono<Void> execute(HandlerContext context) {
-        return Mono.just(extractFinalEvent(context))
+        log.info("Executing FinalEventBuilderAr step for trackingId: {}", context.getTrackingId());
+
+        return Mono.just(TrackerUtility.extractEventFromContext(context))
                 .doOnNext(event -> context.setFinalStatusCode(event.getStatusCode()))
                 .flatMap(event -> handleFinalEvent(context, event))
                 .thenReturn(context)
-                .map(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
+                .flatMap(ctx -> paperTrackingsDAO.updateItem(ctx.getPaperTrackings().getTrackingId(), getPaperTrackingsToUpdate()))
                 .then();
     }
 
@@ -57,11 +62,15 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
         PaperTrackings paperTrackings = context.getPaperTrackings();
         String statusCode = finalEvent.getStatusCode();
         if (!isStockStatus(statusCode)) {
-            return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
+            String eventStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRN002C.name(), statusCode, context.getPaperTrackings()).name();
+            return addEventToSend(context, finalEvent, eventStatus);
         }
 
-        List<Event> validatedEvents = paperTrackings.getPaperStatus().getValidatedEvents();
-        StatusCodeConfiguration.StatusCodeConfigurationEnum configEnum = getRECRN00XA(statusCode);
+        List<Event> validatedEvents = TrackerUtility.validatedEvents(
+                paperTrackings.getPaperStatus().getValidatedEvents(),
+                paperTrackings.getEvents()
+        );
+        EventStatusCodeEnum configEnum = getRECRN00XA(statusCode);
         Event eventRECRN00XA = getEvent(validatedEvents, configEnum);
         Event eventRECRN010 = getEvent(validatedEvents, RECRN010);
 
@@ -81,11 +90,14 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
             log.error("The difference between RECRN005A and RECRN010 is greater than the configured duration, throwing exception");
             return Mono.error(new PnPaperTrackerValidationException(
                     "The difference between RECRN005A and RECRN010 is greater than the configured duration",
-                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings, List.of(finalEvent.getStatusCode()), ErrorCategory.RENDICONTAZIONE_SCARTATA, ErrorCause.GIACENZA_DATE_ERROR,
+                    PaperTrackingsErrorsMapper.buildPaperTrackingsError(paperTrackings, finalEvent.getStatusCode(), ErrorCategory.RENDICONTAZIONE_SCARTATA, ErrorCause.GIACENZA_DATE_ERROR,
                             String.format("RECRN005A getStatusTimestamp: %s, RECRN010 getStatusTimestamp: %s", eventRECRN00XA.getStatusTimestamp(), eventRECRN010.getStatusTimestamp()),
-                            FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR)));
+                            Map.of("recrn005aTimestamp", eventRECRN00XA.getStatusTimestamp().toString(),
+                                    "recrn010Timestamp", eventRECRN010.getStatusTimestamp().toString()
+                            ),
+                            FlowThrow.FINAL_EVENT_BUILDING, ErrorType.ERROR, finalEvent.getId())));
         }
-        return addEventToSend(context, finalEvent, StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(statusCode).getStatus().name());
+        return addEventToSend(context, finalEvent, EventStatusCodeEnum.fromKey(statusCode).getStatus().name());
     }
 
     private boolean isStockStatus(String status) {
@@ -100,22 +112,22 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
                 : isDifferenceGreaterRefinementDuration(eventRECRN010.getStatusTimestamp(), eventRECRN00XA.getStatusTimestamp());
     }
 
-    private StatusCodeConfiguration.StatusCodeConfigurationEnum getRECRN00XA(String statusCode) {
+    private EventStatusCodeEnum getRECRN00XA(String statusCode) {
         final String status = statusCode.substring(0, statusCode.length() - 1).concat("A");
-        return StatusCodeConfiguration.StatusCodeConfigurationEnum.fromKey(status);
+        return EventStatusCodeEnum.fromKey(status);
     }
 
     private Mono<Void> prepareFinalEventAndPNRN012toSend(HandlerContext context, Event finalEvent, Event recrn010) {
         OffsetDateTime pnrn012Time = addDurationToInstant(recrn010.getStatusTimestamp(), pnPaperTrackerConfigs.getRefinementDuration()).atOffset(ZoneOffset.UTC);
 
-        return buildSendEvent(context, finalEvent, StatusCodeEnum.OK, PNRN012.name(), pnrn012Time)
+        return SendEventMapper.createSendEventsFromEventEntity(context.getTrackingId(), finalEvent, StatusCodeEnum.OK, PNRN012.name(), pnrn012Time)
                 .doOnNext(context.getEventsToSend()::add)
                 .flatMap(se -> buildSendEvent(context, finalEvent, StatusCodeEnum.PROGRESS, finalEvent.getStatusCode(), finalEvent.getStatusTimestamp().atOffset(ZoneOffset.UTC)))
                 .doOnNext(context.getEventsToSend()::add)
                 .then();
     }
 
-    private Event getEvent(List<Event> events, StatusCodeConfiguration.StatusCodeConfigurationEnum code) {
+    private Event getEvent(List<Event> events, EventStatusCodeEnum code) {
         return events.stream()
                 .filter(e -> code.name().equals(e.getStatusCode()))
                 .findFirst()
@@ -155,10 +167,13 @@ public class FinalEventBuilderAr extends GenericFinalEventBuilder implements Han
      * @see it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs#isEnableTruncatedDateForRefinementCheck()
      */
     protected Duration getDurationBetweenDates(Instant instant1, Instant instant2) {
-        return pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
-                ? Duration.ofDays(
-                Math.abs(ChronoUnit.DAYS.between(toRomeDate(instant1), toRomeDate(instant2))))
+        LocalDate romeDate1 = toRomeDate(instant1);
+        LocalDate romeDate2 = toRomeDate(instant2);
+        Duration result = pnPaperTrackerConfigs.isEnableTruncatedDateForRefinementCheck()
+                ? Duration.ofDays(ChronoUnit.DAYS.between(romeDate1, romeDate2))
                 : Duration.between(instant1, instant2);
+        log.info("Duration between dates i1={} i2={} result={}",instant1, instant2, result);
+        return result;
     }
 
     /**

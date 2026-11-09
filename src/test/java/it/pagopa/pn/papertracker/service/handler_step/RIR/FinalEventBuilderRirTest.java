@@ -1,14 +1,12 @@
 package it.pagopa.pn.papertracker.service.handler_step.RIR;
 
-import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.middleware.msclient.DataVaultClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,23 +16,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static it.pagopa.pn.papertracker.config.StatusCodeConfiguration.StatusCodeConfigurationEnum.*;
+import static it.pagopa.pn.papertracker.model.EventStatusCodeEnum.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FinalEventBuilderRirTest {
-
-    @Mock
-    PnPaperTrackerConfigs cfg;
 
     @Mock
     DataVaultClient dataVaultClient;
@@ -57,18 +50,18 @@ class FinalEventBuilderRirTest {
         handlerContext.setTrackingId("req-123");
         finalEventBuilder = new FinalEventBuilderRir(dataVaultClient, paperTrackingsDAO);
         paperTrackings = new PaperTrackings();
-        PaperStatus paperStatus = new PaperStatus();
-        paperTrackings.setPaperStatus(paperStatus);
         paperTrackings.setTrackingId("req-123");
-        paperTrackings.setProductType(ProductType.AR);
+        paperTrackings.setProductType(ProductType.AR.getValue());
         paperTrackings.setUnifiedDeliveryDriver("POSTE");
         paperTrackings.setPaperStatus(new PaperStatus());
         paperTrackings.getPaperStatus().setRegisteredLetterCode("RL123");
+        paperTrackings.getPaperStatus().setDeliveryFailureCause("M02");
         ValidationFlow validationFlow = new ValidationFlow();
         validationFlow.setSequencesValidationTimestamp(Instant.now());
         paperTrackings.setValidationFlow(validationFlow);
         Event event = new Event();
         event.setStatusCode("RECRI003A");
+        event.setDeliveryFailureCause("M02");
         event.setStatusTimestamp(now);
         event.setRequestTimestamp(now);
         event.setId(EVENT_ID + "1");
@@ -80,12 +73,13 @@ class FinalEventBuilderRirTest {
         event1.setId(EVENT_ID + "2");
 
         Event event2 = new Event();
-        event2.setStatusCode("RECRN003C");
+        event2.setStatusCode("RECRI003C");
         event2.setStatusTimestamp(now);
         event2.setRequestTimestamp(now);
         event2.setId(EVENT_ID);
 
         paperTrackings.setEvents(List.of(event, event1, event2));
+        paperTrackings.getPaperStatus().setValidatedEvents(List.of(EVENT_ID + "1", EVENT_ID + "2", EVENT_ID));
         handlerContext.setPaperTrackings(paperTrackings);
         when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(paperTrackings));
 
@@ -97,27 +91,16 @@ class FinalEventBuilderRirTest {
         PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI003C.name());
         handlerContext.setPaperProgressStatusEvent(finalEvent);
         handlerContext.setEventId(EVENT_ID);
-        handlerContext.getPaperTrackings().getPaperStatus().setDiscoveredAddress("anonymized");
-        Assertions.assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
 
-        PaperAddress paperAddress = new PaperAddress();
-        paperAddress.setAddress("address");
-        paperAddress.setCap("00100");
-        paperAddress.setCity("Rome");
-        paperAddress.setCountry("IT");
-        paperAddress.setName("address name");
-
-        when(dataVaultClient.deAnonymizeDiscoveredAddress(handlerContext.getTrackingId(), "anonymized"))
-                .thenReturn(Mono.just(paperAddress));
         // Act
         StepVerifier.create(finalEventBuilder.execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        Assertions.assertEquals("anonymized", handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
-        Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
+        Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
     }
 
     @Test
@@ -132,10 +115,100 @@ class FinalEventBuilderRirTest {
                 .verifyComplete();
 
         // Assert
-        Assertions.assertNull(handlerContext.getAnonymizedDiscoveredAddressId());
         Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
         Assertions.assertNull(handlerContext.getEventsToSend().getFirst().getDiscoveredAddress());
         Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getLast().getStatusCode());
+        Assertions.assertEquals("M02", handlerContext.getEventsToSend().getFirst().getDeliveryFailureCause());
+    }
+
+    @Test
+    void buildRIRFinalEvent_withRECRI004C_statusCode() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI004C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        Event event = new Event();
+        event.setStatusCode(RECRI004C.name());
+        event.setStatusTimestamp(Instant.now());
+        event.setRequestTimestamp(Instant.now());
+        event.setId(EVENT_ID);
+        handlerContext.getPaperTrackings().setEvents(List.of(event));
+
+        // Act
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .verifyComplete();
+
+        // Assert
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+        String expectedStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRI004C.name(), RECRI004C.name(), handlerContext.getPaperTrackings()).name();
+        Assertions.assertNotNull(handlerContext.getEventsToSend().getFirst().getStatusCode());
+        Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
+    }
+
+    @Test
+    void buildRIRFinalEvent_withRECRI004C_andM02_shouldSetOkStatus() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI004C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        Event event = new Event();
+        event.setStatusCode(RECRI004C.name());
+        event.setStatusTimestamp(Instant.now());
+        event.setRequestTimestamp(Instant.now());
+        event.setId(EVENT_ID);
+        handlerContext.getPaperTrackings().setEvents(List.of(event));
+        handlerContext.getPaperTrackings().getPaperStatus().setDeliveryFailureCause("M02");
+        // Act
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .verifyComplete();
+        // Assert
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+        Assertions.assertEquals(StatusCodeEnum.OK, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        String expectedStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRI004C.name(), RECRI004C.name(), handlerContext.getPaperTrackings()).name();
+        Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
+    }
+
+    @Test
+    void buildRIRFinalEvent_withRECRI004C_andM06_shouldSetKoStatus() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI004C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        Event event = new Event();
+        event.setStatusCode(RECRI004C.name());
+        event.setStatusTimestamp(Instant.now());
+        event.setRequestTimestamp(Instant.now());
+        event.setId(EVENT_ID);
+        handlerContext.getPaperTrackings().setEvents(List.of(event));
+        handlerContext.getPaperTrackings().getPaperStatus().setDeliveryFailureCause("M06");
+        // Act
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .verifyComplete();
+        // Assert
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
+        Assertions.assertEquals(StatusCodeEnum.KO, handlerContext.getEventsToSend().getFirst().getStatusCode());
+        String expectedStatus = TrackerUtility.evaluateStatusCodeAndRetrieveStatus(RECRI004C.name(), RECRI004C.name(), handlerContext.getPaperTrackings()).name();
+        Assertions.assertEquals(expectedStatus, handlerContext.getEventsToSend().getFirst().getStatusCode().name());
+    }
+
+    @Test
+    void buildRIRFinalEvent_updateItemError() {
+        // Arrange
+        PaperProgressStatusEvent finalEvent = getFinalEvent(RECRI003C.name());
+        handlerContext.setPaperProgressStatusEvent(finalEvent);
+        handlerContext.setEventId(EVENT_ID);
+        when(paperTrackingsDAO.updateItem(any(), any()))
+                .thenReturn(Mono.error(new RuntimeException("DB update failed")));
+
+        // Act & Assert
+        StepVerifier.create(finalEventBuilder.execute(handlerContext))
+                .expectErrorSatisfies(throwable -> {
+                    Assertions.assertInstanceOf(RuntimeException.class, throwable);
+                    Assertions.assertEquals("DB update failed", throwable.getMessage());
+                })
+                .verify();
+
+        Assertions.assertEquals(1, handlerContext.getEventsToSend().size());
     }
 
     private PaperProgressStatusEvent getFinalEvent(String statusCode) {
@@ -144,10 +217,9 @@ class FinalEventBuilderRirTest {
         finalEvent.setRequestId("req-123");
         finalEvent.setClientRequestTimeStamp(OffsetDateTime.now());
         finalEvent.setRegisteredLetterCode("RL123");
-        finalEvent.setDeliveryFailureCause("M02");
         finalEvent.setAttachments(new ArrayList<>());
         finalEvent.setStatusDateTime(OffsetDateTime.now());
-        finalEvent.setProductType("AR");
+        finalEvent.setProductType("RIR");
         return finalEvent;
     }
 }

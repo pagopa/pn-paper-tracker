@@ -1,9 +1,13 @@
 package it.pagopa.pn.papertracker.middleware.msclient.impl;
 
+import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.api.PcRetryApi;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import it.pagopa.pn.papertracker.utils.PcRetryUtilsMock;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,12 +20,20 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class PaperChannelClientImpl implements PaperChannelClient {
 
-
     private final PcRetryApi pcRetryApi;
+    private final PnPaperTrackerConfigs config;
 
     @Override
-    public Mono<PcRetryResponse> getPcRetry(String trackingId) {
-        return pcRetryApi.getPcRetry(trackingId)
+    public Mono<PcRetryResponse> getPcRetry(HandlerContext context, Boolean checkApplyRasterization) {
+        if(!context.isDryRunEnabled()){
+            return getPcRetryPaperChannel(context.getPaperTrackings().getTrackingId(), checkApplyRasterization);
+        }
+        log.debug("giving mock response...");
+        return PcRetryUtilsMock.getPcRetryPaperMock(context.getPaperTrackings(), config.getMaxPcRetryMock(), TrackerUtility.getRetryTriggerStatusCode(context));
+    }
+
+    private Mono<PcRetryResponse> getPcRetryPaperChannel(String trackingId, Boolean checkApplyRasterization) {
+        return pcRetryApi.getPcRetry(trackingId, checkApplyRasterization)
                 .onErrorResume(throwable -> {
                     if (throwable instanceof WebClientResponseException webEx && webEx.getStatusCode() == HttpStatus.NOT_FOUND) {
                         return Mono.error(new PnPaperTrackerNotFoundException("RequestId not found", webEx.getMessage()));
@@ -29,4 +41,5 @@ public class PaperChannelClientImpl implements PaperChannelClient {
                     return Mono.error(throwable);
                 });
     }
+
 }

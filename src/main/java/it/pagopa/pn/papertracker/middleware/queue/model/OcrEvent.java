@@ -20,4 +20,12 @@ public class OcrEvent implements GenericEvent<GenericEventHeader, OcrDataPayload
     public OcrDataPayloadDTO getPayload() {
         return payload;
     }
+
+    @Override
+    public String toString() {
+        return "OcrEvent{" +
+                "header=" + header +
+                ", payload=" + payload +
+                '}';
+    }
 }

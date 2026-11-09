@@ -1,10 +1,19 @@
 package it.pagopa.pn.papertracker.mapper;
 
-import it.pagopa.pn.papertracker.config.StatusCodeConfiguration;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.*;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.DiscoveredAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AnalogAddress;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.StatusCodeEnum;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.pndatavault.model.PaperAddress;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Event;
+import it.pagopa.pn.papertracker.model.EventStatusCodeEnum;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -15,31 +24,38 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
+@Slf4j
 public class SendEventMapper {
 
     /**
-     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro PaperTrackins in modo da fare l'upsert
+     * Crea l'evento dalla classe PaperProgressStatusEvent e lo inserisce dentro SendEvent per l'invio a delivery-push.
+     * Se si tratta di un evento intermedio senza allegati ed è un final demat, non viene inviato a delivery-push.
      *
-     * @param paperProgressStatusEvent
-     * @return PaperTrackings contenente il nuovo evento
+     * @param paperProgressStatusEvent evento intermedio ricevuto
+     * @return SendEvent contenente l'evento rimappato da inviare a delivery-push
      */
     public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(PaperProgressStatusEvent paperProgressStatusEvent) {
+        boolean isFinalDemat = TrackerUtility.checkIfIsFinalDemat(paperProgressStatusEvent.getStatusCode());
         return Mono.just(paperProgressStatusEvent)
                 .flatMapMany(progressEvent -> {
                             if (!CollectionUtils.isEmpty(progressEvent.getAttachments())) {
                                 return Flux.fromIterable(progressEvent.getAttachments().stream()
                                         .map(attachmentDetails -> buildSendEvent(progressEvent, attachmentDetails))
                                         .collect(Collectors.toList()));
-                            }
-                            return Flux.just(buildSendEvent(progressEvent, null));
+                            } else if(!isFinalDemat)
+                                return Flux.just(buildSendEvent(progressEvent, null));
+
+                            log.info("Event with statusCode {} is a final demat without attachments, skipping sending to delivery-push", progressEvent.getStatusCode());
+                            return Flux.empty();
                         }
                 );
     }
 
-    public static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, AttachmentDetails attachmentDetails) {
+    public static SendEvent buildSendEvent(PaperProgressStatusEvent progressEvent, it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails attachmentDetails) {
         SendEvent.SendEventBuilder builder = SendEvent.builder()
                 .requestId(progressEvent.getRequestId())
-                .statusCode(StatusCodeEnum.valueOf(StatusCodeConfiguration.StatusCodeConfigurationEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
+                .statusCode(StatusCodeEnum.valueOf(EventStatusCodeEnum.valueOf(progressEvent.getStatusCode()).getStatus().name()))
                 .statusDetail(progressEvent.getStatusCode())
                 .statusDescription(progressEvent.getProductType() + " - " + progressEvent.getStatusCode() + " - " + progressEvent.getStatusDescription())
                 .deliveryFailureCause(progressEvent.getDeliveryFailureCause())
@@ -51,23 +67,10 @@ public class SendEventMapper {
             builder.discoveredAddress(toAnalogAddress(progressEvent.getDiscoveredAddress()));
         }
         if(Objects.nonNull(attachmentDetails)){
-            builder.attachments(List.of(attachmentDetails));
+            builder.attachments(buildPaperAttachmentDetailsFromExternalChannels(List.of(attachmentDetails)));
         }
 
         return builder.build();
-    }
-
-    public static Flux<SendEvent> createSendEventsFromPaperProgressStatusEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime) {
-        return Mono.just(paperProgressStatusEvent)
-                .flatMapMany(progressEvent -> {
-                            if (!CollectionUtils.isEmpty(progressEvent.getAttachments())) {
-                                return Flux.fromIterable(progressEvent.getAttachments().stream()
-                                        .map(attachmentDetails -> toSendEvent(paperProgressStatusEvent, statusCode, statusDetail, statusDateTime, attachmentDetails))
-                                        .collect(Collectors.toList()));
-                            }
-                            return Flux.just(toSendEvent(paperProgressStatusEvent, statusCode, statusDetail, statusDateTime, null));
-                        }
-                );
     }
 
     public static Flux<SendEvent> createSendEventsFromEventEntity(String requestId, Event event, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime) {
@@ -81,28 +84,6 @@ public class SendEventMapper {
                             return Flux.just(toSendEvent(requestId, event, statusCode, statusDetail, statusDateTime, null));
                         }
                 );
-    }
-
-    public static SendEvent toSendEvent(PaperProgressStatusEvent paperProgressStatusEvent, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, AttachmentDetails attachmentDetails) {
-        SendEvent.SendEventBuilder builder = SendEvent.builder()
-                .requestId(paperProgressStatusEvent.getRequestId())
-                .statusCode(statusCode)
-                .statusDetail(statusDetail)
-                .statusDescription(paperProgressStatusEvent.getProductType() + " - " + statusDetail + " - " + paperProgressStatusEvent.getStatusDescription())
-                .deliveryFailureCause(paperProgressStatusEvent.getDeliveryFailureCause())
-                .registeredLetterCode(paperProgressStatusEvent.getRegisteredLetterCode())
-                .statusDateTime(statusDateTime)
-                .clientRequestTimeStamp(paperProgressStatusEvent.getClientRequestTimeStamp());
-
-        if(Objects.nonNull(paperProgressStatusEvent.getDiscoveredAddress())){
-            builder.discoveredAddress(toAnalogAddress(paperProgressStatusEvent.getDiscoveredAddress()));
-        }
-
-        if(Objects.nonNull(attachmentDetails)){
-            builder.attachments(List.of(attachmentDetails));
-        }
-
-        return builder.build();
     }
 
     public static SendEvent toSendEvent(String requestId, Event event, StatusCodeEnum statusCode, String statusDetail, OffsetDateTime statusDateTime, Attachment attachmentDetails) {
@@ -128,7 +109,16 @@ public class SendEventMapper {
                 .documentType(attachment.getDocumentType())
                 .date(attachment.getDate().atOffset(ZoneOffset.UTC))
                 .id(attachment.getId())
-                .uri(attachment.getUri())
+                .url(attachment.getUri())
+                .build()).toList();
+    }
+
+    private static List<it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails> buildPaperAttachmentDetailsFromExternalChannels(List<it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails> attachments) {
+        return attachments.stream().map(attachment -> AttachmentDetails.builder()
+                .documentType(attachment.getDocumentType())
+                .date(attachment.getDate())
+                .id(attachment.getId())
+                .url(attachment.getUri())
                 .build()).toList();
     }
 

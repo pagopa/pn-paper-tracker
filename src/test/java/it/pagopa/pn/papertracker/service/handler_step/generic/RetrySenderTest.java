@@ -3,7 +3,7 @@ package it.pagopa.pn.papertracker.service.handler_step.generic;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PcRetryResponse;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
@@ -11,6 +11,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProductType;
 import it.pagopa.pn.papertracker.middleware.msclient.PaperChannelClient;
 import it.pagopa.pn.papertracker.model.HandlerContext;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,6 +37,9 @@ public class RetrySenderTest {
     private PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     @Mock
+    private PcRetryService pcRetryService;
+
+    @Mock
     private PaperChannelClient pcRetryApi;
 
     @InjectMocks
@@ -47,35 +51,29 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(true);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
-        when(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).thenReturn(Duration.ofDays(3650));
-        when(paperTrackingsDAO.putIfAbsent(any())).thenReturn(Mono.just(new PaperTrackings()));
-
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.just(response));
+        when(pcRetryService.handlePcRetryResponse(any(), anyBoolean(), any())).thenReturn(Mono.empty());
         //ACT
         StepVerifier.create(retrySender.execute(context))
                 .verifyComplete();
 
         //ASSERT
-        verify(paperTrackingsDAO, times(1)).putIfAbsent(any());
-        verify(paperTrackingsErrorsDAO, never()).insertError(any());
+        verify(pcRetryService, times(1)).handlePcRetryResponse(any(), anyBoolean(), any());
     }
 
     @Test
     void execute_retryNotFound() {
-        //ARRANGE
         HandlerContext context = getHandlerContext();
         PcRetryResponse response = getPcRetryResponse(false);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.just(response));
-
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.just(response));
+        when(pcRetryService.handlePcRetryResponse(any(), anyBoolean(), any())).thenReturn(Mono.empty());
         //ACT
         StepVerifier.create(retrySender.execute(context))
-                .expectErrorMatches(throwable -> throwable instanceof PnPaperTrackerValidationException &&
-                        throwable.getMessage().contains("Retry not found for trackingId: " + context.getPaperTrackings().getTrackingId()));
+                .verifyComplete();
 
         //ASSERT
-        verify(paperTrackingsDAO, never()).updateItem(any(), any());
-        verify(paperTrackingsDAO, never()).putIfAbsent(any());
+        verify(pcRetryService, times(1)).handlePcRetryResponse(any(), anyBoolean(), any());
     }
 
     @Test
@@ -84,7 +82,7 @@ public class RetrySenderTest {
         HandlerContext context = getHandlerContext();
         PnPaperTrackerNotFoundException webClientResponseException = mock(PnPaperTrackerNotFoundException.class);
 
-        when(pcRetryApi.getPcRetry(context.getPaperTrackings().getTrackingId())).thenReturn(Mono.error(webClientResponseException));
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.error(webClientResponseException));
 
         //ACT
         StepVerifier.create(retrySender.execute(context))
@@ -96,11 +94,43 @@ public class RetrySenderTest {
         verifyNoInteractions(paperTrackingsErrorsDAO);
     }
 
+    @Test
+    void execute_genericErrorFromApi_propagatesOriginalErrorWithoutHandlingResponse() {
+        //ARRANGE
+        HandlerContext context = getHandlerContext();
+        RuntimeException serverError = new RuntimeException("paper-channel 500");
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.error(serverError));
+
+        //ACT & ASSERT
+        StepVerifier.create(retrySender.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
+        Assertions.assertNull(context.getNextRequestIdPcRetry());
+        Assertions.assertFalse(context.isMaxPcRetryReached());
+    }
+
+    @Test
+    void execute_errorFromApiOnOcrResponseFlowWithoutPaperProgressStatusEvent_propagatesOriginalError() {
+        //ARRANGE
+        HandlerContext context = getHandlerContext();
+        context.setPaperProgressStatusEvent(null);
+        context.setFinalStatusCode("RECRN002C");
+        RuntimeException serverError = new RuntimeException("paper-channel timeout");
+        when(pcRetryApi.getPcRetry(any(), any())).thenReturn(Mono.error(serverError));
+
+        //ACT & ASSERT
+        StepVerifier.create(retrySender.execute(context))
+                .expectErrorMatches(serverError::equals)
+                .verify();
+        verifyNoInteractions(pcRetryService);
+    }
+
     private HandlerContext getHandlerContext() {
         HandlerContext context = new HandlerContext();
         context.setPaperTrackings(new PaperTrackings());
         context.getPaperTrackings().setTrackingId("requestId");
-        context.getPaperTrackings().setProductType(ProductType.AR);
+        context.getPaperTrackings().setProductType(ProductType.AR.getValue());
         context.setPaperProgressStatusEvent(new PaperProgressStatusEvent());
         context.getPaperProgressStatusEvent().setRequestId("requestId");
         context.getPaperProgressStatusEvent().setStatusCode("statusCode");

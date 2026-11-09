@@ -10,6 +10,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.DYNAMODB;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
@@ -24,7 +25,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 @TestConfiguration
 public class LocalStackTestConfig {
 
-    static LocalStackContainer localStack =
+    public static LocalStackContainer localStack =
             new LocalStackContainer(DockerImageName.parse("localstack/localstack:1.0.4"))
                     .withServices(DYNAMODB, SQS) // ← AGGIUNTO SQS!
                     .withClasspathResourceMapping("testcontainers/init.sh",
@@ -39,11 +40,15 @@ public class LocalStackTestConfig {
     static {
         localStack.start();
         System.setProperty("aws.endpoint-url", localStack.getEndpointOverride(DYNAMODB).toString());
-
+        System.setProperty("aws.endpoint", localStack.getEndpointOverride(DYNAMODB).toString());
+        System.setProperty("aws.region", localStack.getRegion());
+        System.setProperty("aws.accessKey", localStack.getAccessKey());
+        System.setProperty("aws.secretKey",  localStack.getSecretKey());
         System.setProperty("spring.cloud.aws.sqs.endpoint", localStack.getEndpointOverride(SQS).toString());
         System.setProperty("spring.cloud.aws.region.static", localStack.getRegion());
         System.setProperty("spring.cloud.aws.credentials.access-key", localStack.getAccessKey());
         System.setProperty("spring.cloud.aws.credentials.secret-key", localStack.getSecretKey());
+        System.setProperty("pn.paper-tracker.saveAndNotSendToDeliveryPush", "CON018");
 
         try {
             System.setProperty("aws.sharedCredentialsFile", new ClassPathResource("testcontainers/credentials").getFile().getAbsolutePath());

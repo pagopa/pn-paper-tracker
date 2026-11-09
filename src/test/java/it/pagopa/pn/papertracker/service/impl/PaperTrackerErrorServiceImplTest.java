@@ -2,13 +2,17 @@ package it.pagopa.pn.papertracker.service.impl;
 
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingErrorsResponse;
 import it.pagopa.pn.papertracker.generated.openapi.server.v1.dto.TrackingsRequest;
+import it.pagopa.pn.papertracker.mapper.PaperTrackerMapStructMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsErrorsDAO;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ErrorDetails;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsErrors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
@@ -26,11 +30,14 @@ class PaperTrackerErrorServiceImplTest {
     @Mock
     private PaperTrackingsErrorsDAO paperTrackingsErrorsDAO;
 
+    @Spy
+    private PaperTrackerMapStructMapper mapper = Mappers.getMapper(PaperTrackerMapStructMapper.class);
+
     private PaperTrackerErrorServiceImpl paperTrackerErrorService;
 
     @BeforeEach
     void setUp() {
-        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO);
+        paperTrackerErrorService = new PaperTrackerErrorServiceImpl(paperTrackingsErrorsDAO, mapper);
     }
 
     @Test
@@ -127,13 +134,14 @@ class PaperTrackerErrorServiceImplTest {
     }
 
     @Test
-    void insertPaperTrackingsErrorsSuccessfully() {
+    void insertPaperTrackingsErrorSuccessfully() {
         //ARRANGE
         PaperTrackingsErrors paperTrackingsErrors = new PaperTrackingsErrors();
+        paperTrackingsErrors.setDetails(ErrorDetails.builder().build());
         when(paperTrackingsErrorsDAO.insertError(paperTrackingsErrors)).thenReturn(Mono.just(paperTrackingsErrors));
 
         //ACT
-        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsErrors(paperTrackingsErrors);
+        Mono<PaperTrackingsErrors> response = paperTrackerErrorService.insertPaperTrackingsError(paperTrackingsErrors);
 
         //ASSERT
         StepVerifier.create(response)

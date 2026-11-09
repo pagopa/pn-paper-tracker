@@ -2,23 +2,30 @@ package it.pagopa.pn.papertracker.mapper;
 
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
 import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.SendEvent;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackerDryRunOutputs;
+import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.ProcessingMode;
+import it.pagopa.pn.papertracker.model.HandlerContext;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.Objects;
 
+@RequiredArgsConstructor(access = AccessLevel.NONE)
 public class PaperTrackerDryRunOutputsMapper {
 
-    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, String anonymizedDiscoveredAddressId) {
+    public static PaperTrackerDryRunOutputs dtoToEntity(SendEvent event, HandlerContext context, ProcessingMode processingMode) {
         PaperTrackerDryRunOutputs dryRunOutput = new PaperTrackerDryRunOutputs();
-        dryRunOutput.setTrackingId(event.getRequestId());
+        dryRunOutput.setTrackingId(context.getTrackingId());
         dryRunOutput.setCreated(Instant.now());
         dryRunOutput.setRegisteredLetterCode(event.getRegisteredLetterCode());
         dryRunOutput.setStatusDetail(event.getStatusDetail());
         dryRunOutput.setStatusDescription(event.getStatusDescription());
         dryRunOutput.setDeliveryFailureCause(event.getDeliveryFailureCause());
-        dryRunOutput.setAnonymizedDiscoveredAddressId(anonymizedDiscoveredAddressId);
+        dryRunOutput.setAnonymizedDiscoveredAddressId(context.getAnonymizedDiscoveredAddressId());
+        dryRunOutput.setProcessingMode(processingMode);
 
         if(Objects.nonNull(event.getStatusCode())) {
             dryRunOutput.setStatusCode(event.getStatusCode().name());
@@ -41,12 +48,12 @@ public class PaperTrackerDryRunOutputsMapper {
         return dryRunOutput;
     }
 
-    private static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment buildAttachmentForExternalChannelOutputEvent(AttachmentDetails attachment) {
-        it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment attachmentEntity = new it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.Attachment();
+    private static Attachment buildAttachmentForExternalChannelOutputEvent(AttachmentDetails attachment) {
+        Attachment attachmentEntity = new Attachment();
         attachmentEntity.setId(attachment.getId());
         attachmentEntity.setDate(attachment.getDate().toInstant());
         attachmentEntity.setDocumentType(attachment.getDocumentType());
-        attachmentEntity.setUri(attachment.getUri());
+        attachmentEntity.setUri(attachment.getUrl());
         return attachmentEntity;
     }
 }

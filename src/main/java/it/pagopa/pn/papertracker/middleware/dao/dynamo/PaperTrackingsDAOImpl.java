@@ -1,10 +1,9 @@
 package it.pagopa.pn.papertracker.middleware.dao.dynamo;
 
+import com.sngular.apigenerator.asyncapi.business_model.model.event.Data;
 import it.pagopa.pn.papertracker.config.PnPaperTrackerConfigs;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerConflictException;
 import it.pagopa.pn.papertracker.exception.PnPaperTrackerNotFoundException;
-import it.pagopa.pn.papertracker.exception.PnPaperTrackerValidationException;
-import it.pagopa.pn.papertracker.mapper.PaperTrackingsErrorsMapper;
 import it.pagopa.pn.papertracker.middleware.dao.PaperTrackingsDAO;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import lombok.extern.slf4j.Slf4j;
@@ -24,15 +23,16 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static it.pagopa.pn.commons.abstractions.impl.AbstractDynamoKeyValueStore.ATTRIBUTE_NOT_EXISTS;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.OCR_REQUEST_ID_INDEX;
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.*;
-import static software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo;
+import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackings.ATTEMPT_ID_PCRETRY_INDEX;
 
 @Component
 @Slf4j
 public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements PaperTrackingsDAO {
 
     private final String ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM = "PN_PAPER_TRACKER_DUPLICATED_ITEM";
+    private final String ERROR_CODE_PAPER_TRACKER_NOT_FOUND = "PN_PAPER_TRACKER_NOT_FOUND";
+
+    private final PnPaperTrackerConfigs pnPaperTrackerConfigs;
 
     public PaperTrackingsDAOImpl(DynamoDbEnhancedAsyncClient dynamoDbEnhancedClient, PnPaperTrackerConfigs cfg, DynamoDbAsyncClient dynamoDbAsyncClient) {
         super(dynamoDbEnhancedClient,
@@ -40,6 +40,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
                 cfg.getDao().getPaperTrackingsTable(),
                 PaperTrackings.class
         );
+        this.pnPaperTrackerConfigs = cfg;
     }
 
     @Override
@@ -59,19 +60,54 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
     }
 
     @Override
-    public Flux<PaperTrackings> retrieveEntityByOcrRequestId(String ocrRequestId) {
-        return retrieveFromIndex(OCR_REQUEST_ID_INDEX, keyEqualTo(Key.builder().partitionValue(ocrRequestId).build()));
-    }
-
-    @Override
     public Mono<PaperTrackings> putIfAbsent(PaperTrackings entity) {
         String expression = String.format("%s(%s)", ATTRIBUTE_NOT_EXISTS, PaperTrackings.COL_TRACKING_ID);
+        entity.setTtl(Instant.now().plus(pnPaperTrackerConfigs.getPaperTrackingsTtlDuration()).getEpochSecond());
 
         return putIfAbsent(expression, entity)
                 .onErrorMap(ConditionalCheckFailedException.class, ex -> {
                     log.error("Conditional check exception on PaperTrackingsDAOImpl putTrackings trackingId={} exmessage={}", entity.getTrackingId(), ex.getMessage());
+                    log.warn("Duplicate trackingId detected in putIfAbsent: {}", entity.getTrackingId());
                     return new PnPaperTrackerConflictException(ERROR_CODE_PAPER_TRACKER_DUPLICATED_ITEM, String.format("RequestId %s already exists", entity.getTrackingId()));
                 });
+    }
+
+    public Mono<PaperTrackings> updateOcrRequests(Integer ocrRequestIndex, String trackingId, Data.ValidationStatus validationStatus) {
+        log.debug("updateOcrRequests for item with trackingId: {}", trackingId);
+        Instant now = Instant.now();
+        Map<String, String> expressionAttributeNames = new HashMap<>();
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+
+        String updateExpr = "SET #updatedAt = :updatedAt";
+
+        expressionAttributeNames.put("#updatedAt", PaperTrackings.COL_UPDATED_AT);
+        expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
+        expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
+
+        expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(now.toString()).build());
+
+        if (Objects.nonNull(ocrRequestIndex) && ocrRequestIndex >= 0) {
+            expressionAttributeNames.put("#responseTimestamp", OcrRequest.COL_RESPONSE_TIMESTAMP);
+            expressionAttributeValues.put(":responseTimestamp", AttributeValue.builder().s(now.toString()).build());
+            expressionAttributeNames.put("#responseStatus", OcrRequest.COL_RESPONSE_STATUS);
+            expressionAttributeValues.put(":responseStatus", AttributeValue.builder().s(validationStatus.getValue()).build());
+            updateExpr += ", #validationFlow.#ocr[" + ocrRequestIndex + "].#responseStatus = :responseStatus, " +
+                    "#validationFlow.#ocr[" + ocrRequestIndex + "].#responseTimestamp = :responseTimestamp";
+        }
+
+        String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_TRACKING_ID);
+        return updateIfExists(trackingId, updateExpr, expressionAttributeValues, expressionAttributeNames, conditionExpression);
+
+    }
+
+    @Override
+    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings) {
+        return updateItem(trackingId, paperTrackings, false);
+    }
+
+    @Override
+    public Mono<PaperTrackings> updateItemForRework(String trackingId, PaperTrackings paperTrackings) {
+        return updateItem(trackingId, paperTrackings, true);
     }
 
     /**
@@ -84,12 +120,9 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
      * @return un Mono contenente l'oggetto PaperTrackings aggiornato
      * @throws PnPaperTrackerNotFoundException se l'elemento con il trackingId specificato non esiste
      */
-    @Override
-    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings) {
+    public Mono<PaperTrackings> updateItem(String trackingId, PaperTrackings paperTrackings, boolean resetPaperStatus) {
         log.debug("Updating item with trackingId: {}", trackingId);
 
-        Map<String, AttributeValue> attributeValueMap = PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings);
-        AtomicInteger counter = new AtomicInteger(0);
         Map<String, String> expressionAttributeNames = new HashMap<>();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         List<String> updateExpressions = new ArrayList<>();
@@ -98,6 +131,42 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         expressionAttributeValues.put(":updatedAt", AttributeValue.builder().s(Instant.now().toString()).build());
         updateExpressions.add("#updatedAt = :updatedAt");
 
+        String updateExpr = "SET ";
+
+        Optional.ofNullable(paperTrackings.getValidationFlow())
+                .ifPresent(flow -> {
+                    List<OcrRequest> requests = flow.getOcrRequests();
+                    if (!CollectionUtils.isEmpty(requests)) {
+                        expressionAttributeNames.put("#validationFlow", PaperTrackings.COL_VALIDATION_FLOW);
+                        expressionAttributeNames.put("#ocr", ValidationFlow.COL_OCR_REQUESTS);
+                        expressionAttributeValues.put(":requests", AttributeValue.builder()
+                                .l(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings).get("validationFlow").m().get("ocrRequests").l()).build());
+                        updateExpressions.add("#validationFlow.#ocr = list_append(#validationFlow.#ocr, :requests) ");
+                    }
+
+                    flow.setOcrRequests(null);
+                });
+
+
+        Map<String, AttributeValue> attributeValueMap = new HashMap<>(PaperTrackings.paperTrackingsToAttributeValueMap(paperTrackings));
+
+        /*
+         * Reset completo di paperStatus.
+         * In questo modo DynamoDB sovrascrive l'intero attributo paperStatus
+         * con una mappa vuota, eliminando tutti i campi precedenti.
+         */
+        if (resetPaperStatus) {
+            expressionAttributeNames.put("#paperStatus", PaperTrackings.COL_PAPER_STATUS);
+            expressionAttributeValues.put(":emptyPaperStatus", AttributeValue.builder()
+                    .m(Collections.emptyMap())
+                    .build());
+
+            updateExpressions.add("#paperStatus = :emptyPaperStatus");
+            attributeValueMap.remove(PaperTrackings.COL_PAPER_STATUS);
+        }
+
+        AtomicInteger counter = new AtomicInteger(0);
+
         attributeValueMap.forEach((key, value) -> {
             List<String> expressions = buildUpdateExpressions(
                     key, value, counter, expressionAttributeNames, expressionAttributeValues
@@ -105,9 +174,7 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
             updateExpressions.addAll(expressions);
         });
 
-        if (updateExpressions.isEmpty()) return Mono.empty();
-
-        String updateExpr = "SET " + String.join(", ", updateExpressions);
+        updateExpr += String.join(", ", updateExpressions);
 
         String conditionExpression = String.format("%s(%s)", "attribute_exists", PaperTrackings.COL_TRACKING_ID);
 
@@ -115,9 +182,20 @@ public class PaperTrackingsDAOImpl extends BaseDao<PaperTrackings> implements Pa
         log.debug("expressionAttributeValues {}", expressionAttributeValues);
         log.debug("expressionAttributeNames {}", expressionAttributeNames);
 
+        return updateIfExists(trackingId, updateExpr, expressionAttributeValues, expressionAttributeNames, conditionExpression);
+    }
+
+    private Mono<PaperTrackings> updateIfExists(String trackingId, String updateExpr, Map<String, AttributeValue> expressionAttributeValues, Map<String, String> expressionAttributeNames, String conditionExpression) {
         return updateIfExists(Map.of(PaperTrackings.COL_TRACKING_ID, AttributeValue.builder().s(trackingId).build()), updateExpr, expressionAttributeValues, expressionAttributeNames, conditionExpression)
                 .map(updateItemResponse -> PaperTrackings.attributeValueMapToPaperTrackings(updateItemResponse.attributes()))
-                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()));
+                .doOnError(e -> log.error("Error updating item with trackingId {}: {}", trackingId, e.getMessage()))
+                .onErrorMap(ConditionalCheckFailedException.class, e -> {
+                    log.info("Item with trackingId {} not found — cannot update", trackingId);
+                    return new PnPaperTrackerNotFoundException(
+                            ERROR_CODE_PAPER_TRACKER_NOT_FOUND,
+                            String.format("PaperTracking with trackingId %s not found", trackingId)
+                    );
+                });
     }
 
     @Override

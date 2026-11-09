@@ -15,15 +15,13 @@ public class PaperStatus {
 
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_DELIVERY_FAILURE_CAUSE = "deliveryFailureCause";
-    public static final String COL_DISCOVERED_ADDRESS = "discoveredAddress";
+    public static final String COL_ANONYMIZED_DISCOVERED_ADDRESS = "anonymizedDiscoveredAddress";
     public static final String COL_FINAL_STATUS_CODE = "finalStatusCode";
     public static final String COL_VALIDATED_SEQUENCE_TIMESTAMP = "validatedSequenceTimestamp";
-    public static final String COL_VALIDATED_ATTACHMENT_URI = "validatedAttachmentUri";
-    public static final String COL_VALIDATED_ATTACHMENT_TYPE = "validatedAttachmentType";
     public static final String COL_VALIDATED_EVENTS = "validatedEvents";
-    public static final String COL_FINAL_DEMAT_TIMESTAMP = "finalDematTimestamp";
-    public static final String COL_ESTIMATED_PAPER_DELIVERY_TIMESTAMP = "estimatedPaperDeliveryTimestamp";
-    public static final String COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP = "actualPaperDeliveryTimestamp";
+    public static final String COL_FINAL_DEMAT_FOUND = "finalDematFound";
+    public static final String COL_PAPER_DELIVERY_TIMESTAMP = "paperDeliveryTimestamp";
+    public static final String COL_PREDICTED_REFINEMENT_TYPE = "predictedRefinementType";
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
@@ -31,8 +29,8 @@ public class PaperStatus {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DISCOVERED_ADDRESS)}))
-    private String discoveredAddress;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ANONYMIZED_DISCOVERED_ADDRESS)}))
+    private String anonymizedDiscoveredAddress;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_STATUS_CODE)}))
     private String finalStatusCode;
@@ -40,21 +38,16 @@ public class PaperStatus {
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_SEQUENCE_TIMESTAMP)}))
     private Instant validatedSequenceTimestamp;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_URI)}))
-    private String validatedAttachmentUri;
-
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_ATTACHMENT_TYPE)}))
-    private String validatedAttachmentType;
-
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_VALIDATED_EVENTS), @DynamoDbIgnoreNulls}))
-    private List<Event> validatedEvents;
+    private List<String> validatedEvents;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_TIMESTAMP)}))
-    private Instant finalDematTimestamp;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_FINAL_DEMAT_FOUND)}))
+    private Boolean finalDematFound;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ESTIMATED_PAPER_DELIVERY_TIMESTAMP)}))
-    private Instant estimatedPaperDeliveryTimestamp;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PAPER_DELIVERY_TIMESTAMP)}))
+    private Instant paperDeliveryTimestamp;
 
-    @Getter(onMethod = @__({@DynamoDbAttribute(COL_ACTUAL_PAPER_DELIVERY_TIMESTAMP)}))
-    private Instant actualPaperDeliveryTimestamp;
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PREDICTED_REFINEMENT_TYPE)}))
+    private String predictedRefinementType;
+
 }

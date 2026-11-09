@@ -1,8 +1,10 @@
 package it.pagopa.pn.papertracker.service.handler_step;
 
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.AttachmentDetails;
-import it.pagopa.pn.papertracker.generated.openapi.msclient.paperchannel.model.PaperProgressStatusEvent;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.AttachmentDetails;
+import it.pagopa.pn.papertracker.generated.openapi.msclient.externalchannel.model.PaperProgressStatusEvent;
 import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
+import it.pagopa.pn.papertracker.model.OcrStatusEnum;
+import it.pagopa.pn.papertracker.utils.TrackerUtility;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
@@ -10,25 +12,71 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-import static it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.PaperTrackingsState.DONE;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestUtils {
 
-    public static PaperTrackings getPaperTrackings(String requestId) {
+    public static PaperTrackings getPaperTrackings(String requestId, ProductType productType) {
         PaperTrackings pt = new PaperTrackings();
         pt.setTrackingId(requestId);
-        pt.setProductType(ProductType.AR);
+        pt.setProductType(productType.getValue());
         pt.setUnifiedDeliveryDriver("POSTE");
-        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
         pt.setCreatedAt(Instant.now());
         pt.setValidationFlow(new ValidationFlow());
         PaperStatus paperStatus = new PaperStatus();
-        paperStatus.setEstimatedPaperDeliveryTimestamp(Instant.now());
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
         pt.setPaperStatus(paperStatus);
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setSendOcrAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        pt.setValidationConfig(validationConfig);
+        return pt;
+    }
+
+    public static PaperTrackings getPaperTrackingsOldVersion(String requestId, ProductType productType) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(productType.getValue());
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_FINAL_STATUS_CODE);
+        pt.setBusinessState(BusinessState.AWAITING_FINAL_STATUS_CODE);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        return pt;
+    }
+
+    public static PaperTrackings getPaperTrackings(String requestId, List<Event> events) {
+        PaperTrackings pt = new PaperTrackings();
+        pt.setTrackingId(requestId);
+        pt.setProductType(ProductType.AR.getValue());
+        pt.setUnifiedDeliveryDriver("POSTE");
+        pt.setState(PaperTrackingsState.AWAITING_REFINEMENT);
+        pt.setCreatedAt(Instant.now());
+        pt.setValidationFlow(new ValidationFlow());
+        PaperStatus paperStatus = new PaperStatus();
+        paperStatus.setPaperDeliveryTimestamp(Instant.now());
+        pt.setPaperStatus(paperStatus);
+        pt.setEvents(events);
+        ValidationConfig validationConfig = new ValidationConfig();
+        validationConfig.setStrictFinalValidationStock890(Boolean.TRUE);
+        validationConfig.setSendOcrAttachmentsFinalValidationStock890(List.of("ARCAD","CAD"));
+        validationConfig.setSendOcrAttachmentsFinalValidation(List.of("Plico","AR","23L"));
+        validationConfig.setRequiredAttachmentsRefinementStock890(List.of("23L"));
+        validationConfig.setOcrEnabled(OcrStatusEnum.DISABLED);
+        pt.setValidationConfig(validationConfig);
         return pt;
     }
 
@@ -50,41 +98,53 @@ public class TestUtils {
                 .documentType(type)
                 .sha256("sha256")
                 .id("id-" + token)
-                .uri("https://example.com/" + token)
+                .uri("https://example.com/" + token + ".pdf")
                 .date(OffsetDateTime.now())
                 .build()).toList();
     }
 
-    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now) {
+    public static PaperProgressStatusEvent createSimpleAnalogMail(String requestId, OffsetDateTime now, AtomicInteger delay, String productType) {
         PaperProgressStatusEvent ev = new PaperProgressStatusEvent();
         ev.requestId(requestId);
-        ev.setClientRequestTimeStamp(OffsetDateTime.now());
+        ev.setClientRequestTimeStamp(now.plusSeconds(delay.getAndIncrement()));
         ev.setStatusDateTime(now);
         ev.setIun("iun");
-        ev.setProductType("AR");
+        ev.setProductType(productType);
         ev.setRegisteredLetterCode("registeredLetterCode");
         return ev;
     }
 
-    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes) {
-        assertEquals(DONE, pt.getState());
+    public static void assertValidatedDoneSubset(PaperTrackings pt, int totalEvents, int validated, String failure, List<String> expectedValidatedCodes, PaperTrackingsState state, BusinessState businessState) {
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+        assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(expectedValidatedCodes));
+
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
+        assertNotNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
         assertNotNull(pt.getValidationFlow().getFinalEventBuilderTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
         assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());
-        assertNotNull(pt.getPaperStatus().getFinalDematTimestamp());
-        assertNotNull(pt.getPaperStatus().getEstimatedPaperDeliveryTimestamp());
+        assertNotNull(pt.getPaperStatus().getFinalDematFound());
+        assertNotNull(pt.getPaperStatus().getPaperDeliveryTimestamp());
     }
+
+    public static void assertError(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.ERROR, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNotNull(e.getDetails().getCause());
+    }
+
 
     public static void assertSingleError(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(1, errs.size());
@@ -96,12 +156,23 @@ public class TestUtils {
         assertNotNull(e.getTrackingId());
         assertNotNull(e.getProductType());
         assertTrue(e.getDetails().getMessage().contains(msgContains));
-        assertNull(e.getDetails().getCause());
+        assertNotNull(e.getDetails().getCause());
     }
 
     public static void assertSingleWarning(List<PaperTrackingsErrors> errs, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(1, errs.size());
         PaperTrackingsErrors e = errs.getFirst();
+        assertEquals(cat, e.getErrorCategory());
+        assertEquals(flow, e.getFlowThrow());
+        assertEquals(ErrorType.WARNING, e.getType());
+        assertNotNull(e.getCreated());
+        assertNotNull(e.getTrackingId());
+        assertNotNull(e.getProductType());
+        assertTrue(e.getDetails().getMessage().contains(msgContains));
+        assertNull(e.getDetails().getCause());
+    }
+
+    public static void assertWarning(PaperTrackingsErrors e, ErrorCategory cat, FlowThrow flow, String msgContains) {
         assertEquals(cat, e.getErrorCategory());
         assertEquals(flow, e.getFlowThrow());
         assertEquals(ErrorType.WARNING, e.getType());
@@ -159,19 +230,18 @@ public class TestUtils {
         return list.stream().filter(p).count();
     }
 
-    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure) {
+    public static void assertValidatedDone(PaperTrackings pt, int totalEvents, int validated, String failure, PaperTrackingsState state, BusinessState businessState) {
         List<Event> eventsWithoutCon = pt.getEvents().stream().filter(event -> !event.getStatusCode().startsWith("CON")).toList();
-        assertEquals(DONE, pt.getState());
+        assertEquals(state, pt.getState());
+        assertEquals(businessState, pt.getBusinessState());
         assertEquals(totalEvents, pt.getEvents().size());
         assertEquals(validated, pt.getPaperStatus().getValidatedEvents().size());
-        assertTrue(pt.getPaperStatus().getValidatedEvents().stream().map(Event::getStatusCode).toList()
+        assertTrue(TrackerUtility.validatedEvents(pt.getPaperStatus().getValidatedEvents(), pt.getEvents()).stream().map(Event::getStatusCode).toList()
                 .containsAll(eventsWithoutCon.stream().map(Event::getStatusCode).toList()));
         assertNull(pt.getNextRequestIdPcretry());
         assertEquals(failure, pt.getPaperStatus().getDeliveryFailureCause());
-        assertFalse(pt.getValidationFlow().getOcrEnabled());
         assertNotNull(pt.getValidationFlow().getSequencesValidationTimestamp());
-        assertNotNull(pt.getValidationFlow().getDematValidationTimestamp());
-        assertNull(pt.getValidationFlow().getOcrRequestTimestamp());
+        assertNotNull(pt.getValidationFlow().getFinalEventDematValidationTimestamp());
         assertNotNull(pt.getPaperStatus().getRegisteredLetterCode());
         assertNotNull(pt.getPaperStatus().getFinalStatusCode());
         assertNotNull(pt.getPaperStatus().getValidatedSequenceTimestamp());

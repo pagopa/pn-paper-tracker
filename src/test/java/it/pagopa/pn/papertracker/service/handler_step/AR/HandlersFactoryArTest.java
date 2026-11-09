@@ -1,24 +1,23 @@
 package it.pagopa.pn.papertracker.service.handler_step.AR;
 
+import it.pagopa.pn.papertracker.model.EventTypeEnum;
 import it.pagopa.pn.papertracker.model.HandlerContext;
-import it.pagopa.pn.papertracker.service.handler_step.*;
+import it.pagopa.pn.papertracker.service.handler_step.Handler;
+import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.service.handler_step.generic.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.when;
 
 
@@ -29,16 +28,16 @@ class HandlersFactoryArTest {
     private MetadataUpserter metadataUpserter;
 
     @Mock
+    private CheckTrackingProduct checkTrackingProduct;
+
+    @Mock
     private SequenceValidatorAr sequenceValidatorAr;
 
     @Mock
-    private DematValidator dematValidator;
+    private DematValidatorAr dematValidator;
 
     @Mock
     private FinalEventBuilderAr finalEventBuilder;
-
-    @Mock
-    private StateUpdater stateUpdater;
 
     @Mock
     private DuplicatedEventFiltering duplicatedEventFiltering;
@@ -47,7 +46,10 @@ class HandlersFactoryArTest {
     private RetrySender retrySender;
 
     @Mock
-    private DeliveryPushSender deliveryPushSender;
+    private M10RetryTrigger m10RetryTrigger;
+
+    @Mock
+    private OutputTargetSender outputTargetSender;
 
     @Mock
     private IntermediateEventsBuilder intermediateEventsBuilder;
@@ -61,7 +63,15 @@ class HandlersFactoryArTest {
     @Mock
     private NotRetryableErrorInserting notRetryableErrorInserting;
 
-    @InjectMocks
+    @Mock
+    private CheckTrackingState checkTrackingState;
+
+    @Mock
+    private CheckOcrResponse checkOcrResponse;
+
+    @Mock
+    private RetrySenderCON996 retrySenderCON996;
+
     private HandlersFactoryAr handlersFactoryAr;
 
     private HandlerContext handlerContext;
@@ -69,7 +79,22 @@ class HandlersFactoryArTest {
     @BeforeEach
     void setUp() {
         handlerContext = new HandlerContext();
-        // Add any necessary setup for HandlerContext if needed
+        handlersFactoryAr = new HandlersFactoryAr(
+                metadataUpserter,
+                checkTrackingProduct,
+                outputTargetSender,
+                finalEventBuilder,
+                intermediateEventsBuilder,
+                dematValidator,
+                sequenceValidatorAr,
+                retrySender,
+                m10RetryTrigger,
+                notRetryableErrorInserting,
+                duplicatedEventFiltering,
+                checkTrackingState,
+                checkOcrResponse,
+                retrySenderCON996
+        );
     }
 
     @Test
@@ -77,30 +102,25 @@ class HandlersFactoryArTest {
         // Arrange
         List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
+
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Verify execution order
-        InOrder inOrder = inOrder(mockHandlerStep1, mockHandlerStep2);
-        inOrder.verify(mockHandlerStep1).execute(handlerContext);
-        inOrder.verify(mockHandlerStep2).execute(handlerContext);
-    }
-
-    @Test
-    void buildEventsHandler_WithEmptyStepsList_CompletesSuccessfully() {
-        // Arrange
-        List<HandlerStep> emptySteps = Collections.emptyList();
-
-        // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(emptySteps, handlerContext))
-                .verifyComplete();
-
-        // Verify no steps were executed
-        verifyNoInteractions(mockHandlerStep1, mockHandlerStep2);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState,duplicatedEventFiltering, outputTargetSender, intermediateEventsBuilder);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
@@ -109,79 +129,93 @@ class HandlersFactoryArTest {
         List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
         RuntimeException testException = new RuntimeException("Second step failed");
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.error(testException));
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.error(testException));
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .expectError(RuntimeException.class)
                 .verify();
 
         // Verify both steps were attempted in order
-        InOrder inOrder = inOrder(mockHandlerStep1, mockHandlerStep2);
-        inOrder.verify(mockHandlerStep1).execute(handlerContext);
-        inOrder.verify(mockHandlerStep2).execute(handlerContext);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
     }
 
     @Test
     void buildFinalEventsHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(sequenceValidatorAr.execute(handlerContext)).thenReturn(Mono.empty());
         when(dematValidator.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildFinalEventsHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, sequenceValidatorAr, dematValidator, finalEventBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, sequenceValidatorAr, dematValidator, finalEventBuilder, m10RetryTrigger, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
         inOrder.verify(sequenceValidatorAr).execute(handlerContext);
         inOrder.verify(dematValidator).execute(handlerContext);
         inOrder.verify(finalEventBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
     void buildIntermediateEventsHandler_ExecutesMetadataUpserterAndDeliveryPushSender() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildIntermediateEventsHandler(handlerContext))
+        Handler handler = handlersFactoryAr.buildIntermediateEventsHandler(handlerContext);
+        StepVerifier.create(handler.execute(handlerContext))
                 .verifyComplete();
 
         // Verify both steps were executed in the correct order
-        InOrder inOrder = inOrder(metadataUpserter, intermediateEventsBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, duplicatedEventFiltering, intermediateEventsBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
         inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
     void buildRetryEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(retrySender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         // Act
-        StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildRetryEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, retrySender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, retrySender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
         inOrder.verify(retrySender).execute(handlerContext);
     }
 
@@ -189,78 +223,100 @@ class HandlersFactoryArTest {
     void buildNotRetryableEventHandler_ExecutesSuccessfully() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
         when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
         when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
         when(notRetryableErrorInserting.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildNotRetryableEventHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildNotRetryableEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, deliveryPushSender);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState, duplicatedEventFiltering, notRetryableErrorInserting, intermediateEventsBuilder, outputTargetSender);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
         inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
         inOrder.verify(notRetryableErrorInserting).execute(handlerContext);
         inOrder.verify(intermediateEventsBuilder).execute(handlerContext);
-        inOrder.verify(deliveryPushSender).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
-    void buildOcrResponseHandler() {
+    void buildOcrResponseHandler_executesM10RetryTriggerBeforeOutputTargetSender() {
         // Arrange
-        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkOcrResponse.execute(handlerContext)).thenReturn(Mono.empty());
         when(finalEventBuilder.execute(handlerContext)).thenReturn(Mono.empty());
-        when(deliveryPushSender.execute(handlerContext)).thenReturn(Mono.empty());
-        when(stateUpdater.execute(handlerContext)).thenReturn(Mono.empty());
-        // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext))
+        when(m10RetryTrigger.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
+
+        // Act
+        StepVerifier.create(handlersFactoryAr.buildOcrResponseHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
+
+        // Assert
+        InOrder inOrder = inOrder(checkOcrResponse, finalEventBuilder, m10RetryTrigger, outputTargetSender);
+        inOrder.verify(checkOcrResponse).execute(handlerContext);
+        inOrder.verify(finalEventBuilder).execute(handlerContext);
+        inOrder.verify(m10RetryTrigger).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
     void buildEventsHandler_WithSingleStep_ExecutesSuccessfully() {
         // Arrange
-        List<HandlerStep> singleStep = Collections.singletonList(mockHandlerStep1);
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act & Assert
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(singleStep, handlerContext))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
-
-        verify(mockHandlerStep1).execute(handlerContext);
-        verify(mockHandlerStep2, never()).execute(any());
     }
 
     @Test
     void buildEventsHandler_VerifyContextPassedToAllSteps() {
         // Arrange
-        List<HandlerStep> steps = Arrays.asList(mockHandlerStep1, mockHandlerStep2);
 
-        when(mockHandlerStep1.execute(handlerContext)).thenReturn(Mono.empty());
-        when(mockHandlerStep2.execute(handlerContext)).thenReturn(Mono.empty());
+        when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingState.execute(handlerContext)).thenReturn(Mono.empty());
+        when(duplicatedEventFiltering.execute(handlerContext)).thenReturn(Mono.empty());
+        when(outputTargetSender.execute(handlerContext)).thenReturn(Mono.empty());
+        when(intermediateEventsBuilder.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildEventsHandler(steps, handlerContext))
+        StepVerifier.create(handlersFactoryAr.build(EventTypeEnum.INTERMEDIATE_EVENT, handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert - verify the same context instance is passed to all steps
-        verify(mockHandlerStep1).execute(handlerContext);
-        verify(mockHandlerStep2).execute(handlerContext);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct, checkTrackingState,duplicatedEventFiltering, outputTargetSender, intermediateEventsBuilder);
+        inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
+        inOrder.verify(checkTrackingState).execute(handlerContext);
+        inOrder.verify(duplicatedEventFiltering).execute(handlerContext);
+        inOrder.verify(outputTargetSender).execute(handlerContext);
     }
 
     @Test
-    void buildUnrecognizedEventsHandler_ExecutesMetadataUpserter() {
+    void buildSaveOnlyEventHandler_ExecutesMetadataUpserter() {
         // Arrange
         when(metadataUpserter.execute(handlerContext)).thenReturn(Mono.empty());
+        when(checkTrackingProduct.execute(handlerContext)).thenReturn(Mono.empty());
 
         // Act
-        StepVerifier.create(handlersFactoryAr.buildUnrecognizedEventsHandler(handlerContext))
+        StepVerifier.create(handlersFactoryAr.buildSaveOnlyEventHandler(handlerContext).execute(handlerContext))
                 .verifyComplete();
 
         // Assert
-        InOrder inOrder = inOrder(metadataUpserter);
+        InOrder inOrder = inOrder(metadataUpserter, checkTrackingProduct);
         inOrder.verify(metadataUpserter).execute(handlerContext);
+        inOrder.verify(checkTrackingProduct).execute(handlerContext);
     }
 }

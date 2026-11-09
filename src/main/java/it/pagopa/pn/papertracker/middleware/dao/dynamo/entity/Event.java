@@ -2,10 +2,8 @@ package it.pagopa.pn.papertracker.middleware.dao.dynamo.entity;
 
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnoreNulls;
 
 import java.time.Instant;
@@ -26,10 +24,19 @@ public class Event {
     public static final String COL_ATTACHMENTS = "attachments";
     public static final String COL_REGISTERED_LETTER_CODE = "registeredLetterCode";
     public static final String COL_ID = "id";
+    public static final String COL_DRY_RUN = "dryRun";
+    public static final String COL_IUN = "iun";
+    public static final String COL_CREATED_AT = "createdAt";
+    public static final String COL_REWORK_ID = "reworkId";
+    public static final String COL_PRINTER = "printer";
+    public static final String COL_DU = "du";
 
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_ID)}))
     private String id;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_IUN)}))
+    private String iun;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REQUEST_TIMESTAMP)}))
     private Instant requestTimestamp;
@@ -44,7 +51,7 @@ public class Event {
     private Instant statusTimestamp;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRODUCT_TYPE)}))
-    private ProductType productType;
+    private String productType;
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_DELIVERY_FAILURE_CAUSE)}))
     private String deliveryFailureCause;
@@ -57,5 +64,20 @@ public class Event {
 
     @Getter(onMethod = @__({@DynamoDbAttribute(COL_REGISTERED_LETTER_CODE)}))
     private String registeredLetterCode;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DRY_RUN)}))
+    private Boolean dryRun;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_CREATED_AT)}))
+    private Instant createdAt;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_REWORK_ID)}))
+    private String notificationReworkId;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_PRINTER)}))
+    private String printer;
+
+    @Getter(onMethod = @__({@DynamoDbAttribute(COL_DU)}))
+    private String du;
 
 }

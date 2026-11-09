@@ -4,11 +4,11 @@
 	<parent>
 		<groupId>it.pagopa.pn</groupId>
 		<artifactId>pn-parent</artifactId>
-		<version>2.1.3-SPRINGBOOT3</version>
+		<version>2.3.1-SPRINGBOOT3</version>
 		<relativePath />
 	</parent>
 	<artifactId>pn-paper-tracker</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.8.0-SNAPSHOT</version>
 	<name>pn-paper-tracker</name>
 	<description>PN paper-tracker Microservice</description>
 	<scm>
@@ -23,13 +23,18 @@
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-commons</artifactId>
-			<version>2.14.0-SPRINGBOOT3</version>
+			<version>2.18.0-SPRINGBOOT3</version>
 		</dependency>
 
 		<dependency>
 			<groupId>it.pagopa.pn</groupId>
 			<artifactId>pn-model</artifactId>
-			<version>2.9.0</version>
+			<version>2.11.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
 		</dependency>
 
 		<dependency>
@@ -212,7 +217,7 @@
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
-				<version>7.13.0</version>
+				<version>7.16.0</version>
 				<executions>
 					<execution>
 						<id>generate-paper-tracker-server</id>
@@ -298,9 +303,9 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<!-- aggiornare con il commitId di develop -->
+							<!-- aggiornare con il commitId di develop dopo il rilascio della fix del bug PN-16533-->
 							<inputSpec>
-								https://raw.githubusercontent.com/pagopa/pn-paper-channel/b8533c9330718146dfe16dd158173698eb0916c1/docs/openapi/api-internal-v1.yaml
+								https://raw.githubusercontent.com/pagopa/pn-paper-channel/3690259216c94bb7402c9641d0344e222048a191/docs/openapi/api-internal-v1.yaml
 							</inputSpec>
 							<generatorName>java</generatorName>
 							<library>webclient</library>
@@ -356,10 +361,10 @@
 								</additionalModelTypeAnnotations>
 							</configOptions>
 							<apiPackage>
-								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.api
+								${project.groupId}.papertracker.generated.openapi.msclient.externalchannel.api
 							</apiPackage>
 							<modelPackage>
-								${project.groupId}.papertracker.generated.openapi.msclient.paperchannel.model
+								${project.groupId}.papertracker.generated.openapi.msclient.externalchannel.model
 							</modelPackage>
 						</configuration>
 					</execution>
@@ -397,7 +402,7 @@
 			<plugin>
 				<groupId>com.sngular</groupId>
 				<artifactId>scs-multiapi-maven-plugin</artifactId>
-				<version>6.2.1</version>
+				<version>6.7.3</version>
 				<executions>
 					<execution>
 						<phase>generate-sources</phase>
@@ -425,11 +430,11 @@
 									</supplier>
 								</specFile>
 							</specFiles>
-							<generatedSourcesFolder>sources-generated</generatedSourcesFolder>
+							<generatedSourcesFolder>generated-sources</generatedSourcesFolder>
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-		</plugins>
+        </plugins>
 	</build>
 </project>
