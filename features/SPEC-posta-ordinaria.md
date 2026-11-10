@@ -38,15 +38,15 @@ finale verso il destinatario configurato, senza alterare AR, RIR, 890, RS e RIS.
 
 | Superficie | Comportamento attuale e implicazione |
 |---|---|
-| [Contratto interno](docs/openapi/api-internal-v1.yaml) | L'inizializzazione usa `TrackingCreationRequest`; `ProductType` e' una stringa, non un enum OpenAPI chiuso. |
-| [ProductType](src/main/java/it/pagopa/pn/papertracker/middleware/dao/dynamo/entity/ProductType.java) | L'enum applicativo non comprende PO; `fromValue` rifiuta i prodotti sconosciuti. |
-| [PaperTrackingsMapper](src/main/java/it/pagopa/pn/papertracker/mapper/PaperTrackingsMapper.java) | L'init salva `AWAITING_REFINEMENT` / `AWAITING_FINAL_STATUS_CODE`, configura processing mode e OCR per prodotto e costruisce `trackingId=attemptId.pcRetry`. |
-| [EventStatusCodeEnum](src/main/java/it/pagopa/pn/papertracker/model/EventStatusCodeEnum.java) | Il codice determina prodotto, tipo evento ed esito. `CON018` e' intermedio; `REC018` e' save-only. Entrambi descrivono l'accettazione del recapitista. |
-| [ExternalChannelHandler](src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/ExternalChannelHandler.java) | Gli eventi comuni `ALL` sono instradati usando `productType` del payload; gli eventi specifici usano il prodotto associato al codice. |
-| [HandlersRegistry](src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/HandlersRegistry.java) | Registra le factory per prodotto. PO deve avere una gestione coerente sia per gli eventi comuni sia per quello finale. |
-| [AbstractHandlersFactory](src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/AbstractHandlersFactory.java) | La pipeline finale standard include validazione sequenza, dematerializzazione e trigger M10: non e' automaticamente adatta a PO. |
-| [GenericSequenceValidator](src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/GenericSequenceValidator.java) | Verifica anche presenza/coerenza del codice raccomandata e documenti. Il riuso integrale imporrebbe vincoli non ancora concordati per PO. |
-| [OutputTargetSender](src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/OutputTargetSender.java) | Riusa output DRY/RUN e imposta `DONE` dopo la gestione dell'output finale; gli status filtrati dalla configurazione non vengono inviati. |
+| [Contratto interno](../docs/openapi/api-internal-v1.yaml) | L'inizializzazione usa `TrackingCreationRequest`; `ProductType` e' una stringa, non un enum OpenAPI chiuso. |
+| [ProductType](../src/main/java/it/pagopa/pn/papertracker/middleware/dao/dynamo/entity/ProductType.java) | L'enum applicativo non comprende PO; `fromValue` rifiuta i prodotti sconosciuti. |
+| [PaperTrackingsMapper](../src/main/java/it/pagopa/pn/papertracker/mapper/PaperTrackingsMapper.java) | L'init salva `AWAITING_REFINEMENT` / `AWAITING_FINAL_STATUS_CODE`, configura processing mode e OCR per prodotto e costruisce `trackingId=attemptId.pcRetry`. |
+| [EventStatusCodeEnum](../src/main/java/it/pagopa/pn/papertracker/model/EventStatusCodeEnum.java) | Il codice determina prodotto, tipo evento ed esito. `CON018` e' intermedio; `REC018` e' save-only. Entrambi descrivono l'accettazione del recapitista. |
+| [ExternalChannelHandler](../src/main/java/it/pagopa/pn/papertracker/middleware/queue/consumer/internal/ExternalChannelHandler.java) | Gli eventi comuni `ALL` sono instradati usando `productType` del payload; gli eventi specifici usano il prodotto associato al codice. |
+| [HandlersRegistry](../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/HandlersRegistry.java) | Registra le factory per prodotto. PO deve avere una gestione coerente sia per gli eventi comuni sia per quello finale. |
+| [AbstractHandlersFactory](../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/AbstractHandlersFactory.java) | La pipeline finale standard include validazione sequenza, dematerializzazione e trigger M10: non e' automaticamente adatta a PO. |
+| [GenericSequenceValidator](../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/GenericSequenceValidator.java) | Verifica anche presenza/coerenza del codice raccomandata e documenti. Il riuso integrale imporrebbe vincoli non ancora concordati per PO. |
+| [OutputTargetSender](../src/main/java/it/pagopa/pn/papertracker/service/handler_step/generic/OutputTargetSender.java) | Riusa output DRY/RUN e imposta `DONE` dopo la gestione dell'output finale; gli status filtrati dalla configurazione non vengono inviati. |
 
 Non risultano sistemi di specifica preesistenti nelle directory esaminate.
 La proposta resta un unico documento: inizializzazione, eventi e chiusura sono
@@ -147,7 +147,7 @@ Stack esistente: Java 21, Spring Boot 3.x/WebFlux e Reactor, Maven, DynamoDB,
 SQS ed EventBridge. Test con JUnit Jupiter, Mockito, reactor-test e
 Testcontainers/LocalStack.
 
-Versioni dichiarate nel [pom.xml](pom.xml): parent pn-parent
+Versioni dichiarate nel [pom.xml](../pom.xml): parent pn-parent
 `2.3.1-SPRINGBOOT3`, pn-commons `2.18.0-SPRINGBOOT3`, pn-model `2.11.0`,
 OpenAPI Generator `7.13.0`, Testcontainers LocalStack `1.20.6`.
 Non si propongono dipendenze aggiuntive o aggiornamenti di versione.
