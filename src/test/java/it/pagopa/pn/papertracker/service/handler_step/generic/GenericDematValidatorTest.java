@@ -126,7 +126,7 @@ class GenericDematValidatorTest {
     @Test
     void validateDemat_OcrEnabled_UpdatesItemAndPushesEvent2() {
         // Arrange
-        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN002F", null, "eventId1"), getEvent("RECRN002D", null, "eventId2"), getEvent("RECRN002E", "AR", "eventId3")));
+        context.getPaperTrackings().setEvents(List.of(getEvent("RECRN002F", null, "eventId1"), getEvent("RECRN002D", null, "eventId2"), getEvent("RECRN002E", "Plico", "eventId3")));
         context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3"));
         context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
         context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
@@ -142,6 +142,32 @@ class GenericDematValidatorTest {
         verify(safeStorageClient, times(1)).getSafeStoragePresignedUrl(any());
         verify(paperTrackingsDAO, times(1)).updateItem(any(), any());
         verify(ocrMomProducer, times(1)).push(any(OcrEvent.class));
+        assertTrue(context.isStopExecution());
+    }
+
+    @Test
+    void validateDemat_OcrEnabled_ExcludesAttachmentsNotAllowedByStateMachine() {
+        // Arrange: RECRN005B inviato prima con AR (non previsto) e poi corretto con Plico
+        context.getPaperTrackings().setEvents(List.of(
+                getEvent("RECRN005C", null, "eventId1"),
+                getEvent("RECRN005A", null, "eventId2"),
+                getEvent("RECRN005B", "AR", "eventId3"),
+                getEvent("RECRN005B", "Plico", "eventId4")));
+        context.getPaperTrackings().getValidationConfig().setOcrEnabled(OcrStatusEnum.RUN);
+        context.getPaperTrackings().getPaperStatus().setValidatedEvents(List.of("eventId1", "eventId2", "eventId3", "eventId4"));
+        context.getPaperTrackings().getValidationConfig().setOcrFileTypes(List.of(FileType.PDF.getValue()));
+
+        when(safeStorageClient.getSafeStoragePresignedUrl(any())).thenReturn(Mono.just("presigned-url"));
+        when(paperTrackingsDAO.updateItem(any(), any())).thenReturn(Mono.just(context.getPaperTrackings()));
+
+        // Act
+        StepVerifier.create(dematValidator.validateDemat(context))
+                .verifyComplete();
+
+        // Assert
+        ArgumentCaptor<OcrEvent> ocrEventCaptor = ArgumentCaptor.forClass(OcrEvent.class);
+        verify(ocrMomProducer, times(1)).push(ocrEventCaptor.capture());
+        assertEquals("PLICO", ocrEventCaptor.getValue().getPayload().getData().getDocumentType().name());
         assertTrue(context.isStopExecution());
     }
 

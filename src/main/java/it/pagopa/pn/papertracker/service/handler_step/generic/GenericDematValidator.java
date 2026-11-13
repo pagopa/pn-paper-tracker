@@ -6,6 +6,7 @@ import it.pagopa.pn.papertracker.middleware.dao.dynamo.entity.*;
 import it.pagopa.pn.papertracker.model.FileType;
 import it.pagopa.pn.papertracker.model.HandlerContext;
 import it.pagopa.pn.papertracker.model.SourceType;
+import it.pagopa.pn.papertracker.model.sequence.SequenceAttachments;
 import it.pagopa.pn.papertracker.service.PaperTrackerErrorService;
 import it.pagopa.pn.papertracker.service.handler_step.HandlerStep;
 import it.pagopa.pn.papertracker.utils.OcrUtility;
@@ -62,17 +63,35 @@ public abstract class GenericDematValidator implements HandlerStep {
                         .then()));
     }
 
+    /**
+     * Recupera gli allegati da inviare all'OCR. Vengono esclusi gli allegati non previsti dalla macchina a stati
+     * per lo statusCode dell'evento (es. AR inviato su RECRN005B), in quanto non conformi e potenzialmente
+     * già corretti dal recapitista con un invio successivo.
+     */
     private Map<String, List<Attachment>> retrieveFinalDemat(List<Event> validatedEvents, List<String> requiredAttachments) {
         return validatedEvents.stream()
                 .filter(event -> !CollectionUtils.isEmpty(event.getAttachments()))
-                .map(event -> Map.entry(
-                        event.getId(),
-                        event.getAttachments().stream()
-                                .filter(att -> requiredAttachments.contains(att.getDocumentType()))
-                                .toList()
-                ))
+                .map(event -> {
+                    Set<String> allowedAttachments = SequenceAttachments.getValidAttachments(event.getStatusCode());
+                    return Map.entry(
+                            event.getId(),
+                            event.getAttachments().stream()
+                                    .filter(att -> requiredAttachments.contains(att.getDocumentType()))
+                                    .filter(att -> isAllowedAttachment(event, att, allowedAttachments))
+                                    .toList()
+                    );
+                })
                 .filter(entry -> !CollectionUtils.isEmpty(entry.getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    private boolean isAllowedAttachment(Event event, Attachment attachment, Set<String> allowedAttachments) {
+        boolean allowed = allowedAttachments.contains(attachment.getDocumentType());
+        if (!allowed) {
+            log.warn("Attachment {} of event {} (id={}) is not allowed by the state machine, excluded from OCR validation",
+                    attachment.getDocumentType(), event.getStatusCode(), event.getId());
+        }
+        return allowed;
     }
 
     private List<String> getRequiredAttachments(Event event, PaperTrackings paperTrackings) {
